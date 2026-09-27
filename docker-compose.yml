@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  editorial-bot:
+    build: .
+    container_name: tele_editorial_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./output:/app/output
+      - ./articles:/app/articles
+      - ./editorial.db:/app/editorial.db
+    ports:
+      - "8080:8080"
