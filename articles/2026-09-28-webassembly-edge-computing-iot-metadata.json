@@ -1,0 +1,19 @@
+{
+  "topic": "WebAssembly (Wasm) untuk Edge Computing Cerdas di Jaringan IoT",
+  "publish_date": "2026-09-28",
+  "category": "Cloud & Edge Computing",
+  "image_url": "https://bif-pwt.telkomuniversity.ac.id/wp-content/uploads/2026/09/Pin-on-h.jpeg",
+  "yoast_seo": {
+    "focus_keyphrase": "WebAssembly edge computing IoT",
+    "seo_title": "WebAssembly Edge Computing IoT: Solusi Cerdas Perangkat Mikro",
+    "slug": "webassembly-edge-computing-iot",
+    "meta_description": "Pelajari implementasi WebAssembly edge computing IoT untuk perangkat berdaya rendah, isolasi sandbox memori, serta riset monitoring smart village di sini.",
+    "meta_description_char_count": 154
+  },
+  "links": {
+    "internal_link": "https://bif-pwt.telkomuniversity.ac.id/kurikulum/",
+    "outbound_link": "https://bytecodealliance.org/"
+  },
+  "read_time": "4 Menit Baca",
+  "status": "Ready to Publish"
+}

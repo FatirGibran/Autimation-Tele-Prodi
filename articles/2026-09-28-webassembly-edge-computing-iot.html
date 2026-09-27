@@ -1,0 +1,269 @@
+<div class="tu-editorial-container">
+  <style>
+    .tu-editorial-container {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.75;
+      font-size: 16px;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .tu-editorial-container * {
+      box-sizing: border-box;
+    }
+    .tu-hero-header {
+      border-left: 4px solid #c53030;
+      padding: 0 0 0 20px;
+      margin-bottom: 28px;
+    }
+    .tu-badge-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .tu-badge {
+      display: inline-block;
+      background-color: #fff5f5;
+      color: #c53030;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(197, 48, 48, 0.2);
+    }
+    .tu-meta-info {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .tu-article-title {
+      font-size: 28px;
+      line-height: 1.3;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 16px 0;
+    }
+    .tu-lead-paragraph {
+      font-size: 18px;
+      line-height: 1.7;
+      color: #334155;
+      font-weight: 500;
+      margin: 0;
+    }
+    .tu-figure {
+      margin: 28px 0;
+    }
+    .tu-figure img {
+      width: 100%;
+      height: auto;
+      max-height: 440px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+    .tu-figcaption {
+      font-size: 13px;
+      color: #64748b;
+      text-align: center;
+      margin-top: 10px;
+      font-style: italic;
+    }
+    .tu-editorial-container h2 {
+      font-size: 22px;
+      line-height: 1.35;
+      color: #0f172a;
+      font-weight: 700;
+      margin: 36px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .tu-editorial-container p {
+      margin: 0 0 18px 0;
+      color: #334155;
+    }
+    .tu-editorial-container a {
+      color: #c53030;
+      text-decoration: underline;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+    .tu-editorial-container a:hover {
+      color: #dd6b20;
+    }
+    .tu-comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 28px 0;
+    }
+    @media (max-width: 640px) {
+      .tu-comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .tu-card-col {
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid #e2e8f0;
+      background-color: #ffffff;
+    }
+    .tu-card-col.legacy {
+      border-top: 4px solid #64748b;
+      background-color: #f8fafc;
+    }
+    .tu-card-col.modern {
+      border-top: 4px solid #c53030;
+      background-color: #fff5f5;
+    }
+    .tu-card-col h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 14px 0;
+      color: #0f172a;
+    }
+    .tu-card-col ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #334155;
+      font-size: 14px;
+    }
+    .tu-card-col li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .tu-highlight-card {
+      background-color: #f8fafc;
+      border-left: 4px solid #dd6b20;
+      border-radius: 0 8px 8px 0;
+      padding: 18px 20px;
+      margin: 28px 0;
+    }
+    .tu-highlight-card h3 {
+      font-size: 16px;
+      color: #dd6b20;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tu-highlight-card p {
+      font-size: 14px;
+      margin: 0;
+      color: #334155;
+      line-height: 1.6;
+    }
+    .tu-footer-box {
+      background-color: #0f172a;
+      color: #f1f5f9;
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 36px;
+      border: 1px solid #1e293b;
+    }
+    .tu-footer-box h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin: 0 0 12px 0;
+    }
+    .tu-footer-box p {
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.65;
+      margin: 0 0 12px 0;
+    }
+    .tu-footer-box p:last-child {
+      margin-bottom: 0;
+    }
+    .tu-footer-meta {
+      font-size: 12px;
+      color: #94a3b8;
+      border-top: 1px solid #334155;
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+  </style>
+
+  <article>
+    <header class="tu-hero-header">
+      <div class="tu-badge-wrap">
+        <span class="tu-badge">Cloud &amp; Edge Computing</span>
+        <span class="tu-meta-info">28 September 2026 &bull; 4 Menit Baca</span>
+      </div>
+      <h1 class="tu-article-title">WebAssembly (Wasm) untuk Edge Computing Cerdas di Jaringan IoT</h1>
+      <p class="tu-lead-paragraph">
+        Eksplorasi implementasi <strong>WebAssembly edge computing IoT</strong> menghadirkan terobosan komputasi deterministik pada node jaringan sensor berdaya rendah, menggantikan beban komputasi container konvensional melalui eksekusi biner portabel berkecepatan mikrodetik.
+      </p>
+    </header>
+
+    <figure class="tu-figure">
+      <img src="https://bif-pwt.telkomuniversity.ac.id/wp-content/uploads/2026/09/Pin-on-h.jpeg" alt="Implementasi WebAssembly edge computing IoT pada arsitektur sensor pintar" loading="lazy" />
+      <figcaption class="tu-figcaption">Arsitektur modul WebAssembly ringkas yang terintegrasi pada gateway node IoT nirkabel.</figcaption>
+    </figure>
+
+    <section>
+      <h2>Keunggulan Cold Start WebAssembly Edge Computing IoT Dibanding Container Docker</h2>
+      <p>
+        Dalam topologi Internet of Things (IoT), perangkat gateway tepi sering kali mengandalkan prosesor berarsitektur ARM atau RISC-V dengan kapasitas RAM di bawah 512 MB. Menjalankan Docker daemon dan OCI (Open Container Initiative) container pada perangkat mikro memicu konsumsi memori masif serta latensi inisiasi (<em>cold start</em>) berkisar antara 1 hingga 3 detik.
+      </p>
+      <p>
+        Penerapan modul Wasm terkompilasi melalui WebAssembly System Interface (WASI) yang dipelopori oleh konsorsium <a href="https://bytecodealliance.org/" target="_blank" rel="noopener noreferrer">Bytecode Alliance</a> memangkas overhead runtime tersebut secara radikal. Modul biner Wasm berukuran puluhan kilobyte dapat diinisiasi dalam hitungan sub-milidetik (&lt;5 ms), memungkinkan pemrosesan sinyal event-driven instan saat sensor aktif dari mode tidur hemat daya (<em>deep sleep</em>).
+      </p>
+    </section>
+
+    <div class="tu-comparison-grid">
+      <div class="tu-card-col legacy">
+        <h3>Container Konvensional (Docker)</h3>
+        <ul>
+          <li><strong>Memory Footprint:</strong> Membutuhkan 50&ndash;150 MB untuk daemon dan OS layer.</li>
+          <li><strong>Cold Start Latency:</strong> 1.000 &ndash; 3.000 ms sebelum eksekusi payload.</li>
+          <li><strong>Beban CPU:</strong> Overhead virtualisasi namespace kernel Linux tinggi.</li>
+          <li><strong>Dependensi Host:</strong> Image terikat erat pada arsitektur CPU target build.</li>
+        </ul>
+      </div>
+      <div class="tu-card-col modern">
+        <h3>Runtime WebAssembly (Wasm / WASI)</h3>
+        <ul>
+          <li><strong>Memory Footprint:</strong> Sangat hemat, berkisar antara 1&ndash;5 MB RAM total.</li>
+          <li><strong>Cold Start Latency:</strong> Kurang dari 5 ms untuk bootstrap modul biner.</li>
+          <li><strong>Beban CPU:</strong> Eksekusi biner langsung mendekati performa native.</li>
+          <li><strong>Dependensi Host:</strong> Agnostik arsitektur, satu artefak biner untuk ARM, x86, dan RISC-V.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tu-highlight-card">
+      <h3>Keamanan Isolasi Sandbox Memori Linier</h3>
+      <p>
+        Berbeda dari proses Linux standar yang rentan terhadap eksploitasi pointer acak, WebAssembly menerapkan arsitektur <em>software-fault isolation</em> berbasis memori linier. Modul kode beroperasi di dalam sandbox tertutup tanpa akses langsung ke syscall sistem operasi host. Setiap instruksi hanya dapat mengakses alamat memori yang dialokasikan khusus, mengeliminasi risiko serangan <em>buffer overflow</em> pada perangkat sensor tanpa pengawasan fisik.
+      </p>
+    </div>
+
+    <section>
+      <h2>Implementasi pada Smart Village Sensor Monitoring</h2>
+      <p>
+        Riset terapan pada skenario monitoring lingkungan pedesaan cerdas (<em>smart village</em>) membuktikan keandalan pendekatan ini. Node sensor yang dipasang di lahan pertanian terpencil memanfaatkan tenaga surya mini untuk mengukur kelembapan tanah, debit air irigasi, dan mikroklimat. Saat data anomali terdeteksi, modul Wasm langsung memicu algoritma filtering dan inferensi regresi lokal sebelum mentransmisikan data ringkas melalui jaringan LoRaWAN.
+      </p>
+      <p>
+        Pengembangan arsitektur komputasi terdistribusi, sistem tertanam, dan efisiensi cloud-edge ini selaras dengan fokus kompetensi akademik yang diajarkan pada <a href="https://bif-pwt.telkomuniversity.ac.id/kurikulum/">kurikulum S1 Teknik Informatika</a> Telkom University Purwokerto. Integrasi teori sistem cerdas dengan eksekusi perangkat keras nyata mempersiapkan mahasiswa menghadapi standarisasi rekayasa perangkat lunak modern.
+      </p>
+    </section>
+
+    <footer class="tu-footer-box">
+      <h3>Kesimpulan Editorial</h3>
+      <p>
+        WebAssembly menggeser paradigma komputasi edge dari containerisasi monolitik menuju mikromodul modular yang hemat daya dan terisolasi ketat. Untuk infrastruktur IoT masa depan dengan keterbatasan energi dan bandwidth, kombinasi WASI dan hardware edge cerdas merupakan standar komputasi paling efisien.
+      </p>
+      <div class="tu-footer-meta">
+        Dipublikasikan oleh Tim Editorial &amp; Riset S1 Teknik Informatika Telkom University Purwokerto.
+      </div>
+    </footer>
+  </article>
+</div>
