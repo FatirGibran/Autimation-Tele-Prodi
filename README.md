@@ -1,6 +1,6 @@
 # Automation Tele Prodi (Editorial Specialist Bot)
 
-Sistem otomasi produksi artikel berita dan riset mingguan Program Studi S1 Teknik Informatika Telkom University Purwokerto (`bif-pwt.telkomuniversity.ac.id`), dirancang untuk menghasilkan kode HTML siap tempel ke widget Custom HTML Elementor serta metadata Yoast SEO dengan skor hijau (*All Green*).
+Sistem otomasi produksi artikel berita dan riset mingguan Program Studi S1 Teknik Informatika Telkom University Purwokerto (`bif-pwt.telkomuniversity.ac.id`), dirancang untuk memproduksi kode HTML siap tempel ke widget Custom HTML Elementor serta metadata Yoast SEO dengan skor hijau (*All Green*).
 
 ---
 
@@ -10,24 +10,28 @@ Sistem otomasi produksi artikel berita dan riset mingguan Program Studi S1 Tekni
 [Telegram User] 
        │ (Kirim: Topik + Gambar + Tanggal + Poin Utama)
        ▼
-[Telegram Bot Service] (bot.py)
+[Telegram Bot Service] (bot.py / webhook_server.py)
        │ 
        ▼
 [LLM Engine] (Gemini 2.5 Flash / Antigravity Engine)
        │  ├── Injeksi Master System Prompt (prompts/system_prompt.md)
        │  └── Validasi Standar Desain & SEO Kampus
        ▼
-[Response Parser & Validator] (parser.py)
+[Response Parser & Sanitizer] (parser.py, sanitizer.py)
        │  ├── Ekstraksi Metadata Yoast SEO (Title, Slug, Keyphrase, Meta Desc)
-       │  └── Verifikasi Batas Karakter & Kontras Desain
+       │  ├── Sanitasi Tag HTML & Penegakan rel="noopener noreferrer"
+       │  └── Pengecekan Duplikasi Keyphrase (storage.py)
        ▼
-[Telegram Bot Output]
-       │  ├── Output 1: Yoast SEO Metadata Markdown
-       │  └── Output 2: File .html Lengkap Siap Pakai
+[Yoast SEO Evaluator] (seo_validator.py)
+       │  └── Verifikasi 10 Parameter All Green Yoast SEO
+       ▼
+[Telegram Bot Output & Exporter] (formatters.py, exporter.py)
+       │  ├── Output 1: Yoast SEO Metadata Markdown + Tombol Interaktif
+       │  └── Output 2: File .html Lengkap Siap Tempel ke Elementor
        ▼
 [WordPress WP-Admin (bif-pwt.telkomuniversity.ac.id)]
-       ├── Panel Yoast SEO: Input Keyphrase, SEO Title, Slug, Meta Description
-       └── Post Editor: Tempel Kode ke Widget Custom HTML / Elementor HTML
+       ├── Otomatis: Publish Draft via WordPress REST API (wordpress_client.py)
+       └── Manual: Copy-paste ke Post Editor & Panel Yoast SEO
 ```
 
 ---
@@ -36,24 +40,53 @@ Sistem otomasi produksi artikel berita dan riset mingguan Program Studi S1 Tekni
 
 ```
 Autimation Tele Prodi/
-├── .env.example                                      # Contoh konfigurasi kredensial bot & API
-├── .gitignore                                        # Rule pengabaian file Git
-├── README.md                                         # Dokumentasi teknis & operasional
+├── .github/workflows/
+│   ├── ci.yml                                        # Automated CI testing
+│   └── seo_audit.yml                                 # Automated Yoast SEO audit for articles
+├── .env.example                                      # Contoh kredensial & environment
+├── .gitignore                                        # Rule git ignore
+├── Dockerfile                                        # Multi-stage lightweight dockerfile
+├── docker-compose.yml                                # Docker compose definition
+├── Makefile                                          # Developer automation tasks
+├── README.md                                         # Dokumentasi utama proyek
 ├── bot.py                                            # Telegram bot handler & workflow engine
-├── parser.py                                         # Regex parser payload input & output validator
-├── requirements.txt                                  # Dependensi pustaka Python
+├── cli.py                                            # Command-Line Interface untuk audit & list
+├── components.py                                     # Modular semantic HTML component builder
+├── config.py                                         # Centralized typed configuration
+├── exporter.py                                       # Export Elementor JSON & Markdown
+├── formatters.py                                     # Telegram message & inline keyboard builders
+├── parser.py                                         # Multi-format Telegram trigger & output parser
+├── requirements.txt                                  # Dependensi Python
+├── sanitizer.py                                      # HTML sanitizer & CSS isolation guard
+├── seo_validator.py                                  # Evaluator 10 parameter Yoast SEO All-Green
+├── storage.py                                        # SQLite database pencegah kanibalisasi keyphrase
+├── webhook_server.py                                 # Webhook server & health check
+├── articles/                                         # Arsip artikel siap terbit
+│   ├── 2026-09-28-webassembly-edge-computing-iot.html
+│   └── 2026-09-28-webassembly-edge-computing-iot-metadata.json
+├── docs/
+│   ├── API.md                                       # Spesifikasi teknis payload & API
+│   ├── DEPLOYMENT.md                                 # Panduan deployment Docker, Systemd, Cloud Run
+│   └── EDITORIAL_GUIDE.md                           # Panduan brand & prinsip anti-slop
 ├── prompts/
-│   └── system_prompt.md                             # Master system prompt editorial Telkom University
-└── articles/
-    ├── 2026-09-28-webassembly-edge-computing-iot.html # Output artikel HTML siap terbit
-    └── 2026-09-28-webassembly-edge-computing-iot-metadata.json # Metadata Yoast SEO tervalidasi
+│   ├── system_prompt.md                             # Master system prompt editorial
+│   ├── research_spotlight.md                        # Template riset & publikasi ilmiah
+│   ├── campus_achievement.md                        # Template berita prestasi mahasiswa
+│   └── community_service.md                         # Template pengabdian masyarakat (Abdimas)
+└── tests/                                            # Test suite terotomasi
+    ├── test_components.py
+    ├── test_exporter.py
+    ├── test_parser.py
+    ├── test_sanitizer.py
+    ├── test_seo_validator.py
+    └── test_wordpress_client.py
 ```
 
 ---
 
 ## 3. Format Pesan Pemicu (Telegram Trigger)
 
-Gunakan struktur teks berikut saat mengirim permintaan artikel ke bot Telegram:
+Kirimkan pesan ke bot dengan struktur berikut:
 
 ```text
 Topik: WebAssembly (Wasm) untuk Edge Computing Cerdas di Jaringan IoT
@@ -68,54 +101,52 @@ Poin Utama:
 
 ---
 
-## 4. Standar Desain & Yoast SEO
+## 4. Perintah Developer (Makefile & CLI)
+
+Jalankan perintah pengujian dan utilitas dengan mudah:
+
+```bash
+# Menjalankan seluruh test suite unit test
+make test
+
+# Menjalankan audit Yoast SEO pada artikel terbitan
+make audit
+
+# Menampilkan daftar artikel di database lokal
+make cli-list
+
+# Menjalankan bot secara lokal
+make run
+```
+
+---
+
+## 5. Standar Yoast SEO All-Green
 
 | Parameter | Aturan Standar |
 | :--- | :--- |
 | **Focus Keyphrase** | 3–5 kata spesifik, muncul di awal Title, Paragraf 1, H2, Alt Gambar, Slug, dan Meta Description |
 | **Meta Description** | Tepat 140–156 karakter, persuasif, memuat Focus Keyphrase |
-| **Internal Link** | Wajib mengarah ke domain kampus: `https://bif-pwt.telkomuniversity.ac.id/kurikulum/` |
-| **Outbound Link** | Mengarah ke referensi global terverifikasi (`bytecodealliance.org`, `ieee.org`, dll.) dengan `target="_blank" rel="noopener noreferrer"` |
+| **Internal Link** | Mengarah ke ranah web kampus: `https://bif-pwt.telkomuniversity.ac.id/kurikulum/` |
+| **Outbound Link** | Mengarah ke rujukan riset/standar global dengan `target="_blank" rel="noopener noreferrer"` |
 | **Panjang Artikel** | 350–480 kata berkonten teknis padat |
 | **Palet Warna** | Merah Telkom (`#c53030`), Orange (`#dd6b20`), Gelap (`#0f172a`), Soft BG (`#fff5f5`/`#f8fafc`) |
 | **CSS Scoping** | Terisolasi penuh di dalam `<div class="tu-editorial-container">` |
 
 ---
 
-## 5. Panduan Publikasi ke WordPress
+## 6. Panduan Publikasi ke WordPress
 
 1. Buka dashboard WordPress `bif-pwt.telkomuniversity.ac.id/wp-admin`.
-2. Masuk ke menu **Posts > Add New Post**.
-3. Salin nilai **SEO Title** ke kolom judul postingan utama.
-4. Tambahkan blok **Custom HTML** atau buka widget **Elementor HTML**, lalu salin seluruh isi file HTML artikel ke dalamnya.
-5. Pada panel metabox **Yoast SEO**:
-   - Salin **Focus keyphrase**.
-   - Salin **Slug URL**.
-   - Salin **SEO Title** dan **Meta description**.
-   - Pastikan indikator Yoast SEO menyala hijau (*All Green*).
-6. Pada panel samping kanan:
-   - Pilih kategori (misal: *Berita* atau *Artikel Ilmiah*).
-   - Tetapkan **Featured Image** dari Media Library agar thumbnail pada halaman utama `/berita-dan-artikel/` tampil presisi.
+2. Masuk ke **Posts > Add New Post**.
+3. Salin nilai **SEO Title** ke judul post WordPress.
+4. Masukkan blok **Custom HTML** atau widget **Elementor HTML**, lalu tempel kode HTML artikel lengkap.
+5. Pada metabox **Yoast SEO**:
+   - Isi **Focus keyphrase**.
+   - Isi **Slug URL**.
+   - Isi **SEO Title** dan **Meta description**.
+   - Indikator Yoast SEO otomatis menyala hijau (*All Green*).
+6. Di tab panel kanan:
+   - Pilih kategori (misal: *Berita*).
+   - Tetapkan **Featured Image** dari Media Library.
 7. Klik **Publish**.
-
----
-
-## 6. Instalasi & Menjalankan Bot Lokal
-
-1. Pasang dependensi pustaka:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Buat file `.env` dari salinan `.env.example`:
-   ```bash
-   cp .env.example .env
-   ```
-3. Isi token Telegram dan Google Gemini API:
-   ```env
-   TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
-   GEMINI_API_KEY="your_gemini_api_key"
-   ```
-4. Jalankan bot:
-   ```bash
-   python bot.py
-   ```
