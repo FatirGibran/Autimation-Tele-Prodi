@@ -1,0 +1,64 @@
+import re
+from typing import Tuple, List
+
+ALLOWED_TAGS = {
+    "div", "style", "article", "header", "section", "figure", "figcaption",
+    "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
+    "span", "strong", "em", "code", "pre", "blockquote"
+}
+
+DISALLOWED_ATTR_PREFIXES = ("on", "javascript:")
+
+class HTMLSanitizer:
+    @classmethod
+    def sanitize(cls, html_content: str) -> Tuple[str, List[str]]:
+        warnings: List[str] = []
+        cleaned = html_content.strip()
+
+        # 1. Ensure root wrapper exists
+        if not cleaned.startswith('<div class="tu-editorial-container">'):
+            if '<div class="tu-editorial-container">' in cleaned:
+                # Extract starting from the wrapper
+                start_idx = cleaned.find('<div class="tu-editorial-container">')
+                end_idx = cleaned.rfind('</div>') + 6
+                cleaned = cleaned[start_idx:end_idx]
+            else:
+                warnings.append("Missing root .tu-editorial-container; auto-wrapping.")
+                cleaned = f'<div class="tu-editorial-container">\n{cleaned}\n</div>'
+
+        # 2. Strip dangerous script tags
+        if "<script" in cleaned.lower():
+            warnings.append("Stripped dangerous <script> tag from HTML.")
+            cleaned = re.sub(r"<script[^>]*>.*?</script>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+
+        # 3. Strip inline event handlers (onclick, onload, etc.)
+        inline_handler_regex = r'\s+(on\w+)=["\'][^"\']*["\']'
+        if re.search(inline_handler_regex, cleaned, re.IGNORECASE):
+            warnings.append("Stripped inline event handlers.")
+            cleaned = re.sub(inline_handler_regex, "", cleaned, flags=re.IGNORECASE)
+
+        # 4. Enforce rel="noopener noreferrer" on external links
+        def fix_link(match):
+            tag = match.group(0)
+            href = match.group(1)
+            if "bif-pwt.telkomuniversity.ac.id" not in href:
+                if 'rel=' not in tag:
+                    tag = tag.rstrip(">") + ' rel="noopener noreferrer">'
+                elif 'noopener' not in tag:
+                    tag = re.sub(r'rel=["\'][^"\']*["\']', 'rel="noopener noreferrer"', tag)
+                if 'target=' not in tag:
+                    tag = tag.rstrip(">") + ' target="_blank">'
+            return tag
+
+        cleaned = re.sub(r'<a\s+[^>]*href=["\'](https?://[^"\']+)["\'][^>]*>', fix_link, cleaned, flags=re.IGNORECASE)
+
+        # 5. Enforce loading="lazy" on img tags
+        def fix_img(match):
+            tag = match.group(0)
+            if 'loading=' not in tag:
+                tag = tag.rstrip(" />").rstrip(">") + ' loading="lazy" />'
+            return tag
+
+        cleaned = re.sub(r'<img\s+[^>]+>', fix_img, cleaned, flags=re.IGNORECASE)
+
+        return cleaned, warnings
