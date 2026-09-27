@@ -1,27 +1,37 @@
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
+
+DEFAULT_PLACEHOLDER_IMG = "https://bif-pwt.telkomuniversity.ac.id/wp-content/uploads/placeholder.jpg"
+
+def clean_url(raw_url: str) -> str:
+    if not raw_url:
+        return DEFAULT_PLACEHOLDER_IMG
+    # Extract URL from markdown link syntax [text](http://...)
+    md_match = re.search(r'\((https?://[^\s\)]+)\)', raw_url)
+    if md_match:
+        return md_match.group(1).strip()
+    # Plain URL regex
+    url_match = re.search(r'(https?://[^\s\]\>]+)', raw_url)
+    if url_match:
+        return url_match.group(1).strip()
+    return DEFAULT_PLACEHOLDER_IMG
 
 def parse_telegram_input(raw_text: str) -> Dict[str, Any]:
     """
-    Parses structured Telegram text trigger into a dictionary.
-    Expected format:
-    Topik: ...
-    Tanggal: ...
-    Kategori: ...
-    Image URL: ...
-    Poin Utama:
-    - ...
+    Parses structured Telegram text trigger into a normalized dictionary.
+    Supports bullet formats, markdown links, and auto-detects missing fields.
     """
     lines = raw_text.strip().splitlines()
-    data = {
+    data: Dict[str, Any] = {
         "topik": "",
         "tanggal": "",
-        "kategori": "",
-        "image_url": "",
-        "poin_utama": []
+        "kategori": "Berita & Riset",
+        "image_url": DEFAULT_PLACEHOLDER_IMG,
+        "poin_utama": [],
+        "estimasi_baca": "4 Menit Baca"
     }
     
-    current_key = None
+    current_key: Optional[str] = None
     for line in lines:
         line_clean = line.strip()
         if not line_clean:
@@ -37,19 +47,24 @@ def parse_telegram_input(raw_text: str) -> Dict[str, Any]:
         elif lower_line.startswith("kategori:"):
             data["kategori"] = line_clean.split(":", 1)[1].strip()
             current_key = "kategori"
-        elif lower_line.startswith("image url:") or lower_line.startswith("image:"):
+        elif lower_line.startswith("image url:") or lower_line.startswith("image:") or lower_line.startswith("gambar:"):
             raw_url = line_clean.split(":", 1)[1].strip()
-            # Clean markdown link wrapping if present e.g. [url](url)
-            match = re.search(r'\((https?://[^\)]+)\)', raw_url)
-            data["image_url"] = match.group(1) if match else raw_url
+            data["image_url"] = clean_url(raw_url)
             current_key = "image_url"
-        elif lower_line.startswith("poin utama:"):
+        elif lower_line.startswith("estimasi:") or lower_line.startswith("estimasi baca:"):
+            data["estimasi_baca"] = line_clean.split(":", 1)[1].strip()
+            current_key = "estimasi_baca"
+        elif lower_line.startswith("poin utama:") or lower_line.startswith("poin-poin:"):
             current_key = "poin_utama"
         elif current_key == "poin_utama":
+            # Strip standard list markers: -, *, •, or 1.
             cleaned_bullet = re.sub(r'^[\-\*\•\d\.]+\s*', '', line_clean)
             if cleaned_bullet:
                 data["poin_utama"].append(cleaned_bullet)
                 
+    if not data["image_url"]:
+        data["image_url"] = DEFAULT_PLACEHOLDER_IMG
+        
     return data
 
 def parse_llm_response(response_text: str) -> Dict[str, Any]:
@@ -64,56 +79,30 @@ def parse_llm_response(response_text: str) -> Dict[str, Any]:
         "html_code": ""
     }
     
-    # Extract metadata fields
-    fk_match = re.search(r"Focus Keyphrase:\s*(.+)", response_text, re.IGNORECASE)
+    fk_match = re.search(r"Focus Keyphrase:\s*`?([^`\n]+)`?", response_text, re.IGNORECASE)
     if fk_match:
         result["focus_keyphrase"] = fk_match.group(1).strip()
         
-    title_match = re.search(r"SEO Title:\s*(.+)", response_text, re.IGNORECASE)
+    title_match = re.search(r"SEO Title:\s*`?([^`\n]+)`?", response_text, re.IGNORECASE)
     if title_match:
         result["seo_title"] = title_match.group(1).strip()
         
-    slug_match = re.search(r"Slug:\s*(.+)", response_text, re.IGNORECASE)
+    slug_match = re.search(r"Slug:\s*`?([^`\n]+)`?", response_text, re.IGNORECASE)
     if slug_match:
         result["slug"] = slug_match.group(1).strip()
         
-    meta_match = re.search(r"Meta Description:\s*(.+)", response_text, re.IGNORECASE)
+    meta_match = re.search(r"Meta Description:\s*`?([^`\n]+)`?", response_text, re.IGNORECASE)
     if meta_match:
         result["meta_description"] = meta_match.group(1).strip()
         
-    # Extract HTML code block
+    # Search for HTML block inside markdown code fence
     html_match = re.search(r"```(?:html)?\s*(<div class=\"tu-editorial-container\".*?</div>)\s*```", response_text, re.DOTALL)
     if html_match:
         result["html_code"] = html_match.group(1).strip()
     else:
-        # Fallback if markdown block wasn't fenced
+        # Fallback if markdown fence was omitted
         raw_div = re.search(r"(<div class=\"tu-editorial-container\".*?</div>)", response_text, re.DOTALL)
         if raw_div:
             result["html_code"] = raw_div.group(1).strip()
 
     return result
-
-def validate_yoast_seo(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Validates green score criteria according to Yoast SEO guidelines.
-    """
-    report = {"passed": True, "checks": {}}
-    meta_len = len(data.get("meta_description", ""))
-    report["checks"]["meta_description_length"] = {
-        "value": meta_len,
-        "valid": 140 <= meta_len <= 156,
-        "detail": f"{meta_len} chars (target: 140-156)"
-    }
-    
-    fk = data.get("focus_keyphrase", "").lower()
-    report["checks"]["keyphrase_in_title"] = {
-        "valid": bool(fk and data.get("seo_title", "").lower().startswith(fk)),
-        "detail": "Focus keyphrase at start of SEO Title"
-    }
-    report["checks"]["keyphrase_in_slug"] = {
-        "valid": bool(fk and fk.replace(" ", "-") in data.get("slug", "").lower()),
-        "detail": "Focus keyphrase present in slug"
-    }
-    
-    report["passed"] = all(c["valid"] for c in report["checks"].values())
-    return report
