@@ -1,0 +1,49 @@
+name: Automated Yoast SEO Audit
+
+on:
+  push:
+    paths:
+      - 'articles/**'
+  pull_request:
+    paths:
+      - 'articles/**'
+
+jobs:
+  seo-audit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Audit All Published Articles
+      run: |
+        python -c '
+        import glob, json, sys
+        from seo_validator import YoastSEOValidator
+        
+        all_passed = True
+        for html_file in glob.glob("articles/*.html"):
+            base = html_file.replace(".html", "")
+            meta_file = f"{base}-metadata.json"
+            print(f"Auditing: {html_file}")
+            
+            with open(html_file, encoding="utf-8") as f:
+                html = f.read()
+            with open(meta_file, encoding="utf-8") as f:
+                meta = json.load(f)
+                yoast = meta.get("yoast_seo", meta)
+                
+            report = YoastSEOValidator.evaluate(yoast, html)
+            if not report["is_all_green"]:
+                print(f"FAILED {html_file}: {report[\"errors\"]}")
+                all_passed = False
+            else:
+                print(f"PASSED {html_file}: All Green (Score: 100)")
+                
+        if not all_passed:
+            sys.exit(1)
+        '
