@@ -164,6 +164,38 @@ class EditorialComponents:
       padding-top: 12px;
       margin-top: 12px;
     }}
+    .tu-takeaways-card {{
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 28px 0;
+    }}
+    .tu-takeaways-card h3 {{
+      font-size: 16px;
+      font-weight: 700;
+      color: #15803d;
+      margin: 0 0 12px 0;
+    }}
+    .tu-takeaways-card ul {{
+      margin: 0;
+      padding-left: 20px;
+      color: #166534;
+    }}
+    .tu-takeaways-card li {{ margin-bottom: 6px; }}
+    .tu-author-card {{
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }}
+    .tu-author-info h4 {{ margin: 0 0 4px 0; font-size: 16px; color: #0f172a; }}
+    .tu-author-info p {{ margin: 0; font-size: 13px; color: #64748b; }}
 """
 
     @classmethod
@@ -208,6 +240,26 @@ class EditorialComponents:
         return f"""    <div class="tu-highlight-card">
       <h3>{title}</h3>
       <p>{body_text}</p>
+    </div>"""
+
+    @classmethod
+    def render_key_takeaways(cls, items: List[str], heading: str = "Poin-Poin Kunci") -> str:
+        li_elements = "\n".join(f"        <li>{item}</li>" for item in items)
+        return f"""    <div class="tu-takeaways-card">
+      <h3>{heading}</h3>
+      <ul>
+{li_elements}
+      </ul>
+    </div>"""
+
+    @classmethod
+    def render_author_card(cls, author_name: str, author_role: str, bio_text: str = "") -> str:
+        bio_html = f"\n        <p class=\"tu-author-bio\">{bio_text}</p>" if bio_text else ""
+        return f"""    <div class="tu-author-card">
+      <div class="tu-author-info">
+        <h4>{author_name}</h4>
+        <p class="tu-author-role">{author_role}</p>{bio_html}
+      </div>
     </div>"""
 
     @classmethod
