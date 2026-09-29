@@ -56,3 +56,65 @@ class ArticleExporter:
             html_content
         ]
         return "\n".join(frontmatter)
+
+    @staticmethod
+    def to_html_document(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Wraps scoped HTML in a standalone HTML5 document with OpenGraph and SEO meta tags.
+        """
+        title = metadata.get("seo_title", "")
+        meta_desc = metadata.get("meta_description", "")
+        slug = metadata.get("slug", "")
+        canonical = f"https://bif-pwt.telkomuniversity.ac.id/{slug}/" if slug else ""
+
+        return f"""<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content="{meta_desc}">
+  <meta property="og:title" content="{title}">
+  <meta property="og:description" content="{meta_desc}">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="{canonical}">
+  <style>
+    body {{
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      color: #1e293b;
+    }}
+  </style>
+</head>
+<body>
+{html_content}
+</body>
+</html>"""
+
+    @classmethod
+    def export_bundle(cls, output_dir: Path, slug: str, metadata: Dict[str, Any], html_content: str) -> Dict[str, Path]:
+        """
+        Exports article HTML, standalone page, markdown with frontmatter, and Elementor JSON.
+        """
+        output_dir.mkdir(parents=True, exist_ok=True)
+        paths: Dict[str, Path] = {}
+
+        html_path = output_dir / f"{slug}.html"
+        html_path.write_text(html_content, encoding="utf-8")
+        paths["html"] = html_path
+
+        standalone_path = output_dir / f"{slug}_standalone.html"
+        standalone_path.write_text(cls.to_html_document(metadata, html_content), encoding="utf-8")
+        paths["standalone_html"] = standalone_path
+
+        md_path = output_dir / f"{slug}.md"
+        md_path.write_text(cls.to_markdown_with_frontmatter(metadata, html_content), encoding="utf-8")
+        paths["markdown"] = md_path
+
+        elementor_path = output_dir / f"{slug}_elementor.json"
+        elementor_data = cls.to_elementor_json(metadata.get("seo_title", slug), html_content)
+        elementor_path.write_text(json.dumps(elementor_data, indent=2), encoding="utf-8")
+        paths["elementor_json"] = elementor_path
+
+        return paths
