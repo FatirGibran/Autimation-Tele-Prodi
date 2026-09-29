@@ -26,16 +26,25 @@ class HTMLSanitizer:
                 warnings.append("Missing root .tu-editorial-container; auto-wrapping.")
                 cleaned = f'<div class="tu-editorial-container">\n{cleaned}\n</div>'
 
-        # 2. Strip dangerous script tags
+        # 2. Strip dangerous script, iframe, object, and embed tags
         if "<script" in cleaned.lower():
             warnings.append("Stripped dangerous <script> tag from HTML.")
             cleaned = re.sub(r"<script[^>]*>.*?</script>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
 
-        # 3. Strip inline event handlers (onclick, onload, etc.)
+        if re.search(r"<(iframe|object|embed)", cleaned, re.IGNORECASE):
+            warnings.append("Stripped dangerous embedded tags (iframe/object/embed).")
+            cleaned = re.sub(r"<(iframe|object|embed)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+            cleaned = re.sub(r"<(iframe|object|embed)[^>]*/>", "", cleaned, flags=re.IGNORECASE)
+
+        # 3. Strip inline event handlers (onclick, onload, etc.) and javascript: schemes
         inline_handler_regex = r'\s+(on\w+)=["\'][^"\']*["\']'
         if re.search(inline_handler_regex, cleaned, re.IGNORECASE):
             warnings.append("Stripped inline event handlers.")
             cleaned = re.sub(inline_handler_regex, "", cleaned, flags=re.IGNORECASE)
+
+        if "javascript:" in cleaned.lower():
+            warnings.append("Removed javascript: URI pseudo-protocol.")
+            cleaned = re.sub(r'(href|src)=["\']javascript:[^"\']*["\']', r'\1="#"', cleaned, flags=re.IGNORECASE)
 
         # 4. Enforce rel="noopener noreferrer" on external links
         def fix_link(match):
