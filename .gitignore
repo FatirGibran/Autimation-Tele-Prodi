@@ -7,3 +7,5 @@ output/
 venv/
 .venv/
 editorial.db
+backups/
+*.db-journal
