@@ -37,5 +37,18 @@ class TestYoastSEOValidator(unittest.TestCase):
         report = YoastSEOValidator.evaluate(invalid_meta, self.html_content)
         self.assertFalse(report["checks"]["keyphrase_in_title_start"]["passed"])
 
+    def test_title_length_validation(self):
+        # Too short (< 30)
+        short_meta = self.metadata.copy()
+        short_meta["seo_title"] = "WebAssembly IoT"
+        report = YoastSEOValidator.evaluate(short_meta, self.html_content)
+        self.assertFalse(report["checks"]["seo_title_length"]["passed"])
+
+    def test_readability_analysis(self):
+        report = YoastSEOValidator.evaluate(self.metadata, self.html_content)
+        self.assertIn("readability", report)
+        self.assertGreater(report["readability"]["total_sentences"], 0)
+        self.assertIn("avg_words_per_sentence", report["readability"])
+
 if __name__ == "__main__":
     unittest.main()
