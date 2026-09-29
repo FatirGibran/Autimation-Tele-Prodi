@@ -9,6 +9,8 @@ from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
 from storage import StorageManager
 
+from exporter import ArticleExporter
+
 storage = StorageManager(settings.db_path)
 
 def cmd_audit(args):
@@ -48,6 +50,43 @@ def cmd_list(args):
     for a in articles:
         print(f"{a['id']:<4} | {a['publish_date']:<12} | {a['focus_keyphrase'][:28]:<30} | {a['status']:<10} | {a['slug']}")
 
+def cmd_stats(args):
+    stats = storage.get_statistics()
+    print("=== Statistik Database Editorial ===")
+    print(f"Total Artikel      : {stats['total_articles']}")
+    print(f"Terpublikasi/WP    : {stats['published_count']}")
+    print(f"Siap Terbit (Ready): {stats['ready_count']}")
+    print(f"Perlu Review       : {stats['needs_review_count']}")
+
+def cmd_search(args):
+    results = storage.search_articles(args.query, limit=args.limit)
+    if not results:
+        print(f"Tidak ditemukan artikel dengan kata kunci '{args.query}'.")
+        return
+
+    print(f"Ditemukan {len(results)} artikel untuk query '{args.query}':")
+    print(f"{'ID':<4} | {'TANGGAL':<12} | {'KEYPHRASE':<30} | {'SLUG'}")
+    print("-" * 75)
+    for a in results:
+        print(f"{a['id']:<4} | {a['publish_date']:<12} | {a['focus_keyphrase'][:28]:<30} | {a['slug']}")
+
+def cmd_export(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_dir = Path(args.out)
+    paths = ArticleExporter.export_bundle(
+        output_dir=out_dir,
+        slug=article["slug"],
+        metadata=article,
+        html_content=article.get("html_content", "")
+    )
+    print(f"Export selesai ke direktori: {out_dir}")
+    for k, p in paths.items():
+        print(f" - [{k}]: {p}")
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -62,6 +101,22 @@ def main():
     list_parser = subparsers.add_parser("list", help="Tampilkan daftar artikel di database")
     list_parser.add_argument("--limit", type=int, default=20, help="Jumlah maksimal data")
     list_parser.set_defaults(func=cmd_list)
+
+    # Stats command
+    stats_parser = subparsers.add_parser("stats", help="Tampilkan statistik ringkas database editorial")
+    stats_parser.set_defaults(func=cmd_stats)
+
+    # Search command
+    search_parser = subparsers.add_parser("search", help="Cari artikel berdasarkan kata kunci")
+    search_parser.add_argument("--query", required=True, help="Kata kunci pencarian")
+    search_parser.add_argument("--limit", type=int, default=20, help="Batas jumlah hasil")
+    search_parser.set_defaults(func=cmd_search)
+
+    # Export command
+    export_parser = subparsers.add_parser("export", help="Export artikel ke format bundle (HTML, Standalone, MD, Elementor)")
+    export_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    export_parser.add_argument("--out", default="output", help="Direktori tujuan export")
+    export_parser.set_defaults(func=cmd_export)
 
     args = parser.parse_args()
     args.func(args)
