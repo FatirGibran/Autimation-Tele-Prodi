@@ -45,5 +45,27 @@ Poin Utama:
         self.assertEqual(parsed["slug"], "edge-ai-microcontrollers")
         self.assertTrue(parsed["html_code"].startswith('<div class="tu-editorial-container">'))
 
+    def test_extract_headings(self):
+        from parser import extract_headings
+        html = """
+        <div class="tu-editorial-container">
+            <h1>Judul Utama</h1>
+            <h2>Subheading <strong>Pertama</strong></h2>
+            <p>Paragraf</p>
+            <h3>Sub-sub</h3>
+        </div>
+        """
+        headings = extract_headings(html)
+        self.assertEqual(len(headings), 3)
+        self.assertEqual(headings[0], {"tag": "h1", "text": "Judul Utama"})
+        self.assertEqual(headings[1], {"tag": "h2", "text": "Subheading Pertama"})
+        self.assertEqual(headings[2], {"tag": "h3", "text": "Sub-sub"})
+
+    def test_strip_markdown_formatting(self):
+        from parser import strip_markdown_formatting
+        raw = "### **Teks Tebal** dan *miring* serta `kode` dan [tautan](https://example.com)"
+        cleaned = strip_markdown_formatting(raw)
+        self.assertEqual(cleaned, "Teks Tebal dan miring serta kode dan tautan")
+
 if __name__ == "__main__":
     unittest.main()
