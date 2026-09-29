@@ -40,5 +40,25 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Docker", grid)
         self.assertIn("Wasm", grid)
 
+    def test_render_key_takeaways(self):
+        card = EditorialComponents.render_key_takeaways(
+            items=["Kinerja tinggi", "Sandbox aman", "Hemat energi"],
+            heading="Poin Inti Wasm"
+        )
+        self.assertIn("tu-takeaways-card", card)
+        self.assertIn("Poin Inti Wasm", card)
+        self.assertIn("Sandbox aman", card)
+
+    def test_render_author_card(self):
+        author = EditorialComponents.render_author_card(
+            author_name="Dr. Budi Santoso",
+            author_role="Dosen Riset IoT",
+            bio_text="Fokus riset smart sensor."
+        )
+        self.assertIn("tu-author-card", author)
+        self.assertIn("Dr. Budi Santoso", author)
+        self.assertIn("Dosen Riset IoT", author)
+        self.assertIn("Fokus riset smart sensor.", author)
+
 if __name__ == "__main__":
     unittest.main()
