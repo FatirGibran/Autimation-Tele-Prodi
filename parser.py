@@ -106,3 +106,27 @@ def parse_llm_response(response_text: str) -> Dict[str, Any]:
             result["html_code"] = raw_div.group(1).strip()
 
     return result
+
+def extract_headings(html_content: str) -> List[Dict[str, str]]:
+    """
+    Extracts structured headings (h1-h6) from HTML markup.
+    """
+    headings: List[Dict[str, str]] = []
+    pattern = re.compile(r"<(h[1-6])[^>]*>(.*?)</\1>", re.IGNORECASE | re.DOTALL)
+    for match in pattern.finditer(html_content):
+        tag = match.group(1).lower()
+        raw_text = match.group(2)
+        clean_text = re.sub(r"<[^>]+>", "", raw_text).strip()
+        headings.append({"tag": tag, "text": clean_text})
+    return headings
+
+def strip_markdown_formatting(text: str) -> str:
+    """
+    Strips common Markdown formatting symbols leaving clean text.
+    """
+    cleaned = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
+    cleaned = re.sub(r"\*([^*]+)\*", r"\1", cleaned)
+    cleaned = re.sub(r"`([^`]+)`", r"\1", cleaned)
+    cleaned = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", cleaned)
+    cleaned = re.sub(r"^#+\s*", "", cleaned, flags=re.MULTILINE)
+    return cleaned.strip()
