@@ -75,6 +75,18 @@ class YoastSEOValidator:
         if not is_fk_in_title_start:
             results["errors"].append("SEO title must start with the focus keyphrase.")
 
+        # 4b. SEO Title Length (30 - 65 characters)
+        title_len = len(title)
+        is_title_len_ok = 30 <= title_len <= 65
+        results["checks"]["seo_title_length"] = {
+            "status": "green" if is_title_len_ok else "red",
+            "value": title_len,
+            "target": "30 - 65 characters",
+            "passed": is_title_len_ok
+        }
+        if not is_title_len_ok:
+            results["errors"].append(f"SEO title length is {title_len} chars (optimal 30-65 chars).")
+
         # 5. Focus Keyphrase in Slug
         expected_slug = fk.replace(" ", "-")
         is_fk_in_slug = bool(fk and (expected_slug in slug or all(w in slug for w in fk.split())))
@@ -157,8 +169,29 @@ class YoastSEOValidator:
             "optimal": 0.5 <= density <= 3.0
         }
 
+        results["readability"] = cls.analyze_readability(body_text)
+
         all_passed = all(c["passed"] for c in results["checks"].values())
         results["is_all_green"] = all_passed
         results["score"] = 100 if all_passed else max(0, 100 - len(results["errors"]) * 10)
 
         return results
+
+    @classmethod
+    def analyze_readability(cls, text: str) -> Dict[str, Any]:
+        sentences = [s.strip() for s in re.split(r'[.!?]+', text) if s.strip()]
+        total_sentences = len(sentences)
+        if total_sentences == 0:
+            return {"total_sentences": 0, "avg_words_per_sentence": 0.0, "long_sentences_pct": 0.0, "is_readable": True}
+
+        words_per_sentence = [len(s.split()) for s in sentences]
+        long_sentences = [w for w in words_per_sentence if w > 20]
+        long_pct = (len(long_sentences) / total_sentences) * 100
+        avg_words = sum(words_per_sentence) / total_sentences
+
+        return {
+            "total_sentences": total_sentences,
+            "avg_words_per_sentence": round(avg_words, 1),
+            "long_sentences_pct": round(long_pct, 1),
+            "is_readable": long_pct <= 30.0
+        }
