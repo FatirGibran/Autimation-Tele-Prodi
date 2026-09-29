@@ -1,5 +1,16 @@
-from typing import Dict, Any, List
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from typing import Dict, Any, List, Optional
+
+try:
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+except ImportError:
+    class InlineKeyboardButton:
+        def __init__(self, text: str, callback_data: Optional[str] = None, **kwargs):
+            self.text = text
+            self.callback_data = callback_data
+
+    class InlineKeyboardMarkup:
+        def __init__(self, inline_keyboard: List[List[Any]]):
+            self.inline_keyboard = inline_keyboard
 
 class TelegramFormatter:
     @staticmethod
@@ -45,3 +56,29 @@ class TelegramFormatter:
             InlineKeyboardButton("🔍 Audit Ulang SEO", callback_data=f"re_audit:{slug}")
         ])
         return InlineKeyboardMarkup(buttons)
+
+    @staticmethod
+    def format_stats_report(stats: Dict[str, Any]) -> str:
+        lines = [
+            "📊 **Ringkasan Statistik Editorial**\n",
+            f"• 📚 Total Artikel: `{stats.get('total_articles', 0)}`",
+            f"• 🚀 Terpublikasi / WP Draft: `{stats.get('published_count', 0)}`",
+            f"• 🟢 Siap Terbit (Ready): `{stats.get('ready_count', 0)}`",
+            f"• 🟡 Perlu Review: `{stats.get('needs_review_count', 0)}`",
+        ]
+        return "\n".join(lines)
+
+    @staticmethod
+    def format_article_summary_card(article: Dict[str, Any]) -> str:
+        lines = [
+            f"📄 **Detail Artikel (ID: {article.get('id', 'N/A')})**\n",
+            f"📌 **Judul:** {article.get('seo_title', article.get('topic', ''))}",
+            f"🏷️ **Kategori:** {article.get('category', 'N/A')}",
+            f"📅 **Tanggal:** {article.get('publish_date', 'N/A')}",
+            f"🎯 **Keyphrase:** `{article.get('focus_keyphrase', '')}`",
+            f"🔗 **Slug:** `{article.get('slug', '')}`",
+            f"📊 **Status:** `{article.get('status', 'draft')}`",
+        ]
+        if article.get("wp_post_id"):
+            lines.append(f"🌐 **WP Post ID:** `{article['wp_post_id']}`")
+        return "\n".join(lines)
