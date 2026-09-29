@@ -3,13 +3,23 @@ import io
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
+from storage import StorageManager
 import cli
 
 class TestCLI(unittest.TestCase):
     def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.test_db = Path(self.temp_dir.name) / "test_cli.db"
+        self.orig_storage = cli.storage
+        cli.storage = StorageManager(self.test_db)
+
         self.articles_dir = Path(__file__).parent.parent / "articles"
         self.html_file = self.articles_dir / "2026-09-28-webassembly-edge-computing-iot.html"
         self.meta_file = self.articles_dir / "2026-09-28-webassembly-edge-computing-iot-metadata.json"
+
+    def tearDown(self):
+        cli.storage = self.orig_storage
+        self.temp_dir.cleanup()
 
     def test_cmd_audit(self):
         class Args:
