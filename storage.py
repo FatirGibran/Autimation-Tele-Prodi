@@ -91,3 +91,48 @@ class StorageManager:
                 "UPDATE articles SET wp_post_id = ?, status = ? WHERE id = ?",
                 (wp_post_id, status, article_id)
             )
+
+    def get_article_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM articles WHERE slug = ?", (slug.strip().lower(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_article_by_id(self, article_id: int) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM articles WHERE id = ?", (article_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def search_articles(self, query: str, limit: int = 20) -> List[Dict[str, Any]]:
+        pattern = f"%{query.strip().lower()}%"
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                SELECT * FROM articles
+                WHERE LOWER(topic) LIKE ?
+                   OR LOWER(focus_keyphrase) LIKE ?
+                   OR LOWER(seo_title) LIKE ?
+                ORDER BY id DESC LIMIT ?
+                """,
+                (pattern, pattern, pattern, limit)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def delete_article(self, article_id: int) -> bool:
+        with self._get_connection() as conn:
+            cursor = conn.execute("DELETE FROM articles WHERE id = ?", (article_id,))
+            return cursor.rowcount > 0
+
+    def get_statistics(self) -> Dict[str, Any]:
+        with self._get_connection() as conn:
+            total = conn.execute("SELECT COUNT(1) FROM articles").fetchone()[0]
+            published = conn.execute("SELECT COUNT(1) FROM articles WHERE status IN ('published', 'draft_in_wp')").fetchone()[0]
+            ready = conn.execute("SELECT COUNT(1) FROM articles WHERE status = 'ready'").fetchone()[0]
+            needs_review = conn.execute("SELECT COUNT(1) FROM articles WHERE status = 'needs_review'").fetchone()[0]
+            return {
+                "total_articles": total,
+                "published_count": published,
+                "ready_count": ready,
+                "needs_review_count": needs_review,
+            }
