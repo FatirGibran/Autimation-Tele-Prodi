@@ -1,0 +1,77 @@
+import unittest
+import io
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+import cli
+
+class TestCLI(unittest.TestCase):
+    def setUp(self):
+        self.articles_dir = Path(__file__).parent.parent / "articles"
+        self.html_file = self.articles_dir / "2026-09-28-webassembly-edge-computing-iot.html"
+        self.meta_file = self.articles_dir / "2026-09-28-webassembly-edge-computing-iot-metadata.json"
+
+    def test_cmd_audit(self):
+        class Args:
+            html = str(self.html_file)
+            meta = str(self.meta_file)
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_audit(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Yoast SEO Status: ALL GREEN", output)
+            self.assertIn("Score: 100/100", output)
+
+    def test_cmd_stats(self):
+        class Args:
+            pass
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_stats(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Statistik Database Editorial", output)
+            self.assertIn("Total Artikel", output)
+
+    def test_cmd_search_empty(self):
+        class Args:
+            query = "nonexistent-query-string-xyz"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_search(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Tidak ditemukan artikel", output)
+
+    def test_cmd_export(self):
+        # Save a test article first
+        slug = "cli-export-test-slug"
+        cli.storage.save_article({
+            "topic": "Test Export",
+            "category": "Test",
+            "publish_date": "2026-09-29",
+            "focus_keyphrase": "test export",
+            "seo_title": "Test Export CLI",
+            "slug": slug,
+            "meta_description": "Test export CLI meta description sample text.",
+            "html_content": "<div class='tu-editorial-container'><p>CLI Content</p></div>",
+            "status": "ready"
+        })
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            class Args:
+                pass
+            args = Args()
+            args.slug = slug
+            args.out = tmp_dir
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_export(args)
+                output = fake_out.getvalue()
+                self.assertIn("Export selesai ke direktori", output)
+
+            out_path = Path(tmp_dir)
+            self.assertTrue((out_path / f"{slug}.html").exists())
+            self.assertTrue((out_path / f"{slug}_elementor.json").exists())
+
+if __name__ == "__main__":
+    unittest.main()
