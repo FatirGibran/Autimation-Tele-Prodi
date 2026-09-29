@@ -24,5 +24,18 @@ class TestHTMLSanitizer(unittest.TestCase):
         clean, _ = HTMLSanitizer.sanitize(html)
         self.assertIn('loading="lazy"', clean)
 
+    def test_strip_iframe_and_embed(self):
+        malicious = '<div class="tu-editorial-container"><iframe src="https://attacker.com"></iframe><embed src="test.swf" /><p>Safe</p></div>'
+        clean, warnings = HTMLSanitizer.sanitize(malicious)
+        self.assertNotIn("<iframe", clean)
+        self.assertNotIn("<embed", clean)
+        self.assertIn("Safe", clean)
+
+    def test_strip_javascript_uri(self):
+        html = '<div class="tu-editorial-container"><a href="javascript:alert(1)">Click Me</a></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("javascript:", clean)
+        self.assertIn('href="#"', clean)
+
 if __name__ == "__main__":
     unittest.main()
