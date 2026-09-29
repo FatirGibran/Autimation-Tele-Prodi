@@ -28,5 +28,33 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("focus_keyphrase: \"keyphrase test\"", md)
         self.assertIn("<p>Hello</p>", md)
 
+    def test_to_html_document(self):
+        meta = {
+            "seo_title": "Standalone Doc Title",
+            "meta_description": "Standalone meta description.",
+            "slug": "standalone-slug"
+        }
+        doc = ArticleExporter.to_html_document(meta, "<div class='tu-editorial-container'>Body</div>")
+        self.assertIn("<!DOCTYPE html>", doc)
+        self.assertIn("<title>Standalone Doc Title</title>", doc)
+        self.assertIn('property="og:title" content="Standalone Doc Title"', doc)
+        self.assertIn("standalone-slug", doc)
+
+    def test_export_bundle(self):
+        import tempfile
+        from pathlib import Path
+        meta = {
+            "seo_title": "Bundle Title",
+            "meta_description": "Bundle description.",
+            "slug": "bundle-slug"
+        }
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir)
+            paths = ArticleExporter.export_bundle(out_dir, "bundle-slug", meta, "<p>Bundle Content</p>")
+            self.assertTrue(paths["html"].exists())
+            self.assertTrue(paths["standalone_html"].exists())
+            self.assertTrue(paths["markdown"].exists())
+            self.assertTrue(paths["elementor_json"].exists())
+
 if __name__ == "__main__":
     unittest.main()
