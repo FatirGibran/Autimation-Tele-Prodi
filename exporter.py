@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 class ArticleExporter:
     @staticmethod
@@ -142,4 +142,45 @@ class ArticleExporter:
         if metadata.get("image_url"):
             data["image"] = [metadata["image_url"]]
         return json.dumps(data, indent=2, ensure_ascii=False)
+
+    @staticmethod
+    def generate_rss_feed(articles: List[Dict[str, Any]], channel_info: Dict[str, str]) -> str:
+        """
+        Generates standard RSS 2.0 XML feed from a list of articles.
+        """
+        from xml.sax.saxutils import escape
+
+        ch_title = escape(channel_info.get("title", "Portal Riset & Berita S1 Teknik Informatika"))
+        ch_link = escape(channel_info.get("link", "https://bif-pwt.telkomuniversity.ac.id"))
+        ch_desc = escape(channel_info.get("description", "Publikasi berkala seputar inovasi teknologi, riset, dan prestasi prodi."))
+
+        items_xml = []
+        for art in articles:
+            item_title = escape(art.get("seo_title", art.get("topic", "")))
+            slug = art.get("slug", "")
+            item_link = f"https://bif-pwt.telkomuniversity.ac.id/{slug}/" if slug else ch_link
+            item_desc = escape(art.get("meta_description", ""))
+            pub_date = escape(art.get("publish_date", ""))
+            cat = escape(art.get("category", "Umum"))
+            items_xml.append(f"""    <item>
+      <title>{item_title}</title>
+      <link>{item_link}</link>
+      <guid>{item_link}</guid>
+      <pubDate>{pub_date}</pubDate>
+      <category>{cat}</category>
+      <description>{item_desc}</description>
+    </item>""")
+
+        body = "\n".join(items_xml)
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>{ch_title}</title>
+    <link>{ch_link}</link>
+    <description>{ch_desc}</description>
+    <language>id-ID</language>
+{body}
+  </channel>
+</rss>"""
+
 
