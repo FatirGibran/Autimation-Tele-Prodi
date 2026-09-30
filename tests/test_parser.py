@@ -1,5 +1,5 @@
 import unittest
-from parser import parse_telegram_input, parse_llm_response, clean_url, DEFAULT_PLACEHOLDER_IMG
+from parser import parse_telegram_input, parse_llm_response, clean_url, DEFAULT_PLACEHOLDER_IMG, calculate_reading_time
 
 class TestParser(unittest.TestCase):
     def test_clean_url_with_markdown(self):
@@ -84,6 +84,13 @@ Poin Utama:
         self.assertIn("<th>Docker</th>", html)
         self.assertIn("<td>100MB</td>", html)
         self.assertIn("<td>2MB</td>", html)
+
+    def test_calculate_reading_time(self):
+        short_text = "Kata " * 50
+        medium_text = "Kata " * 400
+        self.assertEqual(calculate_reading_time(""), "1 Menit Baca")
+        self.assertEqual(calculate_reading_time(short_text), "1 Menit Baca")
+        self.assertEqual(calculate_reading_time(medium_text), "2 Menit Baca")
 
 if __name__ == "__main__":
     unittest.main()
