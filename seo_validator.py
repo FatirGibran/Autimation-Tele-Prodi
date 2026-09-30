@@ -63,6 +63,37 @@ class YoastSEOValidator:
             "passed": len(flagged_links) == 0
         }
 
+    @classmethod
+    def check_keyword_cannibalization(cls, keyphrase: str, existing_keyphrases: List[str], threshold: float = 0.8) -> Dict[str, Any]:
+        """
+        Detects potential keyword cannibalization against existing published article keyphrases.
+        """
+        target_tokens = set(re.findall(r"\b\w+\b", keyphrase.lower()))
+        if not target_tokens:
+            return {"cannibalized": False, "conflicts": []}
+
+        conflicts = []
+        for existing in existing_keyphrases:
+            norm_existing = existing.strip().lower()
+            if not norm_existing:
+                continue
+            if norm_existing == keyphrase.strip().lower():
+                conflicts.append({"keyphrase": existing, "similarity": 1.0, "exact": True})
+                continue
+            exist_tokens = set(re.findall(r"\b\w+\b", norm_existing))
+            if not exist_tokens:
+                continue
+            intersection = target_tokens.intersection(exist_tokens)
+            union = target_tokens.union(exist_tokens)
+            jaccard = len(intersection) / len(union)
+            if jaccard >= threshold:
+                conflicts.append({"keyphrase": existing, "similarity": round(jaccard, 2), "exact": False})
+
+        return {
+            "cannibalized": len(conflicts) > 0,
+            "conflicts": conflicts
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
