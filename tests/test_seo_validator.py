@@ -100,5 +100,18 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(audit["flagged_links"][0]["anchor"], "klik di sini")
         self.assertFalse(audit["passed"])
 
+    def test_keyword_cannibalization(self):
+        existing = [
+            "webassembly edge computing iot",
+            "arsitektur microservices telkom",
+            "optimasi query mysql"
+        ]
+        exact_check = YoastSEOValidator.check_keyword_cannibalization("WebAssembly Edge Computing IoT", existing)
+        self.assertTrue(exact_check["cannibalized"])
+        self.assertTrue(exact_check["conflicts"][0]["exact"])
+
+        unique_check = YoastSEOValidator.check_keyword_cannibalization("keamanan siber quantum", existing)
+        self.assertFalse(unique_check["cannibalized"])
+
 if __name__ == "__main__":
     unittest.main()
