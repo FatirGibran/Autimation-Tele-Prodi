@@ -120,5 +120,27 @@ class TestCLI(unittest.TestCase):
             self.assertIn("ok", output)
             self.assertIn("Berhasil", output)
 
+    def test_cmd_sitemap(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".xml", delete=False) as tf:
+            temp_sitemap = tf.name
+
+        try:
+            class Args:
+                out = temp_sitemap
+                base_url = "https://bif-pwt.telkomuniversity.ac.id"
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_sitemap(Args())
+                output = fake_out.getvalue()
+                self.assertIn("Sitemap XML berhasil dibuat", output)
+
+            content = Path(temp_sitemap).read_text(encoding="utf-8")
+            self.assertIn("<urlset", content)
+            self.assertIn("https://bif-pwt.telkomuniversity.ac.id", content)
+        finally:
+            if Path(temp_sitemap).exists():
+                Path(temp_sitemap).unlink()
+
 if __name__ == "__main__":
     unittest.main()
