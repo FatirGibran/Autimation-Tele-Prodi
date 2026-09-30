@@ -462,6 +462,32 @@ class EditorialComponents:
       <pre class="tu-code-body"><code>{escaped_code}</code></pre>
     </div>"""
 
+    @classmethod
+    def render_timeline_component(cls, events: List[Dict[str, str]]) -> str:
+        """
+        Renders a responsive academic and event roadmap timeline.
+        """
+        nodes = []
+        for ev in events:
+            date = ev.get("date", "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            title = ev.get("title", "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            desc = ev.get("description", "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            nodes.append(
+                f"""      <div class="tu-timeline-item">
+        <div class="tu-timeline-badge"></div>
+        <div class="tu-timeline-content">
+          <span class="tu-timeline-date">{date}</span>
+          <h4 class="tu-timeline-title">{title}</h4>
+          <p class="tu-timeline-desc">{desc}</p>
+        </div>
+      </div>"""
+            )
+        timeline_html = "\n".join(nodes)
+        return f"""    <div class="tu-timeline">
+{timeline_html}
+    </div>"""
+
+
 
 
 
