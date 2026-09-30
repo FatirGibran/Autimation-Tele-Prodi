@@ -49,5 +49,20 @@ class TestWebhookServer(unittest.TestCase):
             urllib.request.urlopen(req)
         self.assertEqual(ctx.exception.code, 400)
 
+    def test_verify_hmac_sha256(self):
+        import hmac
+        import hashlib
+        from webhook_server import verify_hmac_sha256
+
+        secret = "my-secret-key-123"
+        payload = b'{"event": "ping"}'
+        sig = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+
+        self.assertTrue(verify_hmac_sha256(payload, sig, secret))
+        self.assertTrue(verify_hmac_sha256(payload, f"sha256={sig}", secret))
+        self.assertFalse(verify_hmac_sha256(payload, "invalid_sig", secret))
+        self.assertFalse(verify_hmac_sha256(payload, sig, "wrong_secret"))
+        self.assertFalse(verify_hmac_sha256(payload, "", secret))
+
 if __name__ == "__main__":
     unittest.main()
