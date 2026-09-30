@@ -132,6 +132,20 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Kurikulum prodi sangat aplikatif!", card)
         self.assertIn("tu-alumni-avatar", card)
 
+    def test_render_feature_matrix(self):
+        cols = ["Materi", "S1 Sains Data", "Sertifikasi Singkat"]
+        rows = [
+            {"feature": "Fondasi Teori Matematika", "values": [True, False]},
+            {"feature": "Portofolio Industri Terverifikasi", "values": [True, True]},
+            {"feature": "Durasi Studi", "values": ["8 Semester", "3 Bulan"]}
+        ]
+        matrix = EditorialComponents.render_feature_matrix(cols, rows)
+        self.assertIn("tu-feature-matrix", matrix)
+        self.assertIn("<th>S1 Sains Data</th>", matrix)
+        self.assertIn("tu-matrix-check", matrix)
+        self.assertIn("tu-matrix-cross", matrix)
+        self.assertIn("8 Semester", matrix)
+
 if __name__ == "__main__":
     unittest.main()
 
