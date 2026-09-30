@@ -66,5 +66,30 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(mock_urlopen.call_count, 2)
         mock_sleep.assert_called_once()
 
+    @patch("urllib.request.urlopen")
+    def test_get_or_create_category_existing(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 42, "name": "Artificial Intelligence"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        cat_id = self.client.get_or_create_category("Artificial Intelligence")
+        self.assertEqual(cat_id, 42)
+
+    @patch("urllib.request.urlopen")
+    def test_get_or_create_tag_new(self, mock_urlopen):
+        # 1st call (search): returns empty list [], 2nd call (post): returns created tag {"id": 88}
+        search_resp = MagicMock()
+        search_resp.read.return_value = b'[]'
+        create_resp = MagicMock()
+        create_resp.read.return_value = b'{"id": 88, "name": "wasm"}'
+
+        mock_urlopen.side_effect = [
+            MagicMock(__enter__=MagicMock(return_value=search_resp)),
+            MagicMock(__enter__=MagicMock(return_value=create_resp))
+        ]
+
+        tag_id = self.client.get_or_create_tag("wasm")
+        self.assertEqual(tag_id, 88)
+
 if __name__ == "__main__":
     unittest.main()
