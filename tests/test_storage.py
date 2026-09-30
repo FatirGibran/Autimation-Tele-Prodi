@@ -104,5 +104,24 @@ class TestStorageManager(unittest.TestCase):
         self.assertIsNone(self.storage.get_article_by_id(art_id))
         self.assertFalse(self.storage.delete_article(99999))
 
+    def test_article_tagging(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Bertag",
+            "category": "IoT",
+            "publish_date": "2026-09-30",
+            "focus_keyphrase": "artikel bertag",
+            "seo_title": "Artikel Bertag untuk Uji",
+            "slug": "artikel-bertag-untuk-uji",
+            "meta_description": "Deskripsi meta untuk artikel bertag dalam unit test.",
+            "status": "draft"
+        })
+        self.storage.add_tags(art_id, ["Wasm", "Edge-Computing", "IoT", "wasm"])
+        tags = self.storage.get_article_tags(art_id)
+        self.assertEqual(tags, ["edge-computing", "iot", "wasm"])
+
+        by_tag = self.storage.get_articles_by_tag("wasm")
+        self.assertEqual(len(by_tag), 1)
+        self.assertEqual(by_tag[0]["id"], art_id)
+
 if __name__ == "__main__":
     unittest.main()
