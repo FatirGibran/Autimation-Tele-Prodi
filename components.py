@@ -194,8 +194,34 @@ class EditorialComponents:
       padding: 16px 20px;
       margin: 28px 0;
     }}
-    .tu-author-info h4 {{ margin: 0 0 4px 0; font-size: 16px; color: #0f172a; }}
-    .tu-author-info p {{ margin: 0; font-size: 13px; color: #64748b; }}
+    .tu-faq-wrap {{
+      margin: 28px 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff;
+    }}
+    .tu-faq-item {{
+      border-bottom: 1px solid #e2e8f0;
+    }}
+    .tu-faq-item:last-child {{
+      border-bottom: none;
+    }}
+    .tu-faq-question {{
+      padding: 14px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #0f172a;
+      cursor: pointer;
+      background: #f8fafc;
+    }}
+    .tu-faq-answer {{
+      padding: 14px 18px;
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.65;
+      background: #ffffff;
+    }}
 """
 
     @classmethod
@@ -271,3 +297,20 @@ class EditorialComponents:
         Dipublikasikan oleh Tim Editorial &amp; Riset S1 Teknik Informatika Telkom University Purwokerto.
       </div>
     </footer>"""
+
+    @classmethod
+    def render_faq_accordion(cls, items: List[Tuple[str, str]], section_title: str = "Pertanyaan Umum (FAQ)") -> str:
+        entries = []
+        for q, a in items:
+            entries.append(
+                f"""      <details class="tu-faq-item">
+        <summary class="tu-faq-question">{q}</summary>
+        <div class="tu-faq-answer">{a}</div>
+      </details>"""
+            )
+        items_html = "\n".join(entries)
+        heading_html = f"    <h2>{section_title}</h2>\n" if section_title else ""
+        return f"""{heading_html}    <div class="tu-faq-wrap">
+{items_html}
+    </div>"""
+
