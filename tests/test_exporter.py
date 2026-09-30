@@ -94,5 +94,18 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('<link>https://bif-pwt.telkomuniversity.ac.id/riset-wasm-edge/</link>', rss_xml)
         self.assertIn('<category>Cloud</category>', rss_xml)
 
+    def test_generate_sitemap_xml(self):
+        articles = [
+            {"slug": "webassembly-edge", "publish_date": "2026-09-28"},
+            {"slug": "ai-kampus-cerdas", "publish_date": "2026-09-29"}
+        ]
+        sitemap = ArticleExporter.generate_sitemap_xml(articles, base_url="https://bif-pwt.telkomuniversity.ac.id")
+        self.assertIn('<?xml version="1.0" encoding="UTF-8"?>', sitemap)
+        self.assertIn('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">', sitemap)
+        self.assertIn('<loc>https://bif-pwt.telkomuniversity.ac.id/</loc>', sitemap)
+        self.assertIn('<loc>https://bif-pwt.telkomuniversity.ac.id/webassembly-edge/</loc>', sitemap)
+        self.assertIn('<lastmod>2026-09-28</lastmod>', sitemap)
+        self.assertIn('<loc>https://bif-pwt.telkomuniversity.ac.id/ai-kampus-cerdas/</loc>', sitemap)
+
 if __name__ == "__main__":
     unittest.main()
