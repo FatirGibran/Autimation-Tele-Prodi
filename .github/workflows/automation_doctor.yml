@@ -25,6 +25,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Initialize Database
+      run: |
+        python -c "from storage import StorageManager; StorageManager('editorial.db')"
+
     - name: Run Environment Doctor
       run: |
         python scripts/env_doctor.py --json
@@ -35,5 +39,4 @@ jobs:
 
     - name: Run Database Backup Test
       run: |
-        python -c "from storage import StorageManager; StorageManager('editorial.db')"
         python scripts/backup_db.py --db editorial.db --dest /tmp/backups
