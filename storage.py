@@ -43,6 +43,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_tag ON article_tags(tag);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_audit_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    old_status TEXT NOT NULL,
+                    new_status TEXT NOT NULL,
+                    note TEXT,
+                    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_article ON article_audit_logs(article_id);")
+
 
     def is_keyphrase_used(self, keyphrase: str) -> bool:
         normalized = keyphrase.strip().lower()
@@ -177,4 +190,27 @@ class StorageManager:
                 (normalized, limit)
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def update_status(self, article_id: int, new_status: str, note: str = "") -> bool:
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT status FROM articles WHERE id = ?", (article_id,))
+            row = cursor.fetchone()
+            if not row:
+                return False
+            old_status = row["status"]
+            conn.execute("UPDATE articles SET status = ? WHERE id = ?", (new_status, article_id))
+            conn.execute(
+                "INSERT INTO article_audit_logs (article_id, old_status, new_status, note) VALUES (?, ?, ?, ?)",
+                (article_id, old_status, new_status, note)
+            )
+            return True
+
+    def get_audit_logs(self, article_id: int) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM article_audit_logs WHERE article_id = ? ORDER BY id ASC",
+                (article_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
 
