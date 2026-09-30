@@ -34,6 +34,15 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_keyphrase ON articles(focus_keyphrase);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_slug ON articles(slug);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_tags (
+                    article_id INTEGER NOT NULL,
+                    tag TEXT NOT NULL,
+                    PRIMARY KEY (article_id, tag),
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_tag ON article_tags(tag);")
 
     def is_keyphrase_used(self, keyphrase: str) -> bool:
         normalized = keyphrase.strip().lower()
@@ -136,3 +145,36 @@ class StorageManager:
                 "ready_count": ready,
                 "needs_review_count": needs_review,
             }
+
+    def add_tags(self, article_id: int, tags: List[str]) -> None:
+        with self._get_connection() as conn:
+            for tag in tags:
+                normalized = tag.strip().lower()
+                if normalized:
+                    conn.execute(
+                        "INSERT OR IGNORE INTO article_tags (article_id, tag) VALUES (?, ?)",
+                        (article_id, normalized)
+                    )
+
+    def get_article_tags(self, article_id: int) -> List[str]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT tag FROM article_tags WHERE article_id = ? ORDER BY tag ASC",
+                (article_id,)
+            )
+            return [row["tag"] for row in cursor.fetchall()]
+
+    def get_articles_by_tag(self, tag: str, limit: int = 50) -> List[Dict[str, Any]]:
+        normalized = tag.strip().lower()
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                SELECT a.* FROM articles a
+                JOIN article_tags t ON a.id = t.article_id
+                WHERE t.tag = ?
+                ORDER BY a.id DESC LIMIT ?
+                """,
+                (normalized, limit)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
