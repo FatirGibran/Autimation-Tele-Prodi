@@ -56,5 +56,22 @@ class TestArticleExporter(unittest.TestCase):
             self.assertTrue(paths["markdown"].exists())
             self.assertTrue(paths["elementor_json"].exists())
 
+    def test_generate_json_ld(self):
+        import json
+        meta = {
+            "seo_title": "IoT Smart Campus Telkom",
+            "meta_description": "Implementasi sensor cerdas di Purwokerto.",
+            "slug": "iot-smart-campus-telkom",
+            "publish_date": "2026-09-30",
+            "image_url": "https://example.com/banner.jpg"
+        }
+        json_ld_str = ArticleExporter.generate_json_ld(meta, article_type="ScholarlyArticle")
+        data = json.loads(json_ld_str)
+        self.assertEqual(data["@context"], "https://schema.org")
+        self.assertEqual(data["@type"], "ScholarlyArticle")
+        self.assertEqual(data["headline"], "IoT Smart Campus Telkom")
+        self.assertIn("https://bif-pwt.telkomuniversity.ac.id/iot-smart-campus-telkom/", data["mainEntityOfPage"]["@id"])
+        self.assertEqual(data["image"], ["https://example.com/banner.jpg"])
+
 if __name__ == "__main__":
     unittest.main()
