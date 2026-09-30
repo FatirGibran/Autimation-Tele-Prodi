@@ -92,5 +92,16 @@ Poin Utama:
         self.assertEqual(calculate_reading_time(short_text), "1 Menit Baca")
         self.assertEqual(calculate_reading_time(medium_text), "2 Menit Baca")
 
+    def test_parse_markdown_callouts(self):
+        from parser import parse_markdown_callouts
+        raw = """> [!NOTE]
+> Ini adalah catatan editorial penting.
+> Mohon diperhatikan baik-baik.
+"""
+        rendered = parse_markdown_callouts(raw)
+        self.assertIn("tu-callout tu-callout-note", rendered)
+        self.assertIn("Catatan", rendered)
+        self.assertIn("Ini adalah catatan editorial penting.", rendered)
+
 if __name__ == "__main__":
     unittest.main()
