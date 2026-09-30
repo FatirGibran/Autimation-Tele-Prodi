@@ -96,6 +96,15 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Bringing the Web up to Speed", block)
         self.assertIn("tu-references-list", block)
 
+    def test_render_code_block(self):
+        sample_code = "fn main() {\n    println!(\"Hello <Wasm>\");\n}"
+        block = EditorialComponents.render_code_block(sample_code, language="rust", filename="main.rs")
+        self.assertIn("tu-code-container", block)
+        self.assertIn("main.rs", block)
+        self.assertIn("tu-code-badge", block)
+        self.assertIn("rust", block)
+        self.assertIn("&lt;Wasm&gt;", block)
+
 if __name__ == "__main__":
     unittest.main()
 
