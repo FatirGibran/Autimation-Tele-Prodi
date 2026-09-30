@@ -47,5 +47,12 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("<circle", clean)
         self.assertTrue(any("SVG" in w for w in warnings))
 
+    def test_strip_dangerous_style_expression(self):
+        style_html = '<div class="tu-editorial-container"><p style="color: red; width: expression(alert(1));">Text</p></div>'
+        clean, warnings = HTMLSanitizer.sanitize(style_html)
+        self.assertNotIn("expression", clean)
+        self.assertIn("color: red", clean)
+        self.assertTrue(any("inline style" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
