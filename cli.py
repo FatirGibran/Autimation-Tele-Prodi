@@ -58,6 +58,12 @@ def cmd_stats(args):
     print(f"Siap Terbit (Ready): {stats['ready_count']}")
     print(f"Perlu Review       : {stats['needs_review_count']}")
 
+def cmd_optimize(args):
+    result = storage.optimize_and_check_integrity()
+    print("=== Optimasi & Pemeliharaan Database ===")
+    print(f"Status Integritas SQLite : {result['integrity_check']}")
+    print(f"Status Pemadatan (VACUUM): {'Berhasil' if result['vacuumed'] else 'Gagal'}")
+
 def cmd_search(args):
     results = storage.search_articles(args.query, limit=args.limit)
     if not results:
@@ -152,6 +158,10 @@ def main():
     # Stats command
     stats_parser = subparsers.add_parser("stats", help="Tampilkan statistik ringkas database editorial")
     stats_parser.set_defaults(func=cmd_stats)
+
+    # Optimize command
+    opt_parser = subparsers.add_parser("optimize", help="Jalankan pemeriksaan integritas dan kompresi VACUUM database SQLite")
+    opt_parser.set_defaults(func=cmd_optimize)
 
     # Search command
     search_parser = subparsers.add_parser("search", help="Cari artikel berdasarkan kata kunci")
