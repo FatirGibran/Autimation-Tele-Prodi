@@ -109,5 +109,16 @@ class TestCLI(unittest.TestCase):
             self.assertTrue(data["valid"])
             self.assertEqual(data["seo_report"]["score"], 100)
 
+    def test_cmd_optimize(self):
+        class Args:
+            pass
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_optimize(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Status Integritas SQLite", output)
+            self.assertIn("ok", output)
+            self.assertIn("Berhasil", output)
+
 if __name__ == "__main__":
     unittest.main()
