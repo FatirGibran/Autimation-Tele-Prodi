@@ -61,5 +61,13 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(readability_clean["has_consecutive_duplicates"])
         self.assertTrue(readability_clean["is_readable"])
 
+    def test_transition_words_evaluation(self):
+        text = "Sistem komputasi edge berkembang pesat. Selain itu, latensi jaringan berkurang drastis. Oleh karena itu, efisiensi meningkat."
+        readability = YoastSEOValidator.analyze_readability(text)
+        self.assertIn("transition_words", readability)
+        self.assertEqual(readability["transition_words"]["count"], 2)
+        self.assertTrue(readability["transition_words"]["is_optimal"])
+        self.assertGreaterEqual(readability["transition_words"]["percentage"], 20.0)
+
 if __name__ == "__main__":
     unittest.main()
