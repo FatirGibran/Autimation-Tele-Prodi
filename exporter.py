@@ -247,6 +247,26 @@ class ArticleExporter:
 
         return "\n".join(tags)
 
+    @staticmethod
+    def generate_breadcrumb_schema(breadcrumbs: List[Dict[str, str]]) -> Dict[str, Any]:
+        """
+        Generates schema.org/BreadcrumbList JSON-LD structured data.
+        """
+        elements = []
+        for idx, item in enumerate(breadcrumbs, start=1):
+            elements.append({
+                "@type": "ListItem",
+                "position": idx,
+                "name": item.get("name", ""),
+                "item": item.get("url", "")
+            })
+        return {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": elements
+        }
+
+
 
 
 
