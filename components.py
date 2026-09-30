@@ -272,6 +272,38 @@ class EditorialComponents:
     .tu-references-list li {{
       margin-bottom: 8px;
     }}
+    .tu-code-container {{
+      position: relative;
+      margin: 28px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+    }}
+    .tu-code-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: #1e293b;
+      font-size: 12px;
+      color: #94a3b8;
+      font-family: monospace;
+    }}
+    .tu-code-badge {{
+      text-transform: uppercase;
+      font-weight: 700;
+      color: {cls.SECONDARY_COLOR};
+    }}
+    .tu-code-body {{
+      margin: 0;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #f8fafc;
+    }}
 """
 
     @classmethod
@@ -390,6 +422,19 @@ class EditorialComponents:
 {items}
       </ol>
     </section>"""
+
+    @classmethod
+    def render_code_block(cls, code: str, language: str = "text", filename: str = "") -> str:
+        escaped_code = code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        header_title = filename if filename else language.upper()
+        return f"""    <div class="tu-code-container">
+      <div class="tu-code-header">
+        <span>{header_title}</span>
+        <span class="tu-code-badge">{language}</span>
+      </div>
+      <pre class="tu-code-body"><code>{escaped_code}</code></pre>
+    </div>"""
+
 
 
 
