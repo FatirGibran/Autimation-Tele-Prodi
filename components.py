@@ -487,6 +487,31 @@ class EditorialComponents:
 {timeline_html}
     </div>"""
 
+    @classmethod
+    def render_alumni_quote_card(cls, name: str, batch: str, role: str, company: str, quote: str, avatar_url: str = "") -> str:
+        """
+        Renders an alumni testimonial card for student career showcase.
+        """
+        from xml.sax.saxutils import escape
+        safe_name = escape(name)
+        safe_batch = escape(batch)
+        safe_role = escape(role)
+        safe_company = escape(company)
+        safe_quote = escape(quote)
+        avatar_img = f'<img src="{escape(avatar_url)}" alt="{safe_name}" class="tu-alumni-avatar" loading="lazy" decoding="async" />' if avatar_url else '<div class="tu-alumni-avatar-placeholder"></div>'
+
+        return f"""    <div class="tu-alumni-card">
+      <div class="tu-alumni-quote">"{safe_quote}"</div>
+      <div class="tu-alumni-meta">
+        {avatar_img}
+        <div class="tu-alumni-info">
+          <div class="tu-alumni-name">{safe_name} <span class="tu-alumni-batch">({safe_batch})</span></div>
+          <div class="tu-alumni-role">{safe_role} di <strong>{safe_company}</strong></div>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
