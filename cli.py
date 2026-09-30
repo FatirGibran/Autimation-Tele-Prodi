@@ -87,6 +87,53 @@ def cmd_export(args):
     for k, p in paths.items():
         print(f" - [{k}]: {p}")
 
+def cmd_validate(args):
+    html_path = Path(args.html)
+    if not html_path.exists():
+        print(f"Error: File '{args.html}' tidak ditemukan.")
+        sys.exit(1)
+
+    html_content = html_path.read_text(encoding="utf-8")
+    _, sanitizer_warnings = HTMLSanitizer.sanitize(html_content)
+
+    meta = {}
+    if args.meta:
+        meta_path = Path(args.meta)
+        if not meta_path.exists():
+            print(f"Error: File metadata '{args.meta}' tidak ditemukan.")
+            sys.exit(1)
+        with open(meta_path, encoding="utf-8") as f:
+            data = json.load(f)
+            meta = data.get("yoast_seo", data)
+
+    seo_report = YoastSEOValidator.evaluate(meta, html_content) if meta else None
+    is_valid = (seo_report["is_all_green"] if seo_report else True) and (len(sanitizer_warnings) == 0)
+
+    if args.json_output:
+        output_payload = {
+            "valid": is_valid,
+            "sanitizer_warnings": sanitizer_warnings,
+            "seo_report": seo_report
+        }
+        print(json.dumps(output_payload, indent=2))
+    else:
+        status_str = "VALID (SIAP TERBIT)" if is_valid else "TIDAK VALID"
+        print(f"Hasil Validasi: {status_str}")
+        if sanitizer_warnings:
+            print(f"Peringatan Sanitasi ({len(sanitizer_warnings)}):")
+            for w in sanitizer_warnings:
+                print(f" - {w}")
+        if seo_report:
+            print(f"Skor SEO: {seo_report['score']}/100")
+            if seo_report["errors"]:
+                print(f"Error SEO ({len(seo_report['errors'])}):")
+                for e in seo_report["errors"]:
+                    print(f" ! {e}")
+
+    if not is_valid:
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -118,8 +165,16 @@ def main():
     export_parser.add_argument("--out", default="output", help="Direktori tujuan export")
     export_parser.set_defaults(func=cmd_export)
 
+    # Validate command
+    val_parser = subparsers.add_parser("validate", help="Validasi kepatuhan HTML dan SEO artikel secara komprehensif")
+    val_parser.add_argument("--html", required=True, help="Path ke file HTML")
+    val_parser.add_argument("--meta", help="Path opsional ke file JSON metadata")
+    val_parser.add_argument("--json", dest="json_output", action="store_true", help="Format output sebagai JSON")
+    val_parser.set_defaults(func=cmd_validate)
+
     args = parser.parse_args()
     args.func(args)
+
 
 if __name__ == "__main__":
     main()
