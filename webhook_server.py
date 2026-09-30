@@ -1,13 +1,28 @@
 import os
 import json
 import logging
+import hmac
+import hashlib
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from config import settings
 
 logger = logging.getLogger("WebhookServer")
 
+def verify_hmac_sha256(payload_bytes: bytes, signature_header: str, secret: str) -> bool:
+    """
+    Verifies HMAC SHA-256 signature against payload using constant-time comparison.
+    """
+    if not signature_header or not secret:
+        return False
+    clean_signature = signature_header
+    if signature_header.startswith("sha256="):
+        clean_signature = signature_header[7:]
+    expected = hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(clean_signature.strip().lower(), expected.lower())
+
 class WebhookHandler(BaseHTTPRequestHandler):
     secret_token: str = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    hmac_secret: str = os.getenv("WEBHOOK_HMAC_SECRET", "")
 
     def log_message(self, format, *args):
         # Delegate to standard logging
@@ -38,6 +53,17 @@ class WebhookHandler(BaseHTTPRequestHandler):
 
             content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)
+
+            # Verify HMAC signature if configured
+            if self.hmac_secret:
+                incoming_sig = self.headers.get("X-Signature-SHA256", "") or self.headers.get("X-Hub-Signature-256", "")
+                if not verify_hmac_sha256(post_data, incoming_sig, self.hmac_secret):
+                    self.send_response(401)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"error": "unauthorized", "message": "invalid hmac signature"}')
+                    return
+
 
             # Validate that body is valid JSON
             try:
