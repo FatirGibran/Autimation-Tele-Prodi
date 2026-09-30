@@ -85,6 +85,17 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("10x", grid)
         self.assertIn("Kecepatan Cold Start", grid)
 
+    def test_render_references_block(self):
+        refs = [
+            "Haas, A. et al. (2017). Bringing the Web up to Speed with WebAssembly. ACM SIGPLAN.",
+            "World Wide Web Consortium (W3C). WebAssembly Core Specification."
+        ]
+        block = EditorialComponents.render_references_block(refs, heading="Daftar Pustaka")
+        self.assertIn("tu-references-box", block)
+        self.assertIn("Daftar Pustaka", block)
+        self.assertIn("Bringing the Web up to Speed", block)
+        self.assertIn("tu-references-list", block)
+
 if __name__ == "__main__":
     unittest.main()
 
