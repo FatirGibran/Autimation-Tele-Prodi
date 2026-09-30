@@ -66,6 +66,8 @@ Autimation Tele Prodi/
 │   └── 2026-09-28-webassembly-edge-computing-iot-metadata.json
 ├── docs/
 │   ├── API.md                                       # Spesifikasi teknis payload & API
+│   ├── AUTOMATION_RUNBOOK.md                         # Runbook operasional & pemeliharaan berkala
+│   ├── COMPONENTS_CATALOG.md                         # Katalog komponen semantik HTML Elementor
 │   ├── DEPLOYMENT.md                                 # Panduan deployment Docker, Systemd, Cloud Run
 │   └── EDITORIAL_GUIDE.md                           # Panduan brand & prinsip anti-slop
 ├── prompts/
