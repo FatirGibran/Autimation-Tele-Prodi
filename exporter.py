@@ -216,5 +216,37 @@ class ArticleExporter:
 {body}
 </urlset>"""
 
+    @staticmethod
+    def generate_social_meta_tags(metadata: Dict[str, Any], canonical_url: str = "") -> str:
+        """
+        Generates standard OpenGraph and Twitter Cards metadata HTML tags.
+        """
+        from xml.sax.saxutils import escape
+        title = escape(metadata.get("seo_title", ""))
+        desc = escape(metadata.get("meta_description", ""))
+        image = escape(metadata.get("image_url", ""))
+        url = escape(canonical_url)
+
+        tags = [
+            '<meta property="og:type" content="article" />',
+            f'<meta property="og:title" content="{title}" />',
+            f'<meta property="og:description" content="{desc}" />',
+        ]
+        if url:
+            tags.append(f'<meta property="og:url" content="{url}" />')
+        if image:
+            tags.append(f'<meta property="og:image" content="{image}" />')
+
+        tags.extend([
+            '<meta name="twitter:card" content="summary_large_image" />',
+            f'<meta name="twitter:title" content="{title}" />',
+            f'<meta name="twitter:description" content="{desc}" />',
+        ])
+        if image:
+            tags.append(f'<meta name="twitter:image" content="{image}" />')
+
+        return "\n".join(tags)
+
+
 
 
