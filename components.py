@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 
 class EditorialComponents:
     """
@@ -510,6 +510,41 @@ class EditorialComponents:
         </div>
       </div>
     </div>"""
+
+    @classmethod
+    def render_feature_matrix(cls, columns: List[str], rows: List[Dict[str, Any]]) -> str:
+        """
+        Renders a curriculum/feature comparison matrix with checkmarks and highlight badges.
+        """
+        from xml.sax.saxutils import escape
+        th_cells = "\n".join(f"          <th>{escape(col)}</th>" for col in columns)
+
+        row_trs = []
+        for r in rows:
+            feat_name = escape(str(r.get("feature", "")))
+            td_cells = [f"          <td class=\"tu-matrix-feature\"><strong>{feat_name}</strong></td>"]
+            for val in r.get("values", []):
+                if isinstance(val, bool):
+                    icon = '<span class="tu-matrix-check">&#10003;</span>' if val else '<span class="tu-matrix-cross">&#10007;</span>'
+                    td_cells.append(f"          <td class=\"tu-matrix-val tu-matrix-bool\">{icon}</td>")
+                else:
+                    td_cells.append(f"          <td class=\"tu-matrix-val\">{escape(str(val))}</td>")
+            row_trs.append("        <tr>\n" + "\n".join(td_cells) + "\n        </tr>")
+
+        body_html = "\n".join(row_trs)
+        return f"""    <div class="tu-table-responsive tu-feature-matrix-wrap">
+      <table class="tu-table tu-feature-matrix">
+        <thead>
+        <tr>
+{th_cells}
+        </tr>
+        </thead>
+        <tbody>
+{body_html}
+        </tbody>
+      </table>
+    </div>"""
+
 
 
 
