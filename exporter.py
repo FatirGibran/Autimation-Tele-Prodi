@@ -118,3 +118,28 @@ class ArticleExporter:
         paths["elementor_json"] = elementor_path
 
         return paths
+
+    @staticmethod
+    def generate_json_ld(metadata: Dict[str, Any], article_type: str = "NewsArticle") -> str:
+        slug = metadata.get("slug", "")
+        url = f"https://bif-pwt.telkomuniversity.ac.id/{slug}/" if slug else "https://bif-pwt.telkomuniversity.ac.id/"
+        data = {
+            "@context": "https://schema.org",
+            "@type": article_type,
+            "headline": metadata.get("seo_title", ""),
+            "description": metadata.get("meta_description", ""),
+            "datePublished": metadata.get("publish_date", ""),
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": url
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "S1 Teknik Informatika Telkom University Purwokerto",
+                "url": "https://bif-pwt.telkomuniversity.ac.id"
+            }
+        }
+        if metadata.get("image_url"):
+            data["image"] = [metadata["image_url"]]
+        return json.dumps(data, indent=2, ensure_ascii=False)
+
