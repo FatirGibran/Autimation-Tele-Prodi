@@ -178,3 +178,19 @@ def convert_markdown_table_to_html(md_table: str) -> str:
       </table>
     </div>"""
 
+def calculate_reading_time(text: str, wpm: int = 200) -> str:
+    """
+    Calculates estimated reading time in Indonesian format based on word count.
+    Default rate is 200 words per minute for academic/technical editorial copy.
+    """
+    if not text:
+        return "1 Menit Baca"
+    clean_text = re.sub(r"<[^>]+>", " ", text)
+    words = re.findall(r"\b\w+\b", clean_text)
+    count = len(words)
+    if count == 0:
+        return "1 Menit Baca"
+    minutes = max(1, round(count / wpm))
+    return f"{minutes} Menit Baca"
+
+
