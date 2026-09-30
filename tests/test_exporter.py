@@ -120,5 +120,18 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('property="og:image" content="https://example.com/banner.png"', tags)
         self.assertIn('property="og:url" content="https://example.com/tutorial"', tags)
 
+    def test_generate_breadcrumb_schema(self):
+        crumbs = [
+            {"name": "Beranda", "url": "https://bif-pwt.telkomuniversity.ac.id"},
+            {"name": "Riset", "url": "https://bif-pwt.telkomuniversity.ac.id/riset"},
+            {"name": "WebAssembly Edge", "url": "https://bif-pwt.telkomuniversity.ac.id/riset/wasm"}
+        ]
+        schema = ArticleExporter.generate_breadcrumb_schema(crumbs)
+        self.assertEqual(schema["@type"], "BreadcrumbList")
+        self.assertEqual(len(schema["itemListElement"]), 3)
+        self.assertEqual(schema["itemListElement"][0]["position"], 1)
+        self.assertEqual(schema["itemListElement"][0]["name"], "Beranda")
+        self.assertEqual(schema["itemListElement"][2]["name"], "WebAssembly Edge")
+
 if __name__ == "__main__":
     unittest.main()
