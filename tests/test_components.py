@@ -60,5 +60,18 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Dosen Riset IoT", author)
         self.assertIn("Fokus riset smart sensor.", author)
 
+    def test_render_faq_accordion(self):
+        items = [
+            ("Apa itu WebAssembly?", "WebAssembly adalah format instruksi biner."),
+            ("Apakah aman?", "Sangat aman berkat model memori terisolasi.")
+        ]
+        faq = EditorialComponents.render_faq_accordion(items, section_title="Pertanyaan Populer")
+        self.assertIn("tu-faq-wrap", faq)
+        self.assertIn("Pertanyaan Populer", faq)
+        self.assertIn("<summary class=\"tu-faq-question\">Apa itu WebAssembly?</summary>", faq)
+        self.assertIn("<div class=\"tu-faq-answer\">WebAssembly adalah format instruksi biner.</div>", faq)
+        self.assertIn("<details class=\"tu-faq-item\">", faq)
+
 if __name__ == "__main__":
     unittest.main()
+
