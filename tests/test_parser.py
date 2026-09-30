@@ -67,5 +67,18 @@ Poin Utama:
         cleaned = strip_markdown_formatting(raw)
         self.assertEqual(cleaned, "Teks Tebal dan miring serta kode dan tautan")
 
+    def test_convert_markdown_table_to_html(self):
+        from parser import convert_markdown_table_to_html
+        md = """| Fitur | Docker | Wasm |
+|---|---|---|
+| Ukuran | 100MB | 2MB |"""
+        html = convert_markdown_table_to_html(md)
+        self.assertIn("tu-table-responsive", html)
+        self.assertIn("<table class=\"tu-table\">", html)
+        self.assertIn("<th>Fitur</th>", html)
+        self.assertIn("<th>Docker</th>", html)
+        self.assertIn("<td>100MB</td>", html)
+        self.assertIn("<td>2MB</td>", html)
+
 if __name__ == "__main__":
     unittest.main()
