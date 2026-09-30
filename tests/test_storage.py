@@ -206,5 +206,24 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(res["integrity_check"], "ok")
         self.assertTrue(res["vacuumed"])
 
+    def test_create_and_get_revisions(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Versi Awal",
+            "category": "Riset",
+            "publish_date": "2026-10-01",
+            "focus_keyphrase": "artikel revisi",
+            "seo_title": "Artikel Revisi",
+            "slug": "artikel-revisi",
+            "meta_description": "Deskripsi versi awal.",
+            "html_content": "<p>Versi 1</p>"
+        })
+        rev_id = self.storage.create_revision(art_id)
+        self.assertIsNotNone(rev_id)
+
+        revisions = self.storage.get_revisions(art_id)
+        self.assertEqual(len(revisions), 1)
+        self.assertEqual(revisions[0]["revision_num"], 1)
+        self.assertIn("Versi 1", revisions[0]["html_content"])
+
 if __name__ == "__main__":
     unittest.main()
