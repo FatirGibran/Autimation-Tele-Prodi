@@ -81,5 +81,16 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(readability_active["passive_voice"]["count"], 0)
         self.assertTrue(readability_active["passive_voice"]["is_acceptable"])
 
+    def test_syllable_count_and_reading_ease(self):
+        self.assertEqual(YoastSEOValidator.count_syllables_indonesian("komputasi"), 4)
+        self.assertEqual(YoastSEOValidator.count_syllables_indonesian("data"), 2)
+        self.assertEqual(YoastSEOValidator.count_syllables_indonesian("ai"), 2)
+
+        sample = "Teknologi kecerdasan buatan berkembang dengan cepat di Indonesia."
+        readability = YoastSEOValidator.analyze_readability(sample)
+        self.assertIn("syllables_per_word", readability)
+        self.assertIn("reading_ease_score", readability)
+        self.assertGreater(readability["reading_ease_score"], 0)
+
 if __name__ == "__main__":
     unittest.main()
