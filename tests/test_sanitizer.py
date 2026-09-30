@@ -23,6 +23,8 @@ class TestHTMLSanitizer(unittest.TestCase):
         html = '<div class="tu-editorial-container"><img src="https://example.com/pic.jpg" alt="pic" /></div>'
         clean, _ = HTMLSanitizer.sanitize(html)
         self.assertIn('loading="lazy"', clean)
+        self.assertIn('decoding="async"', clean)
+
 
     def test_strip_iframe_and_embed(self):
         malicious = '<div class="tu-editorial-container"><iframe src="https://attacker.com"></iframe><embed src="test.swf" /><p>Safe</p></div>'
