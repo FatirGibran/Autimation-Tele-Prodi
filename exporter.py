@@ -183,4 +183,38 @@ class ArticleExporter:
   </channel>
 </rss>"""
 
+    @staticmethod
+    def generate_sitemap_xml(articles: List[Dict[str, Any]], base_url: str = "https://bif-pwt.telkomuniversity.ac.id") -> str:
+        """
+        Generates standard XML sitemap for search engine web crawlers.
+        """
+        from xml.sax.saxutils import escape
+
+        clean_base = base_url.rstrip("/")
+        urls = [f"""  <url>
+    <loc>{clean_base}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>"""]
+
+        for art in articles:
+            slug = art.get("slug", "")
+            if not slug:
+                continue
+            loc = f"{clean_base}/{slug}/"
+            lastmod = art.get("publish_date", "")
+            urls.append(f"""  <url>
+    <loc>{escape(loc)}</loc>
+    <lastmod>{escape(lastmod)}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>""")
+
+        body = "\n".join(urls)
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{body}
+</urlset>"""
+
+
 
