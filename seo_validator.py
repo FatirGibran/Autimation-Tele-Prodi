@@ -13,6 +13,20 @@ class YoastSEOValidator:
         "kendati demikian", "terlebih lagi", "selain", "tetapi", "kemudian", "juga"
     ]
 
+    NON_PASSIVE_DI = {
+        "dimensi", "dirinya", "diploma", "dini", "dinamika", "dialog", "diagram",
+        "disiplin", "direktur", "digital", "distribusi", "divisi"
+    }
+
+    @classmethod
+    def is_passive_sentence(cls, sentence: str) -> bool:
+        words = re.findall(r"\b[a-zA-Z]+\b", sentence.lower())
+        for w in words:
+            if w.startswith("di") and len(w) >= 5 and w not in cls.NON_PASSIVE_DI:
+                return True
+        return False
+
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
@@ -211,6 +225,9 @@ class YoastSEOValidator:
         ]
         transition_pct = (len(transition_sentences) / total_sentences * 100) if total_sentences else 0.0
 
+        passive_sentences = [s for s in sentences if cls.is_passive_sentence(s)]
+        passive_pct = (len(passive_sentences) / total_sentences * 100) if total_sentences else 0.0
+
         return {
             "total_sentences": total_sentences,
             "avg_words_per_sentence": round(avg_words, 1),
@@ -221,7 +238,13 @@ class YoastSEOValidator:
                 "percentage": round(transition_pct, 1),
                 "is_optimal": transition_pct >= 20.0
             },
+            "passive_voice": {
+                "count": len(passive_sentences),
+                "percentage": round(passive_pct, 1),
+                "is_acceptable": passive_pct <= 25.0
+            },
             "is_readable": (long_pct <= 30.0) and not has_consecutive_duplicates
         }
+
 
 
