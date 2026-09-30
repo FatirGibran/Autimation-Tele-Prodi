@@ -9,6 +9,11 @@ class TestParser(unittest.TestCase):
     def test_clean_url_fallback(self):
         self.assertEqual(clean_url(""), DEFAULT_PLACEHOLDER_IMG)
 
+    def test_clean_url_strips_tracking_params(self):
+        url = "https://example.com/photo.jpg?utm_source=telegram&utm_medium=social&fbclid=abc123xyz&keep=true"
+        cleaned = clean_url(url)
+        self.assertEqual(cleaned, "https://example.com/photo.jpg?keep=true")
+
     def test_parse_telegram_input_numbered_bullets(self):
         raw = """Topik: Edge AI Monitoring
 Tanggal: 1 Oktober 2026
