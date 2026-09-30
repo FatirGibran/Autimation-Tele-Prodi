@@ -3,7 +3,9 @@ import json
 import time
 import urllib.request
 import urllib.error
+import urllib.parse
 from typing import Dict, Any, Optional
+
 
 class WordPressClient:
     def __init__(
@@ -93,3 +95,40 @@ class WordPressClient:
             method="GET"
         )
         return self._send_request(req)
+
+    def get_or_create_category(self, name: str) -> int:
+        clean_name = name.strip()
+        encoded = urllib.parse.quote(clean_name)
+        endpoint = f"{self.api_url}/categories?search={encoded}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            for cat in results:
+                if cat.get("name", "").strip().lower() == clean_name.lower():
+                    return cat["id"]
+
+        create_endpoint = f"{self.api_url}/categories"
+        payload = {"name": clean_name}
+        data_bytes = json.dumps(payload).encode("utf-8")
+        req_post = urllib.request.Request(create_endpoint, data=data_bytes, headers=self._get_headers(), method="POST")
+        created = self._send_request(req_post)
+        return created["id"]
+
+    def get_or_create_tag(self, name: str) -> int:
+        clean_name = name.strip()
+        encoded = urllib.parse.quote(clean_name)
+        endpoint = f"{self.api_url}/tags?search={encoded}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            for tag in results:
+                if tag.get("name", "").strip().lower() == clean_name.lower():
+                    return tag["id"]
+
+        create_endpoint = f"{self.api_url}/tags"
+        payload = {"name": clean_name}
+        data_bytes = json.dumps(payload).encode("utf-8")
+        req_post = urllib.request.Request(create_endpoint, data=data_bytes, headers=self._get_headers(), method="POST")
+        created = self._send_request(req_post)
+        return created["id"]
+
