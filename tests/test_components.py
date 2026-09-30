@@ -105,6 +105,17 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("rust", block)
         self.assertIn("&lt;Wasm&gt;", block)
 
+    def test_render_timeline_component(self):
+        events = [
+            {"date": "Q1 2026", "title": "Inisiasi Riset", "description": "Eksplorasi modul WebAssembly."},
+            {"date": "Q2 2026", "title": "Implementasi Edge", "description": "Uji coba runtime di gateway IoT."}
+        ]
+        timeline = EditorialComponents.render_timeline_component(events)
+        self.assertIn("tu-timeline", timeline)
+        self.assertIn("tu-timeline-item", timeline)
+        self.assertIn("Inisiasi Riset", timeline)
+        self.assertIn("Q1 2026", timeline)
+
 if __name__ == "__main__":
     unittest.main()
 
