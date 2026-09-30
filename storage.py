@@ -261,6 +261,23 @@ class StorageManager:
 
         return rows
 
+    def optimize_and_check_integrity(self) -> Dict[str, Any]:
+        """
+        Executes database integrity check and compacts SQLite database with VACUUM.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("PRAGMA integrity_check;")
+            integrity_result = cursor.fetchone()[0]
+            is_ok = integrity_result == "ok"
+            if is_ok:
+                conn.execute("VACUUM;")
+            return {
+                "status": "ok" if is_ok else "corrupted",
+                "integrity_check": integrity_result,
+                "vacuumed": is_ok
+            }
+
+
 
 
 
