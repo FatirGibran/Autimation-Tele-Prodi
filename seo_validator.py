@@ -6,6 +6,13 @@ class YoastSEOValidator:
     Comprehensive SEO evaluator following Yoast SEO Green Score criteria.
     """
 
+    INDONESIAN_TRANSITION_WORDS = [
+        "selain itu", "oleh karena itu", "namun", "meskipun demikian", "sehingga",
+        "akibatnya", "dengan demikian", "sementara itu", "di samping itu", "sebagai contoh",
+        "oleh sebab itu", "selanjutnya", "bahkan", "sebaliknya", "akan tetapi",
+        "kendati demikian", "terlebih lagi", "selain", "tetapi", "kemudian", "juga"
+    ]
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
@@ -198,11 +205,23 @@ class YoastSEOValidator:
                 has_consecutive_duplicates = True
                 break
 
+        transition_sentences = [
+            s for s in sentences
+            if any(re.search(r"\b" + re.escape(tw) + r"\b", s.lower()) for tw in cls.INDONESIAN_TRANSITION_WORDS)
+        ]
+        transition_pct = (len(transition_sentences) / total_sentences * 100) if total_sentences else 0.0
+
         return {
             "total_sentences": total_sentences,
             "avg_words_per_sentence": round(avg_words, 1),
             "long_sentences_pct": round(long_pct, 1),
             "has_consecutive_duplicates": has_consecutive_duplicates,
+            "transition_words": {
+                "count": len(transition_sentences),
+                "percentage": round(transition_pct, 1),
+                "is_optimal": transition_pct >= 20.0
+            },
             "is_readable": (long_pct <= 30.0) and not has_consecutive_duplicates
         }
+
 
