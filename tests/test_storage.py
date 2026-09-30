@@ -151,5 +151,38 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(logs[1]["old_status"], "ready")
         self.assertEqual(logs[1]["new_status"], "published")
 
+    def test_bulk_update_and_date_filtering(self):
+        id1 = self.storage.save_article({
+            "topic": "Artikel 1",
+            "category": "Tech",
+            "publish_date": "2026-09-01",
+            "focus_keyphrase": "artikel satu",
+            "seo_title": "Artikel Satu",
+            "slug": "artikel-satu",
+            "meta_description": "Deskripsi satu untuk pengujian.",
+            "status": "draft"
+        })
+        id2 = self.storage.save_article({
+            "topic": "Artikel 2",
+            "category": "Tech",
+            "publish_date": "2026-09-15",
+            "focus_keyphrase": "artikel dua",
+            "seo_title": "Artikel Dua",
+            "slug": "artikel-dua",
+            "meta_description": "Deskripsi dua untuk pengujian.",
+            "status": "draft"
+        })
+
+        # Bulk update
+        updated = self.storage.bulk_update_status([id1, id2], "ready")
+        self.assertEqual(updated, 2)
+        self.assertEqual(self.storage.get_article_by_id(id1)["status"], "ready")
+        self.assertEqual(self.storage.get_article_by_id(id2)["status"], "ready")
+
+        # Date range filtering
+        filtered = self.storage.filter_by_date_range("2026-09-10", "2026-09-20")
+        self.assertEqual(len(filtered), 1)
+        self.assertEqual(filtered[0]["slug"], "artikel-dua")
+
 if __name__ == "__main__":
     unittest.main()
