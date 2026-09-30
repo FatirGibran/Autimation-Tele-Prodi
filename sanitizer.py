@@ -81,5 +81,16 @@ class HTMLSanitizer:
                 cleaned = re.sub(r"<(script|foreignObject)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
             cleaned = re.sub(r'xlink:href=["\']javascript:[^"\']*["\']', 'xlink:href="#"', cleaned, flags=re.IGNORECASE)
 
+        # 7. Strip dangerous patterns from inline style attributes
+        def fix_style(match):
+            style_content = match.group(1)
+            if re.search(r'(expression|@import|-moz-binding|javascript:|data:text/html)', style_content, re.IGNORECASE):
+                warnings.append("Stripped dangerous expression from inline style attribute.")
+                sanitized_style = re.sub(r'(expression\s*\([^)]*\)|@import[^;]*;?|-moz-binding[^;]*;?|javascript:[^;]*|data:text/html[^;]*)', '', style_content, flags=re.IGNORECASE).strip()
+                return f'style="{sanitized_style}"' if sanitized_style else ''
+            return match.group(0)
+
+        cleaned = re.sub(r'style=["\']([^"\']*)["\']', fix_style, cleaned, flags=re.IGNORECASE)
+
         return cleaned, warnings
 
