@@ -26,6 +26,19 @@ class YoastSEOValidator:
                 return True
         return False
 
+    @staticmethod
+    def count_syllables_indonesian(word: str) -> int:
+        """
+        Estimates syllable count for Indonesian words based on vowel clusters.
+        """
+        clean_word = re.sub(r"[^a-zA-Z]", "", word.lower())
+        if not clean_word:
+            return 0
+        vowels = "aiueo"
+        count = sum(1 for char in clean_word if char in vowels)
+        return max(1, count)
+
+
 
     @staticmethod
     def extract_text(html: str) -> str:
@@ -228,11 +241,18 @@ class YoastSEOValidator:
         passive_sentences = [s for s in sentences if cls.is_passive_sentence(s)]
         passive_pct = (len(passive_sentences) / total_sentences * 100) if total_sentences else 0.0
 
+        total_words = sum(words_per_sentence)
+        total_syllables = sum(cls.count_syllables_indonesian(w) for w in text.split())
+        syllables_per_word = (total_syllables / total_words) if total_words else 0.0
+        flesch_score = round(max(0.0, min(100.0, 206.84 - (1.015 * avg_words) - (30.0 * syllables_per_word))), 1)
+
         return {
             "total_sentences": total_sentences,
             "avg_words_per_sentence": round(avg_words, 1),
             "long_sentences_pct": round(long_pct, 1),
             "has_consecutive_duplicates": has_consecutive_duplicates,
+            "syllables_per_word": round(syllables_per_word, 2),
+            "reading_ease_score": flesch_score,
             "transition_words": {
                 "count": len(transition_sentences),
                 "percentage": round(transition_pct, 1),
