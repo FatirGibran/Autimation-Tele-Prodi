@@ -130,3 +130,35 @@ def strip_markdown_formatting(text: str) -> str:
     cleaned = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", cleaned)
     cleaned = re.sub(r"^#+\s*", "", cleaned, flags=re.MULTILINE)
     return cleaned.strip()
+
+def convert_markdown_table_to_html(md_table: str) -> str:
+    """
+    Converts a standard Markdown table into responsive semantic HTML.
+    """
+    lines = [line.strip() for line in md_table.strip().splitlines() if line.strip()]
+    if len(lines) < 2:
+        return md_table
+
+    header_cells = [c.strip() for c in lines[0].strip("|").split("|")]
+    if not re.match(r"^\|?[\s\-:|]+\|?$", lines[1]):
+        return md_table
+
+    thead_html = "        <tr>\n" + "\n".join(f"          <th>{c}</th>" for c in header_cells) + "\n        </tr>"
+    rows_html = []
+    for line in lines[2:]:
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        row_tds = "\n".join(f"          <td>{c}</td>" for c in cells)
+        rows_html.append(f"        <tr>\n{row_tds}\n        </tr>")
+
+    tbody_html = "\n".join(rows_html)
+    return f"""    <div class="tu-table-responsive">
+      <table class="tu-table">
+        <thead>
+{thead_html}
+        </thead>
+        <tbody>
+{tbody_html}
+        </tbody>
+      </table>
+    </div>"""
+

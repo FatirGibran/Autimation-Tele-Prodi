@@ -304,6 +304,33 @@ class EditorialComponents:
       line-height: 1.6;
       color: #f8fafc;
     }}
+    .tu-table-responsive {{
+      overflow-x: auto;
+      margin: 28px 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }}
+    .tu-table {{
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }}
+    .tu-table th {{
+      background: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }}
+    .tu-table td {{
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }}
+    .tu-table tr:last-child td {{
+      border-bottom: none;
+    }}
 """
 
     @classmethod
