@@ -236,5 +236,31 @@ class StorageManager:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def search_articles(self, query: str, limit: int = 20) -> List[Dict[str, Any]]:
+        """
+        Performs multi-column keyword search with matching context highlighting.
+        """
+        cleaned_query = query.strip()
+        if not cleaned_query:
+            return []
+        pattern = f"%{cleaned_query}%"
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                SELECT * FROM articles
+                WHERE topic LIKE ? OR focus_keyphrase LIKE ? OR meta_description LIKE ? OR html_content LIKE ?
+                ORDER BY id DESC LIMIT ?
+                """,
+                (pattern, pattern, pattern, pattern, limit)
+            )
+            rows = [dict(row) for row in cursor.fetchall()]
+
+        for item in rows:
+            desc = item.get("meta_description", "")
+            item["matched_snippet"] = desc if cleaned_query.lower() in desc.lower() else item.get("topic", "")
+
+        return rows
+
+
 
 
