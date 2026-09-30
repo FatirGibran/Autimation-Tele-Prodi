@@ -4,7 +4,8 @@ from typing import Tuple, List
 ALLOWED_TAGS = {
     "div", "style", "article", "header", "section", "figure", "figcaption",
     "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
-    "span", "strong", "em", "code", "pre", "blockquote"
+    "span", "strong", "em", "code", "pre", "blockquote", "details", "summary",
+    "table", "thead", "tbody", "tr", "th", "td"
 }
 
 DISALLOWED_ATTR_PREFIXES = ("on", "javascript:")
@@ -61,13 +62,16 @@ class HTMLSanitizer:
 
         cleaned = re.sub(r'<a\s+[^>]*href=["\'](https?://[^"\']+)["\'][^>]*>', fix_link, cleaned, flags=re.IGNORECASE)
 
-        # 5. Enforce loading="lazy" on img tags
+        # 5. Enforce loading="lazy" and decoding="async" on img tags
         def fix_img(match):
             tag = match.group(0)
             if 'loading=' not in tag:
-                tag = tag.rstrip(" />").rstrip(">") + ' loading="lazy" />'
-            return tag
+                tag = tag.rstrip(" />").rstrip(">") + ' loading="lazy"'
+            if 'decoding=' not in tag:
+                tag = tag.rstrip(" />").rstrip(">") + ' decoding="async"'
+            return tag.rstrip(" />").rstrip(">") + ' />'
 
         cleaned = re.sub(r'<img\s+[^>]+>', fix_img, cleaned, flags=re.IGNORECASE)
 
         return cleaned, warnings
+
