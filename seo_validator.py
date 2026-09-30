@@ -170,6 +170,8 @@ class YoastSEOValidator:
         }
 
         results["readability"] = cls.analyze_readability(body_text)
+        if results["readability"]["has_consecutive_duplicates"]:
+            results["warnings"].append("Terdapat 3 atau lebih kalimat berurutan yang diawali kata yang sama.")
 
         all_passed = all(c["passed"] for c in results["checks"].values())
         results["is_all_green"] = all_passed
@@ -189,9 +191,18 @@ class YoastSEOValidator:
         long_pct = (len(long_sentences) / total_sentences) * 100
         avg_words = sum(words_per_sentence) / total_sentences
 
+        first_words = [s.split()[0].lower() for s in sentences if s.split()]
+        has_consecutive_duplicates = False
+        for i in range(2, len(first_words)):
+            if first_words[i] == first_words[i - 1] == first_words[i - 2]:
+                has_consecutive_duplicates = True
+                break
+
         return {
             "total_sentences": total_sentences,
             "avg_words_per_sentence": round(avg_words, 1),
             "long_sentences_pct": round(long_pct, 1),
-            "is_readable": long_pct <= 30.0
+            "has_consecutive_duplicates": has_consecutive_duplicates,
+            "is_readable": (long_pct <= 30.0) and not has_consecutive_duplicates
         }
+
