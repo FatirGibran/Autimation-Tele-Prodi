@@ -5,7 +5,8 @@ ALLOWED_TAGS = {
     "div", "style", "article", "header", "section", "figure", "figcaption",
     "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary",
-    "table", "thead", "tbody", "tr", "th", "td"
+    "table", "thead", "tbody", "tr", "th", "td",
+    "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline"
 }
 
 DISALLOWED_ATTR_PREFIXES = ("on", "javascript:")
@@ -72,6 +73,13 @@ class HTMLSanitizer:
             return tag.rstrip(" />").rstrip(">") + ' />'
 
         cleaned = re.sub(r'<img\s+[^>]+>', fix_img, cleaned, flags=re.IGNORECASE)
+
+        # 6. Sanitize inline SVG: strip dangerous nested tags and attributes
+        if "<svg" in cleaned.lower():
+            if re.search(r"<(script|foreignObject)", cleaned, re.IGNORECASE):
+                warnings.append("Stripped dangerous tags from SVG.")
+                cleaned = re.sub(r"<(script|foreignObject)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+            cleaned = re.sub(r'xlink:href=["\']javascript:[^"\']*["\']', 'xlink:href="#"', cleaned, flags=re.IGNORECASE)
 
         return cleaned, warnings
 
