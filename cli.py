@@ -64,6 +64,13 @@ def cmd_optimize(args):
     print(f"Status Integritas SQLite : {result['integrity_check']}")
     print(f"Status Pemadatan (VACUUM): {'Berhasil' if result['vacuumed'] else 'Gagal'}")
 
+def cmd_sitemap(args):
+    articles = storage.list_articles(limit=1000)
+    out_path = Path(args.out)
+    sitemap_xml = ArticleExporter.generate_sitemap_xml(articles, base_url=args.base_url)
+    out_path.write_text(sitemap_xml, encoding="utf-8")
+    print(f"Sitemap XML berhasil dibuat untuk {len(articles)} artikel -> {out_path}")
+
 def cmd_search(args):
     results = storage.search_articles(args.query, limit=args.limit)
     if not results:
@@ -162,6 +169,12 @@ def main():
     # Optimize command
     opt_parser = subparsers.add_parser("optimize", help="Jalankan pemeriksaan integritas dan kompresi VACUUM database SQLite")
     opt_parser.set_defaults(func=cmd_optimize)
+
+    # Sitemap command
+    sm_parser = subparsers.add_parser("sitemap", help="Generate berkas sitemap.xml dari seluruh artikel di database")
+    sm_parser.add_argument("--out", default="sitemap.xml", help="Path berkas output XML sitemap")
+    sm_parser.add_argument("--base-url", default="https://bif-pwt.telkomuniversity.ac.id", help="Base URL website prodi")
+    sm_parser.set_defaults(func=cmd_sitemap)
 
     # Search command
     search_parser = subparsers.add_parser("search", help="Cari artikel berdasarkan kata kunci")
