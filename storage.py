@@ -213,4 +213,28 @@ class StorageManager:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def bulk_update_status(self, article_ids: List[int], status: str) -> int:
+        if not article_ids:
+            return 0
+        placeholders = ",".join("?" for _ in article_ids)
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                f"UPDATE articles SET status = ? WHERE id IN ({placeholders})",
+                [status] + article_ids
+            )
+            return cursor.rowcount
+
+    def filter_by_date_range(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                SELECT * FROM articles
+                WHERE publish_date >= ? AND publish_date <= ?
+                ORDER BY publish_date DESC, id DESC
+                """,
+                (start_date, end_date)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+
 
