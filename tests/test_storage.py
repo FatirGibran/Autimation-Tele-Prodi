@@ -200,5 +200,11 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(results[0]["slug"], "edge-ai-sec")
         self.assertIn("Enkripsi", results[0]["matched_snippet"])
 
+    def test_optimize_and_check_integrity(self):
+        res = self.storage.optimize_and_check_integrity()
+        self.assertEqual(res["status"], "ok")
+        self.assertEqual(res["integrity_check"], "ok")
+        self.assertTrue(res["vacuumed"])
+
 if __name__ == "__main__":
     unittest.main()
