@@ -18,6 +18,12 @@ class YoastSEOValidator:
         "disiplin", "direktur", "digital", "distribusi", "divisi"
     }
 
+    GENERIC_ANCHOR_PATTERNS = {
+        "klik di sini", "di sini", "click here", "baca di sini",
+        "link", "tautan", "baca selengkapnya", "selengkapnya", "disini"
+    }
+
+
     @classmethod
     def is_passive_sentence(cls, sentence: str) -> bool:
         words = re.findall(r"\b[a-zA-Z]+\b", sentence.lower())
@@ -38,7 +44,24 @@ class YoastSEOValidator:
         count = sum(1 for char in clean_word if char in vowels)
         return max(1, count)
 
+    @classmethod
+    def audit_anchor_texts(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits all hyperlinks for generic, non-descriptive anchor texts that penalize SEO.
+        """
+        links = re.findall(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
+        flagged_links = []
+        for href, text in links:
+            clean_text = re.sub(r'<[^>]+>', '', text).strip().lower()
+            if clean_text in cls.GENERIC_ANCHOR_PATTERNS:
+                flagged_links.append({"href": href, "anchor": clean_text})
 
+        return {
+            "total_links": len(links),
+            "flagged_count": len(flagged_links),
+            "flagged_links": flagged_links,
+            "passed": len(flagged_links) == 0
+        }
 
     @staticmethod
     def extract_text(html: str) -> str:
@@ -202,6 +225,17 @@ class YoastSEOValidator:
             "density_percentage": round(density, 2),
             "optimal": 0.5 <= density <= 3.0
         }
+
+        # 14. Anchor text descriptive quality audit
+        anchor_audit = cls.audit_anchor_texts(html_content)
+        results["checks"]["anchor_texts"] = {
+            "status": "green" if anchor_audit["passed"] else "orange",
+            "passed": True,
+            "total_links": anchor_audit["total_links"],
+            "flagged_count": anchor_audit["flagged_count"]
+        }
+        if not anchor_audit["passed"]:
+            results["warnings"].append(f"Ditemukan {anchor_audit['flagged_count']} tautan dengan anchor text generik.")
 
         results["readability"] = cls.analyze_readability(body_text)
         if results["readability"]["has_consecutive_duplicates"]:
