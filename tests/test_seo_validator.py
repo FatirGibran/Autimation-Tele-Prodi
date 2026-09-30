@@ -69,5 +69,17 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertTrue(readability["transition_words"]["is_optimal"])
         self.assertGreaterEqual(readability["transition_words"]["percentage"], 20.0)
 
+    def test_passive_voice_detection(self):
+        passive_text = "Riset ini dilakukan oleh dosen. Modul dijalankan di server lokal. Pengujian diselesaikan kemarin."
+        readability_passive = YoastSEOValidator.analyze_readability(passive_text)
+        self.assertIn("passive_voice", readability_passive)
+        self.assertEqual(readability_passive["passive_voice"]["count"], 3)
+        self.assertFalse(readability_passive["passive_voice"]["is_acceptable"])
+
+        active_text = "Dosen memimpin riset komputasi awan. Tim merancang arsitektur baru. Mahasiswa menguji kinerja modul."
+        readability_active = YoastSEOValidator.analyze_readability(active_text)
+        self.assertEqual(readability_active["passive_voice"]["count"], 0)
+        self.assertTrue(readability_active["passive_voice"]["is_acceptable"])
+
 if __name__ == "__main__":
     unittest.main()
