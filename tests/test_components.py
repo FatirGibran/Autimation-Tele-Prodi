@@ -72,6 +72,19 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("<div class=\"tu-faq-answer\">WebAssembly adalah format instruksi biner.</div>", faq)
         self.assertIn("<details class=\"tu-faq-item\">", faq)
 
+    def test_render_stat_grid(self):
+        stats = [
+            {"value": "95%", "label": "Efisiensi Memori"},
+            {"value": "10x", "label": "Kecepatan Cold Start"}
+        ]
+        grid = EditorialComponents.render_stat_grid(stats)
+        self.assertIn("tu-stat-grid", grid)
+        self.assertIn("tu-stat-card", grid)
+        self.assertIn("95%", grid)
+        self.assertIn("Efisiensi Memori", grid)
+        self.assertIn("10x", grid)
+        self.assertIn("Kecepatan Cold Start", grid)
+
 if __name__ == "__main__":
     unittest.main()
 
