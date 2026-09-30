@@ -83,5 +83,31 @@ class TestCLI(unittest.TestCase):
             self.assertTrue((out_path / f"{slug}.html").exists())
             self.assertTrue((out_path / f"{slug}_elementor.json").exists())
 
+    def test_cmd_validate_success(self):
+        class Args:
+            html = str(self.html_file)
+            meta = str(self.meta_file)
+            json_output = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_validate(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Hasil Validasi: VALID (SIAP TERBIT)", output)
+            self.assertIn("Skor SEO: 100/100", output)
+
+    def test_cmd_validate_json(self):
+        import json
+        class Args:
+            html = str(self.html_file)
+            meta = str(self.meta_file)
+            json_output = True
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_validate(Args())
+            output = fake_out.getvalue()
+            data = json.loads(output)
+            self.assertTrue(data["valid"])
+            self.assertEqual(data["seo_report"]["score"], 100)
+
 if __name__ == "__main__":
     unittest.main()
