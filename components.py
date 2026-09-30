@@ -249,6 +249,29 @@ class EditorialComponents:
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }}
+    .tu-references-box {{
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 32px 0;
+    }}
+    .tu-references-box h3 {{
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 12px 0;
+    }}
+    .tu-references-list {{
+      margin: 0;
+      padding-left: 20px;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+    }}
+    .tu-references-list li {{
+      margin-bottom: 8px;
+    }}
 """
 
     @classmethod
@@ -357,5 +380,16 @@ class EditorialComponents:
         return f"""    <div class="tu-stat-grid">
 {cards_html}
     </div>"""
+
+    @classmethod
+    def render_references_block(cls, references: List[str], heading: str = "Referensi & Publikasi Terkait") -> str:
+        items = "\n".join(f"        <li>{ref}</li>" for ref in references)
+        return f"""    <section class="tu-references-box">
+      <h3>{heading}</h3>
+      <ol class="tu-references-list">
+{items}
+      </ol>
+    </section>"""
+
 
 
