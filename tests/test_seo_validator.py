@@ -92,5 +92,13 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertIn("reading_ease_score", readability)
         self.assertGreater(readability["reading_ease_score"], 0)
 
+    def test_audit_anchor_texts(self):
+        html_with_generic = '<p>Untuk panduan silakan <a href="https://example.com/guide">klik di sini</a> atau <a href="https://example.com/docs">dokumentasi resmi</a>.</p>'
+        audit = YoastSEOValidator.audit_anchor_texts(html_with_generic)
+        self.assertEqual(audit["total_links"], 2)
+        self.assertEqual(audit["flagged_count"], 1)
+        self.assertEqual(audit["flagged_links"][0]["anchor"], "klik di sini")
+        self.assertFalse(audit["passed"])
+
 if __name__ == "__main__":
     unittest.main()
