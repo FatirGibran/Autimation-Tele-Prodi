@@ -73,5 +73,26 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("https://bif-pwt.telkomuniversity.ac.id/iot-smart-campus-telkom/", data["mainEntityOfPage"]["@id"])
         self.assertEqual(data["image"], ["https://example.com/banner.jpg"])
 
+    def test_generate_rss_feed(self):
+        articles = [
+            {
+                "seo_title": "Riset Wasm & Edge Computing",
+                "slug": "riset-wasm-edge",
+                "meta_description": "Ulasan performa Wasm di node IoT.",
+                "publish_date": "Wed, 30 Sep 2026 12:00:00 +0700",
+                "category": "Cloud"
+            }
+        ]
+        rss_xml = ArticleExporter.generate_rss_feed(articles, {
+            "title": "Kanal Berita & Riset",
+            "link": "https://bif-pwt.telkomuniversity.ac.id"
+        })
+        self.assertIn('<?xml version="1.0" encoding="UTF-8"?>', rss_xml)
+        self.assertIn('<rss version="2.0">', rss_xml)
+        self.assertIn('<title>Kanal Berita &amp; Riset</title>', rss_xml)
+        self.assertIn('<title>Riset Wasm &amp; Edge Computing</title>', rss_xml)
+        self.assertIn('<link>https://bif-pwt.telkomuniversity.ac.id/riset-wasm-edge/</link>', rss_xml)
+        self.assertIn('<category>Cloud</category>', rss_xml)
+
 if __name__ == "__main__":
     unittest.main()
