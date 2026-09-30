@@ -55,6 +55,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_article ON article_audit_logs(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_revisions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    revision_num INTEGER NOT NULL,
+                    html_content TEXT,
+                    meta_description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_rev_article ON article_revisions(article_id);")
+
 
 
     def is_keyphrase_used(self, keyphrase: str) -> bool:
@@ -276,6 +289,32 @@ class StorageManager:
                 "integrity_check": integrity_result,
                 "vacuumed": is_ok
             }
+
+    def create_revision(self, article_id: int) -> Optional[int]:
+        """
+        Creates a timestamped snapshot revision of the current article content.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT html_content, meta_description FROM articles WHERE id = ?", (article_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            rev_count_cur = conn.execute("SELECT COUNT(*) FROM article_revisions WHERE article_id = ?", (article_id,))
+            next_rev = rev_count_cur.fetchone()[0] + 1
+            rev_cur = conn.execute(
+                "INSERT INTO article_revisions (article_id, revision_num, html_content, meta_description) VALUES (?, ?, ?, ?)",
+                (article_id, next_rev, row["html_content"], row["meta_description"])
+            )
+            return rev_cur.lastrowid
+
+    def get_revisions(self, article_id: int) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM article_revisions WHERE article_id = ? ORDER BY revision_num DESC",
+                (article_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
