@@ -39,5 +39,13 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("javascript:", clean)
         self.assertIn('href="#"', clean)
 
+    def test_sanitize_svg_elements(self):
+        svg_html = '<div class="tu-editorial-container"><svg viewBox="0 0 10 10"><foreignObject><script>alert(1)</script></foreignObject><circle cx="5" cy="5" r="5"/></svg></div>'
+        clean, warnings = HTMLSanitizer.sanitize(svg_html)
+        self.assertNotIn("<foreignObject", clean)
+        self.assertNotIn("<script", clean)
+        self.assertIn("<circle", clean)
+        self.assertTrue(any("SVG" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
