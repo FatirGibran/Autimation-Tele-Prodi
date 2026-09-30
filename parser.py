@@ -193,4 +193,33 @@ def calculate_reading_time(text: str, wpm: int = 200) -> str:
     minutes = max(1, round(count / wpm))
     return f"{minutes} Menit Baca"
 
+def parse_markdown_callouts(text: str) -> str:
+    """
+    Parses GitHub-flavored markdown callouts/admonitions (> [!TYPE]) into styled Elementor callout cards.
+    """
+    callout_pattern = re.compile(
+        r"^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*\n((?:>.*(?:\n|$))+)",
+        re.MULTILINE | re.IGNORECASE
+    )
+
+    title_labels = {
+        "NOTE": "Catatan",
+        "TIP": "Tips Penting",
+        "IMPORTANT": "Perhatian",
+        "WARNING": "Peringatan",
+        "CAUTION": "Peringatan Kritis"
+    }
+
+    def replace_callout(match):
+        c_type = match.group(1).upper()
+        raw_body = match.group(2)
+        body_lines = [re.sub(r"^>\s?", "", line).strip() for line in raw_body.splitlines()]
+        body_text = " ".join(line for line in body_lines if line)
+        title = title_labels.get(c_type, c_type.capitalize())
+        css_modifier = c_type.lower()
+        return f'<div class="tu-callout tu-callout-{css_modifier}">\n  <strong class="tu-callout-title">{title}</strong>\n  <p>{body_text}</p>\n</div>'
+
+    return callout_pattern.sub(replace_callout, text)
+
+
 
