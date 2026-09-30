@@ -35,4 +35,5 @@ jobs:
 
     - name: Run Database Backup Test
       run: |
+        python -c "from storage import StorageManager; StorageManager('editorial.db')"
         python scripts/backup_db.py --db editorial.db --dest /tmp/backups
