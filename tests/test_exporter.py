@@ -107,5 +107,18 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('<lastmod>2026-09-28</lastmod>', sitemap)
         self.assertIn('<loc>https://bif-pwt.telkomuniversity.ac.id/ai-kampus-cerdas/</loc>', sitemap)
 
+    def test_generate_social_meta_tags(self):
+        meta = {
+            "seo_title": "Tutorial WebAssembly Edge",
+            "meta_description": "Panduan komputasi edge berlatensi rendah.",
+            "image_url": "https://example.com/banner.png"
+        }
+        tags = ArticleExporter.generate_social_meta_tags(meta, canonical_url="https://example.com/tutorial")
+        self.assertIn('property="og:type" content="article"', tags)
+        self.assertIn('property="og:title" content="Tutorial WebAssembly Edge"', tags)
+        self.assertIn('name="twitter:card" content="summary_large_image"', tags)
+        self.assertIn('property="og:image" content="https://example.com/banner.png"', tags)
+        self.assertIn('property="og:url" content="https://example.com/tutorial"', tags)
+
 if __name__ == "__main__":
     unittest.main()
