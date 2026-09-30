@@ -222,6 +222,33 @@ class EditorialComponents:
       line-height: 1.65;
       background: #ffffff;
     }}
+    .tu-stat-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 28px 0;
+    }}
+    .tu-stat-card {{
+      background: {cls.SOFT_BG};
+      border: 1px solid rgba(197, 48, 48, 0.2);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }}
+    .tu-stat-number {{
+      font-size: 32px;
+      font-weight: 800;
+      color: {cls.PRIMARY_COLOR};
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }}
+    .tu-stat-label {{
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }}
 """
 
     @classmethod
@@ -313,4 +340,22 @@ class EditorialComponents:
         return f"""{heading_html}    <div class="tu-faq-wrap">
 {items_html}
     </div>"""
+
+    @classmethod
+    def render_stat_grid(cls, stats: List[Dict[str, str]]) -> str:
+        cards = []
+        for s in stats:
+            num = s.get("value", "")
+            lbl = s.get("label", "")
+            cards.append(
+                f"""      <div class="tu-stat-card">
+        <div class="tu-stat-number">{num}</div>
+        <div class="tu-stat-label">{lbl}</div>
+      </div>"""
+            )
+        cards_html = "\n".join(cards)
+        return f"""    <div class="tu-stat-grid">
+{cards_html}
+    </div>"""
+
 
