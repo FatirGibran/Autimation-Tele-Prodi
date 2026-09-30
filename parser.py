@@ -9,12 +9,28 @@ def clean_url(raw_url: str) -> str:
     # Extract URL from markdown link syntax [text](http://...)
     md_match = re.search(r'\((https?://[^\s\)]+)\)', raw_url)
     if md_match:
-        return md_match.group(1).strip()
-    # Plain URL regex
-    url_match = re.search(r'(https?://[^\s\]\>]+)', raw_url)
-    if url_match:
-        return url_match.group(1).strip()
-    return DEFAULT_PLACEHOLDER_IMG
+        url = md_match.group(1).strip()
+    else:
+        # Plain URL regex
+        url_match = re.search(r'(https?://[^\s\]\>]+)', raw_url)
+        if url_match:
+            url = url_match.group(1).strip()
+        else:
+            return DEFAULT_PLACEHOLDER_IMG
+
+    import urllib.parse as urlparse
+    parsed = urlparse.urlsplit(url)
+    if parsed.query:
+        tracking_params = {
+            "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+            "fbclid", "gclid", "ref", "mc_eid", "igshid"
+        }
+        query_pairs = urlparse.parse_qsl(parsed.query, keep_blank_values=True)
+        filtered_pairs = [(k, v) for k, v in query_pairs if k.lower() not in tracking_params]
+        new_query = urlparse.urlencode(filtered_pairs)
+        url = urlparse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, new_query, parsed.fragment))
+
+    return url
 
 def parse_telegram_input(raw_text: str) -> Dict[str, Any]:
     """
