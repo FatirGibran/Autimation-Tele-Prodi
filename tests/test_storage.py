@@ -123,5 +123,33 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(by_tag), 1)
         self.assertEqual(by_tag[0]["id"], art_id)
 
+    def test_status_transitions_and_audit_logs(self):
+        art_id = self.storage.save_article({
+            "topic": "Status Test",
+            "category": "System",
+            "publish_date": "2026-09-30",
+            "focus_keyphrase": "status test",
+            "seo_title": "Status Test Article",
+            "slug": "status-test-article",
+            "meta_description": "Meta description test for status transitions.",
+            "status": "draft"
+        })
+
+        success = self.storage.update_status(art_id, "ready", note="Lolos audit Yoast SEO")
+        self.assertTrue(success)
+        self.assertFalse(self.storage.update_status(99999, "ready"))
+
+        art = self.storage.get_article_by_id(art_id)
+        self.assertEqual(art["status"], "ready")
+
+        self.storage.update_status(art_id, "published", note="Dipublikasikan ke WP")
+        logs = self.storage.get_audit_logs(art_id)
+        self.assertEqual(len(logs), 2)
+        self.assertEqual(logs[0]["old_status"], "draft")
+        self.assertEqual(logs[0]["new_status"], "ready")
+        self.assertEqual(logs[0]["note"], "Lolos audit Yoast SEO")
+        self.assertEqual(logs[1]["old_status"], "ready")
+        self.assertEqual(logs[1]["new_status"], "published")
+
 if __name__ == "__main__":
     unittest.main()
