@@ -184,5 +184,21 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(filtered), 1)
         self.assertEqual(filtered[0]["slug"], "artikel-dua")
 
+    def test_search_articles(self):
+        self.storage.save_article({
+            "topic": "Edge AI Security Protocol",
+            "category": "Keamanan",
+            "publish_date": "2026-10-01",
+            "focus_keyphrase": "edge ai security",
+            "seo_title": "Edge AI Security",
+            "slug": "edge-ai-sec",
+            "meta_description": "Enkripsi end to end pada sensor IoT edge.",
+            "status": "published"
+        })
+        results = self.storage.search_articles("sensor IoT")
+        self.assertGreaterEqual(len(results), 1)
+        self.assertEqual(results[0]["slug"], "edge-ai-sec")
+        self.assertIn("Enkripsi", results[0]["matched_snippet"])
+
 if __name__ == "__main__":
     unittest.main()
