@@ -50,5 +50,16 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertGreater(report["readability"]["total_sentences"], 0)
         self.assertIn("avg_words_per_sentence", report["readability"])
 
+    def test_consecutive_sentence_starts_detection(self):
+        repetitive_text = "Namun ini adalah kalimat satu. Namun ini adalah kalimat kedua. Namun ini adalah kalimat ketiga."
+        readability = YoastSEOValidator.analyze_readability(repetitive_text)
+        self.assertTrue(readability["has_consecutive_duplicates"])
+        self.assertFalse(readability["is_readable"])
+
+        clean_text = "Pertama kita mulai. Kemudian langkah selanjutnya. Terakhir kita evaluasi."
+        readability_clean = YoastSEOValidator.analyze_readability(clean_text)
+        self.assertFalse(readability_clean["has_consecutive_duplicates"])
+        self.assertTrue(readability_clean["is_readable"])
+
 if __name__ == "__main__":
     unittest.main()
