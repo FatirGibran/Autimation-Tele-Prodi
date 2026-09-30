@@ -116,6 +116,22 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Inisiasi Riset", timeline)
         self.assertIn("Q1 2026", timeline)
 
+    def test_render_alumni_quote_card(self):
+        card = EditorialComponents.render_alumni_quote_card(
+            name="Ahmad Fauzan",
+            batch="Angkatan 2022",
+            role="AI Engineer",
+            company="Tech Corp",
+            quote="Kurikulum prodi sangat aplikatif!",
+            avatar_url="https://example.com/avatar.jpg"
+        )
+        self.assertIn("tu-alumni-card", card)
+        self.assertIn("Ahmad Fauzan", card)
+        self.assertIn("Angkatan 2022", card)
+        self.assertIn("Tech Corp", card)
+        self.assertIn("Kurikulum prodi sangat aplikatif!", card)
+        self.assertIn("tu-alumni-avatar", card)
+
 if __name__ == "__main__":
     unittest.main()
 
