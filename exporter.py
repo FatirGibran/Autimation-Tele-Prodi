@@ -393,6 +393,33 @@ class ArticleExporter:
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_course_json_ld(course_data: Dict[str, Any]) -> str:
+        """
+        Generates schema.org Course structured data JSON-LD script for academic courses.
+        """
+        schema: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Course",
+            "name": course_data.get("name", ""),
+            "description": course_data.get("description", ""),
+            "courseCode": course_data.get("course_code", ""),
+            "provider": {
+                "@type": "CollegeOrUniversity",
+                "name": "Telkom University Purwokerto",
+                "sameAs": "https://bif-pwt.telkomuniversity.ac.id"
+            }
+        }
+        if course_data.get("credits"):
+            schema["numberOfCredits"] = course_data["credits"]
+        if course_data.get("prerequisites"):
+            schema["coursePrerequisites"] = course_data["prerequisites"]
+        if course_data.get("url"):
+            schema["url"] = course_data["url"]
+
+        return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2, ensure_ascii=False)}\n</script>'
+
+
 
 
 
