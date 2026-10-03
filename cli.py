@@ -226,9 +226,45 @@ def cmd_meta(args):
         print(f"Metadata [{args.key}] {'berhasil dihapus' if ok else 'tidak ditemukan'}.")
 
 
+def cmd_analytics(args):
+    data = storage.get_editorial_analytics(days=args.days)
+    print(f"=== Analitik Editorial ({data['window_days']} Hari Terakhir) ===")
+    print(f"Total Artikel Baru   : {data['total_articles']}")
+    print(f"Artikel Terbit       : {data['published_count']}")
+    print(f"Kategori Aktif       : {data['active_categories']}")
+    print(f"Kecepatan Publikasi  : {data['publishing_velocity_per_day']} artikel/hari")
+    print("Distribusi Status    :")
+    for status, cnt in data.get("status_breakdown", {}).items():
+        print(f" - {status}: {cnt}")
+
+
+def cmd_prune(args):
+    deleted = storage.prune_revisions(retention_days=args.retention_days, keep_minimum=args.keep_minimum)
+    print("=== Pembersihan Revisi Database ===")
+    print(f"Revisi usang dihapus : {deleted} revisi")
+
+
+def cmd_hugo(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    hugo_md = ArticleExporter.to_hugo_markdown(
+        metadata=article,
+        html_content=article.get("html_content", ""),
+        is_draft=article.get("status") == "draft"
+    )
+    out_path.write_text(hugo_md, encoding="utf-8")
+    print(f"Export Hugo markdown berhasil -> {out_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
 
     # Audit command
     audit_parser = subparsers.add_parser("audit", help="Audit file HTML dan Metadata Yoast SEO")
@@ -304,8 +340,26 @@ def main():
     meta_parser.add_argument("--value", help="Nilai metadata")
     meta_parser.set_defaults(func=cmd_meta)
 
+    # Analytics command
+    analytics_parser = subparsers.add_parser("analytics", help="Tampilkan analitik editorial dan kecepatan publikasi")
+    analytics_parser.add_argument("--days", type=int, default=30, help="Jendela waktu analisis dalam hari")
+    analytics_parser.set_defaults(func=cmd_analytics)
+
+    # Prune command
+    prune_parser = subparsers.add_parser("prune", help="Pangkas riwayat revisi artikel yang sudah kadaluarsa")
+    prune_parser.add_argument("--retention-days", type=int, default=30, help="Masa retensi revisi dalam hari")
+    prune_parser.add_argument("--keep-minimum", type=int, default=2, help="Jumlah minimum revisi yang dipertahankan")
+    prune_parser.set_defaults(func=cmd_prune)
+
+    # Hugo command
+    hugo_parser = subparsers.add_parser("hugo", help="Export artikel ke format Markdown kompatibel Hugo static site generator")
+    hugo_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    hugo_parser.add_argument("--out", help="Path berkas output Markdown Hugo")
+    hugo_parser.set_defaults(func=cmd_hugo)
+
     args = parser.parse_args()
     args.func(args)
+
 
 
 if __name__ == "__main__":
