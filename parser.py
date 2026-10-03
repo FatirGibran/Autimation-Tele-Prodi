@@ -373,3 +373,27 @@ def get_indonesian_reading_level_label(score: float) -> str:
         return "Jurnal Ilmiah & Makalah Riset Lanjutan"
     else:
         return "Monograf Riset Khusus / Sangat Padat"
+
+
+def parse_markdown_task_lists(text: str) -> str:
+    """
+    Parses Markdown task lists (- [ ] and - [x]) into semantic HTML checklists.
+    """
+    if not text:
+        return ""
+
+    def replace_task_block(match):
+        block = match.group(0)
+        items = []
+        for line in block.strip().splitlines():
+            line_str = line.strip()
+            checked_match = re.match(r"^[-*]\s+\[([ xX])\]\s+(.*)$", line_str)
+            if checked_match:
+                is_checked = checked_match.group(1).lower() == "x"
+                label = checked_match.group(2)
+                chk_attr = " checked" if is_checked else ""
+                items.append(f'  <li class="tu-task-item"><input type="checkbox"{chk_attr} disabled /> <span>{label}</span></li>')
+        return '<ul class="tu-task-list">\n' + "\n".join(items) + "\n</ul>"
+
+    pattern = re.compile(r"^(?:[-*]\s+\[[ xX]\]\s+.*(?:\n|$))+", re.MULTILINE)
+    return pattern.sub(replace_task_block, text)
