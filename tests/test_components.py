@@ -197,6 +197,64 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("98%", metric)
         self.assertIn("Tingkat Kelulusan Tepat Waktu", metric)
 
+    def test_render_pull_quote(self):
+        quote = EditorialComponents.render_pull_quote(
+            quote="Komputasi awan dan edge computing adalah masa depan industri telekomunikasi.",
+            author="Prof. Adiwijaya",
+            source="IEEE Journal",
+            citation_url="https://ieee.org/paper123"
+        )
+        self.assertIn("tu-pull-quote", quote)
+        self.assertIn("Prof. Adiwijaya", quote)
+        self.assertIn("IEEE Journal", quote)
+
+    def test_render_lab_affiliation_banner(self):
+        banner = EditorialComponents.render_lab_affiliation_banner(
+            lab_name="Laboratorium Jaringan & Keamanan Siber",
+            focus_area="Kriptografi Post-Quantum",
+            coordinator="Dr. Hendra",
+            lab_url="https://bif-pwt.telkomuniversity.ac.id/lab/cyber"
+        )
+        self.assertIn("tu-lab-banner", banner)
+        self.assertIn("Kriptografi Post-Quantum", banner)
+        self.assertIn("Dr. Hendra", banner)
+
+    def test_render_prerequisite_tree(self):
+        tree = EditorialComponents.render_prerequisite_tree(
+            course_code="CS304",
+            course_name="Komputasi Bergerak Lanjut",
+            prerequisites=["Struktur Data", "Jaringan Komputer"],
+            semester="Semester 5"
+        )
+        self.assertIn("tu-prereq-card", tree)
+        self.assertIn("CS304", tree)
+        self.assertIn("Jaringan Komputer", tree)
+
+    def test_render_event_box(self):
+        box = EditorialComponents.render_event_box(
+            event_name="Workshop Edge AI & Microcontrollers",
+            date_time="10 Oktober 2026, 09:00 WIB",
+            speaker="Alumni Ahli IoT",
+            location="Auditorium Gedung IoT Telkom Purwokerto",
+            rsvp_url="https://bif-pwt.telkomuniversity.ac.id/event/rsvp"
+        )
+        self.assertIn("tu-event-box", box)
+        self.assertIn("Workshop Edge AI", box)
+        self.assertIn("Daftar Seminar", box)
+
+    def test_render_code_repo_card(self):
+        repo = EditorialComponents.render_code_repo_card(
+            repo_name="telkom-edge-inference",
+            github_url="https://github.com/prodi/telkom-edge-inference",
+            stars="142",
+            language="Rust",
+            description="Runtime inferensi model kuantisasi untuk MCU."
+        )
+        self.assertIn("tu-repo-card", repo)
+        self.assertIn("telkom-edge-inference", repo)
+        self.assertIn("142", repo)
+        self.assertIn("Rust", repo)
+
 if __name__ == "__main__":
     unittest.main()
 
