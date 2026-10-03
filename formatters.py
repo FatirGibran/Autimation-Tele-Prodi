@@ -132,3 +132,22 @@ class TelegramFormatter:
         icon = "🟢" if score >= 60.0 else ("🟡" if score >= 40.0 else "🔴")
         desc = label or ("Keterbacaan Baik" if score >= 60.0 else "Perlu Penyederhanaan Kalimat")
         return f"{icon} **Skor Keterbacaan:** `{score:.1f}` — *{desc}*"
+
+    @staticmethod
+    def build_review_management_keyboard(article_id: int, slug: str = "") -> Dict[str, Any]:
+        """
+        Builds inline keyboard markup schema for Telegram bot review workflows.
+        """
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ Setujui & Terbitkan", "callback_data": f"approve:{article_id}"},
+                    {"text": "✏️ Minta Revisi", "callback_data": f"revise:{article_id}"},
+                ],
+                [
+                    {"text": "📊 Detail Analisis", "callback_data": f"analyze:{article_id}"},
+                    {"text": "🗑️ Arsipkan", "callback_data": f"archive:{article_id}"},
+                ],
+            ]
+        }
+
