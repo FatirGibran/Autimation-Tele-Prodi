@@ -126,6 +126,31 @@ class YoastSEOValidator:
             "advice": advice
         }
 
+    @classmethod
+    def evaluate_paragraph_lengths(cls, html_content: str, max_words: int = 150) -> Dict[str, Any]:
+        """
+        Validates paragraph lengths against Yoast SEO threshold (maximum 150 words per paragraph).
+        """
+        paragraphs = re.findall(r'<p[^>]*>(.*?)</p>', html_content, re.DOTALL | re.IGNORECASE)
+        flagged = []
+        for idx, p in enumerate(paragraphs, start=1):
+            text = cls.extract_text(p)
+            wc = len(text.split())
+            if wc > max_words:
+                flagged.append({
+                    "paragraph_index": idx,
+                    "word_count": wc,
+                    "preview": text[:80] + "..." if len(text) > 80 else text
+                })
+
+        return {
+            "total_paragraphs": len(paragraphs),
+            "max_words_allowed": max_words,
+            "flagged_count": len(flagged),
+            "flagged_paragraphs": flagged,
+            "passed": len(flagged) == 0
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
