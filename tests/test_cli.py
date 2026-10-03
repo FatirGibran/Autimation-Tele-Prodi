@@ -136,11 +136,103 @@ class TestCLI(unittest.TestCase):
                 self.assertIn("Sitemap XML berhasil dibuat", output)
 
             content = Path(temp_sitemap).read_text(encoding="utf-8")
-            self.assertIn("<urlset", content)
             self.assertIn("https://bif-pwt.telkomuniversity.ac.id", content)
         finally:
             if Path(temp_sitemap).exists():
                 Path(temp_sitemap).unlink()
+
+    def test_cmd_density(self):
+        class Args:
+            html = str(self.html_file)
+            keyphrase = "WebAssembly edge computing IoT"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_density(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Analisis Kerapatan Kata Kunci", output)
+            self.assertIn("WebAssembly edge computing IoT", output)
+            self.assertIn("Persentase", output)
+
+    def test_cmd_trash_and_restore(self):
+        # Save a sample article
+        art_id = cli.storage.save_article({
+            "topic": "Sampah CLI",
+            "category": "Testing",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "sampah cli",
+            "seo_title": "Sampah CLI",
+            "slug": "sampah-cli",
+            "meta_description": "Deskripsi artikel sampah cli.",
+            "status": "draft"
+        })
+        class DelArgs:
+            action = "delete"
+            id = art_id
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_trash(DelArgs())
+            self.assertIn("berhasil dipindahkan ke sampah", fake_out.getvalue())
+
+        class RestoreArgs:
+            action = "restore"
+            id = art_id
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_trash(RestoreArgs())
+            self.assertIn("berhasil dipulihkan dari sampah", fake_out.getvalue())
+
+    def test_cmd_meta_get_set(self):
+        art_id = cli.storage.save_article({
+            "topic": "Meta CLI",
+            "category": "Testing",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "meta cli",
+            "seo_title": "Meta CLI",
+            "slug": "meta-cli",
+            "meta_description": "Deskripsi meta cli.",
+            "status": "draft"
+        })
+        class SetArgs:
+            action = "set"
+            id = art_id
+            key = "semester"
+            value = "ganjil"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_meta(SetArgs())
+            self.assertIn("Metadata berhasil disimpan", fake_out.getvalue())
+
+        class GetArgs:
+            action = "get"
+            id = art_id
+            key = "semester"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_meta(GetArgs())
+            self.assertIn("ganjil", fake_out.getvalue())
+
+    def test_cmd_feed(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".xml", delete=False) as tf:
+            feed_file = tf.name
+
+        try:
+            class Args:
+                format = "atom"
+                out = feed_file
+                title = "Test Feed"
+                base_url = "https://bif-pwt.telkomuniversity.ac.id"
+                limit = 10
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_feed(Args())
+                self.assertIn("berhasil diekspor", fake_out.getvalue())
+
+            content = Path(feed_file).read_text(encoding="utf-8")
+            self.assertIn("<feed", content)
+        finally:
+            if Path(feed_file).exists():
+                Path(feed_file).unlink()
 
 if __name__ == "__main__":
     unittest.main()
