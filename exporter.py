@@ -310,6 +310,39 @@ class ArticleExporter:
 {body}
 </feed>"""
 
+    @staticmethod
+    def generate_json_feed(articles: List[Dict[str, Any]], feed_info: Dict[str, str]) -> str:
+        """
+        Generates standard JSON Feed v1.1 formatted syndication feed.
+        """
+        base_url = feed_info.get("base_url", "https://bif-pwt.telkomuniversity.ac.id").rstrip("/")
+        items = []
+        for art in articles:
+            slug = art.get("slug", "")
+            if not slug:
+                continue
+            item = {
+                "id": f"{base_url}/{slug}/",
+                "url": f"{base_url}/{slug}/",
+                "title": art.get("seo_title", art.get("topic", "")),
+                "summary": art.get("meta_description", ""),
+                "date_published": art.get("publish_date", ""),
+            }
+            if art.get("html_content"):
+                item["content_html"] = art["html_content"]
+            if art.get("image_url"):
+                item["image"] = art["image_url"]
+            items.append(item)
+
+        feed_data = {
+            "version": "https://jsonfeed.org/version/1.1",
+            "title": feed_info.get("title", "S1 Teknik Informatika Telkom University Purwokerto"),
+            "home_page_url": base_url,
+            "feed_url": feed_info.get("feed_url", f"{base_url}/feed.json"),
+            "items": items
+        }
+        return json.dumps(feed_data, indent=2, ensure_ascii=False)
+
 
 
 
