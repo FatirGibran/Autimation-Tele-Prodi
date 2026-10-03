@@ -445,6 +445,34 @@ class StorageManager:
             row = cursor.fetchone()
             return row[0].upper() if row else "UNKNOWN"
 
+    def list_categories(self) -> List[Dict[str, Any]]:
+        """
+        Retrieves distinct categories across active articles with counts.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT category, COUNT(1) as article_count
+                FROM articles
+                WHERE is_deleted = 0
+                GROUP BY category
+                ORDER BY article_count DESC, category ASC
+            """)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_articles_by_category(self, category: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves non-deleted articles filtered by a specific category.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT * FROM articles
+                WHERE LOWER(TRIM(category)) = LOWER(TRIM(?)) AND is_deleted = 0
+                ORDER BY id DESC
+                LIMIT ?
+            """, (category, limit))
+            return [dict(row) for row in cursor.fetchall()]
+
+
 
 
 
