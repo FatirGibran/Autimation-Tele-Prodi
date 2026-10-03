@@ -222,4 +222,27 @@ class WordPressClient:
                 "status_message": "Connection or authentication failed",
             }
 
+    def batch_update_post_status(self, post_ids: List[int], status: str) -> Dict[str, Any]:
+        """
+        Updates post status across multiple WordPress post IDs in batch.
+        Returns aggregate result counts with lists of succeeded and failed IDs.
+        """
+        succeeded: List[int] = []
+        failed: List[Dict[str, Any]] = []
+
+        for pid in post_ids:
+            try:
+                self.update_post(pid, {"status": status})
+                succeeded.append(pid)
+            except Exception as e:
+                failed.append({"id": pid, "error": str(e)})
+
+        return {
+            "total": len(post_ids),
+            "succeeded": succeeded,
+            "failed": failed,
+            "all_success": len(failed) == 0,
+        }
+
+
 
