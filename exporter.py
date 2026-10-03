@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -354,9 +355,9 @@ class ArticleExporter:
         import html
         # Replace block elements with newlines
         text = re.sub(r"<(?:p|div|h[1-6]|li|blockquote|tr)[^>]*>", "\n", html_content, flags=re.IGNORECASE)
-        text = re.sub(r"<[^>]+>", " ", text)
+        text = re.sub(r"<[^>]+>", "", text)
         text = html.unescape(text)
-        lines = [line.strip() for line in text.splitlines()]
+        lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
         clean_lines = [l for l in lines if l]
         return "\n\n".join(clean_lines)
 

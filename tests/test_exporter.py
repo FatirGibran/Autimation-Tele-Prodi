@@ -1,4 +1,5 @@
 import unittest
+import json
 from exporter import ArticleExporter
 
 class TestArticleExporter(unittest.TestCase):
@@ -132,6 +133,54 @@ class TestArticleExporter(unittest.TestCase):
         self.assertEqual(schema["itemListElement"][0]["position"], 1)
         self.assertEqual(schema["itemListElement"][0]["name"], "Beranda")
         self.assertEqual(schema["itemListElement"][2]["name"], "WebAssembly Edge")
+
+    def test_generate_atom_feed(self):
+        articles = [
+            {
+                "slug": "riset-edge-ai",
+                "seo_title": "Riset Edge AI Terapan",
+                "meta_description": "Deskripsi riset edge ai terbaru.",
+                "publish_date": "2026-10-01"
+            }
+        ]
+        info = {
+            "title": "Kanal Riset Telkom University Purwokerto",
+            "base_url": "https://bif-pwt.telkomuniversity.ac.id"
+        }
+        atom_xml = ArticleExporter.generate_atom_feed(articles, info)
+        self.assertIn('<feed xmlns="http://www.w3.org/2005/Atom">', atom_xml)
+        self.assertIn('<title>Kanal Riset Telkom University Purwokerto</title>', atom_xml)
+        self.assertIn('<id>https://bif-pwt.telkomuniversity.ac.id/riset-edge-ai/</id>', atom_xml)
+        self.assertIn('Riset Edge AI Terapan', atom_xml)
+
+    def test_generate_json_feed(self):
+        articles = [
+            {
+                "slug": "berita-pmb",
+                "seo_title": "Pendaftaran Mahasiswa Baru 2026",
+                "meta_description": "Informasi jalur seleksi PMB.",
+                "publish_date": "2026-10-01"
+            }
+        ]
+        info = {
+            "title": "Warta PMB Prodi",
+            "base_url": "https://bif-pwt.telkomuniversity.ac.id"
+        }
+        feed_json_str = ArticleExporter.generate_json_feed(articles, info)
+        feed_data = json.loads(feed_json_str)
+        self.assertEqual(feed_data["version"], "https://jsonfeed.org/version/1.1")
+        self.assertEqual(feed_data["title"], "Warta PMB Prodi")
+        self.assertEqual(len(feed_data["items"]), 1)
+        self.assertEqual(feed_data["items"][0]["title"], "Pendaftaran Mahasiswa Baru 2026")
+
+    def test_to_plain_text(self):
+        html = '<div class="tu-editorial-container"><h2>Judul Penting</h2><p>Paragraf <strong>pertama</strong> dengan tautan <a href="#">klik</a>.</p><p>Paragraf kedua.</p></div>'
+        plain = ArticleExporter.to_plain_text(html)
+        self.assertNotIn("<h2>", plain)
+        self.assertNotIn("<p>", plain)
+        self.assertIn("Judul Penting", plain)
+        self.assertIn("Paragraf pertama dengan tautan klik.", plain)
+        self.assertIn("Paragraf kedua.", plain)
 
 if __name__ == "__main__":
     unittest.main()
