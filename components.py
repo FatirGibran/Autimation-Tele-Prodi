@@ -576,6 +576,40 @@ class EditorialComponents:
       </ul>
     </nav>"""
 
+    @classmethod
+    def render_author_team(cls, members: List[Dict[str, str]], title: str = "Tim Penulis & Peneliti") -> str:
+        """
+        Renders an editorial author team and faculty researcher profile grid.
+        """
+        if not members:
+            return ""
+
+        from xml.sax.saxutils import escape
+
+        cards = []
+        for m in members:
+            name = escape(m.get("name", ""))
+            role = escape(m.get("role", ""))
+            lab = escape(m.get("lab", ""))
+            avatar = m.get("avatar_url", "")
+            img_html = f'<img src="{escape(avatar)}" alt="{name}" class="tu-team-avatar" loading="lazy" decoding="async" />' if avatar else '<div class="tu-team-avatar-placeholder"></div>'
+            cards.append(f"""        <div class="tu-team-card">
+          {img_html}
+          <div class="tu-team-info">
+            <h5 class="tu-team-name">{name}</h5>
+            <span class="tu-team-role">{role}</span>
+            {f'<span class="tu-team-lab">{lab}</span>' if lab else ''}
+          </div>
+        </div>""")
+
+        grid_html = "\n".join(cards)
+        return f"""    <section class="tu-team-section">
+      <h4 class="tu-team-title">{escape(title)}</h4>
+      <div class="tu-team-grid">
+{grid_html}
+      </div>
+    </section>"""
+
 
 
 
