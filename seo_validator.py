@@ -151,6 +151,33 @@ class YoastSEOValidator:
             "passed": len(flagged) == 0
         }
 
+    @classmethod
+    def evaluate_subheading_distribution(cls, html_content: str, max_words_per_section: int = 300) -> Dict[str, Any]:
+        """
+        Audits text sections between H2/H3 subheadings against the 300-word limit.
+        Ensures content is visually structured with sufficient subheadings.
+        """
+        parts = re.split(r'<h[234][^>]*>.*?</h[234]>', html_content, flags=re.IGNORECASE | re.DOTALL)
+        flagged_sections = []
+        for idx, part in enumerate(parts, start=1):
+            text = cls.extract_text(part)
+            words = text.split()
+            wc = len(words)
+            if wc > max_words_per_section:
+                flagged_sections.append({
+                    "section_index": idx,
+                    "word_count": wc,
+                    "preview": " ".join(words[:15]) + "..."
+                })
+
+        return {
+            "total_sections": len(parts),
+            "max_words_allowed": max_words_per_section,
+            "flagged_count": len(flagged_sections),
+            "flagged_sections": flagged_sections,
+            "passed": len(flagged_sections) == 0
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
