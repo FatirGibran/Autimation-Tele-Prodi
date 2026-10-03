@@ -238,6 +238,39 @@ class YoastSEOValidator:
             "message": "Struktur H1 optimal (maksimal 1 tag H1)" if passed else f"Terdeteksi {count} tag H1 (disarankan maksimal 1 tag H1 per artikel)"
         }
 
+    @classmethod
+    def evaluate_academic_title_style(cls, title: str) -> Dict[str, Any]:
+        """
+        Evaluates SEO title adherence to academic journalism style guides
+        (structured subtitle and domain power terminology).
+        """
+        clean_title = title.strip()
+        has_subtitle = any(sep in clean_title for sep in [":", " -- ", " - ", "|"])
+
+        academic_power_terms = [
+            "inovasi", "riset", "implementasi", "analisis", "optimalisasi",
+            "arsitektur", "komputasi", "penerapan", "integrasi", "evaluasi",
+            "perancangan", "sistem", "efisiensi", "keamanan", "prototipe"
+        ]
+
+        title_lower = clean_title.lower()
+        matched_terms = [term for term in academic_power_terms if term in title_lower]
+
+        score = 60
+        if has_subtitle:
+            score += 20
+        if matched_terms:
+            score += min(20, len(matched_terms) * 10)
+
+        is_recommended = score >= 80
+        return {
+            "title": clean_title,
+            "has_subtitle": has_subtitle,
+            "power_terms_found": matched_terms,
+            "score": score,
+            "is_recommended": is_recommended
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
