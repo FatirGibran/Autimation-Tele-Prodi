@@ -343,6 +343,23 @@ class ArticleExporter:
         }
         return json.dumps(feed_data, indent=2, ensure_ascii=False)
 
+    @staticmethod
+    def to_plain_text(html_content: str) -> str:
+        """
+        Extracts clean plain text formatted with paragraph breaks, stripping HTML elements.
+        Useful for text search indexing, CLI terminal rendering, or speech synthesis.
+        """
+        if not html_content:
+            return ""
+        import html
+        # Replace block elements with newlines
+        text = re.sub(r"<(?:p|div|h[1-6]|li|blockquote|tr)[^>]*>", "\n", html_content, flags=re.IGNORECASE)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = html.unescape(text)
+        lines = [line.strip() for line in text.splitlines()]
+        clean_lines = [l for l in lines if l]
+        return "\n\n".join(clean_lines)
+
 
 
 
