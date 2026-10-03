@@ -334,3 +334,26 @@ def extract_keyword_frequency(text: str, n_gram: int = 1, top_n: int = 10) -> Li
 
     sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
     return sorted_counts[:top_n]
+
+
+def parse_math_blocks(text: str) -> str:
+    """
+    Parses LaTeX/Math syntax ($$...$$ display blocks and $...$ inline math)
+    into semantic styled HTML math elements for academic papers.
+    """
+    if not text:
+        return ""
+    # 1. Display math blocks ($$...$$)
+    def replace_block(match):
+        code = match.group(1).strip()
+        return f'<div class="tu-math-block"><code>{code}</code></div>'
+
+    text = re.sub(r"\$\$\s*([\s\S]*?)\s*\$\$", replace_block, text)
+
+    # 2. Inline math ($...$), ensuring it's not preceded/followed by digits (currency protection)
+    def replace_inline(match):
+        code = match.group(1).strip()
+        return f'<span class="tu-math-inline"><code>{code}</code></span>'
+
+    text = re.sub(r"(?<![\w\$])\$([^\$\n]+?)\$(?![\w\$])", replace_inline, text)
+    return text
