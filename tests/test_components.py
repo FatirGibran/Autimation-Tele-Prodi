@@ -146,6 +146,57 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("tu-matrix-cross", matrix)
         self.assertIn("8 Semester", matrix)
 
+    def test_render_table_of_contents(self):
+        headings = [
+            {"tag": "h2", "text": "Pengantar WebAssembly"},
+            {"tag": "h3", "text": "Keunggulan Kinerja"}
+        ]
+        toc = EditorialComponents.render_table_of_contents(headings)
+        self.assertIn("tu-toc-card", toc)
+        self.assertIn("#pengantar-webassembly", toc)
+        self.assertIn("tu-toc-sub", toc)
+
+    def test_render_author_team(self):
+        members = [
+            {"name": "Dr. Ir. Budi", "role": "Dosen Pembina", "lab": "Lab IoT & Edge", "avatar_url": "https://example.com/budi.jpg"}
+        ]
+        grid = EditorialComponents.render_author_team(members)
+        self.assertIn("tu-team-section", grid)
+        self.assertIn("Dr. Ir. Budi", grid)
+        self.assertIn("Lab IoT &amp; Edge", grid)
+
+    def test_render_download_card(self):
+        card = EditorialComponents.render_download_card(
+            title="Silabus Mata Kuliah Edge Computing",
+            description="Panduan kurikulum dan RPS semester genap.",
+            file_type="PDF",
+            file_size="2.4 MB",
+            download_url="https://bif-pwt.telkomuniversity.ac.id/rps.pdf"
+        )
+        self.assertIn("tu-download-card", card)
+        self.assertIn("PDF", card)
+        self.assertIn("2.4 MB", card)
+
+    def test_render_video_embed(self):
+        video = EditorialComponents.render_video_embed(
+            embed_url="https://www.youtube-nocookie.com/embed/demo123",
+            title="Kuliah Umum Edge Computing",
+            caption="Rekaman sesi kuliah umum semester genap 2026."
+        )
+        self.assertIn("tu-video-figure", video)
+        self.assertIn("Kuliah Umum Edge Computing", video)
+
+    def test_render_admission_cta(self):
+        cta = EditorialComponents.render_admission_cta()
+        self.assertIn("tu-cta-banner", cta)
+        self.assertIn("Telkom University Purwokerto", cta)
+
+    def test_render_metric_callout(self):
+        metric = EditorialComponents.render_metric_callout("98%", "Tingkat Kelulusan Tepat Waktu", "Berdasarkan audit akademik 2026")
+        self.assertIn("tu-metric-card", metric)
+        self.assertIn("98%", metric)
+        self.assertIn("Tingkat Kelulusan Tepat Waktu", metric)
+
 if __name__ == "__main__":
     unittest.main()
 
