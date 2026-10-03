@@ -131,3 +131,36 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 76. **Subcommand CLI Baru (`trash`, `density`, `feed`, `meta`)**: Ekstensi perkakas baris perintah untuk audit dan tata kelola editorial terpadu.
 77. **Perkakas Otomasi Migrasi Database & Benchmark SEO**: Skrip mandiri `scripts/migrate_db.py` dan `scripts/benchmark_seo.py` dengan throughput tinggi (>3.600 ops/sec).
 78. **Pengembangan Suite Pengujian Komprehensif (120 Tests Passing)**: Penambahan pengujian unit penuh dengan 100% kelulusan pengujian (0 fail, 0 error).
+
+---
+
+## 10. Pembaruan Fitur & Arsitektur v2.2.0 (#79 - #105)
+
+79. **Pembersihan Data URI / Base64 pada Gambar (`sanitizer.py`)**: Netralisasi atribut `src` gambar berformat `data:` untuk mencegah eksploitasi payload tersembunyi dan memory bloating.
+80. **Sanitasi Tag Definisi Akademik `<abbr>` & `<dfn>` (`sanitizer.py`)**: Filtrasi atribut aman pada tag glosarium dan singkatan ilmiah.
+81. **Pembersihan Paragraf Kosong & Normalisasi Whitespace (`sanitizer.py`)**: Stripping otomatis elemen `<p></p>` kosong dan perataan spasi berlebih.
+82. **Parser Matematika LaTeX & Persamaan Ilmiah (`parser.py`)**: Konversi persamaan matematika inline (`$...$`) dan blok (`$$...$$`) ke markup standar institusional.
+83. **Klasifikasi Tingkat Kemudahan Baca Bahasa Indonesia (`parser.py`)**: Kategorisasi label keterbacaan teks (Sangat Mudah hingga Sangat Sulit) berbasis metrik Flesch-Kincaid lokal.
+84. **Parser Checklist & Task List Markdown (`parser.py`)**: Konversi sintaks tugas interaktif `[ ]` dan `[x]` ke elemen checkbox responsif.
+85. **Generator Slug Judul Unik dengan Resolusi Tabrakan (`parser.py`)**: Pencegahan tabrakan tautan URL kanonis dengan penomoran berurutan otomatis.
+86. **Validator Struktur Heading H1 Tunggal (`seo_validator.py`)**: Penegakan aturan SEO untuk mencegah lebih dari satu H1 di dalam isi artikel.
+87. **Evaluator Gaya Judul Akademik & Power Keywords (`seo_validator.py`)**: Penilaian daya tarik judul artikel dan deteksi kata pemicu atensi pembaca.
+88. **Evaluator Rasio Stop-Word & Kepadatan Konten (`seo_validator.py`)**: Analisis proporsi kata tugas terhadap kata substantif untuk mencegah thin content.
+89. **Evaluator Keberagaman Anchor Text (`seo_validator.py`)**: Pendeteksi repetisi frasa tautan generik dan evaluasi variasi anchor text.
+90. **Komponen Kutipan Akademik Pull-Quote (`components.py`)**: Template kutipan bernilai ilmiah dengan atribusi penulis dan sumber riset.
+91. **Komponen Banner Afiliasi Lab Riset (`components.py`)**: Kartu identitas laboratorium komputasi dan kelompok keahlian fakultas.
+92. **Komponen Pohon Prasyarat Kurikulum (`components.py`)**: Diagram alur prasyarat mata kuliah berformat visual kartu hierarkis.
+93. **Komponen Pengumuman Acara & Seminar Akademik (`components.py`)**: Kartu agenda kegiatan ilmiah, webinar, dan pendaftaran peserta.
+94. **Komponen Badge Dataset Riset Terbuka (`components.py`)**: Lencana resmi repositori GitHub dan repositori data penelitian terbuka prodi.
+95. **Bilah Progres Visual Skor SEO & Indikator Keterbacaan (`formatters.py`)**: Representasi visual skor Yoast SEO berbasis Unicode bar dan lencana Telegram.
+96. **Pembatas Laju Perintah Bot (Rate Limiter) (`formatters.py`)**: Proteksi anti-flood pengguna Telegram dengan mekanisme sliding cooldown.
+97. **Keyboard Interaktif Review Editorial (`formatters.py`)**: Builder tombol inline keyboard Telegram untuk alur persetujuan dan revisi artikel.
+98. **Manajemen Kategori & Filter Artikel Database (`storage.py`)**: Fungsi klasifikasi taksonomi dan penyaringan artikel aktif.
+99. **Agregasi Analitik Editorial & Kecepatan Publikasi (`storage.py`)**: Kalkulasi metrik produktivitas tim editorial dan statistik penerbitan.
+100. **Pembersihan & Retensi Revisi Kadaluarsa (`storage.py`)**: Mekanisme pruning revisi artikel usang dengan batas retensi fleksibel.
+101. **Pemeriksaan Koneksi & Pembaruan Batch WordPress REST API (`wordpress_client.py`)**: Endpoint health-check dan helper pembaruan status pos massal.
+102. **Ekstensi Format Hugo SSG & Skema Course JSON-LD (`exporter.py`)**: Ekspor Markdown kompatibel generator situs statis Hugo dan skema terstruktur mata kuliah Schema.org.
+103. **Subcommand CLI Baru (`analytics`, `prune`, `hugo`) (`cli.py`)**: Perluasan antarmuka baris perintah untuk tata kelola editorial dan ekspor statis.
+104. **Skrip Diagnostik Database & Pinger Mesin Pencari (`scripts/`)**: Skrip inspeksi SQLite `scripts/db_stats.py` dan notifikasi sitemap `scripts/ping_search_engines.py`.
+105. **Pengembangan Suite Pengujian Komprehensif (151 Tests Passing)**: Penambahan pengujian unit penuh dengan 100% kelulusan pengujian (0 fail, 0 error).
+
