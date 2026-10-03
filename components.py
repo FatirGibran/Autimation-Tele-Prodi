@@ -739,6 +739,35 @@ class EditorialComponents:
       {btn_html}
     </aside>"""
 
+    @classmethod
+    def render_prerequisite_tree(cls, course_code: str, course_name: str, prerequisites: List[str], semester: str = "") -> str:
+        """
+        Renders an academic prerequisite relationship card showing required preparatory courses.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_code = escape(course_code)
+        safe_name = escape(course_name)
+        sem_html = f'<span class="tu-prereq-sem">{escape(semester)}</span>' if semester else ""
+
+        if prerequisites:
+            prereq_items = "\n".join(f'        <li>&rarr; {escape(p)}</li>' for p in prerequisites)
+            prereq_list_html = f'<ul class="tu-prereq-list">\n{prereq_items}\n      </ul>'
+        else:
+            prereq_list_html = '<p class="tu-prereq-none">Tidak ada prasyarat mata kuliah (Terbuka).</p>'
+
+        return f"""    <div class="tu-prereq-card">
+      <div class="tu-prereq-header">
+        <span class="tu-prereq-code">{safe_code}</span>
+        {sem_html}
+        <h5 class="tu-prereq-title">{safe_name}</h5>
+      </div>
+      <div class="tu-prereq-body">
+        <span class="tu-prereq-label">Prasyarat Mata Kuliah:</span>
+        {prereq_list_html}
+      </div>
+    </div>"""
+
 
 
 
