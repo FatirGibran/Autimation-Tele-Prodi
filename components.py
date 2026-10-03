@@ -719,6 +719,26 @@ class EditorialComponents:
       <figcaption>&mdash; {safe_author}{source_html}</figcaption>
     </figure>"""
 
+    @classmethod
+    def render_lab_affiliation_banner(cls, lab_name: str, focus_area: str, coordinator: str, lab_url: str = "") -> str:
+        """
+        Renders an official research laboratory affiliation banner for academic publications.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_name = escape(lab_name)
+        safe_area = escape(focus_area)
+        safe_coord = escape(coordinator)
+        btn_html = f'<a href="{escape(lab_url)}" class="tu-lab-btn" target="_blank" rel="noopener noreferrer">Profil Lab &rarr;</a>' if lab_url else ""
+
+        return f"""    <aside class="tu-lab-banner">
+      <div class="tu-lab-badge">Laboratorium Riset Resmi</div>
+      <h5 class="tu-lab-name">{safe_name}</h5>
+      <p class="tu-lab-focus">Fokus Riset: <strong>{safe_area}</strong></p>
+      <span class="tu-lab-coordinator">Koordinator: {safe_coord}</span>
+      {btn_html}
+    </aside>"""
+
 
 
 
