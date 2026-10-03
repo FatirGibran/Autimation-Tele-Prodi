@@ -9,3 +9,5 @@ venv/
 editorial.db
 backups/
 *.db-journal
+*.db-wal
+*.db-shm
