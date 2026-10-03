@@ -5,7 +5,7 @@ ALLOWED_TAGS = {
     "div", "style", "article", "header", "section", "figure", "figcaption",
     "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary",
-    "table", "thead", "tbody", "tr", "th", "td",
+    "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline"
 }
 
@@ -86,6 +86,14 @@ class HTMLSanitizer:
         if "javascript:" in cleaned.lower():
             warnings.append("Removed javascript: URI pseudo-protocol.")
             cleaned = re.sub(r'(href|src)=["\']javascript:[^"\']*["\']', r'\1="#"', cleaned, flags=re.IGNORECASE)
+
+        # 3b. Sanitize title attribute on definition and abbreviation tags
+        if re.search(r'<(abbr|dfn)\b', cleaned, re.IGNORECASE):
+            def clean_abbr(match):
+                tag = match.group(0)
+                # Strip any quotes or script characters inside title attribute
+                return re.sub(r'title=["\'](.*?)["\']', lambda m: f'title="{m.group(1).replace("<", "").replace(">", "").strip()}"', tag)
+            cleaned = re.sub(r'<(abbr|dfn)\s+[^>]*>', clean_abbr, cleaned, flags=re.IGNORECASE)
 
         # 4. Enforce rel="noopener noreferrer" on external links and target="_blank"
         def fix_link(match):
