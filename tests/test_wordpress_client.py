@@ -91,5 +91,41 @@ class TestWordPressClient(unittest.TestCase):
         tag_id = self.client.get_or_create_tag("wasm")
         self.assertEqual(tag_id, 88)
 
+    @patch("urllib.request.urlopen")
+    def test_update_post(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 123, "title": {"rendered": "Updated Title"}}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.update_post(123, {"title": "Updated Title"})
+        self.assertEqual(res["id"], 123)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/posts/123", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_delete_post(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 123, "status": "trash"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.delete_post(123, force=False)
+        self.assertEqual(res["status"], "trash")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "DELETE")
+        self.assertIn("force=false", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_upload_media(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 555, "source_url": "https://example.com/pic.jpg"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.upload_media(b"binary_image_data", "pic.jpg", "image/jpeg")
+        self.assertEqual(res["id"], 555)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertEqual(req.headers.get("Content-type"), "image/jpeg")
+
 if __name__ == "__main__":
     unittest.main()
