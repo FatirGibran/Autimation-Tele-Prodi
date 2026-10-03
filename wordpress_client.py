@@ -158,3 +158,46 @@ class WordPressClient:
         )
         return self._send_request(req)
 
+    def upload_media(
+        self,
+        file_bytes: bytes,
+        filename: str,
+        mime_type: str = "image/jpeg",
+        alt_text: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Uploads an image or document binary to the WordPress Media Library via REST API.
+        """
+        endpoint = f"{self.api_url}/media"
+        headers = self._get_headers()
+        headers["Content-Type"] = mime_type
+        headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+        req = urllib.request.Request(
+            endpoint,
+            data=file_bytes,
+            headers=headers,
+            method="POST"
+        )
+        result = self._send_request(req)
+        if alt_text and isinstance(result, dict) and "id" in result:
+            try:
+                self.update_media(result["id"], {"alt_text": alt_text})
+            except Exception:
+                pass
+        return result
+
+    def update_media(self, media_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Updates metadata or description of an uploaded media object.
+        """
+        endpoint = f"{self.api_url}/media/{media_id}"
+        data_bytes = json.dumps(updates).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint,
+            data=data_bytes,
+            headers=self._get_headers(),
+            method="POST"
+        )
+        return self._send_request(req)
+
