@@ -792,6 +792,29 @@ class EditorialComponents:
       {rsvp_html}
     </div>"""
 
+    @classmethod
+    def render_code_repo_card(cls, repo_name: str, github_url: str, stars: str = "", language: str = "Python", description: str = "") -> str:
+        """
+        Renders an open-source research dataset or software repository badge card.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_name = escape(repo_name)
+        safe_url = escape(github_url)
+        safe_lang = escape(language)
+        safe_desc = escape(description)
+        stars_html = f'<span class="tu-repo-stars">&#9733; {escape(stars)}</span>' if stars else ""
+        desc_html = f'\n      <p class="tu-repo-desc">{safe_desc}</p>' if description else ""
+
+        return f"""    <div class="tu-repo-card">
+      <div class="tu-repo-header">
+        <span class="tu-repo-icon">&#128187;</span>
+        <a href="{safe_url}" class="tu-repo-link" target="_blank" rel="noopener noreferrer">{safe_name}</a>
+        <span class="tu-repo-lang">{safe_lang}</span>
+        {stars_html}
+      </div>{desc_html}
+    </div>"""
+
 
 
 
