@@ -637,6 +637,24 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_video_embed(cls, embed_url: str, title: str, caption: str = "") -> str:
+        """
+        Renders a responsive 16:9 aspect-ratio video player embed for lectures and webinars.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_url = escape(embed_url)
+        safe_title = escape(title)
+        safe_caption = escape(caption)
+
+        caption_html = f'\n      <figcaption class="tu-video-caption">{safe_caption}</figcaption>' if caption else ""
+        return f"""    <figure class="tu-video-figure">
+      <div class="tu-video-responsive">
+        <iframe src="{safe_url}" title="{safe_title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>
+      </div>{caption_html}
+    </figure>"""
+
 
 
 
