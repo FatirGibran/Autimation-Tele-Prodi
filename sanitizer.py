@@ -28,6 +28,21 @@ class HTMLSanitizer:
                 warnings.append("Missing root .tu-editorial-container; auto-wrapping.")
                 cleaned = f'<div class="tu-editorial-container">\n{cleaned}\n</div>'
 
+        # 1b. Normalize table structures and strip obsolete presentation attributes
+        if "<table" in cleaned.lower():
+            def fix_table(match):
+                tag = match.group(0)
+                # Strip legacy attributes: border, cellpadding, cellspacing, width, bgcolor
+                tag = re.sub(r'\s+(border|cellpadding|cellspacing|width|bgcolor)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                if 'class=' not in tag:
+                    tag = tag.rstrip(">") + ' class="tu-table">'
+                elif 'tu-table' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-table"', tag)
+                return tag
+            cleaned = re.sub(r'<table[^>]*>', fix_table, cleaned, flags=re.IGNORECASE)
+            warnings.append("Normalized table structure and stripped presentational attributes.")
+
+
         # 2. Strip dangerous script, iframe, object, and embed tags
         if "<script" in cleaned.lower():
             warnings.append("Stripped dangerous <script> tag from HTML.")
