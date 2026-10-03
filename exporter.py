@@ -266,6 +266,50 @@ class ArticleExporter:
             "itemListElement": elements
         }
 
+    @staticmethod
+    def generate_atom_feed(articles: List[Dict[str, Any]], feed_info: Dict[str, str]) -> str:
+        """
+        Generates RFC 4287 compliant Atom 1.0 XML syndication feed.
+        """
+        from xml.sax.saxutils import escape
+
+        feed_id = escape(feed_info.get("id", "https://bif-pwt.telkomuniversity.ac.id/atom.xml"))
+        title = escape(feed_info.get("title", "S1 Teknik Informatika Telkom University Purwokerto"))
+        updated = escape(feed_info.get("updated", "2026-10-01T00:00:00Z"))
+        author = escape(feed_info.get("author", "Tim Editorial Prodi"))
+        base_url = feed_info.get("base_url", "https://bif-pwt.telkomuniversity.ac.id").rstrip("/")
+
+        entries = []
+        for art in articles:
+            slug = art.get("slug", "")
+            if not slug:
+                continue
+            entry_url = f"{base_url}/{slug}/"
+            entry_title = escape(art.get("seo_title", art.get("topic", "")))
+            entry_summary = escape(art.get("meta_description", ""))
+            pub_date = art.get("publish_date", "2026-01-01")
+            updated_date = f"{pub_date}T00:00:00Z"
+
+            entries.append(f"""  <entry>
+    <id>{escape(entry_url)}</id>
+    <title>{entry_title}</title>
+    <link href="{escape(entry_url)}" rel="alternate" />
+    <updated>{escape(updated_date)}</updated>
+    <summary>{entry_summary}</summary>
+    <author><name>{author}</name></author>
+  </entry>""")
+
+        body = "\n".join(entries)
+        return f"""<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>{feed_id}</id>
+  <title>{title}</title>
+  <updated>{updated}</updated>
+  <author><name>{author}</name></author>
+  <link href="{feed_id}" rel="self" />
+{body}
+</feed>"""
+
 
 
 
