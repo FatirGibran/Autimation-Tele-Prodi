@@ -87,20 +87,27 @@ class HTMLSanitizer:
             warnings.append("Removed javascript: URI pseudo-protocol.")
             cleaned = re.sub(r'(href|src)=["\']javascript:[^"\']*["\']', r'\1="#"', cleaned, flags=re.IGNORECASE)
 
-        # 4. Enforce rel="noopener noreferrer" on external links
+        # 4. Enforce rel="noopener noreferrer" on external links and target="_blank"
         def fix_link(match):
             tag = match.group(0)
             href = match.group(1)
-            if "bif-pwt.telkomuniversity.ac.id" not in href:
-                if 'rel=' not in tag:
-                    tag = tag.rstrip(">") + ' rel="noopener noreferrer">'
-                elif 'noopener' not in tag:
-                    tag = re.sub(r'rel=["\'][^"\']*["\']', 'rel="noopener noreferrer"', tag)
+            # Internal domain whitelist
+            is_internal = "telkomuniversity.ac.id" in href.lower() or href.startswith("/") or href.startswith("#")
+            if not is_internal:
                 if 'target=' not in tag:
-                    tag = tag.rstrip(">") + ' target="_blank">'
+                    tag = tag.rstrip(">").rstrip(" ") + ' target="_blank">'
+                if 'rel=' not in tag:
+                    tag = tag.rstrip(">").rstrip(" ") + ' rel="noopener noreferrer">'
+                else:
+                    rel_val = re.search(r'rel=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                    if rel_val:
+                        tokens = set(rel_val.group(1).lower().split())
+                        tokens.add("noopener")
+                        tokens.add("noreferrer")
+                        tag = re.sub(r'rel=["\'][^"\']*["\']', f'rel="{" ".join(sorted(tokens))}"', tag, flags=re.IGNORECASE)
             return tag
 
-        cleaned = re.sub(r'<a\s+[^>]*href=["\'](https?://[^"\']+)["\'][^>]*>', fix_link, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>', fix_link, cleaned, flags=re.IGNORECASE)
 
         # 5. Enforce loading="lazy" and decoding="async" on img tags
         def fix_img(match):
