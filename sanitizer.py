@@ -149,5 +149,9 @@ class HTMLSanitizer:
 
         cleaned = re.sub(r'style=["\']([^"\']*)["\']', fix_style, cleaned, flags=re.IGNORECASE)
 
+        # 8. Clean up redundant empty paragraphs and whitespace placeholders
+        if re.search(r'<p>\s*(?:&nbsp;|\s)*</p>', cleaned, re.IGNORECASE):
+            cleaned = re.sub(r'<p>\s*(?:&nbsp;|\s)*</p>\n?', '', cleaned, flags=re.IGNORECASE)
+
         return cleaned, warnings
 
