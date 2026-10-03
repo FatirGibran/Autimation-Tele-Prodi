@@ -103,5 +103,41 @@ Poin Utama:
         self.assertIn("Catatan", rendered)
         self.assertIn("Ini adalah catatan editorial penting.", rendered)
 
+    def test_generate_excerpt(self):
+        from parser import generate_excerpt
+        html = '<div class="tu-editorial-container"><h1>Judul</h1><p>Program Studi S1 Teknik Informatika Telkom University Purwokerto menyelenggarakan riset unggulan IoT.</p></div>'
+        excerpt = generate_excerpt(html, max_length=50)
+        self.assertTrue(excerpt.endswith("..."))
+        self.assertNotIn("<h1>", excerpt)
+        self.assertLessEqual(len(excerpt), 55)
+
+    def test_normalize_indonesian_typography(self):
+        from parser import normalize_indonesian_typography
+        raw = "“Kecerdasan Buatan”—kata dosen ‘Informatika’…\u00a0itu benar\u200b."
+        normalized = normalize_indonesian_typography(raw)
+        self.assertIn('"Kecerdasan Buatan"', normalized)
+        self.assertIn("'Informatika'", normalized)
+        self.assertIn(" -- ", normalized)
+        self.assertIn("...", normalized)
+        self.assertNotIn("\u200b", normalized)
+
+    def test_parse_markdown_footnotes(self):
+        from parser import parse_markdown_footnotes
+        raw = "Arsitektur cloud native[^1] membutuhkan orkestrator kubernetes[^2].\n\n[^1]: Standard IEEE 2026\n[^2]: CNCF Cloud Foundation"
+        rendered = parse_markdown_footnotes(raw)
+        self.assertIn('<sup class="tu-footnote-ref"><a href="#fn-1" id="fnref-1">[1]</a></sup>', rendered)
+        self.assertIn('<div class="tu-footnotes">', rendered)
+        self.assertIn('<li id="fn-1"><p>Standard IEEE 2026', rendered)
+        self.assertIn('<a href="#fnref-1" class="tu-footnote-backref"', rendered)
+
+    def test_extract_keyword_frequency(self):
+        from parser import extract_keyword_frequency
+        sample = "<p>Jaringan komputer dan keamanan komputer sangat penting dalam arsitektur komputer modern.</p>"
+        unigrams = extract_keyword_frequency(sample, n_gram=1, top_n=3)
+        self.assertEqual(unigrams[0][0], "komputer")
+        self.assertEqual(unigrams[0][1], 3)
+        bigrams = extract_keyword_frequency(sample, n_gram=2, top_n=2)
+        self.assertIn("jaringan komputer", [bg[0] for bg in bigrams])
+
 if __name__ == "__main__":
     unittest.main()
