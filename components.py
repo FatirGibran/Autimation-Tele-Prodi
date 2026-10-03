@@ -683,6 +683,23 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_metric_callout(cls, metric: str, label: str, context: str = "") -> str:
+        """
+        Renders a focused highlight callout box showcasing a key metric or performance KPI.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_metric = escape(metric)
+        safe_label = escape(label)
+        safe_context = escape(context)
+
+        context_html = f'\n      <p class="tu-metric-context">{safe_context}</p>' if context else ""
+        return f"""    <div class="tu-metric-card">
+      <div class="tu-metric-value">{safe_metric}</div>
+      <div class="tu-metric-label">{safe_label}</div>{context_html}
+    </div>"""
+
 
 
 
