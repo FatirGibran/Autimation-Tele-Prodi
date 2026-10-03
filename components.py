@@ -610,6 +610,33 @@ class EditorialComponents:
       </div>
     </section>"""
 
+    @classmethod
+    def render_download_card(cls, title: str, description: str, file_type: str, file_size: str, download_url: str) -> str:
+        """
+        Renders an academic resource download card (syllabus, RPS, lab guide, dataset).
+        """
+        from xml.sax.saxutils import escape
+
+        safe_title = escape(title)
+        safe_desc = escape(description)
+        safe_type = escape(file_type.upper())
+        safe_size = escape(file_size)
+        safe_url = escape(download_url)
+
+        return f"""    <div class="tu-download-card">
+      <div class="tu-download-icon-box">
+        <span class="tu-download-badge">{safe_type}</span>
+      </div>
+      <div class="tu-download-content">
+        <h5 class="tu-download-title">{safe_title}</h5>
+        <p class="tu-download-desc">{safe_desc}</p>
+        <span class="tu-download-size">Ukuran Berkas: {safe_size}</span>
+      </div>
+      <div class="tu-download-action">
+        <a href="{safe_url}" class="tu-download-btn" target="_blank" rel="noopener noreferrer">&#11015; Unduh Berkas</a>
+      </div>
+    </div>"""
+
 
 
 
