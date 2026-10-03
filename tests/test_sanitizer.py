@@ -70,5 +70,26 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('rel="author noopener noreferrer"', clean)
         self.assertIn('target="_blank"', clean)
 
+    def test_strip_data_uri_in_img_src(self):
+        data_uri_html = '<div class="tu-editorial-container"><img src="data:image/png;base64,iVBORw0KGgoAAA..." alt="bloated" /></div>'
+        clean, warnings = HTMLSanitizer.sanitize(data_uri_html)
+        self.assertIn('src=""', clean)
+        self.assertNotIn("base64", clean)
+        self.assertTrue(any("data URI" in w for w in warnings))
+
+    def test_sanitize_abbr_title_attribute(self):
+        abbr_html = '<div class="tu-editorial-container"><p><abbr title="Internet <script> of Things">IoT</abbr></p></div>'
+        clean, _ = HTMLSanitizer.sanitize(abbr_html)
+        self.assertIn('title="Internet script of Things"', clean)
+        self.assertNotIn("<script>", clean)
+
+    def test_strip_empty_paragraphs(self):
+        empty_p_html = '<div class="tu-editorial-container"><p>Paragraf isi.</p><p></p><p>&nbsp;</p><p>Paragraf kedua.</p></div>'
+        clean, _ = HTMLSanitizer.sanitize(empty_p_html)
+        self.assertNotIn("<p></p>", clean)
+        self.assertNotIn("<p>&nbsp;</p>", clean)
+        self.assertIn("<p>Paragraf isi.</p>", clean)
+        self.assertIn("<p>Paragraf kedua.</p>", clean)
+
 if __name__ == "__main__":
     unittest.main()

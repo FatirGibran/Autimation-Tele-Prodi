@@ -90,10 +90,11 @@ class HTMLSanitizer:
         # 3b. Sanitize title attribute on definition and abbreviation tags
         if re.search(r'<(abbr|dfn)\b', cleaned, re.IGNORECASE):
             def clean_abbr(match):
-                tag = match.group(0)
-                # Strip any quotes or script characters inside title attribute
-                return re.sub(r'title=["\'](.*?)["\']', lambda m: f'title="{m.group(1).replace("<", "").replace(">", "").strip()}"', tag)
-            cleaned = re.sub(r'<(abbr|dfn)\s+[^>]*>', clean_abbr, cleaned, flags=re.IGNORECASE)
+                tag_name = match.group(1)
+                title_val = match.group(2)
+                safe_title = re.sub(r'[<>]', '', title_val).strip()
+                return f'<{tag_name} title="{safe_title}">'
+            cleaned = re.sub(r'<(abbr|dfn)\s+title=["\'](.*?)["\']>', clean_abbr, cleaned, flags=re.IGNORECASE)
 
         # 4. Enforce rel="noopener noreferrer" on external links and target="_blank"
         def fix_link(match):
