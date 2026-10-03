@@ -286,5 +286,75 @@ class TestStorageManager(unittest.TestCase):
         mode = self.storage.enable_wal_mode()
         self.assertIn(mode, ["WAL", "MEMORY", "DELETE"])
 
+    def test_list_categories_and_filter(self):
+        self.storage.save_article({
+            "topic": "Telecom AI",
+            "category": "Kecerdasan Buatan",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "telecom ai",
+            "seo_title": "Telecom AI",
+            "slug": "telecom-ai",
+            "meta_description": "Deskripsi telecom ai.",
+            "status": "ready"
+        })
+        self.storage.save_article({
+            "topic": "Telecom 5G",
+            "category": "Jaringan",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "telecom 5g",
+            "seo_title": "Telecom 5G",
+            "slug": "telecom-5g",
+            "meta_description": "Deskripsi telecom 5g.",
+            "status": "published"
+        })
+        cats = self.storage.list_categories()
+        cat_names = [c["category"] for c in cats]
+        self.assertIn("Kecerdasan Buatan", cat_names)
+        self.assertIn("Jaringan", cat_names)
+
+        filtered = self.storage.get_articles_by_category("Kecerdasan Buatan")
+        self.assertTrue(any(a["slug"] == "telecom-ai" for a in filtered))
+        self.assertFalse(any(a["slug"] == "telecom-5g" for a in filtered))
+
+    def test_get_editorial_analytics(self):
+        self.storage.save_article({
+            "topic": "Analitik 1",
+            "category": "Riset",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "analitik satu",
+            "seo_title": "Analitik Satu",
+            "slug": "analitik-satu",
+            "meta_description": "Deskripsi analitik satu.",
+            "status": "published"
+        })
+        analytics = self.storage.get_editorial_analytics(days=7)
+        self.assertEqual(analytics["window_days"], 7)
+        self.assertGreaterEqual(analytics["total_articles"], 1)
+        self.assertGreaterEqual(analytics["published_count"], 1)
+        self.assertIn("published", analytics["status_breakdown"])
+
+    def test_prune_revisions(self):
+        art_id = self.storage.save_article({
+            "topic": "Revisi Prune",
+            "category": "Riset",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "revisi prune",
+            "seo_title": "Revisi Prune",
+            "slug": "revisi-prune",
+            "meta_description": "Deskripsi prune.",
+            "html_content": "<p>Content</p>"
+        })
+        self.storage.create_revision(art_id)
+        self.storage.create_revision(art_id)
+        self.storage.create_revision(art_id)
+        revs = self.storage.get_revisions(art_id)
+        self.assertEqual(len(revs), 3)
+
+        deleted = self.storage.prune_revisions(retention_days=0, keep_minimum=2)
+        revs_after = self.storage.get_revisions(art_id)
+        self.assertEqual(len(revs_after), 2)
+        self.assertEqual(deleted, 1)
+
 if __name__ == "__main__":
     unittest.main()
+

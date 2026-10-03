@@ -512,21 +512,30 @@ class StorageManager:
         """
         Prunes historical revisions older than retention_days while retaining
         at least keep_minimum recent revisions per article.
+        If retention_days is 0 or negative, prunes all revisions exceeding keep_minimum.
         Returns the number of deleted revisions.
         """
         with self._get_connection() as conn:
-            cursor = conn.execute("""
+            if retention_days > 0:
+                time_filter = "AND created_at < datetime('now', ?)"
+                params = (keep_minimum, f"-{retention_days} days")
+            else:
+                time_filter = ""
+                params = (keep_minimum,)
+
+            cursor = conn.execute(f"""
                 DELETE FROM article_revisions
-                WHERE created_at < datetime('now', ?)
-                  AND id NOT IN (
-                      SELECT id FROM (
-                          SELECT id,
-                                 ROW_NUMBER() OVER (PARTITION BY article_id ORDER BY revision_num DESC) as rn
-                          FROM article_revisions
-                      ) WHERE rn <= ?
-                  )
-            """, (f"-{retention_days} days", keep_minimum))
+                WHERE id NOT IN (
+                    SELECT id FROM (
+                        SELECT id,
+                               ROW_NUMBER() OVER (PARTITION BY article_id ORDER BY revision_num DESC) as rn
+                        FROM article_revisions
+                    ) WHERE rn <= ?
+                )
+                {time_filter}
+            """, params)
             return cursor.rowcount
+
 
 
 
