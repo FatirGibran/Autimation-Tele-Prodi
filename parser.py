@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 
 DEFAULT_PLACEHOLDER_IMG = "https://bif-pwt.telkomuniversity.ac.id/wp-content/uploads/placeholder.jpg"
 
@@ -300,3 +300,37 @@ def parse_markdown_footnotes(text: str) -> str:
         '  <ol>\n' + "\n".join(items_html) + "\n  </ol>\n</div>"
     )
     return f"{body_text}\n\n{footnotes_section}"
+
+
+def extract_keyword_frequency(text: str, n_gram: int = 1, top_n: int = 10) -> List[Tuple[str, int]]:
+    """
+    Extracts high-frequency n-grams from text content excluding Indonesian and English stop words.
+    Useful for keyword density analysis and SEO content optimization.
+    """
+    if not text:
+        return []
+    clean_text = re.sub(r"<[^>]+>", " ", text).lower()
+    tokens = re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", clean_text)
+
+    stop_words = {
+        "yang", "untuk", "pada", "dengan", "adalah", "sebagai", "dalam", "dari",
+        "ini", "itu", "dan", "atau", "oleh", "akan", "juga", "dapat", "secara",
+        "antara", "karena", "bagi", "setelah", "saat", "lebih", "telah", "bisa",
+        "the", "and", "for", "with", "that", "this", "from", "are", "were"
+    }
+
+    filtered_tokens = [t for t in tokens if t not in stop_words and not t.isdigit()]
+    if n_gram <= 1:
+        candidates = filtered_tokens
+    else:
+        candidates = [
+            " ".join(filtered_tokens[i:i + n_gram])
+            for i in range(len(filtered_tokens) - n_gram + 1)
+        ]
+
+    counts: Dict[str, int] = {}
+    for item in candidates:
+        counts[item] = counts.get(item, 0) + 1
+
+    sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    return sorted_counts[:top_n]
