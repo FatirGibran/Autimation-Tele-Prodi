@@ -85,6 +85,17 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_meta_article ON article_meta(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_exports (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    export_type TEXT NOT NULL,
+                    destination_path TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_exports_article ON article_exports(article_id);")
 
 
 
@@ -401,6 +412,28 @@ class StorageManager:
                 (article_id, key.strip())
             )
             return cursor.rowcount > 0
+
+    def log_export_event(self, article_id: int, export_type: str, destination_path: str) -> int:
+        """
+        Records an export audit event for tracking generated deliverables.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_exports (article_id, export_type, destination_path)
+                VALUES (?, ?, ?)
+            """, (article_id, export_type.strip(), destination_path.strip()))
+            return cursor.lastrowid
+
+    def get_export_history(self, article_id: int) -> List[Dict[str, Any]]:
+        """
+        Fetches all recorded export events for an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM article_exports WHERE article_id = ? ORDER BY id DESC",
+                (article_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
 
 
