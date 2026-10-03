@@ -271,6 +271,43 @@ class YoastSEOValidator:
             "is_recommended": is_recommended
         }
 
+    @classmethod
+    def evaluate_stopword_ratio(cls, text: str) -> Dict[str, Any]:
+        """
+        Calculates stop word ratio to ensure information density without excessive grammatical filler.
+        """
+        clean_words = re.findall(r"\b[a-zA-Z]+\b", text.lower())
+        total_words = len(clean_words)
+        if total_words == 0:
+            return {"total_words": 0, "stop_words_count": 0, "ratio_pct": 0.0, "is_balanced": True, "status": "green"}
+
+        stop_words_set = {
+            "yang", "untuk", "pada", "dengan", "adalah", "sebagai", "dalam", "dari",
+            "ini", "itu", "dan", "atau", "oleh", "akan", "juga", "dapat", "secara",
+            "antara", "karena", "bagi", "setelah", "saat", "lebih", "telah", "bisa",
+            "ke", "di", "dari", "pada", "oleh", "sampai", "tentang", "maka", "lalu"
+        }
+
+        matched_stops = [w for w in clean_words if w in stop_words_set]
+        ratio_pct = round((len(matched_stops) / total_words) * 100, 1)
+
+        # Balanced range: 20% to 50%
+        is_balanced = 15.0 <= ratio_pct <= 52.0
+        status = "green" if is_balanced else ("orange" if ratio_pct < 15.0 else "red")
+        advice = "Kepadatan konten dan rasio kata hubung optimal" if is_balanced else (
+            "Teks sangat padat istilah teknis" if ratio_pct < 15.0 else
+            "Rasio kata hubung/stop words terlalu tinggi, disarankan memperpadat konten informasi"
+        )
+
+        return {
+            "total_words": total_words,
+            "stop_words_count": len(matched_stops),
+            "ratio_pct": ratio_pct,
+            "is_balanced": is_balanced,
+            "status": status,
+            "advice": advice
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
