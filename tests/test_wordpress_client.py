@@ -127,5 +127,41 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "POST")
         self.assertEqual(req.headers.get("Content-type"), "image/jpeg")
 
+    @patch("urllib.request.urlopen")
+    def test_check_connection_success(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 1, "name": "Admin User", "slug": "admin"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        status = self.client.check_connection()
+        self.assertTrue(status["ok"])
+        self.assertEqual(status["user_id"], 1)
+        self.assertEqual(status["username"], "admin")
+
+    @patch("urllib.request.urlopen")
+    def test_check_connection_failure(self, mock_urlopen):
+        mock_urlopen.side_effect = Exception("Connection refused")
+
+        status = self.client.check_connection()
+        self.assertFalse(status["ok"])
+        self.assertIn("Connection refused", status["error"])
+
+    @patch.object(WordPressClient, "update_post")
+    def test_batch_update_post_status(self, mock_update):
+        def side_effect(pid, updates):
+            if pid == 102:
+                raise RuntimeError("Post not found")
+            return {"id": pid, "status": updates["status"]}
+
+        mock_update.side_effect = side_effect
+
+        result = self.client.batch_update_post_status([101, 102], "publish")
+        self.assertEqual(result["total"], 2)
+        self.assertEqual(result["succeeded"], [101])
+        self.assertEqual(len(result["failed"]), 1)
+        self.assertEqual(result["failed"][0]["id"], 102)
+        self.assertFalse(result["all_success"])
+
 if __name__ == "__main__":
     unittest.main()
+
