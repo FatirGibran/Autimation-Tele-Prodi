@@ -109,9 +109,12 @@ class HTMLSanitizer:
 
         cleaned = re.sub(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>', fix_link, cleaned, flags=re.IGNORECASE)
 
-        # 5. Enforce loading="lazy" and decoding="async" on img tags
+        # 5. Enforce loading="lazy" and decoding="async" on img tags; block bloated data URIs
         def fix_img(match):
             tag = match.group(0)
+            if re.search(r'src=["\']data:', tag, re.IGNORECASE):
+                warnings.append("Stripped dangerous or oversized data URI in image src.")
+                tag = re.sub(r'src=["\']data:[^"\']*["\']', 'src=""', tag, flags=re.IGNORECASE)
             if 'loading=' not in tag:
                 tag = tag.rstrip(" />").rstrip(">") + ' loading="lazy"'
             if 'decoding=' not in tag:
