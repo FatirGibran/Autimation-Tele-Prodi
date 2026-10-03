@@ -700,6 +700,25 @@ class EditorialComponents:
       <div class="tu-metric-label">{safe_label}</div>{context_html}
     </div>"""
 
+    @classmethod
+    def render_pull_quote(cls, quote: str, author: str, source: str = "", citation_url: str = "") -> str:
+        """
+        Renders a distinguished editorial pull quote with attribution and academic source citation.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_quote = escape(quote)
+        safe_author = escape(author)
+        safe_source = escape(source)
+        source_html = f', <cite><a href="{escape(citation_url)}" target="_blank" rel="noopener noreferrer">{safe_source}</a></cite>' if (source and citation_url) else (f', <cite>{safe_source}</cite>' if source else "")
+
+        return f"""    <figure class="tu-pull-quote">
+      <blockquote>
+        <p>&ldquo;{safe_quote}&rdquo;</p>
+      </blockquote>
+      <figcaption>&mdash; {safe_author}{source_html}</figcaption>
+    </figure>"""
+
 
 
 
