@@ -234,5 +234,86 @@ class TestCLI(unittest.TestCase):
             if Path(feed_file).exists():
                 Path(feed_file).unlink()
 
+    def test_cmd_analytics(self):
+        cli.storage.save_article({
+            "topic": "Analytics CLI",
+            "category": "Testing",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "analytics cli",
+            "seo_title": "Analytics CLI",
+            "slug": "analytics-cli",
+            "meta_description": "Deskripsi analytics cli.",
+            "status": "published"
+        })
+        class Args:
+            days = 14
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_analytics(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Analitik Editorial (14 Hari Terakhir)", output)
+            self.assertIn("Total Artikel Baru", output)
+            self.assertIn("Kecepatan Publikasi", output)
+
+    def test_cmd_prune(self):
+        art_id = cli.storage.save_article({
+            "topic": "Prune CLI",
+            "category": "Testing",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "prune cli",
+            "seo_title": "Prune CLI",
+            "slug": "prune-cli",
+            "meta_description": "Deskripsi prune cli.",
+            "html_content": "<p>Content</p>"
+        })
+        cli.storage.create_revision(art_id)
+        cli.storage.create_revision(art_id)
+        cli.storage.create_revision(art_id)
+
+        class Args:
+            retention_days = 0
+            keep_minimum = 1
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_prune(Args())
+            output = fake_out.getvalue()
+            self.assertIn("Pembersihan Revisi Database", output)
+            self.assertIn("Revisi usang dihapus", output)
+
+    def test_cmd_hugo(self):
+        slug = "hugo-cli-slug"
+        cli.storage.save_article({
+            "topic": "Hugo CLI Article",
+            "category": "Web Dev",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "hugo cli",
+            "seo_title": "Hugo CLI Article",
+            "slug": slug,
+            "meta_description": "Deskripsi hugo cli.",
+            "html_content": "<p>Hugo HTML Content</p>",
+            "status": "ready"
+        })
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class Args:
+                pass
+            args = Args()
+            args.slug = slug
+            args.out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_hugo(args)
+                self.assertIn("Export Hugo markdown berhasil", fake_out.getvalue())
+
+            content = Path(out_file).read_text(encoding="utf-8")
+            self.assertIn('title: "Hugo CLI Article"', content)
+            self.assertIn("<p>Hugo HTML Content</p>", content)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
 if __name__ == "__main__":
     unittest.main()
+
