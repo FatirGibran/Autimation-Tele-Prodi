@@ -105,3 +105,29 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 55. **Skrip Pencadangan Terjadwal (`scripts/backup_db.py`)**: Pencadangan SQLite otomatis dengan format timestamping ISO dan rotasi berkas.
 56. **Skrip Batch Audit SEO (`scripts/bulk_audit.py`)**: Audit massal seluruh draf artikel untuk memastikan standar All-Green Yoast SEO terpenuhi sebelum rilis.
 57. **Suite Pengujian Terotomasi (90 Tests Passing)**: Penambahan cakupan pengujian unit komprehensif pada folder `tests/` dengan 100% tingkat keberhasilan.
+
+---
+
+## 9. Pembaruan Fitur & Arsitektur v2.1.0 (#58 - #78)
+
+58. **Normalisasi Struktur Tabel HTML & Sanitasi Presentasi**: Pembersihan atribut usang tabel dan penambahan kelas semantik `tu-table`.
+59. **Filter & Whitelist Iframe Edukasi**: Perlindungan embed media pembelajaran dengan atribut `sandbox` ketat dan pembatasan domain terpercaya.
+60. **Penegakan Keamanan Tautan Eksternal `rel="noopener noreferrer"`**: Normalisasi otomatis seluruh link keluar dengan target `_blank`.
+61. **Ekstraktor Excerpt Otomatis**: Fungsi `generate_excerpt` untuk ringkasan artikel berbasis batas kata bersih.
+62. **Normalisasi Tipografi Bahasa Indonesia**: Standarisasi tanda petik kurung, em-dash, non-breaking space, dan zero-width character pada `normalize_indonesian_typography`.
+63. **Parser Catatan Kaki Akademik (Footnotes)**: Konversi sintaks footnote markdown `[^1]` menjadi markup semantik dengan backlink dua arah.
+64. **Ekstraktor Frekuensi Kata Kunci & N-gram**: Fungsi `extract_keyword_frequency` dengan penyaringan stop words bahasa Indonesia dan Inggris.
+65. **Validator Kerapatan Kata Kunci (Keyword Density)**: Evaluasi batasan rasio kerapatan kata kunci Yoast SEO (0.5% - 3.0%).
+66. **Validator Batasan Panjang Paragraf**: Pemeriksaan keterbacaan terhadap paragraf yang melebihi batas maksimal 150 kata.
+67. **Auditor Distribusi Subheading**: Pemastian pembagian struktur teks panjang di bawah H2/H3 tidak melebihi 300 kata per bagian.
+68. **Auditor Profil Distribusi Tautan**: Pemeriksaan rasio keseimbangan link internal kampus dan referensi otoritatif eksternal.
+69. **Komponen Editorial Interaktif Baru**: Penambahan Daftar Isi artikel (`render_table_of_contents`), Tim Penulis & Dosen (`render_author_team`), Kartu Unduhan Berkas/Silabus (`render_download_card`), Wadah Video Responsif 16:9 (`render_video_embed`), Spanduk Pendaftaran PMB (`render_admission_cta`), dan Badge Metrik KPI (`render_metric_callout`).
+70. **Siklus Hidup Kotak Sampah & Pemulihan (Soft Delete)**: Dukungan pemindahan ke kotak sampah dan pemulihan artikel di SQLite.
+71. **Penyimpanan Kustom Metadata Key-Value**: Tabel `article_meta` dan relasi atribut kustom artikel.
+72. **Logging Audit Ekspor & Dukungan SQLite WAL Mode**: Tabel `article_exports` untuk pelacakan berkas hasil generate serta optimasi konkurensi Write-Ahead Logging (`enable_wal_mode`).
+73. **Ekstensi WordPress REST API Client**: Penambahan metode pembaruan posting (`update_post`), penghapusan/trashing (`delete_post`), dan pengunggahan berkas media pustaka (`upload_media`).
+74. **Sindikasi Konten Atom 1.0 & JSON Feed v1.1**: Generator feed RFC 4287 dan JSON Feed untuk distribusi konten ke agregator modern.
+75. **Ekstraktor Plain Text Bersih**: Fungsi `to_plain_text` untuk indexing pencarian, voice generator, dan inferensi LLM.
+76. **Subcommand CLI Baru (`trash`, `density`, `feed`, `meta`)**: Ekstensi perkakas baris perintah untuk audit dan tata kelola editorial terpadu.
+77. **Perkakas Otomasi Migrasi Database & Benchmark SEO**: Skrip mandiri `scripts/migrate_db.py` dan `scripts/benchmark_seo.py` dengan throughput tinggi (>3.600 ops/sec).
+78. **Pengembangan Suite Pengujian Komprehensif (120 Tests Passing)**: Penambahan pengujian unit penuh dengan 100% kelulusan pengujian (0 fail, 0 error).
