@@ -113,5 +113,38 @@ class TestYoastSEOValidator(unittest.TestCase):
         unique_check = YoastSEOValidator.check_keyword_cannibalization("keamanan siber quantum", existing)
         self.assertFalse(unique_check["cannibalized"])
 
+    def test_evaluate_keyword_density(self):
+        body = ("Edge AI merupakan inovasi penting dalam jaringan telekomunikasi dan komputasi edge modern. " * 3) + ("mahasiswa belajar dengan tekun di kampus telkom university purwokerto setiap hari. " * 15)
+        result = YoastSEOValidator.evaluate_keyword_density("Edge AI", body)
+        self.assertEqual(result["count"], 3)
+        self.assertGreater(result["density_percentage"], 0.0)
+        self.assertIn(result["status"], ["green", "orange"])
+
+    def test_evaluate_paragraph_lengths(self):
+        short_p = "<p>" + ("kata " * 50) + "</p>"
+        long_p = "<p>" + ("panjang " * 160) + "</p>"
+        html = f"<div>{short_p}{long_p}</div>"
+        report = YoastSEOValidator.evaluate_paragraph_lengths(html, max_words=150)
+        self.assertEqual(report["total_paragraphs"], 2)
+        self.assertEqual(report["flagged_count"], 1)
+        self.assertFalse(report["passed"])
+
+    def test_evaluate_subheading_distribution(self):
+        good_html = "<h2>Bab 1</h2><p>" + ("kata " * 100) + "</p><h2>Bab 2</h2><p>" + ("kata " * 100) + "</p>"
+        good_rep = YoastSEOValidator.evaluate_subheading_distribution(good_html, max_words_per_section=300)
+        self.assertTrue(good_rep["passed"])
+
+        bad_html = "<h2>Bab 1</h2><p>" + ("kata " * 350) + "</p>"
+        bad_rep = YoastSEOValidator.evaluate_subheading_distribution(bad_html, max_words_per_section=300)
+        self.assertFalse(bad_rep["passed"])
+        self.assertEqual(bad_rep["flagged_count"], 1)
+
+    def test_audit_links_profile(self):
+        html = '<p><a href="https://bif-pwt.telkomuniversity.ac.id/kurikulum">Kurikulum</a> dan <a href="https://ieee.org/paper" rel="noopener noreferrer">IEEE</a></p>'
+        profile = YoastSEOValidator.audit_links_profile(html)
+        self.assertEqual(profile["internal_count"], 1)
+        self.assertEqual(profile["external_count"], 1)
+        self.assertTrue(profile["passed"])
+
 if __name__ == "__main__":
     unittest.main()
