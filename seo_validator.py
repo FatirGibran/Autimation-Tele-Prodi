@@ -94,6 +94,38 @@ class YoastSEOValidator:
             "conflicts": conflicts
         }
 
+    @classmethod
+    def evaluate_keyword_density(cls, keyphrase: str, text: str) -> Dict[str, Any]:
+        """
+        Evaluates focus keyphrase density against Yoast SEO optimal bounds (0.5% - 3.0%).
+        """
+        clean_text = text.lower()
+        clean_fk = keyphrase.strip().lower()
+        if not clean_fk or not clean_text:
+            return {"count": 0, "density_percentage": 0.0, "is_optimal": False, "status": "red", "advice": "Kata kunci kosong"}
+
+        words = clean_text.split()
+        word_count = len(words)
+        fk_words_len = len(clean_fk.split())
+        fk_count = len(re.findall(rf"\b{re.escape(clean_fk)}\b", clean_text))
+
+        density = (fk_count * fk_words_len / max(word_count, 1)) * 100
+        is_optimal = 0.5 <= density <= 3.0
+        status = "green" if is_optimal else ("orange" if density < 0.5 else "red")
+        
+        advice = "Kerapatan kata kunci optimal" if is_optimal else (
+            "Kerapatan kata kunci terlalu rendah (disarankan >= 0.5%)" if density < 0.5 else
+            "Peringatan keyword stuffing! Kerapatan kata kunci melebihi 3.0%"
+        )
+
+        return {
+            "count": fk_count,
+            "density_percentage": round(density, 2),
+            "is_optimal": is_optimal,
+            "status": status,
+            "advice": advice
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
