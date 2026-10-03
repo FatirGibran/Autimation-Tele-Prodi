@@ -182,5 +182,37 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("Paragraf pertama dengan tautan klik.", plain)
         self.assertIn("Paragraf kedua.", plain)
 
+    def test_to_hugo_markdown(self):
+        meta = {
+            "seo_title": "Tutorial Hugo Static Site",
+            "meta_description": "Cara membuat blog dengan Hugo.",
+            "slug": "tutorial-hugo-static",
+            "category": "Web Dev",
+            "publish_date": "2026-10-03",
+            "tags": ["hugo", "golang", "web"]
+        }
+        hugo_doc = ArticleExporter.to_hugo_markdown(meta, "<p>Halo Dunia</p>")
+        self.assertTrue(hugo_doc.startswith("---"))
+        self.assertIn('title: "Tutorial Hugo Static Site"', hugo_doc)
+        self.assertIn('slug: "tutorial-hugo-static"', hugo_doc)
+        self.assertIn('"hugo"', hugo_doc)
+        self.assertIn("<p>Halo Dunia</p>", hugo_doc)
+
+    def test_generate_course_json_ld(self):
+        course = {
+            "name": "Kecerdasan Buatan Terapan",
+            "course_code": "CS-301",
+            "description": "Pengantar machine learning dan neural networks.",
+            "credits": 3,
+            "prerequisites": "Struktur Data & Algoritma"
+        }
+        json_ld = ArticleExporter.generate_course_json_ld(course)
+        self.assertIn('<script type="application/ld+json">', json_ld)
+        self.assertIn('"@type": "Course"', json_ld)
+        self.assertIn('"courseCode": "CS-301"', json_ld)
+        self.assertIn('"numberOfCredits": 3', json_ld)
+        self.assertIn("Telkom University Purwokerto", json_ld)
+
 if __name__ == "__main__":
     unittest.main()
+
