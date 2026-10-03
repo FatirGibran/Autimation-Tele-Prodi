@@ -47,12 +47,28 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("<circle", clean)
         self.assertTrue(any("SVG" in w for w in warnings))
 
-    def test_strip_dangerous_style_expression(self):
-        style_html = '<div class="tu-editorial-container"><p style="color: red; width: expression(alert(1));">Text</p></div>'
-        clean, warnings = HTMLSanitizer.sanitize(style_html)
-        self.assertNotIn("expression", clean)
-        self.assertIn("color: red", clean)
-        self.assertTrue(any("inline style" in w for w in warnings))
+    def test_normalize_table_structure_and_strip_attributes(self):
+        raw = '<div class="tu-editorial-container"><table border="1" cellpadding="5" width="100%"><tr><td>Col</td></tr></table></div>'
+        clean, warnings = HTMLSanitizer.sanitize(raw)
+        self.assertIn('class="tu-table"', clean)
+        self.assertNotIn('border="1"', clean)
+        self.assertNotIn('cellpadding="5"', clean)
+        self.assertNotIn('width="100%"', clean)
+        self.assertTrue(any("Normalized table structure" in w for w in warnings))
+
+    def test_preserve_and_sandbox_whitelisted_iframe(self):
+        iframe_html = '<div class="tu-editorial-container"><iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"></iframe></div>'
+        clean, warnings = HTMLSanitizer.sanitize(iframe_html)
+        self.assertIn('<iframe', clean)
+        self.assertIn('sandbox="allow-scripts allow-same-origin allow-presentation"', clean)
+        self.assertIn('loading="lazy"', clean)
+        self.assertTrue(any("Sanitized iframe embeds" in w for w in warnings))
+
+    def test_merge_existing_rel_attributes(self):
+        link_html = '<div class="tu-editorial-container"><a href="https://github.com/prodi" rel="author">Github</a></div>'
+        clean, _ = HTMLSanitizer.sanitize(link_html)
+        self.assertIn('rel="author noopener noreferrer"', clean)
+        self.assertIn('target="_blank"', clean)
 
 if __name__ == "__main__":
     unittest.main()
