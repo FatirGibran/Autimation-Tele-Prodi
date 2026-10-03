@@ -435,6 +435,16 @@ class StorageManager:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def enable_wal_mode(self) -> str:
+        """
+        Enables SQLite Write-Ahead Logging (WAL) mode for high-concurrency access.
+        Returns the active journal mode string.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("PRAGMA journal_mode=WAL;")
+            row = cursor.fetchone()
+            return row[0].upper() if row else "UNKNOWN"
+
 
 
 
