@@ -1,4 +1,5 @@
-from typing import Dict, Any, List, Optional
+import time
+from typing import Dict, Any, List, Optional, Tuple
 
 try:
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -11,6 +12,34 @@ except ImportError:
     class InlineKeyboardMarkup:
         def __init__(self, inline_keyboard: List[List[Any]]):
             self.inline_keyboard = inline_keyboard
+
+
+class CommandRateLimiter:
+    """
+    In-memory sliding cooldown rate limiter for Telegram bot users to prevent API flooding.
+    """
+    def __init__(self, default_cooldown: float = 3.0):
+        self.default_cooldown = default_cooldown
+        self._last_invocations: Dict[int, float] = {}
+
+    def is_allowed(self, user_id: int, cooldown_seconds: Optional[float] = None) -> Tuple[bool, float]:
+        now = time.time()
+        cd = cooldown_seconds if cooldown_seconds is not None else self.default_cooldown
+        last_time = self._last_invocations.get(user_id, 0.0)
+        elapsed = now - last_time
+
+        if elapsed >= cd:
+            self._last_invocations[user_id] = now
+            return True, 0.0
+        else:
+            remaining = round(cd - elapsed, 1)
+            return False, remaining
+
+    def reset(self, user_id: Optional[int] = None) -> None:
+        if user_id is not None:
+            self._last_invocations.pop(user_id, None)
+        else:
+            self._last_invocations.clear()
 
 class TelegramFormatter:
     @staticmethod
