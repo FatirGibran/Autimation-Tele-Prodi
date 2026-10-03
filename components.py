@@ -768,6 +768,30 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_event_box(cls, event_name: str, date_time: str, speaker: str, location: str, rsvp_url: str = "") -> str:
+        """
+        Renders an academic seminar, workshop, or guest lecture announcement card.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_name = escape(event_name)
+        safe_dt = escape(date_time)
+        safe_spk = escape(speaker)
+        safe_loc = escape(location)
+        rsvp_html = f'<div class="tu-event-action"><a href="{escape(rsvp_url)}" class="tu-event-btn" target="_blank" rel="noopener noreferrer">Daftar Seminar &rarr;</a></div>' if rsvp_url else ""
+
+        return f"""    <div class="tu-event-box">
+      <div class="tu-event-badge">Agenda Seminar & Kuliah Tamu</div>
+      <h5 class="tu-event-title">{safe_name}</h5>
+      <ul class="tu-event-details">
+        <li><strong>Waktu:</strong> {safe_dt}</li>
+        <li><strong>Narasumber:</strong> {safe_spk}</li>
+        <li><strong>Lokasi:</strong> {safe_loc}</li>
+      </ul>
+      {rsvp_html}
+    </div>"""
+
 
 
 
