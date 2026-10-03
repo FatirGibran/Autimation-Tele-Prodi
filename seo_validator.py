@@ -220,6 +220,24 @@ class YoastSEOValidator:
             "passed": passed
         }
 
+    @classmethod
+    def validate_h1_structure(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Validates H1 heading usage in article content.
+        Google and Yoast guidelines recommend at most one H1 per page to maintain clear topic hierarchy.
+        """
+        h1_tags = re.findall(r'<h1[^>]*>(.*?)</h1>', html_content, re.IGNORECASE | re.DOTALL)
+        count = len(h1_tags)
+        # Passing if 0 (theme handles it) or 1 (content has main title). Flagged if >= 2.
+        passed = count <= 1
+        return {
+            "h1_count": count,
+            "h1_texts": [cls.extract_text(h) for h in h1_tags],
+            "passed": passed,
+            "status": "green" if passed else "red",
+            "message": "Struktur H1 optimal (maksimal 1 tag H1)" if passed else f"Terdeteksi {count} tag H1 (disarankan maksimal 1 tag H1 per artikel)"
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
