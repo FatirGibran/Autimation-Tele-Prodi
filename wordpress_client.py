@@ -146,3 +146,15 @@ class WordPressClient:
         )
         return self._send_request(req)
 
+    def delete_post(self, post_id: int, force: bool = False) -> Dict[str, Any]:
+        """
+        Deletes or trashes a WordPress post via the REST API.
+        """
+        endpoint = f"{self.api_url}/posts/{post_id}?force={'true' if force else 'false'}"
+        req = urllib.request.Request(
+            endpoint,
+            headers=self._get_headers(),
+            method="DELETE"
+        )
+        return self._send_request(req)
+
