@@ -357,3 +357,19 @@ def parse_math_blocks(text: str) -> str:
 
     text = re.sub(r"(?<![\w\$])\$([^\$\n]+?)\$(?![\w\$])", replace_inline, text)
     return text
+
+
+def get_indonesian_reading_level_label(score: float) -> str:
+    """
+    Categorizes the Indonesian adapted Flesch Reading Ease score into editorial audience bands.
+    """
+    if score >= 80.0:
+        return "Sangat Mudah Dipahami (Populer / Umum)"
+    elif score >= 60.0:
+        return "Standar Editorial Edukasi & Blog"
+    elif score >= 40.0:
+        return "Teks Teknis & Akademik Mahasiswa"
+    elif score >= 20.0:
+        return "Jurnal Ilmiah & Makalah Riset Lanjutan"
+    else:
+        return "Monograf Riset Khusus / Sangat Padat"
