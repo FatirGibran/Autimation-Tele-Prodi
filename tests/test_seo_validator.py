@@ -146,5 +146,40 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(profile["external_count"], 1)
         self.assertTrue(profile["passed"])
 
+    def test_validate_h1_structure(self):
+        single_h1 = '<div class="tu-editorial-container"><h1>Judul Utama</h1><p>Konten</p></div>'
+        res1 = YoastSEOValidator.validate_h1_structure(single_h1)
+        self.assertTrue(res1["passed"])
+        self.assertEqual(res1["h1_count"], 1)
+
+        multi_h1 = '<div class="tu-editorial-container"><h1>Judul 1</h1><p>Konten</p><h1>Judul 2</h1></div>'
+        res2 = YoastSEOValidator.validate_h1_structure(multi_h1)
+        self.assertFalse(res2["passed"])
+        self.assertEqual(res2["h1_count"], 2)
+
+    def test_evaluate_academic_title_style(self):
+        title = "Edge Computing: Analisis Implementasi Arsitektur IoT Modern"
+        res = YoastSEOValidator.evaluate_academic_title_style(title)
+        self.assertTrue(res["has_subtitle"])
+        self.assertIn("analisis", res["power_terms_found"])
+        self.assertTrue(res["is_recommended"])
+
+    def test_evaluate_stopword_ratio(self):
+        text = "Sistem komputasi cerdas yang dirancang untuk mendukung penelitian dan pengembangan teknologi baru di kampus."
+        res = YoastSEOValidator.evaluate_stopword_ratio(text)
+        self.assertTrue(res["is_balanced"])
+        self.assertGreater(res["ratio_pct"], 0.0)
+
+    def test_evaluate_anchor_diversity(self):
+        html = '<p><a href="https://a.com">WebAssembly</a>, <a href="https://b.com">Edge Computing</a>, <a href="https://c.com">Cloud</a></p>'
+        res = YoastSEOValidator.evaluate_anchor_diversity(html)
+        self.assertTrue(res["is_diverse"])
+        self.assertEqual(res["unique_anchors"], 3)
+
+        redundant_html = '<p>' + ''.join(f'<a href="https://a.com/{i}">klik di sini</a> ' for i in range(4)) + '</p>'
+        red_res = YoastSEOValidator.evaluate_anchor_diversity(redundant_html)
+        self.assertFalse(red_res["is_diverse"])
+        self.assertEqual(len(red_res["repeated"]), 1)
+
 if __name__ == "__main__":
     unittest.main()
