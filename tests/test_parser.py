@@ -139,5 +139,41 @@ Poin Utama:
         bigrams = extract_keyword_frequency(sample, n_gram=2, top_n=2)
         self.assertIn("jaringan komputer", [bg[0] for bg in bigrams])
 
+    def test_parse_math_blocks(self):
+        from parser import parse_math_blocks
+        raw = "Rumus kompleksitas waktu adalah $O(n \\log n)$ dan rumus energi:\n\n$$E = mc^2$$\n\nBiaya sensor adalah $50 per unit."
+        rendered = parse_math_blocks(raw)
+        self.assertIn('<span class="tu-math-inline"><code>O(n \\log n)</code></span>', rendered)
+        self.assertIn('<div class="tu-math-block"><code>E = mc^2</code></div>', rendered)
+        self.assertIn('$50', rendered)
+
+    def test_get_indonesian_reading_level_label(self):
+        from parser import get_indonesian_reading_level_label
+        self.assertEqual(get_indonesian_reading_level_label(85.0), "Sangat Mudah Dipahami (Populer / Umum)")
+        self.assertEqual(get_indonesian_reading_level_label(65.0), "Standar Editorial Edukasi & Blog")
+        self.assertEqual(get_indonesian_reading_level_label(45.0), "Teks Teknis & Akademik Mahasiswa")
+        self.assertEqual(get_indonesian_reading_level_label(25.0), "Jurnal Ilmiah & Makalah Riset Lanjutan")
+        self.assertEqual(get_indonesian_reading_level_label(10.0), "Monograf Riset Khusus / Sangat Padat")
+
+    def test_parse_markdown_task_lists(self):
+        from parser import parse_markdown_task_lists
+        raw = "- [x] Menginstal toolchain Rust\n- [ ] Kompilasi target wasm32-wasi"
+        rendered = parse_markdown_task_lists(raw)
+        self.assertIn('<ul class="tu-task-list">', rendered)
+        self.assertIn('<input type="checkbox" checked disabled />', rendered)
+        self.assertIn('<input type="checkbox" disabled />', rendered)
+
+    def test_generate_unique_heading_slugs(self):
+        from parser import generate_unique_heading_slugs
+        headings = [
+            {"tag": "h2", "text": "Pengantar"},
+            {"tag": "h2", "text": "Metodologi"},
+            {"tag": "h2", "text": "Pengantar"}
+        ]
+        result = generate_unique_heading_slugs(headings)
+        self.assertEqual(result[0]["slug"], "pengantar")
+        self.assertEqual(result[1]["slug"], "metodologi")
+        self.assertEqual(result[2]["slug"], "pengantar-2")
+
 if __name__ == "__main__":
     unittest.main()
