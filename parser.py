@@ -264,3 +264,39 @@ def normalize_indonesian_typography(text: str) -> str:
     # Collapse multiple spaces but preserve newlines
     text = re.sub(r"[ \t]+", " ", text)
     return text.strip()
+
+
+def parse_markdown_footnotes(text: str) -> str:
+    """
+    Parses Markdown footnotes ([^1] and [^1]: ...) into academic HTML footnotes
+    with bidirectional reference anchors and backlink navigation.
+    """
+    if not text:
+        return ""
+    # Extract footnote definitions
+    footnote_def_pattern = re.compile(r"^\[\^([a-zA-Z0-9_\-]+)\]:\s*(.+)$", re.MULTILINE)
+    definitions = footnote_def_pattern.findall(text)
+    if not definitions:
+        return text
+
+    # Remove definitions from body text
+    body_text = footnote_def_pattern.sub("", text).strip()
+
+    # Replace inline footnote references
+    for label, _ in definitions:
+        inline_pattern = re.compile(rf"\[\^{re.escape(label)}\]")
+        ref_html = f'<sup class="tu-footnote-ref"><a href="#fn-{label}" id="fnref-{label}">[{label}]</a></sup>'
+        body_text = inline_pattern.sub(ref_html, body_text)
+
+    # Build footnotes section
+    items_html = []
+    for label, content in definitions:
+        backlink = f' <a href="#fnref-{label}" class="tu-footnote-backref" title="Kembali ke teks">&#8617;</a>'
+        items_html.append(f'    <li id="fn-{label}"><p>{content.strip()}{backlink}</p></li>')
+
+    footnotes_section = (
+        '<div class="tu-footnotes">\n'
+        '  <hr class="tu-footnotes-divider" />\n'
+        '  <ol>\n' + "\n".join(items_html) + "\n  </ol>\n</div>"
+    )
+    return f"{body_text}\n\n{footnotes_section}"
