@@ -29,9 +29,15 @@ class StorageManager:
                     html_content TEXT,
                     status TEXT DEFAULT 'draft',
                     wp_post_id INTEGER,
+                    is_deleted INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
+            cursor = conn.execute("PRAGMA table_info(articles);")
+            columns = [row["name"] for row in cursor.fetchall()]
+            if "is_deleted" not in columns and len(columns) > 0:
+                conn.execute("ALTER TABLE articles ADD COLUMN is_deleted INTEGER DEFAULT 0;")
+
             conn.execute("CREATE INDEX IF NOT EXISTS idx_keyphrase ON articles(focus_keyphrase);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_slug ON articles(slug);")
             conn.execute("""
@@ -112,10 +118,38 @@ class StorageManager:
             ))
             return cursor.lastrowid
 
-    def list_articles(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def list_articles(self, limit: int = 50, include_deleted: bool = False) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM articles" if include_deleted else "SELECT * FROM articles WHERE is_deleted = 0"
+            cursor = conn.execute(f"{query} ORDER BY id DESC LIMIT ?", (limit,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def soft_delete_article(self, article_id: int) -> bool:
+        with self._get_connection() as conn:
+            cursor = conn.execute("UPDATE articles SET is_deleted = 1 WHERE id = ?", (article_id,))
+            if cursor.rowcount > 0:
+                conn.execute(
+                    "INSERT INTO article_audit_logs (article_id, old_status, new_status, note) VALUES (?, ?, ?, ?)",
+                    (article_id, "active", "trashed", "Soft-deleted to trash")
+                )
+                return True
+            return False
+
+    def restore_article(self, article_id: int) -> bool:
+        with self._get_connection() as conn:
+            cursor = conn.execute("UPDATE articles SET is_deleted = 0 WHERE id = ?", (article_id,))
+            if cursor.rowcount > 0:
+                conn.execute(
+                    "INSERT INTO article_audit_logs (article_id, old_status, new_status, note) VALUES (?, ?, ?, ?)",
+                    (article_id, "trashed", "restored", "Restored from trash")
+                )
+                return True
+            return False
+
+    def list_trash(self, limit: int = 50) -> List[Dict[str, Any]]:
         with self._get_connection() as conn:
             cursor = conn.execute(
-                "SELECT * FROM articles ORDER BY id DESC LIMIT ?",
+                "SELECT * FROM articles WHERE is_deleted = 1 ORDER BY id DESC LIMIT ?",
                 (limit,)
             )
             return [dict(row) for row in cursor.fetchall()]
