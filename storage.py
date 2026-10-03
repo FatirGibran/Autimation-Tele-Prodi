@@ -73,6 +73,18 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rev_article ON article_revisions(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_meta (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    meta_key TEXT NOT NULL,
+                    meta_value TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(article_id, meta_key),
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_meta_article ON article_meta(article_id);")
 
 
 
@@ -348,6 +360,47 @@ class StorageManager:
                 (article_id,)
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def set_article_meta(self, article_id: int, key: str, value: str) -> None:
+        """
+        Stores or updates arbitrary key-value metadata for an article.
+        """
+        with self._get_connection() as conn:
+            conn.execute("""
+                INSERT INTO article_meta (article_id, meta_key, meta_value)
+                VALUES (?, ?, ?)
+                ON CONFLICT(article_id, meta_key) DO UPDATE SET meta_value = excluded.meta_value;
+            """, (article_id, key.strip(), value.strip()))
+
+    def get_article_meta(self, article_id: int, key: Optional[str] = None) -> Any:
+        """
+        Retrieves custom metadata for an article (single key string value, or dict of all keys).
+        """
+        with self._get_connection() as conn:
+            if key:
+                cursor = conn.execute(
+                    "SELECT meta_value FROM article_meta WHERE article_id = ? AND meta_key = ?",
+                    (article_id, key.strip())
+                )
+                row = cursor.fetchone()
+                return row["meta_value"] if row else None
+            else:
+                cursor = conn.execute(
+                    "SELECT meta_key, meta_value FROM article_meta WHERE article_id = ?",
+                    (article_id,)
+                )
+                return {row["meta_key"]: row["meta_value"] for row in cursor.fetchall()}
+
+    def delete_article_meta(self, article_id: int, key: str) -> bool:
+        """
+        Deletes a specific metadata key for an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "DELETE FROM article_meta WHERE article_id = ? AND meta_key = ?",
+                (article_id, key.strip())
+            )
+            return cursor.rowcount > 0
 
 
 
