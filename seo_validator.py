@@ -178,6 +178,48 @@ class YoastSEOValidator:
             "passed": len(flagged_sections) == 0
         }
 
+    @classmethod
+    def audit_links_profile(cls, html_content: str, internal_domain: str = "telkomuniversity.ac.id") -> Dict[str, Any]:
+        """
+        Conducts a comprehensive audit of internal vs external link distribution and security headers.
+        """
+        raw_links = re.findall(r'<a\s+([^>]*href=["\'][^"\']+["\'][^>]*)>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
+        internal_links = []
+        external_links = []
+        unsecured_external = []
+
+        for attr_str, anchor_inner in raw_links:
+            href_match = re.search(r'href=["\']([^"\']+)["\']', attr_str, re.IGNORECASE)
+            if not href_match:
+                continue
+            href = href_match.group(1).strip()
+            anchor_text = cls.extract_text(anchor_inner)
+
+            is_internal = internal_domain in href.lower() or href.startswith("/") or href.startswith("#")
+            link_record = {"href": href, "anchor": anchor_text}
+
+            if is_internal:
+                internal_links.append(link_record)
+            else:
+                external_links.append(link_record)
+                if "noopener" not in attr_str.lower():
+                    unsecured_external.append(link_record)
+
+        has_internal = len(internal_links) >= 1
+        has_external = len(external_links) >= 1
+        is_secure = len(unsecured_external) == 0
+        passed = has_internal and has_external and is_secure
+
+        return {
+            "total_links": len(raw_links),
+            "internal_count": len(internal_links),
+            "external_count": len(external_links),
+            "unsecured_external_count": len(unsecured_external),
+            "internal_links": internal_links,
+            "external_links": external_links,
+            "passed": passed
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
