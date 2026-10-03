@@ -655,6 +655,34 @@ class EditorialComponents:
       </div>{caption_html}
     </figure>"""
 
+    @classmethod
+    def render_admission_cta(
+        cls,
+        headline: str = "Bergabung dengan S1 Teknik Informatika Telkom University Purwokerto",
+        description: str = "",
+        cta_url: str = "https://bif-pwt.telkomuniversity.ac.id/pmb",
+        button_text: str = "Daftar Sekarang"
+    ) -> str:
+        """
+        Renders a branded institutional call-to-action banner for academic admission and prospective students.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_headline = escape(headline)
+        safe_desc = escape(description or "Wujudkan karir masa depan di bidang kecerdasan buatan, komputasi awan, dan rekayasa perangkat lunak bersama kami.")
+        safe_url = escape(cta_url)
+        safe_btn = escape(button_text)
+
+        return f"""    <div class="tu-cta-banner">
+      <div class="tu-cta-content">
+        <h4 class="tu-cta-title">{safe_headline}</h4>
+        <p class="tu-cta-desc">{safe_desc}</p>
+      </div>
+      <div class="tu-cta-action">
+        <a href="{safe_url}" class="tu-cta-btn" target="_blank" rel="noopener noreferrer">{safe_btn} &rarr;</a>
+      </div>
+    </div>"""
+
 
 
 
