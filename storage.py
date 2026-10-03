@@ -472,6 +472,43 @@ class StorageManager:
             """, (category, limit))
             return [dict(row) for row in cursor.fetchall()]
 
+    def get_editorial_analytics(self, days: int = 30) -> Dict[str, Any]:
+        """
+        Aggregates editorial analytics and publishing velocity within the specified rolling window.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT status, COUNT(1) as cnt
+                FROM articles
+                WHERE is_deleted = 0
+                  AND created_at >= datetime('now', ?)
+                GROUP BY status
+            """, (f"-{days} days",))
+            status_counts = {row["status"]: row["cnt"] for row in cursor.fetchall()}
+
+            cursor = conn.execute("""
+                SELECT COUNT(1) as total, COUNT(DISTINCT category) as categories_active
+                FROM articles
+                WHERE is_deleted = 0
+                  AND created_at >= datetime('now', ?)
+            """, (f"-{days} days",))
+            meta_row = cursor.fetchone()
+            total = meta_row["total"] if meta_row else 0
+            cat_count = meta_row["categories_active"] if meta_row else 0
+
+            published = status_counts.get("published", 0)
+            velocity_per_day = round(published / max(1, days), 2)
+
+            return {
+                "window_days": days,
+                "total_articles": total,
+                "status_breakdown": status_counts,
+                "published_count": published,
+                "active_categories": cat_count,
+                "publishing_velocity_per_day": velocity_per_day,
+            }
+
+
 
 
 
