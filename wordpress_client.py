@@ -4,7 +4,7 @@ import time
 import urllib.request
 import urllib.error
 import urllib.parse
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 
 class WordPressClient:
@@ -200,4 +200,26 @@ class WordPressClient:
             method="POST"
         )
         return self._send_request(req)
+
+    def check_connection(self) -> Dict[str, Any]:
+        """
+        Pings the WordPress REST API users/me endpoint and verifies authentication status.
+        """
+        endpoint = f"{self.api_url}/users/me"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            data = self._send_request(req)
+            return {
+                "ok": True,
+                "user_id": data.get("id"),
+                "username": data.get("slug") or data.get("name"),
+                "status_message": "Authentication successful",
+            }
+        except Exception as e:
+            return {
+                "ok": False,
+                "error": str(e),
+                "status_message": "Connection or authentication failed",
+            }
+
 
