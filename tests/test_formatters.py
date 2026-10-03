@@ -53,5 +53,59 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("**WP Post ID:** `999`", output)
         self.assertIn("sistem-terdistribusi-cloud", output)
 
+    def test_format_score_progress_bar(self):
+        bar_high = TelegramFormatter.format_score_progress_bar(95)
+        self.assertIn("100/100" if 100 in [95] else "95/100", bar_high)
+        self.assertIn("Sempurna", bar_high)
+        self.assertIn("█", bar_high)
+
+        bar_low = TelegramFormatter.format_score_progress_bar(40)
+        self.assertIn("40/100", bar_low)
+        self.assertIn("Kritis", bar_low)
+
+    def test_format_readability_badge(self):
+        badge_good = TelegramFormatter.format_readability_badge(72.5)
+        self.assertIn("🟢", badge_good)
+        self.assertIn("72.5", badge_good)
+
+        badge_poor = TelegramFormatter.format_readability_badge(30.0, label="Sulit Dibaca")
+        self.assertIn("🔴", badge_poor)
+        self.assertIn("Sulit Dibaca", badge_poor)
+
+    def test_build_review_management_keyboard(self):
+        keyboard = TelegramFormatter.build_review_management_keyboard(123, "test-slug")
+        self.assertIn("inline_keyboard", keyboard)
+        buttons = [btn["text"] for row in keyboard["inline_keyboard"] for btn in row]
+        self.assertTrue(any("Setujui" in t for t in buttons))
+        self.assertTrue(any("Revisi" in t for t in buttons))
+        self.assertTrue(any(btn["callback_data"] == "approve:123" for row in keyboard["inline_keyboard"] for btn in row))
+
+
+class TestCommandRateLimiter(unittest.TestCase):
+    def test_rate_limiter_allows_and_blocks(self):
+        from formatters import CommandRateLimiter
+        import time
+
+        limiter = CommandRateLimiter(default_cooldown=0.2)
+        allowed, remaining = limiter.is_allowed(1001)
+        self.assertTrue(allowed)
+        self.assertEqual(remaining, 0.0)
+
+        # Immediate repeat should be blocked
+        allowed2, remaining2 = limiter.is_allowed(1001)
+        self.assertFalse(allowed2)
+        self.assertGreater(remaining2, 0.0)
+
+        # Different user is not blocked
+        allowed_other, _ = limiter.is_allowed(1002)
+        self.assertTrue(allowed_other)
+
+        # Reset user
+        limiter.reset(1001)
+        allowed_reset, _ = limiter.is_allowed(1001)
+        self.assertTrue(allowed_reset)
+
+
 if __name__ == "__main__":
     unittest.main()
+
