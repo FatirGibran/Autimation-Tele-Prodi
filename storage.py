@@ -508,6 +508,27 @@ class StorageManager:
                 "publishing_velocity_per_day": velocity_per_day,
             }
 
+    def prune_revisions(self, retention_days: int = 30, keep_minimum: int = 2) -> int:
+        """
+        Prunes historical revisions older than retention_days while retaining
+        at least keep_minimum recent revisions per article.
+        Returns the number of deleted revisions.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                DELETE FROM article_revisions
+                WHERE created_at < datetime('now', ?)
+                  AND id NOT IN (
+                      SELECT id FROM (
+                          SELECT id,
+                                 ROW_NUMBER() OVER (PARTITION BY article_id ORDER BY revision_num DESC) as rn
+                          FROM article_revisions
+                      ) WHERE rn <= ?
+                  )
+            """, (f"-{retention_days} days", keep_minimum))
+            return cursor.rowcount
+
+
 
 
 
