@@ -225,5 +225,66 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(revisions[0]["revision_num"], 1)
         self.assertIn("Versi 1", revisions[0]["html_content"])
 
+    def test_soft_delete_and_restore_trash(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Sampah",
+            "category": "Testing",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "artikel sampah",
+            "seo_title": "Artikel Sampah",
+            "slug": "artikel-sampah",
+            "meta_description": "Deskripsi artikel sampah.",
+            "status": "draft"
+        })
+        self.assertTrue(self.storage.soft_delete_article(art_id))
+        trash = self.storage.list_trash()
+        self.assertTrue(any(a["id"] == art_id for a in trash))
+        active = self.storage.list_articles()
+        self.assertFalse(any(a["id"] == art_id for a in active))
+
+        self.assertTrue(self.storage.restore_article(art_id))
+        active_after = self.storage.list_articles()
+        self.assertTrue(any(a["id"] == art_id for a in active_after))
+
+    def test_custom_article_metadata(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Meta",
+            "category": "Testing",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "artikel meta",
+            "seo_title": "Artikel Meta",
+            "slug": "artikel-meta",
+            "meta_description": "Deskripsi artikel meta.",
+            "status": "draft"
+        })
+        self.storage.set_article_meta(art_id, "curriculum_code", "IF-2026-B")
+        self.assertEqual(self.storage.get_article_meta(art_id, "curriculum_code"), "IF-2026-B")
+
+        all_meta = self.storage.get_article_meta(art_id)
+        self.assertIn("curriculum_code", all_meta)
+        self.assertTrue(self.storage.delete_article_meta(art_id, "curriculum_code"))
+        self.assertIsNone(self.storage.get_article_meta(art_id, "curriculum_code"))
+
+    def test_export_event_logging(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Export Log",
+            "category": "Testing",
+            "publish_date": "2026-10-02",
+            "focus_keyphrase": "artikel export",
+            "seo_title": "Artikel Export",
+            "slug": "artikel-export",
+            "meta_description": "Deskripsi artikel export.",
+            "status": "draft"
+        })
+        export_id = self.storage.log_export_event(art_id, "elementor_json", "output/article.json")
+        self.assertIsNotNone(export_id)
+        history = self.storage.get_export_history(art_id)
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["export_type"], "elementor_json")
+
+    def test_enable_wal_mode(self):
+        mode = self.storage.enable_wal_mode()
+        self.assertIn(mode, ["WAL", "MEMORY", "DELETE"])
+
 if __name__ == "__main__":
     unittest.main()
