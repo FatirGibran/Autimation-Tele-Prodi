@@ -238,3 +238,29 @@ def generate_excerpt(html_content: str, max_length: int = 160) -> str:
     if last_space > 0:
         truncated = truncated[:last_space]
     return f"{truncated}..."
+
+
+def normalize_indonesian_typography(text: str) -> str:
+    """
+    Normalizes typographic characters, non-breaking spaces, and quotes
+    to standard editorial characters for consistent CMS rendering.
+    """
+    if not text:
+        return ""
+    replacements = {
+        "\u201c": '"',  # Left double quotation mark
+        "\u201d": '"',  # Right double quotation mark
+        "\u2018": "'",  # Left single quotation mark
+        "\u2019": "'",  # Right single quotation mark
+        "\u2014": " -- ", # Em-dash
+        "\u2013": "-",  # En-dash
+        "\u2026": "...", # Ellipsis
+        "\u00a0": " ",  # Non-breaking space
+        "\u200b": "",   # Zero-width space
+        "\ufeff": "",   # Byte order mark
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    # Collapse multiple spaces but preserve newlines
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
