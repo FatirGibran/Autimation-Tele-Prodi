@@ -43,15 +43,39 @@ class HTMLSanitizer:
             warnings.append("Normalized table structure and stripped presentational attributes.")
 
 
-        # 2. Strip dangerous script, iframe, object, and embed tags
+        # 2. Strip dangerous script, object, and embed tags; sanitize/whitelist educational iframes
         if "<script" in cleaned.lower():
             warnings.append("Stripped dangerous <script> tag from HTML.")
             cleaned = re.sub(r"<script[^>]*>.*?</script>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
 
-        if re.search(r"<(iframe|object|embed)", cleaned, re.IGNORECASE):
-            warnings.append("Stripped dangerous embedded tags (iframe/object/embed).")
-            cleaned = re.sub(r"<(iframe|object|embed)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
-            cleaned = re.sub(r"<(iframe|object|embed)[^>]*/>", "", cleaned, flags=re.IGNORECASE)
+        # Remove object and embed tags entirely
+        if re.search(r"<(object|embed)", cleaned, re.IGNORECASE):
+            warnings.append("Stripped dangerous embedded tags (object/embed).")
+            cleaned = re.sub(r"<(object|embed)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+            cleaned = re.sub(r"<(object|embed)[^>]*/>", "", cleaned, flags=re.IGNORECASE)
+
+        # Filter iframes: allow only whitelisted educational domains with strict sandbox
+        ALLOWED_IFRAME_HOSTS = ("youtube.com", "youtube-nocookie.com", "youtu.be", "vimeo.com", "drive.google.com")
+        if "<iframe" in cleaned.lower():
+            def filter_iframe(match):
+                tag = match.group(0)
+                src_match = re.search(r'src=["\'](https?://[^"\']+)["\']', tag, re.IGNORECASE)
+                if not src_match:
+                    return ""
+                src_url = src_match.group(1).lower()
+                if any(host in src_url for host in ALLOWED_IFRAME_HOSTS):
+                    # Ensure sandbox and lazy loading
+                    if 'sandbox=' not in tag:
+                        tag = tag.rstrip(" />").rstrip(">") + ' sandbox="allow-scripts allow-same-origin allow-presentation"'
+                    if 'loading=' not in tag:
+                        tag = tag.rstrip(" />").rstrip(">") + ' loading="lazy"'
+                    return tag.rstrip(" />").rstrip(">") + '></iframe>'
+                return ""
+
+            old_cleaned = cleaned
+            cleaned = re.sub(r'<iframe[^>]*>.*?</iframe>|<iframe[^>]*/>', filter_iframe, cleaned, flags=re.DOTALL | re.IGNORECASE)
+            if cleaned != old_cleaned:
+                warnings.append("Sanitized iframe embeds against domain whitelist.")
 
         # 3. Strip inline event handlers (onclick, onload, etc.) and javascript: schemes
         inline_handler_regex = r'\s+(on\w+)=["\'][^"\']*["\']'
