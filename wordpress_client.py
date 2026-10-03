@@ -132,3 +132,17 @@ class WordPressClient:
         created = self._send_request(req_post)
         return created["id"]
 
+    def update_post(self, post_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Updates an existing WordPress post using PATCH/POST.
+        """
+        endpoint = f"{self.api_url}/posts/{post_id}"
+        data_bytes = json.dumps(updates).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint,
+            data=data_bytes,
+            headers=self._get_headers(),
+            method="POST"
+        )
+        return self._send_request(req)
+
