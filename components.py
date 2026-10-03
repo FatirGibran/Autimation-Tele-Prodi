@@ -545,6 +545,37 @@ class EditorialComponents:
       </table>
     </div>"""
 
+    @classmethod
+    def render_table_of_contents(cls, headings: List[Dict[str, str]], title: str = "Daftar Isi Artikel") -> str:
+        """
+        Renders a structured, accessible Table of Contents component with slugified anchor links.
+        """
+        if not headings:
+            return ""
+
+        from xml.sax.saxutils import escape
+        import re
+
+        items = []
+        for h in headings:
+            tag = h.get("tag", "h2").lower()
+            text = h.get("text", "")
+            slug = re.sub(r"[^\w\s-]", "", text.lower()).strip()
+            slug = re.sub(r"[-\s]+", "-", slug)
+            indent_class = "tu-toc-sub" if tag == "h3" else "tu-toc-item"
+            items.append(f'      <li class="{indent_class}"><a href="#{slug}">{escape(text)}</a></li>')
+
+        list_html = "\n".join(items)
+        return f"""    <nav class="tu-toc-card" aria-label="{escape(title)}">
+      <div class="tu-toc-header">
+        <span class="tu-toc-icon">&#128203;</span>
+        <h4 class="tu-toc-title">{escape(title)}</h4>
+      </div>
+      <ul class="tu-toc-list">
+{list_html}
+      </ul>
+    </nav>"""
+
 
 
 
