@@ -82,3 +82,24 @@ class TelegramFormatter:
         if article.get("wp_post_id"):
             lines.append(f"🌐 **WP Post ID:** `{article['wp_post_id']}`")
         return "\n".join(lines)
+
+    @staticmethod
+    def format_score_progress_bar(score: int, width: int = 10) -> str:
+        """
+        Renders a Unicode visual progress bar for SEO score indication.
+        """
+        clamped = max(0, min(100, score))
+        filled = round((clamped / 100) * width)
+        empty = width - filled
+        bar = "█" * filled + "░" * empty
+        rating = "Sempurna" if clamped >= 95 else ("Optimal" if clamped >= 80 else ("Perlu Perbaikan" if clamped >= 60 else "Kritis"))
+        return f"[{bar}] {clamped}/100 ({rating})"
+
+    @staticmethod
+    def format_readability_badge(score: float, label: str = "") -> str:
+        """
+        Renders an Indonesian readability assessment badge for Telegram chat messages.
+        """
+        icon = "🟢" if score >= 60.0 else ("🟡" if score >= 40.0 else "🔴")
+        desc = label or ("Keterbacaan Baik" if score >= 60.0 else "Perlu Penyederhanaan Kalimat")
+        return f"{icon} **Skor Keterbacaan:** `{score:.1f}` — *{desc}*"
