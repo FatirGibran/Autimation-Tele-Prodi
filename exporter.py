@@ -361,6 +361,39 @@ class ArticleExporter:
         clean_lines = [l for l in lines if l]
         return "\n\n".join(clean_lines)
 
+    @staticmethod
+    def to_hugo_markdown(metadata: Dict[str, Any], html_content: str, is_draft: bool = False) -> str:
+        """
+        Formats article content for Hugo static site generator with extended archetype frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        category = metadata.get("category", "")
+        date = metadata.get("publish_date", "")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        tags_yaml = json.dumps(tags)
+        cats_yaml = json.dumps([category] if category else [])
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'date: {date}' if date else 'date: 2026-10-01',
+            f'slug: "{slug}"',
+            f'draft: {"true" if is_draft else "false"}',
+            f'description: "{desc}"',
+            f'categories: {cats_yaml}',
+            f'tags: {tags_yaml}',
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
