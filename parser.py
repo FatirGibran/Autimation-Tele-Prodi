@@ -222,4 +222,19 @@ def parse_markdown_callouts(text: str) -> str:
     return callout_pattern.sub(replace_callout, text)
 
 
-
+def generate_excerpt(html_content: str, max_length: int = 160) -> str:
+    """
+    Extracts a clean, tag-stripped text excerpt suitable for meta description or RSS summary.
+    Truncates at the nearest word boundary without splitting words.
+    """
+    if not html_content:
+        return ""
+    clean = re.sub(r"<[^>]+>", " ", html_content)
+    clean = re.sub(r"\s+", " ", clean).strip()
+    if len(clean) <= max_length:
+        return clean
+    truncated = clean[:max_length]
+    last_space = truncated.rfind(" ")
+    if last_space > 0:
+        truncated = truncated[:last_space]
+    return f"{truncated}..."
