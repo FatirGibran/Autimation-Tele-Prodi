@@ -397,3 +397,27 @@ def parse_markdown_task_lists(text: str) -> str:
 
     pattern = re.compile(r"^(?:[-*]\s+\[[ xX]\]\s+.*(?:\n|$))+", re.MULTILINE)
     return pattern.sub(replace_task_block, text)
+
+
+def generate_unique_heading_slugs(headings: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """
+    Computes unique, url-safe anchor slugs for a list of headings, automatically
+    resolving duplicate heading text collisions.
+    """
+    slug_counts: Dict[str, int] = {}
+    enriched = []
+    for h in headings:
+        text = h.get("text", "").strip()
+        base_slug = re.sub(r"[^\w\s-]", "", text.lower()).strip()
+        base_slug = re.sub(r"[-\s]+", "-", base_slug) or "heading"
+        if base_slug in slug_counts:
+            slug_counts[base_slug] += 1
+            final_slug = f"{base_slug}-{slug_counts[base_slug]}"
+        else:
+            slug_counts[base_slug] = 1
+            final_slug = base_slug
+
+        item = dict(h)
+        item["slug"] = final_slug
+        enriched.append(item)
+    return enriched
