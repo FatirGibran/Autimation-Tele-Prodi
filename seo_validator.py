@@ -308,6 +308,37 @@ class YoastSEOValidator:
             "advice": advice
         }
 
+    @classmethod
+    def evaluate_anchor_diversity(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits hyperlink anchor text diversity to detect excessive repetitive anchor phrasing.
+        """
+        links = re.findall(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
+        if not links:
+            return {"total_links": 0, "unique_anchors": 0, "diversity_ratio": 1.0, "is_diverse": True, "repeated": []}
+
+        anchors: Dict[str, int] = {}
+        for _, text in links:
+            clean = cls.extract_text(text).strip().lower()
+            if clean:
+                anchors[clean] = anchors.get(clean, 0) + 1
+
+        total = len(links)
+        unique = len(anchors)
+        ratio = round(unique / total, 2)
+
+        # Repeated anchors (> 2 occurrences)
+        repeated = [{"anchor": k, "count": v} for k, v in anchors.items() if v > 2]
+        is_diverse = len(repeated) == 0
+
+        return {
+            "total_links": total,
+            "unique_anchors": unique,
+            "diversity_ratio": ratio,
+            "is_diverse": is_diverse,
+            "repeated": repeated
+        }
+
     @staticmethod
     def extract_text(html: str) -> str:
         # Remove style and script tags
