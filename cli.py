@@ -147,6 +147,85 @@ def cmd_validate(args):
         sys.exit(1)
 
 
+def cmd_trash(args):
+    if args.action == "list":
+        trashed = storage.list_trash(limit=args.limit)
+        if not trashed:
+            print("Kotak sampah kosong.")
+            return
+        print(f"{'ID':<4} | {'TANGGAL':<12} | {'KEYPHRASE':<30} | {'SLUG'}")
+        print("-" * 75)
+        for a in trashed:
+            print(f"{a['id']:<4} | {a['publish_date']:<12} | {a['focus_keyphrase'][:28]:<30} | {a['slug']}")
+    elif args.action == "delete":
+        if not args.id:
+            print("Error: Argumen --id wajib disertakan untuk tindakan delete.")
+            sys.exit(1)
+        ok = storage.soft_delete_article(args.id)
+        print(f"Artikel ID {args.id} {'berhasil dipindahkan ke sampah' if ok else 'gagal/tidak ditemukan'}.")
+    elif args.action == "restore":
+        if not args.id:
+            print("Error: Argumen --id wajib disertakan untuk tindakan restore.")
+            sys.exit(1)
+        ok = storage.restore_article(args.id)
+        print(f"Artikel ID {args.id} {'berhasil dipulihkan dari sampah' if ok else 'gagal/tidak ditemukan'}.")
+
+
+def cmd_density(args):
+    html_path = Path(args.html)
+    if not html_path.exists():
+        print(f"Error: File HTML '{args.html}' tidak ditemukan.")
+        sys.exit(1)
+    html_content = html_path.read_text(encoding="utf-8")
+    body_text = YoastSEOValidator.extract_text(html_content)
+    result = YoastSEOValidator.evaluate_keyword_density(args.keyphrase, body_text)
+    print("=== Analisis Kerapatan Kata Kunci (Yoast SEO) ===")
+    print(f"Focus Keyphrase   : {args.keyphrase}")
+    print(f"Kemunculan (Count): {result['count']}")
+    print(f"Persentase        : {result['density_percentage']}%")
+    print(f"Status Evaluasi   : {result['status'].upper()}")
+    print(f"Saran Editorial   : {result['advice']}")
+
+
+def cmd_feed(args):
+    articles = storage.list_articles(limit=args.limit)
+    out_path = Path(args.out)
+    info = {
+        "title": args.title,
+        "base_url": args.base_url,
+        "feed_url": f"{args.base_url}/{out_path.name}"
+    }
+    if args.format == "atom":
+        content = ArticleExporter.generate_atom_feed(articles, info)
+    else:
+        content = ArticleExporter.generate_json_feed(articles, info)
+    out_path.write_text(content, encoding="utf-8")
+    print(f"Feed syndication format {args.format.upper()} berhasil diekspor ({len(articles)} artikel) -> {out_path}")
+
+
+def cmd_meta(args):
+    if args.action == "get":
+        val = storage.get_article_meta(args.id, args.key)
+        if args.key:
+            print(f"Artikel ID {args.id} [{args.key}]: {val}")
+        else:
+            print(f"=== Metadata Artikel ID {args.id} ===")
+            for k, v in (val or {}).items():
+                print(f" - {k}: {v}")
+    elif args.action == "set":
+        if not args.key or args.value is None:
+            print("Error: Argumen --key dan --value wajib disertakan.")
+            sys.exit(1)
+        storage.set_article_meta(args.id, args.key, args.value)
+        print(f"Metadata berhasil disimpan: [{args.key}] = {args.value}")
+    elif args.action == "delete":
+        if not args.key:
+            print("Error: Argumen --key wajib disertakan.")
+            sys.exit(1)
+        ok = storage.delete_article_meta(args.id, args.key)
+        print(f"Metadata [{args.key}] {'berhasil dihapus' if ok else 'tidak ditemukan'}.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -194,6 +273,36 @@ def main():
     val_parser.add_argument("--meta", help="Path opsional ke file JSON metadata")
     val_parser.add_argument("--json", dest="json_output", action="store_true", help="Format output sebagai JSON")
     val_parser.set_defaults(func=cmd_validate)
+
+    # Trash command
+    trash_parser = subparsers.add_parser("trash", help="Kelola kotak sampah artikel (list, delete, restore)")
+    trash_parser.add_argument("--action", choices=["list", "delete", "restore"], default="list", help="Tindakan kotak sampah")
+    trash_parser.add_argument("--id", type=int, help="ID artikel")
+    trash_parser.add_argument("--limit", type=int, default=20, help="Batas artikel yang ditampilkan")
+    trash_parser.set_defaults(func=cmd_trash)
+
+    # Density command
+    density_parser = subparsers.add_parser("density", help="Analisis kerapatan fokus kata kunci konten HTML")
+    density_parser.add_argument("--html", required=True, help="Path ke file HTML")
+    density_parser.add_argument("--keyphrase", required=True, help="Fokus kata kunci")
+    density_parser.set_defaults(func=cmd_density)
+
+    # Feed command
+    feed_parser = subparsers.add_parser("feed", help="Generate syndication feed (Atom atau JSON Feed v1.1)")
+    feed_parser.add_argument("--format", choices=["atom", "json"], default="atom", help="Format feed")
+    feed_parser.add_argument("--out", default="feed.xml", help="Path berkas output feed")
+    feed_parser.add_argument("--title", default="S1 Teknik Informatika Telkom University Purwokerto", help="Judul kanal feed")
+    feed_parser.add_argument("--base-url", default="https://bif-pwt.telkomuniversity.ac.id", help="Base URL website prodi")
+    feed_parser.add_argument("--limit", type=int, default=50, help="Jumlah artikel maksimal")
+    feed_parser.set_defaults(func=cmd_feed)
+
+    # Meta command
+    meta_parser = subparsers.add_parser("meta", help="Kelola custom metadata pasangan key-value artikel")
+    meta_parser.add_argument("--id", type=int, required=True, help="ID artikel")
+    meta_parser.add_argument("--action", choices=["get", "set", "delete"], default="get", help="Tindakan metadata")
+    meta_parser.add_argument("--key", help="Kunci metadata")
+    meta_parser.add_argument("--value", help="Nilai metadata")
+    meta_parser.set_defaults(func=cmd_meta)
 
     args = parser.parse_args()
     args.func(args)
