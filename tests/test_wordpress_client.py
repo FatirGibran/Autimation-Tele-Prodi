@@ -162,6 +162,25 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(result["failed"][0]["id"], 102)
         self.assertFalse(result["all_success"])
 
+    @patch("urllib.request.urlopen")
+    def test_get_post_revisions(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 55, "author": 1, "date": "2026-10-01T12:00:00"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        revisions = self.client.get_post_revisions(123)
+        self.assertEqual(len(revisions), 1)
+        self.assertEqual(revisions[0]["id"], 55)
+
+    @patch.object(WordPressClient, "update_post")
+    def test_schedule_post(self, mock_update):
+        mock_update.return_value = {"id": 123, "status": "future", "date": "2026-10-15T08:00:00"}
+
+        res = self.client.schedule_post(123, "2026-10-15T08:00:00")
+        mock_update.assert_called_once_with(123, {"status": "future", "date": "2026-10-15T08:00:00"})
+        self.assertEqual(res["status"], "future")
+
 if __name__ == "__main__":
     unittest.main()
+
 
