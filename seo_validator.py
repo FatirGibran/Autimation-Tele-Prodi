@@ -613,6 +613,58 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def evaluate_keyphrase_distribution(cls, html_content: str, focus_keyphrase: str) -> Dict[str, Any]:
+        """
+        Evaluates whether the focus keyphrase is distributed evenly across the introductory,
+        body, and concluding sections of the content.
+        """
+        text = cls.extract_text(html_content).lower()
+        fk = focus_keyphrase.strip().lower()
+        if not fk or not text:
+            return {
+                "total_occurrences": 0,
+                "sections": {"intro": 0, "body": 0, "conclusion": 0},
+                "sections_covered": 0,
+                "is_uniform": False,
+                "warning": "Focus keyphrase or content is empty."
+            }
+
+        words = text.split()
+        total_words = len(words)
+        third = total_words // 3
+
+        sec1 = " ".join(words[:third])
+        sec2 = " ".join(words[third:2 * third])
+        sec3 = " ".join(words[2 * third:])
+
+        c1 = sec1.count(fk)
+        c2 = sec2.count(fk)
+        c3 = sec3.count(fk)
+        total = c1 + c2 + c3
+
+        sections_present = sum(1 for c in (c1, c2, c3) if c > 0)
+        is_uniform = (total >= 2 and sections_present >= 2) or (total == 1 and sections_present == 1)
+
+        warning = ""
+        if total == 0:
+            warning = "Focus keyphrase tidak ditemukan di dalam isi teks."
+        elif not is_uniform:
+            warning = "Distribusi kata kunci tidak merata (terkonsentrasi pada satu bagian saja)."
+
+        return {
+            "total_occurrences": total,
+            "sections": {
+                "intro": c1,
+                "body": c2,
+                "conclusion": c3
+            },
+            "sections_covered": sections_present,
+            "is_uniform": is_uniform,
+            "warning": warning
+        }
+
+
 
 
 
