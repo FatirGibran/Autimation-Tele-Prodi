@@ -421,3 +421,37 @@ def generate_unique_heading_slugs(headings: List[Dict[str, str]]) -> List[Dict[s
         item["slug"] = final_slug
         enriched.append(item)
     return enriched
+
+
+def parse_academic_citations(text: str) -> str:
+    """
+    Parses Pandoc-style academic citation brackets ([@key], [@key, p. 12])
+    into semantic <cite class="tu-citation" data-key="..."> markup.
+    """
+    if not text:
+        return ""
+    citation_pattern = re.compile(r'\[([^\]]*?@([a-zA-Z0-9_\-]+)[^\]]*?)\]')
+
+    def replace_citation(match):
+        full_cite = match.group(1)
+        primary_key = match.group(2)
+        return f'<cite class="tu-citation" data-cite-key="{primary_key}">[{full_cite.strip()}]</cite>'
+
+    return citation_pattern.sub(replace_citation, text)
+
+
+def extract_citation_keys(text: str) -> List[str]:
+    """
+    Extracts all distinct academic citation keys (@key) referenced in text.
+    """
+    if not text:
+        return []
+    keys = re.findall(r'@([a-zA-Z0-9_\-]+)', text)
+    seen = set()
+    result = []
+    for k in keys:
+        if k not in seen:
+            seen.add(k)
+            result.append(k)
+    return result
+
