@@ -180,5 +180,18 @@ class HTMLSanitizer:
         if re.search(r'<p>\s*(?:&nbsp;|\s)*</p>', cleaned, re.IGNORECASE):
             cleaned = re.sub(r'<p>\s*(?:&nbsp;|\s)*</p>\n?', '', cleaned, flags=re.IGNORECASE)
 
+        # 8b. Strip zero-sized tracking pixels and invisible web beacons
+        def check_tracking_pixel(match):
+            tag = match.group(0)
+            has_zero_dim = re.search(r'\b(width|height)=["\'](?:0|1)(?:px)?["\']', tag, re.IGNORECASE)
+            has_hidden_style = re.search(r'style=["\'][^"\']*(display:\s*none|visibility:\s*hidden|opacity:\s*0)[^"\']*["\']', tag, re.IGNORECASE)
+            if has_zero_dim or has_hidden_style:
+                warnings.append("Stripped hidden tracking pixel or zero-dimension element.")
+                return ""
+            return tag
+
+        cleaned = re.sub(r'<img\s+[^>]*>', check_tracking_pixel, cleaned, flags=re.IGNORECASE)
+
         return cleaned, warnings
+
 
