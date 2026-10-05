@@ -244,5 +244,15 @@ class WordPressClient:
             "all_success": len(failed) == 0,
         }
 
+    def get_post_revisions(self, post_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves remote revision history for a WordPress post.
+        """
+        endpoint = f"{self.api_url}/posts/{post_id}/revisions"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        return results if isinstance(results, list) else []
+
+
 
 
