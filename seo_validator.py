@@ -664,6 +664,55 @@ class YoastSEOValidator:
             "warning": warning
         }
 
+    @classmethod
+    def evaluate_internal_link_structure(cls, html_content: str, base_domain: str = "telkomuniversity.ac.id") -> Dict[str, Any]:
+        """
+        Audits internal hyperlinks for academic information architecture depth,
+        canonical structure, and absence of tracking queries.
+        """
+        links = re.findall(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>', html_content, re.IGNORECASE)
+        internal_links = []
+        for href in links:
+            h = href.strip()
+            if h.startswith("#") or h.startswith("mailto:") or h.startswith("tel:"):
+                continue
+            if base_domain in h.lower() or (h.startswith("/") and not h.startswith("//")):
+                internal_links.append(h)
+
+        if not internal_links:
+            return {
+                "total_internal_links": 0,
+                "has_internal_links": False,
+                "links": [],
+                "warnings": ["Tidak ada tautan internal prodi/kampus dalam konten."]
+            }
+
+        warnings = []
+        links_detail = []
+        for link in internal_links:
+            has_tracking = bool(re.search(r'\?(?:utm_|fbclid|gclid)', link, re.IGNORECASE))
+            if has_tracking:
+                warnings.append(f"Tautan internal '{link}' mengandung parameter tracking/query string.")
+
+            path = link.split("?")[0].split("#")[0]
+            if base_domain in path:
+                path = path.split(base_domain, 1)[-1]
+            segments = [s for s in path.strip("/").split("/") if s]
+            depth = len(segments)
+            if depth > 4:
+                warnings.append(f"Kedalaman URL tautan '{link}' terlalu dalam (kedalaman {depth} > 4).")
+
+            links_detail.append({"href": link, "depth": depth, "has_tracking": has_tracking})
+
+        return {
+            "total_internal_links": len(internal_links),
+            "has_internal_links": len(internal_links) > 0,
+            "links": links_detail,
+            "warnings": warnings,
+            "is_optimal": len(warnings) == 0
+        }
+
+
 
 
 
