@@ -107,6 +107,17 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sched_time ON article_schedules(scheduled_at);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_engagement (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL UNIQUE,
+                    view_count INTEGER DEFAULT 0,
+                    share_count INTEGER DEFAULT 0,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_eng_article ON article_engagement(article_id);")
 
 
 
@@ -667,6 +678,42 @@ class StorageManager:
             "articles_imported": imported_articles,
             "tags_imported": imported_tags,
         }
+
+    def record_engagement(self, article_id: int, views_increment: int = 1, shares_increment: int = 0) -> Dict[str, Any]:
+        """
+        Increments view and share counts for an article and returns updated stats.
+        """
+        with self._get_connection() as conn:
+            conn.execute("""
+                INSERT INTO article_engagement (article_id, view_count, share_count, last_updated)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(article_id) DO UPDATE SET
+                    view_count = view_count + excluded.view_count,
+                    share_count = share_count + excluded.share_count,
+                    last_updated = CURRENT_TIMESTAMP;
+            """, (article_id, max(0, views_increment), max(0, shares_increment)))
+
+            cursor = conn.execute(
+                "SELECT * FROM article_engagement WHERE article_id = ?;",
+                (article_id,)
+            )
+            return dict(cursor.fetchone())
+
+    def get_top_engaged_articles(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Retrieves top performing articles ranked by total views and shares.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT e.*, a.seo_title, a.slug, a.category
+                FROM article_engagement e
+                JOIN articles a ON e.article_id = a.id
+                WHERE a.is_deleted = 0
+                ORDER BY e.view_count DESC, e.share_count DESC
+                LIMIT ?;
+            """, (limit,))
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
