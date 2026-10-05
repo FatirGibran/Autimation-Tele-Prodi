@@ -455,3 +455,34 @@ def extract_citation_keys(text: str) -> List[str]:
             result.append(k)
     return result
 
+
+DEFAULT_ACADEMIC_GLOSSARY: Dict[str, str] = {
+    "KRS": "Kartu Rencana Studi",
+    "KHS": "Kartu Hasil Studi",
+    "SKS": "Satuan Kredit Semester",
+    "MBKM": "Merdeka Belajar Kampus Merdeka",
+    "RPS": "Rencana Pembelajaran Semester",
+    "CPL": "Capaian Pembelajaran Lulusan",
+    "CPMK": "Capaian Pembelajaran Mata Kuliah",
+    "TA": "Tugas Akhir",
+    "PA": "Pembimbing Akademik",
+    "LPPM": "Lembaga Penelitian dan Pengabdian kepada Masyarakat",
+    "IKU": "Indikator Kinerja Utama",
+    "SN-DIKTI": "Standar Nasional Pendidikan Tinggi",
+}
+
+
+def expand_indonesian_acronyms(text: str, glossary: Optional[Dict[str, str]] = None) -> str:
+    """
+    Annotates first occurrences of academic acronyms with <abbr title="Full Form">ACRONYM</abbr>.
+    """
+    if not text:
+        return ""
+    active_glossary = glossary or DEFAULT_ACADEMIC_GLOSSARY
+    expanded_text = text
+    for acronym, full_form in active_glossary.items():
+        pattern = re.compile(rf'(?<![<"\'])\b({re.escape(acronym)})\b(?![>"\'])')
+        expanded_text = pattern.sub(f'<abbr title="{full_form}">{acronym}</abbr>', expanded_text, count=1)
+    return expanded_text
+
+
