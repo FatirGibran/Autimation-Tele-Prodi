@@ -486,3 +486,48 @@ def expand_indonesian_acronyms(text: str, glossary: Optional[Dict[str, str]] = N
     return expanded_text
 
 
+def normalize_markdown_code_blocks(text: str, default_lang: str = "text") -> str:
+    """
+    Normalizes Markdown fenced code blocks into semantic HTML <pre><code class="language-...">
+    with language alias mapping and auto-detection fallback.
+    """
+    if not text:
+        return ""
+    import html
+
+    LANG_ALIASES = {
+        "py": "python",
+        "js": "javascript",
+        "ts": "typescript",
+        "sh": "bash",
+        "golang": "go",
+        "yml": "yaml",
+        "cpp": "cpp",
+        "c++": "cpp",
+        "rs": "rust",
+    }
+
+    def detect_lang(code_snippet: str) -> str:
+        snippet = code_snippet.strip()
+        if re.search(r'^(import\s+|def\s+|from\s+\w+\s+import|class\s+\w+:)', snippet, re.MULTILINE):
+            return "python"
+        if re.search(r'^(const\s+|let\s+|function\s+|export\s+default)', snippet, re.MULTILINE):
+            return "javascript"
+        if re.search(r'^(#include\s+<|int\s+main\s*\()', snippet, re.MULTILINE):
+            return "cpp"
+        if re.search(r'^(SELECT\s+|INSERT\s+INTO\s+|UPDATE\s+)', snippet, re.IGNORECASE | re.MULTILINE):
+            return "sql"
+        return default_lang
+
+    def replace_fenced_code(match):
+        raw_lang = (match.group(1) or "").strip().lower()
+        code_body = match.group(2)
+        lang = LANG_ALIASES.get(raw_lang, raw_lang) if raw_lang else detect_lang(code_body)
+        escaped_code = html.escape(code_body.rstrip("\n"))
+        return f'<pre class="tu-code-block"><code class="language-{lang}">{escaped_code}</code></pre>'
+
+    fenced_pattern = re.compile(r'```([a-zA-Z0-9_\-+]*)\n([\s\S]*?)```', re.MULTILINE)
+    return fenced_pattern.sub(replace_fenced_code, text)
+
+
+
