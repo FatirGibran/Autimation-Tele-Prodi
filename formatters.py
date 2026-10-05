@@ -185,4 +185,22 @@ class TelegramFormatter:
 
         return "\n".join(lines)
 
+    @staticmethod
+    def format_scheduled_reminder_card(article: Dict[str, Any], publish_at_str: str) -> str:
+        """
+        Renders a scheduled publishing notification card for Telegram editorial channels.
+        """
+        title = article.get("seo_title", article.get("topic", "N/A"))
+        category = article.get("category", "Umum")
+        slug = article.get("slug", "")
+        return (
+            f"⏰ **Pengingat Jadwal Terbit Artikel**\n\n"
+            f"📌 **Judul:** {title}\n"
+            f"🏷️ **Kategori:** `{category}`\n"
+            f"📅 **Waktu Rilis:** `{publish_at_str}`\n"
+            f"🔗 **Slug:** `{slug}`\n\n"
+            f"💡 *Artikel siap dipublikasikan ke WordPress sesuai antrean jadwal.*"
+        )
+
+
 
