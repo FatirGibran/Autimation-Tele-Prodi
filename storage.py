@@ -96,6 +96,17 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_exports_article ON article_exports(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_schedules (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL UNIQUE,
+                    scheduled_at TEXT NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sched_time ON article_schedules(scheduled_at);")
 
 
 
@@ -535,6 +546,55 @@ class StorageManager:
                 {time_filter}
             """, params)
             return cursor.rowcount
+
+    def schedule_publication(self, article_id: int, scheduled_at: str) -> int:
+        """
+        Schedules an article for automated publishing at a specific ISO timestamp.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_schedules (article_id, scheduled_at, status)
+                VALUES (?, ?, 'pending')
+                ON CONFLICT(article_id) DO UPDATE SET
+                    scheduled_at = excluded.scheduled_at,
+                    status = 'pending';
+            """, (article_id, scheduled_at.strip()))
+            return cursor.lastrowid
+
+    def get_pending_schedules(self, before_time: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Retrieves articles queued for scheduled publication, optionally filtered up to before_time.
+        """
+        with self._get_connection() as conn:
+            if before_time:
+                cursor = conn.execute("""
+                    SELECT s.*, a.seo_title, a.slug, a.category, a.status as article_status
+                    FROM article_schedules s
+                    JOIN articles a ON s.article_id = a.id
+                    WHERE s.status = 'pending' AND s.scheduled_at <= ? AND a.is_deleted = 0
+                    ORDER BY s.scheduled_at ASC;
+                """, (before_time.strip(),))
+            else:
+                cursor = conn.execute("""
+                    SELECT s.*, a.seo_title, a.slug, a.category, a.status as article_status
+                    FROM article_schedules s
+                    JOIN articles a ON s.article_id = a.id
+                    WHERE s.status = 'pending' AND a.is_deleted = 0
+                    ORDER BY s.scheduled_at ASC;
+                """)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def cancel_schedule(self, article_id: int) -> bool:
+        """
+        Cancels an active scheduled publication entry.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE article_schedules SET status = 'cancelled' WHERE article_id = ? AND status = 'pending';",
+                (article_id,)
+            )
+            return cursor.rowcount > 0
+
 
 
 
