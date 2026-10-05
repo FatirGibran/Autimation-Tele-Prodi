@@ -255,6 +255,65 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("142", repo)
         self.assertIn("Rust", repo)
 
+    def test_render_faculty_profile_card(self):
+        card = EditorialComponents.render_faculty_profile_card(
+            name="Dr. Aris Tri Jaka, M.Kom.",
+            academic_title="Lektor Kepala / Dosen Peneliti AI",
+            nidn="0612038501",
+            expertise="Computer Vision & Deep Learning",
+            scholar_url="https://scholar.google.com/citations?user=xyz",
+            email="aris@telkomuniversity.ac.id"
+        )
+        self.assertIn("tu-faculty-card", card)
+        self.assertIn("Dr. Aris Tri Jaka", card)
+        self.assertIn("0612038501", card)
+        self.assertIn("Google Scholar", card)
+
+    def test_render_capstone_showcase_card(self):
+        showcase = EditorialComponents.render_capstone_showcase_card(
+            project_title="Sistem Deteksi Anomali Jaringan IoT",
+            student_names=["Fajar Nugraha", "Rina Wulandari"],
+            supervisor="Dr. Budi Santoso",
+            abstract="Implementasi algoritma Isolation Forest pada mikrokontroler ESP32.",
+            demo_url="https://demo.prodi.ac.id",
+            github_url="https://github.com/prodi/capstone-iot"
+        )
+        self.assertIn("tu-capstone-card", showcase)
+        self.assertIn("Sistem Deteksi Anomali", showcase)
+        self.assertIn("Fajar Nugraha, Rina Wulandari", showcase)
+        self.assertIn("Live Demo", showcase)
+
+    def test_render_certification_grid(self):
+        certs = [
+            {"name": "AWS Certified Solutions Architect", "issuer": "Amazon Web Services", "level": "Associate", "icon": "☁️"},
+            {"name": "Cisco Certified Network Associate (CCNA)", "issuer": "Cisco Systems", "level": "Professional", "icon": "🌐"}
+        ]
+        grid = EditorialComponents.render_certification_grid(certs)
+        self.assertIn("tu-cert-section", grid)
+        self.assertIn("AWS Certified", grid)
+        self.assertIn("Cisco Systems", grid)
+
+    def test_render_academic_calendar_card(self):
+        events = [
+            {"date": "1 - 5 September 2026", "activity": "Pengisian KRS Semester Ganjil", "status": "Selesai"},
+            {"date": "26 - 31 Oktober 2026", "activity": "Ujian Tengah Semester (UTS)", "status": "Mendatang"}
+        ]
+        cal = EditorialComponents.render_academic_calendar_card("Semester Ganjil 2026/2027", events)
+        self.assertIn("tu-calendar-card", cal)
+        self.assertIn("Semester Ganjil 2026/2027", cal)
+        self.assertIn("Pengisian KRS", cal)
+
+    def test_render_industry_partner_banner(self):
+        partners = [
+            {"name": "Telkom Indonesia", "category": "Telekomunikasi"},
+            {"name": "Google Cloud", "category": "Cloud Computing"}
+        ]
+        banner = EditorialComponents.render_industry_partner_banner("Mitra Magang & Kerjasama Industri", partners)
+        self.assertIn("tu-partner-banner", banner)
+        self.assertIn("Telkom Indonesia", banner)
+        self.assertIn("Google Cloud", banner)
+
 if __name__ == "__main__":
     unittest.main()
+
 
