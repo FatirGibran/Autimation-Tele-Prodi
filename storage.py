@@ -595,6 +595,80 @@ class StorageManager:
             )
             return cursor.rowcount > 0
 
+    def export_database_dump(self) -> Dict[str, Any]:
+        """
+        Exports all articles, tags, revisions, metadata, and schedules into a serializable dump dict.
+        """
+        with self._get_connection() as conn:
+            articles = [dict(r) for r in conn.execute("SELECT * FROM articles;").fetchall()]
+            tags = [dict(r) for r in conn.execute("SELECT * FROM article_tags;").fetchall()]
+            meta = [dict(r) for r in conn.execute("SELECT * FROM article_meta;").fetchall()]
+            revisions = [dict(r) for r in conn.execute("SELECT * FROM article_revisions;").fetchall()]
+            schedules = [dict(r) for r in conn.execute("SELECT * FROM article_schedules;").fetchall()]
+
+            return {
+                "schema_version": "2.3.0",
+                "dump_created_at": datetime.utcnow().isoformat(),
+                "articles": articles,
+                "article_tags": tags,
+                "article_meta": meta,
+                "article_revisions": revisions,
+                "article_schedules": schedules,
+            }
+
+    def import_database_dump(self, dump_data: Dict[str, Any]) -> Dict[str, int]:
+        """
+        Imports articles and tags from a dump dictionary into the database,
+        skipping existing records that share the same slug.
+        Returns counts of imported items.
+        """
+        imported_articles = 0
+        imported_tags = 0
+        with self._get_connection() as conn:
+            for art in dump_data.get("articles", []):
+                slug = art.get("slug", "").strip()
+                if not slug:
+                    continue
+                existing = conn.execute("SELECT id FROM articles WHERE slug = ?", (slug,)).fetchone()
+                if existing:
+                    continue
+
+                cursor = conn.execute("""
+                    INSERT INTO articles (
+                        topic, category, publish_date, image_url, focus_keyphrase,
+                        seo_title, slug, meta_description, html_content, status, wp_post_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    art.get("topic", "N/A"),
+                    art.get("category", "Umum"),
+                    art.get("publish_date", "2026-10-01"),
+                    art.get("image_url", ""),
+                    art.get("focus_keyphrase", ""),
+                    art.get("seo_title", ""),
+                    slug,
+                    art.get("meta_description", ""),
+                    art.get("html_content", ""),
+                    art.get("status", "draft"),
+                    art.get("wp_post_id")
+                ))
+                new_id = cursor.lastrowid
+                imported_articles += 1
+
+                old_id = art.get("id")
+                for tag_row in dump_data.get("article_tags", []):
+                    if tag_row.get("article_id") == old_id:
+                        conn.execute(
+                            "INSERT OR IGNORE INTO article_tags (article_id, tag) VALUES (?, ?)",
+                            (new_id, tag_row.get("tag", "").strip())
+                        )
+                        imported_tags += 1
+
+        return {
+            "articles_imported": imported_articles,
+            "tags_imported": imported_tags,
+        }
+
+
 
 
 
