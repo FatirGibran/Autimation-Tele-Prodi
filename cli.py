@@ -261,6 +261,56 @@ def cmd_hugo(args):
     print(f"Export Hugo markdown berhasil -> {out_path}")
 
 
+def cmd_schedule(args):
+    if args.action == "list":
+        schedules = storage.get_pending_schedules()
+        if not schedules:
+            print("Tidak ada jadwal publikasi pending.")
+            return
+        print(f"{'ID':<4} | {'ARTICLE_ID':<10} | {'SCHEDULED_AT':<25} | {'STATUS':<10} | {'SLUG'}")
+        print("-" * 80)
+        for s in schedules:
+            print(f"{s['id']:<4} | {s['article_id']:<10} | {s['scheduled_at']:<25} | {s['status']:<10} | {s.get('slug', '')}")
+    elif args.action == "add":
+        if not args.id or not args.time:
+            print("Error: Argumen --id dan --time wajib disertakan untuk tindakan add.")
+            sys.exit(1)
+        sched_id = storage.schedule_publication(args.id, args.time)
+        print(f"Jadwal publikasi berhasil dibuat (Schedule ID {sched_id}) untuk Artikel ID {args.id} pada {args.time}.")
+    elif args.action == "cancel":
+        if not args.id:
+            print("Error: Argumen --id wajib disertakan untuk tindakan cancel.")
+            sys.exit(1)
+        ok = storage.cancel_schedule(args.id)
+        print(f"Jadwal publikasi artikel ID {args.id} {'berhasil dibatalkan' if ok else 'gagal/tidak ditemukan'}.")
+
+
+def cmd_dump(args):
+    out_path = Path(args.out)
+    dump_data = storage.export_database_dump()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(dump_data, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Database dump berhasil diekspor ({len(dump_data.get('articles', []))} artikel) -> {out_path}")
+
+
+def cmd_mdx(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    framework = getattr(args, "framework", "astro")
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.mdx")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    mdx_content = ArticleExporter.to_mdx(
+        metadata=article,
+        html_content=article.get("html_content", ""),
+        framework=framework
+    )
+    out_path.write_text(mdx_content, encoding="utf-8")
+    print(f"Export MDX ({framework}) berhasil -> {out_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -356,6 +406,25 @@ def main():
     hugo_parser.add_argument("--slug", required=True, help="Slug artikel di database")
     hugo_parser.add_argument("--out", help="Path berkas output Markdown Hugo")
     hugo_parser.set_defaults(func=cmd_hugo)
+
+    # Schedule command
+    sched_parser = subparsers.add_parser("schedule", help="Kelola antrean publikasi terjadwal artikel")
+    sched_parser.add_argument("--action", choices=["list", "add", "cancel"], default="list", help="Tindakan penjadwalan")
+    sched_parser.add_argument("--id", type=int, help="ID artikel")
+    sched_parser.add_argument("--time", help="Waktu publikasi ISO (YYYY-MM-DDTHH:MM:SS)")
+    sched_parser.set_defaults(func=cmd_schedule)
+
+    # Dump command
+    dump_parser = subparsers.add_parser("dump", help="Export full database backup dump ke berkas JSON")
+    dump_parser.add_argument("--out", default="db_dump.json", help="Path berkas output JSON dump")
+    dump_parser.set_defaults(func=cmd_dump)
+
+    # MDX command
+    mdx_parser = subparsers.add_parser("mdx", help="Export artikel ke format MDX modern (Astro atau Docusaurus)")
+    mdx_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    mdx_parser.add_argument("--framework", choices=["astro", "docusaurus"], default="astro", help="Target framework komponen MDX")
+    mdx_parser.add_argument("--out", help="Path berkas output MDX")
+    mdx_parser.set_defaults(func=cmd_mdx)
 
     args = parser.parse_args()
     args.func(args)
