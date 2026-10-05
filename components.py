@@ -917,6 +917,35 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_academic_calendar_card(cls, semester_title: str, events: List[Dict[str, str]]) -> str:
+        """
+        Renders an academic semester milestone card (e.g. Registrasi, UTS, UAS, Yudisium).
+        """
+        from xml.sax.saxutils import escape
+
+        safe_title = escape(semester_title)
+        event_rows = []
+        for ev in events:
+            date_range = escape(ev.get("date", ""))
+            activity = escape(ev.get("activity", ""))
+            status = escape(ev.get("status", "Mendatang"))
+            event_rows.append(f"""        <div class="tu-calendar-item">
+          <span class="tu-calendar-date">{date_range}</span>
+          <span class="tu-calendar-activity">{activity}</span>
+          <span class="tu-calendar-status">{status}</span>
+        </div>""")
+
+        rows_html = "\n".join(event_rows)
+        return f"""    <div class="tu-calendar-card">
+      <div class="tu-calendar-badge">Kalender Akademik</div>
+      <h4 class="tu-calendar-title">{safe_title}</h4>
+      <div class="tu-calendar-list">
+{rows_html}
+      </div>
+    </div>"""
+
+
 
 
 
