@@ -151,3 +151,38 @@ class TelegramFormatter:
             ]
         }
 
+    @staticmethod
+    def format_editorial_diff_preview(old_data: Dict[str, Any], new_data: Dict[str, Any]) -> str:
+        """
+        Renders a compact Telegram markdown preview of editorial changes between two revisions.
+        """
+        lines = [
+            f"🔄 **Perbandingan Revisi Editorial (ID: {new_data.get('id', old_data.get('id', 'N/A'))})**\n",
+        ]
+
+        old_title = old_data.get("seo_title", old_data.get("topic", ""))
+        new_title = new_data.get("seo_title", new_data.get("topic", ""))
+        if old_title != new_title:
+            lines.append(f"📌 **Judul:**\n  ~~{old_title}~~\n  ➡️ `{new_title}`")
+        else:
+            lines.append(f"📌 **Judul:** `{new_title}` *(tetap)*")
+
+        old_fk = old_data.get("focus_keyphrase", "")
+        new_fk = new_data.get("focus_keyphrase", "")
+        if old_fk != new_fk:
+            lines.append(f"🎯 **Keyphrase:** ~~{old_fk}~~ ➡️ `{new_fk}`")
+
+        old_st = old_data.get("status", "")
+        new_st = new_data.get("status", "")
+        if old_st != new_st:
+            lines.append(f"📊 **Status:** `{old_st}` ➡️ `{new_st}`")
+
+        old_wc = len(old_data.get("html_content", "").split())
+        new_wc = len(new_data.get("html_content", "").split())
+        diff_wc = new_wc - old_wc
+        diff_sign = f"+{diff_wc}" if diff_wc > 0 else str(diff_wc)
+        lines.append(f"📝 **Panjang Teks:** `{new_wc}` kata ({diff_sign} kata)")
+
+        return "\n".join(lines)
+
+
