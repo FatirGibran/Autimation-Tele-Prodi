@@ -355,6 +355,82 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(revs_after), 2)
         self.assertEqual(deleted, 1)
 
+    def test_schedule_publication_and_cancel(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Terjadwal",
+            "category": "Riset",
+            "publish_date": "2026-10-05",
+            "focus_keyphrase": "artikel terjadwal",
+            "seo_title": "Artikel Terjadwal",
+            "slug": "artikel-terjadwal-1",
+            "meta_description": "Deskripsi artikel terjadwal.",
+            "status": "ready"
+        })
+        sched_id = self.storage.schedule_publication(art_id, "2026-10-10T08:00:00")
+        self.assertIsNotNone(sched_id)
+
+        pending = self.storage.get_pending_schedules()
+        self.assertTrue(any(s["article_id"] == art_id for s in pending))
+
+        cancelled = self.storage.cancel_schedule(art_id)
+        self.assertTrue(cancelled)
+
+        pending_after = self.storage.get_pending_schedules()
+        self.assertFalse(any(s["article_id"] == art_id for s in pending_after))
+
+    def test_export_and_import_database_dump(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Dump",
+            "category": "Testing",
+            "publish_date": "2026-10-05",
+            "focus_keyphrase": "artikel dump",
+            "seo_title": "Artikel Dump",
+            "slug": "artikel-dump-unique",
+            "meta_description": "Deskripsi dump.",
+            "status": "published"
+        })
+        self.storage.add_tags(art_id, ["dump-test-tag"])
+        dump = self.storage.export_database_dump()
+
+        self.assertEqual(dump["schema_version"], "2.3.0")
+        self.assertTrue(any(a["slug"] == "artikel-dump-unique" for a in dump["articles"]))
+
+        # Import into an empty temporary storage
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            from storage import StorageManager
+            other_storage = StorageManager(Path(tmp_dir) / "imported.db")
+            res = other_storage.import_database_dump(dump)
+            self.assertGreaterEqual(res["articles_imported"], 1)
+            imported_art = other_storage.get_article_by_slug("artikel-dump-unique")
+            self.assertIsNotNone(imported_art)
+            self.assertEqual(imported_art["topic"], "Artikel Dump")
+
+    def test_record_engagement_and_top_articles(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Populer",
+            "category": "Trending",
+            "publish_date": "2026-10-05",
+            "focus_keyphrase": "artikel populer",
+            "seo_title": "Artikel Populer",
+            "slug": "artikel-populer",
+            "meta_description": "Deskripsi populer.",
+            "status": "published"
+        })
+        eng = self.storage.record_engagement(art_id, views_increment=50, shares_increment=10)
+        self.assertEqual(eng["view_count"], 50)
+        self.assertEqual(eng["share_count"], 10)
+
+        # Increment again
+        eng2 = self.storage.record_engagement(art_id, views_increment=25, shares_increment=5)
+        self.assertEqual(eng2["view_count"], 75)
+        self.assertEqual(eng2["share_count"], 15)
+
+        top = self.storage.get_top_engaged_articles(limit=5)
+        self.assertTrue(any(a["article_id"] == art_id for a in top))
+
 if __name__ == "__main__":
     unittest.main()
+
 
