@@ -530,4 +530,33 @@ def normalize_markdown_code_blocks(text: str, default_lang: str = "text") -> str
     return fenced_pattern.sub(replace_fenced_code, text)
 
 
+def extract_paragraph_transitions(text: str) -> List[Dict[str, Any]]:
+    """
+    Extracts topic sentences (first sentence) and concluding/transitional sentences
+    (last sentence) of each paragraph for structural discourse analysis.
+    """
+    if not text:
+        return []
+    cleaned = re.sub(r'</p>\s*<p[^>]*>', '\n\n', text)
+    cleaned = re.sub(r'<[^>]+>', '', cleaned)
+    raw_paragraphs = [p.strip() for p in cleaned.split("\n\n") if p.strip()]
+
+    results: List[Dict[str, Any]] = []
+    for idx, p in enumerate(raw_paragraphs, 1):
+        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', p) if s.strip()]
+        if not sentences:
+            continue
+        topic = sentences[0]
+        conclusion = sentences[-1] if len(sentences) > 1 else topic
+        results.append({
+            "paragraph_index": idx,
+            "topic_sentence": topic,
+            "concluding_sentence": conclusion,
+            "sentence_count": len(sentences),
+            "word_count": len(p.split()),
+        })
+    return results
+
+
+
 
