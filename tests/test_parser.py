@@ -175,5 +175,46 @@ Poin Utama:
         self.assertEqual(result[1]["slug"], "metodologi")
         self.assertEqual(result[2]["slug"], "pengantar-2")
 
+    def test_parse_academic_citations(self):
+        from parser import parse_academic_citations, extract_citation_keys
+        text = "Menurut studi terbaru [@tanenbaum2021], sistem terdistribusi berkembang pesat [lihat @kurniawan2023, hal. 45]."
+        rendered = parse_academic_citations(text)
+        self.assertIn('<cite class="tu-citation" data-cite-key="tanenbaum2021">[@tanenbaum2021]</cite>', rendered)
+        self.assertIn('data-cite-key="kurniawan2023"', rendered)
+
+        keys = extract_citation_keys(text)
+        self.assertEqual(keys, ["tanenbaum2021", "kurniawan2023"])
+
+    def test_expand_indonesian_acronyms(self):
+        from parser import expand_indonesian_acronyms
+        raw = "Mahasiswa wajib mengisi KRS pada awal semester. KRS harus disetujui PA."
+        expanded = expand_indonesian_acronyms(raw)
+        self.assertIn('<abbr title="Kartu Rencana Studi">KRS</abbr>', expanded)
+        self.assertIn('<abbr title="Pembimbing Akademik">PA</abbr>', expanded)
+        # Second KRS should not be wrapped again
+        self.assertEqual(expanded.count('<abbr title="Kartu Rencana Studi">KRS</abbr>'), 1)
+
+    def test_normalize_markdown_code_blocks(self):
+        from parser import normalize_markdown_code_blocks
+        markdown = "Berikut script:\n\n```py\ndef hitung(x):\n    return x * 2\n```\n\n```\nconst val = 42;\n```"
+        html = normalize_markdown_code_blocks(markdown)
+        self.assertIn('<pre class="tu-code-block"><code class="language-python">def hitung(x):', html)
+        self.assertIn('<code class="language-javascript">const val = 42;</code>', html)
+
+    def test_extract_paragraph_transitions(self):
+        from parser import extract_paragraph_transitions
+        article = (
+            "<p>Kecerdasan buatan berkembang dengan cepat di Indonesia. Berbagai inovasi terus bermunculan di kampus. Oleh karena itu, kurikulum harus beradaptasi.</p>\n\n"
+            "<p>Tantangan utama adalah ketersediaan komputasi berkecepatan tinggi. Mahasiswa membutuhkan akses GPU. Dengan demikian, investasi laboratorium menjadi krusial.</p>"
+        )
+        transitions = extract_paragraph_transitions(article)
+        self.assertEqual(len(transitions), 2)
+        self.assertEqual(transitions[0]["paragraph_index"], 1)
+        self.assertIn("Kecerdasan buatan", transitions[0]["topic_sentence"])
+        self.assertIn("kurikulum harus beradaptasi", transitions[0]["concluding_sentence"])
+        self.assertEqual(transitions[0]["sentence_count"], 3)
+        self.assertGreater(transitions[0]["word_count"], 10)
+
 if __name__ == "__main__":
     unittest.main()
+
