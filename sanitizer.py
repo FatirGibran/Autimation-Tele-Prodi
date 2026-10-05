@@ -6,8 +6,10 @@ ALLOWED_TAGS = {
     "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary",
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
-    "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline"
+    "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
+    "video", "audio", "source"
 }
+
 
 DISALLOWED_ATTR_PREFIXES = ("on", "javascript:")
 
@@ -139,7 +141,24 @@ class HTMLSanitizer:
 
         cleaned = re.sub(r'<img\s+[^>]+>', fix_img, cleaned, flags=re.IGNORECASE)
 
+        # 5b. Enforce secure protocols and safe schemes on audio and video media tags
+        if re.search(r'<(video|audio|source)\b', cleaned, re.IGNORECASE):
+            def fix_media(match):
+                tag = match.group(0)
+                src_match = re.search(r'src=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if src_match:
+                    src_url = src_match.group(1).strip()
+                    if src_url.lower().startswith(("javascript:", "data:")):
+                        warnings.append("Stripped dangerous media src protocol.")
+                        tag = re.sub(r'src=["\'][^"\']*["\']', 'src=""', tag, flags=re.IGNORECASE)
+                    elif src_url.lower().startswith("http://"):
+                        warnings.append("Upgraded insecure HTTP media source to HTTPS.")
+                        tag = re.sub(r'src=["\']http://', 'src="https://', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<(video|audio|source)[^>]*>', fix_media, cleaned, flags=re.IGNORECASE)
+
         # 6. Sanitize inline SVG: strip dangerous nested tags and attributes
+
         if "<svg" in cleaned.lower():
             if re.search(r"<(script|foreignObject)", cleaned, re.IGNORECASE):
                 warnings.append("Stripped dangerous tags from SVG.")
