@@ -314,6 +314,115 @@ class TestCLI(unittest.TestCase):
             if Path(out_file).exists():
                 Path(out_file).unlink()
 
+    def test_cmd_schedule(self):
+        art_id = cli.storage.save_article({
+            "topic": "Scheduled Article",
+            "category": "Testing",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "scheduled test",
+            "seo_title": "Scheduled Article Title",
+            "slug": "scheduled-article-test",
+            "meta_description": "Meta desc for schedule test.",
+            "html_content": "<p>Content</p>",
+            "status": "ready"
+        })
+
+        class ArgsList:
+            action = "list"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_schedule(ArgsList())
+            self.assertIn("Tidak ada jadwal publikasi pending.", fake_out.getvalue())
+
+        class ArgsAdd:
+            action = "add"
+            id = art_id
+            time = "2026-10-15T10:00:00"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_schedule(ArgsAdd())
+            self.assertIn("Jadwal publikasi berhasil dibuat", fake_out.getvalue())
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_schedule(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn(str(art_id), out)
+            self.assertIn("2026-10-15T10:00:00", out)
+
+        class ArgsCancel:
+            action = "cancel"
+            id = art_id
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_schedule(ArgsCancel())
+            self.assertIn("berhasil dibatalkan", fake_out.getvalue())
+
+    def test_cmd_dump(self):
+        cli.storage.save_article({
+            "topic": "Dump Article",
+            "category": "Testing",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "dump test",
+            "seo_title": "Dump Article Title",
+            "slug": "dump-article-test",
+            "meta_description": "Meta desc for dump test.",
+            "html_content": "<p>Content</p>",
+            "status": "ready"
+        })
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class Args:
+                out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_dump(Args())
+                self.assertIn("Database dump berhasil diekspor", fake_out.getvalue())
+
+            import json
+            dump = json.loads(Path(out_file).read_text(encoding="utf-8"))
+            self.assertEqual(dump["schema_version"], "2.3.0")
+            self.assertIn("articles", dump)
+            self.assertGreater(len(dump["articles"]), 0)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
+    def test_cmd_mdx(self):
+        slug = "cli-mdx-test-slug"
+        cli.storage.save_article({
+            "topic": "MDX CLI Article",
+            "category": "Frontend",
+            "publish_date": "2026-10-03",
+            "focus_keyphrase": "mdx cli",
+            "seo_title": "MDX CLI Article",
+            "slug": slug,
+            "meta_description": "Deskripsi mdx cli.",
+            "html_content": "<div class='tu-editorial-container'><p>MDX HTML</p></div>",
+            "status": "ready"
+        })
+        with tempfile.NamedTemporaryFile(suffix=".mdx", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class Args:
+                framework = "astro"
+            args = Args()
+            args.slug = slug
+            args.out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_mdx(args)
+                self.assertIn("Export MDX (astro) berhasil", fake_out.getvalue())
+
+            content = Path(out_file).read_text(encoding="utf-8")
+            self.assertIn('title: "MDX CLI Article"', content)
+            self.assertIn("pubDate: 2026-10-03", content)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
 if __name__ == "__main__":
     unittest.main()
 
