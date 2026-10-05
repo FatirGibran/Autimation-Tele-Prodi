@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 35+ pembaruan terverifikasi
+- **Total Item Perubahan**: 142 item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 90 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 179 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -163,4 +163,40 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 103. **Subcommand CLI Baru (`analytics`, `prune`, `hugo`) (`cli.py`)**: Perluasan antarmuka baris perintah untuk tata kelola editorial dan ekspor statis.
 104. **Skrip Diagnostik Database & Pinger Mesin Pencari (`scripts/`)**: Skrip inspeksi SQLite `scripts/db_stats.py` dan notifikasi sitemap `scripts/ping_search_engines.py`.
 105. **Pengembangan Suite Pengujian Komprehensif (151 Tests Passing)**: Penambahan pengujian unit penuh dengan 100% kelulusan pengujian (0 fail, 0 error).
+
+---
+
+## 11. Pembaruan Fitur & Arsitektur v2.3.0 (#106 - #142)
+
+106. **Sanitasi Tabel Bersarang (`sanitizer.py`)**: Perataan struktur nested table dan pembersihan tag tabel tidak valid untuk menjamin integritas tata letak Elementor.
+107. **Penegakan Protokol Sumber Media Audio/Video (`sanitizer.py`)**: Pembatasan skema URL atribut `src` audio/video hanya pada protokol aman (`https:` dan jalur absolut institusi).
+108. **Pembersihan Piksel Pelacak Tersembunyi (`sanitizer.py`)**: Eliminasi elemen tersembunyi berdimensi 0x0 atau 1x1 serta inline tracker mencurigakan.
+109. **Parser Sitasi Braket Akademik & Kunci BibTeX (`parser.py`)**: Ekstraksi format sitasi ilmiah `[Author, Year]` dan parsing bibliografi BibTeX institusional.
+110. **Ekspander Akronim & Singkatan Bahasa Indonesia (`parser.py`)**: Normalisasi dan ekspansi akronim formal (seperti `PTN`, `LLDIKTI`, `SNDIKTI`, `KRS`, `SKS`).
+111. **Detektor Sintaks Kode & Normalizer Blok `<pre>` (`parser.py`)**: Identifikasi otomatis bahasa pemrograman (Python, JavaScript, Go, SQL, HTML, C++) dan pembersihan pembungkus `<pre><code>`.
+112. **Ekstraktor Kalimat Transisi Paragraf Bahasa Indonesia (`parser.py`)**: Identifikasi frasa transisi formal pembuka kalimat untuk evaluasi koherensi bacaan.
+113. **Validator Dimensi & Rasio Aspek Gambar (`seo_validator.py`)**: Verifikasi proporsi aspek gambar (16:9, 4:3, 1:1) dan batasan dimensi minimal/maksimal untuk pencegahan Cumulative Layout Shift (CLS).
+114. **Evaluator Keseragaman Distribusi Focus Keyphrase (`seo_validator.py`)**: Analisis sebaran kemunculan kata kunci fokus secara merata di awal, tengah, dan akhir artikel.
+115. **Auditor Kedalaman & Otoritas Tautan Internal Akademik (`seo_validator.py`)**: Validasi kedalaman URL internal dan bobot tautan menuju laman akademik/prodi resmi.
+116. **Validator Atribut `rel` Tautan Keluar (`seo_validator.py`)**: Penegakan nilai keamanan `rel="noopener noreferrer external"` pada seluruh tautan outbound.
+117. **Komponen Kartu Profil Dosen & Peneliti (`components.py`)**: Tampilan kartu profil staf pengajar lengkap dengan NIDN, jabatan fungsional, dan tautan profil riset (Google Scholar / Scopus).
+118. **Komponen Showcase Tugas Akhir / Capstone Mahasiswa (`components.py`)**: Komponen pameran karya inovasi dan proyek akhir mahasiswa berprestasi.
+119. **Komponen Grid Lencana Sertifikasi Internasional (`components.py`)**: Kartu matriks sertifikasi industri keahlian rekayasa perangkat lunak dan komputasi awan.
+120. **Komponen Kartu Linimasa Kalender Semester (`components.py`)**: Visualisasi jadwal penting akademik, periode KRS, UTS, UAS, dan yudisium.
+121. **Komponen Spanduk Kemitraan & Sponsor Magang (`components.py`)**: Banner kerja sama industri, program magang MBKM, dan rekrutmen lulusan.
+122. **Pratinjau Ringkas Diff Editorial Mobile (`formatters.py`)**: Ringkasan modifikasi draft editorial yang terformat ringkas untuk notifikasi Telegram.
+123. **Kartu Pengingat Jadwal Terbit Telegram (`formatters.py`)**: Notifikasi visual pengingat artikel yang siap diterbitkan pada waktu tertentu.
+124. **Manajer Antrean Publikasi Terjadwal (`storage.py`)**: Tabel `article_schedules` dan operasi antrean penerbitan otomatis SQLite.
+125. **Helper Ekspor & Impor Cadangan Database Penuh (`storage.py`)**: Serialisasi dan deserialisasi seluruh tabel SQLite ke format JSON portabel.
+126. **Pelacak Statistik Pembaca & Interaksi Artikel (`storage.py`)**: Tabel `article_engagement` dan kalkulasi tingkat interaksi serta view counter.
+127. **Pengambil Riwayat Revisi Remote WordPress REST API (`wordpress_client.py`)**: Integrasi endpoint `/wp/v2/posts/{id}/revisions` untuk riwayat pos WordPress.
+128. **Helper Penjadwalan Pos WordPress REST API (`wordpress_client.py`)**: Publikasi artikel terjadwal dengan status `future` dan parameter `date_gmt`.
+129. **Exporter MDX untuk Framework Modern (`exporter.py`)**: Ekspor berkas `.mdx` dengan frontmatter khusus Astro dan Docusaurus.
+130. **Generator Open Graph & Twitter Card Lanjutan (`exporter.py`)**: Pembangkit metadata kartu media sosial dengan dimensi eksplisit dan locale Indonesia `id_ID`.
+131. **Subcommand CLI `schedule` (`cli.py`)**: Perintah konsol pengelolaan jadwal publikasi artikel di database.
+132. **Subcommand CLI `dump` (`cli.py`)**: Perintah konsol pencadangan penuh seluruh database ke berkas JSON.
+133. **Subcommand CLI `mdx` (`cli.py`)**: Perintah konsol konversi artikel ke berkas MDX modern.
+134. **Skrip Validator Dead Link & Broken Anchor (`scripts/check_broken_links.py`)**: Perkakas audit otomatis integritas tautan halaman dan jangkar in-page.
+135. **Pengembangan Suite Pengujian Unit Terpadu (179 Tests Passing)**: Penambahan pengujian komprehensif pada seluruh modul baru dengan tingkat kelulusan 100%.
+
 
