@@ -80,6 +80,43 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertTrue(any("Revisi" in t for t in buttons))
         self.assertTrue(any(btn["callback_data"] == "approve:123" for row in keyboard["inline_keyboard"] for btn in row))
 
+    def test_format_editorial_diff_preview(self):
+        old_data = {
+            "id": 10,
+            "seo_title": "Judul Lama",
+            "focus_keyphrase": "keyphrase lama",
+            "status": "draft",
+            "html_content": "<p>Satu dua tiga empat lima.</p>"
+        }
+        new_data = {
+            "id": 10,
+            "seo_title": "Judul Baru yang Diperbarui",
+            "focus_keyphrase": "keyphrase baru",
+            "status": "ready",
+            "html_content": "<p>Satu dua tiga empat lima enam tujuh delapan.</p>"
+        }
+        diff_text = TelegramFormatter.format_editorial_diff_preview(old_data, new_data)
+        self.assertIn("Perbandingan Revisi Editorial", diff_text)
+        self.assertIn("Judul Lama", diff_text)
+        self.assertIn("Judul Baru yang Diperbarui", diff_text)
+        self.assertIn("keyphrase baru", diff_text)
+        self.assertIn("ready", diff_text)
+        self.assertIn("kata", diff_text)
+
+    def test_format_scheduled_reminder_card(self):
+        article = {
+            "seo_title": "Peluncuran Lab Baru",
+            "category": "Infrastruktur",
+            "slug": "peluncuran-lab-baru"
+        }
+        card = TelegramFormatter.format_scheduled_reminder_card(article, "2026-10-10 10:00 WIB")
+        self.assertIn("Pengingat Jadwal Terbit Artikel", card)
+        self.assertIn("Peluncuran Lab Baru", card)
+        self.assertIn("Infrastruktur", card)
+        self.assertIn("2026-10-10 10:00 WIB", card)
+        self.assertIn("peluncuran-lab-baru", card)
+
+
 
 class TestCommandRateLimiter(unittest.TestCase):
     def test_rate_limiter_allows_and_blocks(self):
