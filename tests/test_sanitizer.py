@@ -91,5 +91,29 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("<p>Paragraf isi.</p>", clean)
         self.assertIn("<p>Paragraf kedua.</p>", clean)
 
+    def test_sanitize_malformed_table_containers(self):
+        malformed_table = '<div class="tu-editorial-container"><table><p><tr><td>Cell 1</td></tr></p></table></div>'
+        clean, warnings = HTMLSanitizer.sanitize(malformed_table)
+        self.assertIn("<tr><td>Cell 1</td></tr>", clean)
+        self.assertNotIn("<p><tr>", clean)
+        self.assertTrue(any("malformed container" in w for w in warnings))
+
+    def test_sanitize_media_sources(self):
+        insecure_media = '<div class="tu-editorial-container"><video src="http://example.com/demo.mp4"></video><audio src="data:audio/mp3;base64,XYZ123"></audio></div>'
+        clean, warnings = HTMLSanitizer.sanitize(insecure_media)
+        self.assertIn('src="https://example.com/demo.mp4"', clean)
+        self.assertIn('src=""', clean)
+        self.assertTrue(any("HTTPS" in w for w in warnings))
+        self.assertTrue(any("dangerous media" in w for w in warnings))
+
+
+    def test_strip_tracking_pixels(self):
+        tracking_html = '<div class="tu-editorial-container"><p>Konten</p><img src="https://tracker.com/pixel.gif" width="1" height="1" /><img src="https://tracker.com/beacon.gif" style="display:none" /></div>'
+        clean, warnings = HTMLSanitizer.sanitize(tracking_html)
+        self.assertNotIn("pixel.gif", clean)
+        self.assertNotIn("beacon.gif", clean)
+        self.assertTrue(any("tracking pixel" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
+
