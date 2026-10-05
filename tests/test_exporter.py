@@ -213,6 +213,38 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('"numberOfCredits": 3', json_ld)
         self.assertIn("Telkom University Purwokerto", json_ld)
 
+    def test_to_mdx_astro_and_docusaurus(self):
+        meta = {
+            "seo_title": "Dokumentasi API Prodi",
+            "meta_description": "Panduan integrasi sistem informasi.",
+            "slug": "api-docs",
+            "tags": ["api", "rest", "python"]
+        }
+        astro_mdx = ArticleExporter.to_mdx(meta, "<p>Isi MDX</p>", framework="astro")
+        self.assertIn('pubDate:', astro_mdx)
+        self.assertIn('"api"', astro_mdx)
+        self.assertIn("<p>Isi MDX</p>", astro_mdx)
+
+        docusaurus_mdx = ArticleExporter.to_mdx(meta, "<p>Isi MDX</p>", framework="docusaurus")
+        self.assertIn('slug: /api-docs', docusaurus_mdx)
+        self.assertIn('authors: [editorial_team]', docusaurus_mdx)
+
+    def test_generate_enhanced_social_meta(self):
+        meta = {
+            "seo_title": "Riset Quantum Computing",
+            "meta_description": "Eksplorasi algoritma Shor dan Grover.",
+            "slug": "riset-quantum",
+            "image_url": "https://example.com/quantum.png",
+            "publish_date": "2026-10-05T08:00:00Z"
+        }
+        tags = ArticleExporter.generate_enhanced_social_meta(meta, image_dimensions=(1200, 630))
+        self.assertIn('property="og:locale" content="id_ID"', tags)
+        self.assertIn('property="og:title" content="Riset Quantum Computing"', tags)
+        self.assertIn('property="og:image:width" content="1200"', tags)
+        self.assertIn('property="og:image:height" content="630"', tags)
+        self.assertIn('name="twitter:card" content="summary_large_image"', tags)
+
 if __name__ == "__main__":
     unittest.main()
+
 
