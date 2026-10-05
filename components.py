@@ -945,6 +945,32 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_industry_partner_banner(cls, banner_title: str, partners: List[Dict[str, str]]) -> str:
+        """
+        Renders an industry partnership and internship sponsor banner with company badges.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_title = escape(banner_title)
+        badges = []
+        for p in partners:
+            name = escape(p.get("name", ""))
+            category = escape(p.get("category", "Industri Teknologi"))
+            badges.append(f"""        <div class="tu-partner-badge">
+          <span class="tu-partner-name">{name}</span>
+          <span class="tu-partner-category">{category}</span>
+        </div>""")
+
+        badges_html = "\n".join(badges)
+        return f"""    <div class="tu-partner-banner">
+      <h5 class="tu-partner-title">{safe_title}</h5>
+      <div class="tu-partner-track">
+{badges_html}
+      </div>
+    </div>"""
+
+
 
 
 
