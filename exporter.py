@@ -419,6 +419,49 @@ class ArticleExporter:
 
         return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2, ensure_ascii=False)}\n</script>'
 
+    @staticmethod
+    def to_mdx(metadata: Dict[str, Any], html_content: str, framework: str = "astro") -> str:
+        """
+        Exports article to MDX format tailored for modern static documentation
+        and content frameworks (Astro or Docusaurus).
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        date = metadata.get("publish_date", "2026-10-01")
+        image = metadata.get("image_url", "")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        tags_json = json.dumps(tags)
+
+        if framework.lower() == "docusaurus":
+            frontmatter = [
+                "---",
+                f'title: "{title}"',
+                f'description: "{desc}"',
+                f'slug: /{slug}' if slug else "",
+                f'authors: [editorial_team]',
+                f'tags: {tags_json}',
+                f'date: {date}',
+                "---",
+            ]
+        else:
+            frontmatter = [
+                "---",
+                f'title: "{title}"',
+                f'description: "{desc}"',
+                f'pubDate: {date}',
+                f'heroImage: "{image}"' if image else "",
+                f'tags: {tags_json}',
+                "---",
+            ]
+
+        clean_fm = [line for line in frontmatter if line]
+        return "\n".join(clean_fm) + "\n\n" + html_content.strip()
+
+
 
 
 
