@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Tuple
 
 class ArticleExporter:
     @staticmethod
@@ -460,6 +460,47 @@ class ArticleExporter:
 
         clean_fm = [line for line in frontmatter if line]
         return "\n".join(clean_fm) + "\n\n" + html_content.strip()
+
+    @staticmethod
+    def generate_enhanced_social_meta(
+        metadata: Dict[str, Any],
+        image_dimensions: Optional[Tuple[int, int]] = (1200, 630),
+        site_name: str = "S1 Teknik Informatika Telkom University Purwokerto"
+    ) -> str:
+        """
+        Generates production-grade OpenGraph and Twitter Card metadata tags with image dimensions.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", ""))
+        desc = metadata.get("meta_description", "")
+        slug = metadata.get("slug", "")
+        canonical = f"https://bif-pwt.telkomuniversity.ac.id/{slug}/" if slug else "https://bif-pwt.telkomuniversity.ac.id"
+        image = metadata.get("image_url", "https://bif-pwt.telkomuniversity.ac.id/wp-content/uploads/og-default.jpg")
+        pub_date = metadata.get("publish_date", "")
+
+        tags = [
+            f'<meta property="og:locale" content="id_ID">',
+            f'<meta property="og:type" content="article">',
+            f'<meta property="og:site_name" content="{site_name}">',
+            f'<meta property="og:title" content="{title}">',
+            f'<meta property="og:description" content="{desc}">',
+            f'<meta property="og:url" content="{canonical}">',
+            f'<meta property="og:image" content="{image}">',
+        ]
+        if image_dimensions:
+            w, h = image_dimensions
+            tags.append(f'<meta property="og:image:width" content="{w}">')
+            tags.append(f'<meta property="og:image:height" content="{h}">')
+        if pub_date:
+            tags.append(f'<meta property="article:published_time" content="{pub_date}">')
+
+        tags.extend([
+            f'<meta name="twitter:card" content="summary_large_image">',
+            f'<meta name="twitter:title" content="{title}">',
+            f'<meta name="twitter:description" content="{desc}">',
+            f'<meta name="twitter:image" content="{image}">',
+        ])
+        return "\n".join(tags)
+
 
 
 
