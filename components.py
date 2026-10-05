@@ -889,6 +889,35 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_certification_grid(cls, certifications: List[Dict[str, str]]) -> str:
+        """
+        Renders an industry and international certification badge grid (e.g. Cisco, AWS, Red Hat).
+        """
+        from xml.sax.saxutils import escape
+
+        cards = []
+        for cert in certifications:
+            name = escape(cert.get("name", ""))
+            issuer = escape(cert.get("issuer", ""))
+            level = escape(cert.get("level", "Professional"))
+            badge_icon = escape(cert.get("icon", "🏅"))
+            cards.append(f"""        <div class="tu-cert-card">
+          <div class="tu-cert-icon">{badge_icon}</div>
+          <h5 class="tu-cert-name">{name}</h5>
+          <p class="tu-cert-issuer">{issuer}</p>
+          <span class="tu-cert-level">{level}</span>
+        </div>""")
+
+        items_html = "\n".join(cards)
+        return f"""    <div class="tu-cert-section">
+      <div class="tu-cert-header">Sertifikasi Internasional & Industri</div>
+      <div class="tu-cert-grid">
+{items_html}
+      </div>
+    </div>"""
+
+
 
 
 
