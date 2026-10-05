@@ -42,6 +42,13 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<table[^>]*>', fix_table, cleaned, flags=re.IGNORECASE)
             warnings.append("Normalized table structure and stripped presentational attributes.")
 
+            # Strip stray paragraph or div containers wrapping table rows
+            if re.search(r'<table[^>]*>[\s\S]*?<(?:p|div|span)>\s*<tr', cleaned, re.IGNORECASE):
+                cleaned = re.sub(r'(<table[^>]*>|<tbody[^>]*>|<thead[^>]*>)\s*<(?:p|div|span)>\s*(<tr)', r'\1\2', cleaned, flags=re.IGNORECASE)
+                cleaned = re.sub(r'(</tr>)\s*</(?:p|div|span)>\s*(</tbody[^>]*>|</table[^>]*>)', r'\1\2', cleaned, flags=re.IGNORECASE)
+                warnings.append("Sanitized malformed container tags inside table structure.")
+
+
 
         # 2. Strip dangerous script, object, and embed tags; sanitize/whitelist educational iframes
         if "<script" in cleaned.lower():
