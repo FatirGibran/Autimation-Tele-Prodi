@@ -852,6 +852,44 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_capstone_showcase_card(
+        cls,
+        project_title: str,
+        student_names: List[str],
+        supervisor: str,
+        abstract: str,
+        demo_url: str = "",
+        github_url: str = ""
+    ) -> str:
+        """
+        Renders a student capstone / final project showcase card with abstract and links.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_title = escape(project_title)
+        safe_students = ", ".join(escape(s) for s in student_names)
+        safe_sup = escape(supervisor)
+        safe_abs = escape(abstract)
+
+        demo_html = f'<a href="{escape(demo_url)}" class="tu-capstone-btn" target="_blank" rel="noopener noreferrer">Live Demo &rarr;</a>' if demo_url else ""
+        repo_html = f'<a href="{escape(github_url)}" class="tu-capstone-link" target="_blank" rel="noopener noreferrer">Source Code</a>' if github_url else ""
+
+        return f"""    <div class="tu-capstone-card">
+      <div class="tu-capstone-badge">Showcase Tugas Akhir / Capstone</div>
+      <h4 class="tu-capstone-title">{safe_title}</h4>
+      <div class="tu-capstone-meta">
+        <p><strong>Pengembang:</strong> {safe_students}</p>
+        <p><strong>Dosen Pembimbing:</strong> {safe_sup}</p>
+      </div>
+      <p class="tu-capstone-abstract">{safe_abs}</p>
+      <div class="tu-capstone-actions">
+        {demo_html}
+        {repo_html}
+      </div>
+    </div>"""
+
+
 
 
 
