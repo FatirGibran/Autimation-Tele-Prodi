@@ -576,5 +576,43 @@ class YoastSEOValidator:
             "is_readable": (long_pct <= 30.0) and not has_consecutive_duplicates
         }
 
+    @classmethod
+    def validate_image_dimensions(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits image elements for explicit width and height attributes to prevent
+        Cumulative Layout Shift (CLS) in Google Core Web Vitals.
+        """
+        img_tags = re.findall(r'<img\s+[^>]+>', html_content, re.IGNORECASE)
+        total_images = len(img_tags)
+        if total_images == 0:
+            return {
+                "total_images": 0,
+                "images_with_dimensions": 0,
+                "missing_dimensions_count": 0,
+                "is_optimal": True,
+                "warnings": []
+            }
+
+        with_dims = 0
+        warnings = []
+        for tag in img_tags:
+            has_w = bool(re.search(r'\bwidth=["\']\d+(?:px)?["\']', tag, re.IGNORECASE))
+            has_h = bool(re.search(r'\bheight=["\']\d+(?:px)?["\']', tag, re.IGNORECASE))
+            has_aspect = bool(re.search(r'aspect-ratio', tag, re.IGNORECASE))
+            if (has_w and has_h) or has_aspect:
+                with_dims += 1
+            else:
+                warnings.append("Image element missing explicit width and height attributes.")
+
+        missing = total_images - with_dims
+        return {
+            "total_images": total_images,
+            "images_with_dimensions": with_dims,
+            "missing_dimensions_count": missing,
+            "is_optimal": missing == 0,
+            "warnings": warnings
+        }
+
+
 
 
