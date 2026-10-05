@@ -712,6 +712,56 @@ class YoastSEOValidator:
             "is_optimal": len(warnings) == 0
         }
 
+    @classmethod
+    def audit_outbound_links_security(cls, html_content: str, base_domain: str = "telkomuniversity.ac.id") -> Dict[str, Any]:
+        """
+        Audits all external hyperlinks to ensure they adhere to strict security
+        requirements (target="_blank" and rel="noopener noreferrer").
+        """
+        external_tags = []
+        for match in re.finditer(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>', html_content, re.IGNORECASE):
+            full_tag = match.group(0)
+            href = match.group(1).strip()
+            if href.startswith("#") or (href.startswith("/") and not href.startswith("//")) or base_domain in href.lower() or href.startswith("mailto:") or href.startswith("tel:"):
+                continue
+            external_tags.append((full_tag, href))
+
+        if not external_tags:
+            return {
+                "total_outbound_links": 0,
+                "compliant_count": 0,
+                "non_compliant_count": 0,
+                "is_secure": True,
+                "issues": []
+            }
+
+        issues = []
+        compliant_count = 0
+        for tag, href in external_tags:
+            has_blank = bool(re.search(r'target=["\']_blank["\']', tag, re.IGNORECASE))
+            rel_match = re.search(r'rel=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            rel_tokens = set(rel_match.group(1).lower().split()) if rel_match else set()
+            has_rel = "noopener" in rel_tokens and "noreferrer" in rel_tokens
+
+            if has_blank and has_rel:
+                compliant_count += 1
+            else:
+                missing = []
+                if not has_blank:
+                    missing.append('target="_blank"')
+                if not has_rel:
+                    missing.append('rel="noopener noreferrer"')
+                issues.append(f"Tautan eksternal '{href}' tidak memiliki: {', '.join(missing)}.")
+
+        return {
+            "total_outbound_links": len(external_tags),
+            "compliant_count": compliant_count,
+            "non_compliant_count": len(issues),
+            "is_secure": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
