@@ -181,5 +181,62 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(red_res["is_diverse"])
         self.assertEqual(len(red_res["repeated"]), 1)
 
+    def test_validate_image_dimensions(self):
+        good_img = '<p><img src="pic.jpg" width="800" height="600" alt="Grafik" /></p>'
+        res1 = YoastSEOValidator.validate_image_dimensions(good_img)
+        self.assertTrue(res1["is_optimal"])
+        self.assertEqual(res1["missing_dimensions_count"], 0)
+
+        bad_img = '<p><img src="pic.jpg" alt="Grafik" /></p>'
+        res2 = YoastSEOValidator.validate_image_dimensions(bad_img)
+        self.assertFalse(res2["is_optimal"])
+        self.assertEqual(res2["missing_dimensions_count"], 1)
+
+    def test_evaluate_keyphrase_distribution(self):
+        # Evenly spread across 3 sections
+        content = (
+            "<p>Kecerdasan buatan merupakan fokus riset masa depan.</p>"
+            "<p>Pengembangan modul kecerdasan buatan dilakukan di laboratorium.</p>"
+            "<p>Kesimpulannya kecerdasan buatan sangat menjanjikan.</p>"
+        )
+        res = YoastSEOValidator.evaluate_keyphrase_distribution(content, "kecerdasan buatan")
+        self.assertTrue(res["is_uniform"])
+        self.assertGreaterEqual(res["sections_covered"], 2)
+
+        # Clustered only in the first section
+        skewed = (
+            "<p>Kecerdasan buatan kecerdasan buatan kecerdasan buatan pada bagian pembuka.</p>"
+            "<p>Paragraf tengah membahas topik lain secara lengkap dan mendalam tentang arsitektur jaringan komputer dan server lokal.</p>"
+            "<p>Paragraf penutup membahas evaluasi kinerja sistem dan kesimpulan akhir tanpa menyebutkan topik utama sama sekali.</p>"
+        )
+        res_skewed = YoastSEOValidator.evaluate_keyphrase_distribution(skewed, "kecerdasan buatan")
+        self.assertFalse(res_skewed["is_uniform"])
+        self.assertEqual(res_skewed["sections_covered"], 1)
+
+
+    def test_evaluate_internal_link_structure(self):
+        good_links = '<p><a href="/kurikulum">Kurikulum</a> dan <a href="https://bif-pwt.telkomuniversity.ac.id/dosen">Dosen</a></p>'
+        res = YoastSEOValidator.evaluate_internal_link_structure(good_links)
+        self.assertTrue(res["has_internal_links"])
+        self.assertTrue(res["is_optimal"])
+        self.assertEqual(res["total_internal_links"], 2)
+
+        bad_links = '<p><a href="/kurikulum/prodi/if/semester/1/matkul?utm_source=fb">Detail</a></p>'
+        res_bad = YoastSEOValidator.evaluate_internal_link_structure(bad_links)
+        self.assertFalse(res_bad["is_optimal"])
+        self.assertTrue(any("parameter tracking" in w for w in res_bad["warnings"]))
+
+    def test_audit_outbound_links_security(self):
+        secure_html = '<p><a href="https://github.com/prodi" target="_blank" rel="noopener noreferrer">Repo</a></p>'
+        res = YoastSEOValidator.audit_outbound_links_security(secure_html)
+        self.assertTrue(res["is_secure"])
+        self.assertEqual(res["compliant_count"], 1)
+
+        insecure_html = '<p><a href="https://github.com/prodi">Repo</a></p>'
+        res_insecure = YoastSEOValidator.audit_outbound_links_security(insecure_html)
+        self.assertFalse(res_insecure["is_secure"])
+        self.assertEqual(res_insecure["non_compliant_count"], 1)
+
 if __name__ == "__main__":
     unittest.main()
+
