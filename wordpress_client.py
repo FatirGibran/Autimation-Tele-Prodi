@@ -253,6 +253,17 @@ class WordPressClient:
         results = self._send_request(req)
         return results if isinstance(results, list) else []
 
+    def schedule_post(self, post_id: int, publish_date_iso: str) -> Dict[str, Any]:
+        """
+        Schedules a WordPress post for future publication by setting status to 'future' and target date.
+        """
+        payload = {
+            "status": "future",
+            "date": publish_date_iso.strip()
+        }
+        return self.update_post(post_id, payload)
+
+
 
 
 
