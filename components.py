@@ -815,6 +815,44 @@ class EditorialComponents:
       </div>{desc_html}
     </div>"""
 
+    @classmethod
+    def render_faculty_profile_card(
+        cls,
+        name: str,
+        academic_title: str,
+        nidn: str,
+        expertise: str,
+        scholar_url: str = "",
+        email: str = ""
+    ) -> str:
+        """
+        Renders a faculty member academic profile card with NIDN and Google Scholar links.
+        """
+        from xml.sax.saxutils import escape
+
+        safe_name = escape(name)
+        safe_title = escape(academic_title)
+        safe_nidn = escape(nidn)
+        safe_exp = escape(expertise)
+
+        scholar_html = f'<a href="{escape(scholar_url)}" class="tu-faculty-link" target="_blank" rel="noopener noreferrer">Google Scholar &rarr;</a>' if scholar_url else ""
+        email_html = f'<span class="tu-faculty-email">&#9993; {escape(email)}</span>' if email else ""
+
+        return f"""    <div class="tu-faculty-card">
+      <div class="tu-faculty-badge">Profil Dosen & Peneliti</div>
+      <h4 class="tu-faculty-name">{safe_name}</h4>
+      <p class="tu-faculty-title">{safe_title}</p>
+      <div class="tu-faculty-meta">
+        <span class="tu-faculty-nidn"><strong>NIDN:</strong> {safe_nidn}</span>
+        <span class="tu-faculty-expertise"><strong>Bidang Keahlian:</strong> {safe_exp}</span>
+      </div>
+      <div class="tu-faculty-footer">
+        {email_html}
+        {scholar_html}
+      </div>
+    </div>"""
+
+
 
 
 
