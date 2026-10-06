@@ -1017,6 +1017,36 @@ class EditorialComponents:
       </ul>
     </div>"""
 
+    @classmethod
+    def render_award_podium_card(cls, competition_name: str, achievements: List[Dict[str, str]]) -> str:
+        """
+        Renders an academic/hackathon competition award showcase card.
+        """
+        from xml.sax.saxutils import escape
+        s_comp = escape(competition_name)
+        podium_entries = []
+        for ach in achievements:
+            medal = escape(ach.get("medal", "Juara"))
+            team = escape(ach.get("team", ""))
+            project = escape(ach.get("project", ""))
+            podium_entries.append(f"""        <div class="tu-award-item">
+          <span class="tu-award-medal">{medal}</span>
+          <span class="tu-award-team">{team}</span>
+          <span class="tu-award-project">{project}</span>
+        </div>""")
+
+        podium_html = "\n".join(podium_entries)
+        return f"""    <div class="tu-award-podium-card">
+      <div class="tu-award-header">
+        <span class="tu-award-badge">Prestasi Mahasiswa</span>
+        <h4 class="tu-award-comp">{s_comp}</h4>
+      </div>
+      <div class="tu-award-list">
+{podium_html}
+      </div>
+    </div>"""
+
+
 
 
 
