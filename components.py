@@ -970,6 +970,29 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_accreditation_badge(cls, agency: str, grade: str, decree_no: str, valid_until: str) -> str:
+        """
+        Renders an official academic accreditation rating card (e.g. LAM INFOKOM / BAN-PT).
+        """
+        from xml.sax.saxutils import escape
+        s_agency = escape(agency)
+        s_grade = escape(grade)
+        s_decree = escape(decree_no)
+        s_valid = escape(valid_until)
+
+        return f"""    <div class="tu-accreditation-card">
+      <div class="tu-accreditation-header">
+        <span class="tu-accreditation-agency">{s_agency}</span>
+        <span class="tu-accreditation-grade">{s_grade}</span>
+      </div>
+      <div class="tu-accreditation-body">
+        <p class="tu-accreditation-decree">SK: {s_decree}</p>
+        <p class="tu-accreditation-validity">Berlaku Hingga: {s_valid}</p>
+      </div>
+    </div>"""
+
+
 
 
 
