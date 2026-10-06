@@ -118,6 +118,18 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_eng_article ON article_engagement(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    slug TEXT NOT NULL UNIQUE,
+                    parent_id INTEGER,
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (parent_id) REFERENCES article_categories(id) ON DELETE SET NULL
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_cat_parent ON article_categories(parent_id);")
 
 
 
@@ -713,6 +725,45 @@ class StorageManager:
                 LIMIT ?;
             """, (limit,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def add_category(self, name: str, slug: str, parent_id: Optional[int] = None, description: Optional[str] = None) -> int:
+        """
+        Adds a new hierarchical category for editorial taxonomy.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_categories (name, slug, parent_id, description)
+                VALUES (?, ?, ?, ?);
+            """, (name.strip(), slug.strip().lower(), parent_id, description))
+            return cursor.lastrowid
+
+    def get_category_tree(self) -> List[Dict[str, Any]]:
+        """
+        Retrieves all categories organized into a parent-children tree structure.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM article_categories ORDER BY parent_id ASC, name ASC;")
+            all_cats = [dict(r) for r in cursor.fetchall()]
+
+        by_id = {c["id"]: {**c, "children": []} for c in all_cats}
+        roots = []
+        for c in by_id.values():
+            p_id = c.get("parent_id")
+            if p_id and p_id in by_id:
+                by_id[p_id]["children"].append(c)
+            else:
+                roots.append(c)
+        return roots
+
+    def get_category_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves category data by its URL slug.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM article_categories WHERE slug = ?;", (slug.strip().lower(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
