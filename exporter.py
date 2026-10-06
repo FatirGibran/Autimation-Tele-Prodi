@@ -501,6 +501,38 @@ class ArticleExporter:
         ])
         return "\n".join(tags)
 
+    @staticmethod
+    def generate_program_json_ld(
+        program_name: str = "S1 Teknik Informatika",
+        description: str = "Program Studi Sarjana Teknik Informatika Telkom University Purwokerto berfokus pada AI, Cloud Computing, dan Rekayasa Perangkat Lunak.",
+        degree: str = "Sarjana Komputer (S.Kom.)",
+        program_url: str = "https://bif-pwt.telkomuniversity.ac.id"
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org/EducationalOccupationalProgram structured data for university degree programs.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "EducationalOccupationalProgram",
+            "name": program_name,
+            "description": description,
+            "url": program_url,
+            "timeToComplete": "P4Y",
+            "educationalCredentialAwarded": degree,
+            "provider": {
+                "@type": "CollegeOrUniversity",
+                "name": "Telkom University Purwokerto",
+                "url": "https://bif-pwt.telkomuniversity.ac.id",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Purwokerto",
+                    "addressRegion": "Jawa Tengah",
+                    "addressCountry": "ID"
+                }
+            }
+        }
+
+
 
 
 
