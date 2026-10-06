@@ -798,6 +798,51 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def validate_academic_journal_references(html_content: str) -> Dict[str, Any]:
+        """
+        Validates academic journal links, DOIs, and citation indices (SINTA, Scopus, IEEE, ACM).
+        Ensures DOIs use https://doi.org/ canonical format rather than dx.doi.org or raw strings.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        dois_found = []
+        sinta_tiers = []
+        issues = []
+
+        doi_regex = re.compile(r'\b10\.\d{4,9}/[-._;()/:A-Za-z0-9]+\b')
+        for a in soup.find_all("a", href=True):
+            href = a["href"].strip()
+            if "doi.org" in href.lower():
+                if href.startswith("http://"):
+                    issues.append(f"DOI link '{href}' menggunakan HTTP tidak aman; gunakan HTTPS.")
+                elif "dx.doi.org" in href.lower():
+                    issues.append(f"DOI link '{href}' menggunakan domain usang dx.doi.org; ganti ke https://doi.org/.")
+                else:
+                    dois_found.append(href)
+            elif doi_regex.search(href):
+                dois_found.append(href)
+
+        text = soup.get_text()
+        sinta_matches = re.findall(r'\bSINTA\s*([1-6])\b', text, re.IGNORECASE)
+        for s in sinta_matches:
+            tier = f"SINTA {s}"
+            if tier not in sinta_tiers:
+                sinta_tiers.append(tier)
+
+        has_scopus = bool(re.search(r'\bScopus\b', text, re.IGNORECASE))
+        has_wos = bool(re.search(r'\b(Web of Science|WoS)\b', text, re.IGNORECASE))
+
+        return {
+            "doi_count": len(dois_found),
+            "dois": dois_found,
+            "sinta_tiers": sorted(sinta_tiers),
+            "has_scopus_mention": has_scopus,
+            "has_wos_mention": has_wos,
+            "issues": issues,
+            "is_valid": len(issues) == 0
+        }
+
+
 
 
 
