@@ -1072,6 +1072,34 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_career_placement_card(cls, stat_title: str, metrics: List[Dict[str, str]]) -> str:
+        """
+        Renders graduate career placement and salary outcome statistics card.
+        """
+        from xml.sax.saxutils import escape
+        s_title = escape(stat_title)
+        metric_items = []
+        for m in metrics:
+            label = escape(m.get("label", ""))
+            value = escape(str(m.get("value", "")))
+            detail = escape(m.get("detail", ""))
+            metric_items.append(f"""        <div class="tu-career-metric">
+          <span class="tu-career-val">{value}</span>
+          <span class="tu-career-lbl">{label}</span>
+          <span class="tu-career-desc">{detail}</span>
+        </div>""")
+
+        metrics_html = "\n".join(metric_items)
+        return f"""    <div class="tu-career-placement-card">
+      <div class="tu-career-badge">Tracer Study & Karir Alumni</div>
+      <h4 class="tu-career-title">{s_title}</h4>
+      <div class="tu-career-grid">
+{metrics_html}
+      </div>
+    </div>"""
+
+
 
 
 
