@@ -244,6 +244,28 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('property="og:image:height" content="630"', tags)
         self.assertIn('name="twitter:card" content="summary_large_image"', tags)
 
+    def test_generate_program_json_ld(self):
+        schema = ArticleExporter.generate_program_json_ld()
+        self.assertEqual(schema["@type"], "EducationalOccupationalProgram")
+        self.assertEqual(schema["name"], "S1 Teknik Informatika")
+        self.assertEqual(schema["timeToComplete"], "P4Y")
+        self.assertEqual(schema["provider"]["name"], "Telkom University Purwokerto")
+        self.assertEqual(schema["educationalCredentialAwarded"], "Sarjana Komputer (S.Kom.)")
+
+    def test_to_nextjs_mdx(self):
+        meta = {
+            "seo_title": "Belajar Next.js App Router",
+            "meta_description": "Panduan server components.",
+            "slug": "nextjs-app-router",
+            "publish_date": "2026-10-06",
+            "tags": ["react", "nextjs"]
+        }
+        mdx = ArticleExporter.to_nextjs_mdx(meta, "<p>Konten Next.js</p>")
+        self.assertIn('export const metadata = {', mdx)
+        self.assertIn('title: "Belajar Next.js App Router"', mdx)
+        self.assertIn('slug: "nextjs-app-router"', mdx)
+        self.assertIn('<p>Konten Next.js</p>', mdx)
+
 if __name__ == "__main__":
     unittest.main()
 
