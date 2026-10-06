@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest.mock import patch, MagicMock
 from wordpress_client import WordPressClient
@@ -179,6 +180,31 @@ class TestWordPressClient(unittest.TestCase):
         res = self.client.schedule_post(123, "2026-10-15T08:00:00")
         mock_update.assert_called_once_with(123, {"status": "future", "date": "2026-10-15T08:00:00"})
         self.assertEqual(res["status"], "future")
+
+    @patch.object(WordPressClient, "get_or_create_tag")
+    @patch.object(WordPressClient, "update_post")
+    def test_assign_post_tags(self, mock_update, mock_get_tag):
+        mock_get_tag.side_effect = lambda t: 10 if t == "ai" else 20
+        mock_update.return_value = {"id": 123, "tags": [10, 20]}
+
+        res = self.client.assign_post_tags(123, ["ai", "iot"])
+        mock_update.assert_called_once_with(123, {"tags": [10, 20]})
+        self.assertEqual(res["tags"], [10, 20])
+
+    @patch("urllib.request.urlopen")
+    def test_update_media_metadata(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 44, "alt_text": "Diagram", "caption": "Gambar 1"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.update_media_metadata(44, alt_text="Diagram", caption="Gambar 1")
+        self.assertEqual(res["id"], 44)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/media/44", req.full_url)
+        body = json.loads(req.data.decode("utf-8"))
+        self.assertEqual(body["alt_text"], "Diagram")
+        self.assertEqual(body["caption"], "Gambar 1")
 
 if __name__ == "__main__":
     unittest.main()
