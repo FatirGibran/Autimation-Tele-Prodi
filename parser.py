@@ -639,6 +639,46 @@ def balance_and_clean_quotes(text: str) -> str:
     return res
 
 
+def italicize_academic_latin_terms(text: str) -> str:
+    """
+    Auto-italicizes standard academic Latin terms (et al., ibid., de facto, ad hoc, vice versa, a priori)
+    outside of existing HTML tags or code blocks.
+    """
+    if not text:
+        return ""
+
+    latin_terms = [
+        r'\bet\s+al\.(?!\<\/em\>)',
+        r'\bibid\.(?!\<\/em\>)',
+        r'\bde\s+facto(?!\<\/em\>)',
+        r'\bad\s+hoc(?!\<\/em\>)',
+        r'\bvice\s+versa(?!\<\/em\>)',
+        r'\ba\s+priori(?!\<\/em\>)',
+        r'\bpassim(?!\<\/em\>)',
+    ]
+
+    pattern = re.compile(r'(' + '|'.join(latin_terms) + r')', re.IGNORECASE)
+
+    tokens = re.split(r'(<[^>]+>)', text)
+    processed = []
+    in_code = False
+
+    for token in tokens:
+        if token.startswith("<"):
+            if "<code" in token or "<pre" in token:
+                in_code = True
+            elif "</code" in token or "</pre" in token:
+                in_code = False
+            processed.append(token)
+        else:
+            if not in_code:
+                token = pattern.sub(r'<em>\1</em>', token)
+            processed.append(token)
+
+    return "".join(processed)
+
+
+
 
 
 
