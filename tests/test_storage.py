@@ -430,6 +430,93 @@ class TestStorageManager(unittest.TestCase):
         top = self.storage.get_top_engaged_articles(limit=5)
         self.assertTrue(any(a["article_id"] == art_id for a in top))
 
+    def test_category_hierarchy_and_tree(self):
+        root_id = self.storage.add_category("Ilmu Komputer", "ilmu-komputer", description="Kategori utama")
+        self.assertIsNotNone(root_id)
+        child_id = self.storage.add_category("Kecerdasan Buatan", "ai", parent_id=root_id)
+        self.assertIsNotNone(child_id)
+
+        tree = self.storage.get_category_tree()
+        self.assertTrue(any(c["slug"] == "ilmu-komputer" for c in tree))
+        root_node = next(c for c in tree if c["slug"] == "ilmu-komputer")
+        self.assertEqual(len(root_node["children"]), 1)
+        self.assertEqual(root_node["children"][0]["slug"], "ai")
+
+        cat = self.storage.get_category_by_slug("ai")
+        self.assertIsNotNone(cat)
+        self.assertEqual(cat["name"], "Kecerdasan Buatan")
+
+    def test_article_locks_acquire_and_release(self):
+        art_id = self.storage.save_article({
+            "topic": "Artikel Lock",
+            "category": "Testing",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "artikel lock",
+            "seo_title": "Artikel Lock",
+            "slug": "artikel-lock",
+            "meta_description": "Deskripsi lock.",
+            "status": "draft"
+        })
+        # User 1 acquires lock
+        ok1, blocker1 = self.storage.acquire_article_lock(art_id, user_id="editor_1", ttl_seconds=60)
+        self.assertTrue(ok1)
+        self.assertIsNone(blocker1)
+
+        # User 2 tries to acquire -> blocked
+        ok2, blocker2 = self.storage.acquire_article_lock(art_id, user_id="editor_2", ttl_seconds=60)
+        self.assertFalse(ok2)
+        self.assertEqual(blocker2, "editor_1")
+
+        # User 1 refreshes lock -> ok
+        ok1_refresh, _ = self.storage.acquire_article_lock(art_id, user_id="editor_1", ttl_seconds=120)
+        self.assertTrue(ok1_refresh)
+
+        # Status check
+        status = self.storage.get_article_lock_status(art_id)
+        self.assertIsNotNone(status)
+        self.assertEqual(status["locked_by"], "editor_1")
+
+        # Release lock
+        self.assertTrue(self.storage.release_article_lock(art_id, user_id="editor_1"))
+        self.assertIsNone(self.storage.get_article_lock_status(art_id))
+
+        # Now User 2 can acquire
+        ok2_after, _ = self.storage.acquire_article_lock(art_id, user_id="editor_2", ttl_seconds=60)
+        self.assertTrue(ok2_after)
+
+    def test_batch_replace_content(self):
+        art_id1 = self.storage.save_article({
+            "topic": "Batch 1",
+            "category": "Testing",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "batch test",
+            "seo_title": "Judul lama v1",
+            "slug": "batch-1",
+            "meta_description": "Deskripsi lama.",
+            "html_content": "<p>Teks lama di dalam artikel 1.</p>",
+            "status": "draft"
+        })
+        art_id2 = self.storage.save_article({
+            "topic": "Batch 2",
+            "category": "Testing",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "batch test",
+            "seo_title": "Judul Lain",
+            "slug": "batch-2",
+            "meta_description": "Deskripsi lama juga.",
+            "html_content": "<p>Teks lama di dalam artikel 2.</p>",
+            "status": "draft"
+        })
+
+        res = self.storage.batch_replace_content("lama", "baru", status_filter="draft")
+        self.assertEqual(res["articles_updated"], 2)
+        self.assertGreaterEqual(res["total_replacements"], 4)
+
+        updated1 = self.storage.get_article_by_slug("batch-1")
+        self.assertIn("Judul baru v1", updated1["seo_title"])
+        self.assertIn("Deskripsi baru.", updated1["meta_description"])
+        self.assertIn("Teks baru di dalam", updated1["html_content"])
+
 if __name__ == "__main__":
     unittest.main()
 
