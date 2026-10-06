@@ -229,6 +229,43 @@ class TelegramFormatter:
             f"💡 *Gunakan sitasi di atas untuk rujukan riset dan tugas akhir mahasiswa.*"
         )
 
+    @staticmethod
+    def format_plagiarism_alert_card(
+        title: str,
+        similarity_percentage: float,
+        matched_sources: List[Dict[str, Any]]
+    ) -> str:
+        """
+        Renders a similarity/plagiarism audit alert card with threshold indicators.
+        """
+        if similarity_percentage < 15.0:
+            status_badge = "🟢 **AMAN (SIMILARITY RENDAH)**"
+            advice = "Draf artikel memenuhi batas orisinalitas institusi (< 15%)."
+        elif similarity_percentage <= 25.0:
+            status_badge = "🟡 **PERHATIAN (SIMILARITY SEDANG)**"
+            advice = "Periksa kembali bagian kutipan dan lakukan parafrase pada kalimat terdeteksi."
+        else:
+            status_badge = "🔴 **DITOLAK (SIMILARITY TINGGI)**"
+            advice = "Tingkat kesamaan melebihi ambang batas toleransi (> 25%). Wajib revisi total."
+
+        source_lines = []
+        for s in matched_sources[:4]:
+            source_url = s.get("url", "Sumber Eksternal")
+            overlap = s.get("percent", 0.0)
+            source_lines.append(f"  • `{overlap}%` - {source_url}")
+
+        sources_text = "\n".join(source_lines) if source_lines else "  • Tidak ada sumber signifikan yang cocok."
+
+        return (
+            f"🔍 **Laporan Audit Orisinalitas Konten**\n\n"
+            f"📌 **Artikel:** {title}\n"
+            f"📊 **Skor Kesamaan:** `{similarity_percentage}%`\n"
+            f"🏷️ **Status:** {status_badge}\n\n"
+            f"🌐 **Sumber Kecocokan Teratas:**\n{sources_text}\n\n"
+            f"💡 *Saran:* {advice}"
+        )
+
+
 
 
 
