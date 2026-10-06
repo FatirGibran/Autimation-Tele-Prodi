@@ -826,6 +826,60 @@ class StorageManager:
             row = cursor.fetchone()
             return dict(row) if row else None
 
+    def batch_replace_content(
+        self,
+        target_str: str,
+        replace_str: str,
+        status_filter: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Executes a transactional search-and-replace across article drafts
+        for seo_title, meta_description, and html_content.
+        """
+        if not target_str:
+            return {"articles_updated": 0, "total_replacements": 0}
+
+        updated_count = 0
+        total_replacements = 0
+
+        with self._get_connection() as conn:
+            query = "SELECT id, seo_title, meta_description, html_content FROM articles WHERE is_deleted = 0"
+            params = []
+            if status_filter:
+                query += " AND status = ?"
+                params.append(status_filter)
+
+            cursor = conn.execute(query, params)
+            rows = cursor.fetchall()
+
+            for row in rows:
+                art_id = row["id"]
+                title = row["seo_title"] or ""
+                desc = row["meta_description"] or ""
+                html = row["html_content"] or ""
+
+                matches = title.count(target_str) + desc.count(target_str) + html.count(target_str)
+                if matches > 0:
+                    new_title = title.replace(target_str, replace_str)
+                    new_desc = desc.replace(target_str, replace_str)
+                    new_html = html.replace(target_str, replace_str)
+
+                    conn.execute("""
+                        UPDATE articles SET
+                            seo_title = ?,
+                            meta_description = ?,
+                            html_content = ?
+                        WHERE id = ?;
+                    """, (new_title, new_desc, new_html, art_id))
+                    updated_count += 1
+                    total_replacements += matches
+
+        return {
+            "articles_updated": updated_count,
+            "total_replacements": total_replacements
+        }
+
+
 
 
 
