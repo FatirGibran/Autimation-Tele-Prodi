@@ -842,6 +842,52 @@ class YoastSEOValidator:
             "is_valid": len(issues) == 0
         }
 
+    @staticmethod
+    def audit_table_accessibility(html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML table structures for accessibility and search crawler clarity.
+        Checks for presence of <caption> or aria-label/aria-describedby, and <th> elements with scope="col|row".
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+        if not tables:
+            return {
+                "total_tables": 0,
+                "accessible_tables": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues = []
+        compliant_count = 0
+
+        for idx, table in enumerate(tables, 1):
+            table_issues = []
+            has_caption = bool(table.find("caption") or table.get("aria-label") or table.get("aria-describedby"))
+            if not has_caption:
+                table_issues.append(f"Tabel #{idx} tidak memiliki <caption> atau atribut aria-label.")
+
+            th_tags = table.find_all("th")
+            if not th_tags:
+                table_issues.append(f"Tabel #{idx} tidak memiliki elemen header <th>.")
+            else:
+                missing_scope = [th for th in th_tags if not th.get("scope")]
+                if missing_scope:
+                    table_issues.append(f"Tabel #{idx} memiliki {len(missing_scope)} tag <th> tanpa atribut 'scope'.")
+
+            if table_issues:
+                issues.extend(table_issues)
+            else:
+                compliant_count += 1
+
+        return {
+            "total_tables": len(tables),
+            "accessible_tables": compliant_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
