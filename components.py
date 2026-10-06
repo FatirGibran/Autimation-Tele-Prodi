@@ -1046,6 +1046,33 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_exchange_program_showcase(cls, program_title: str, universities: List[Dict[str, str]]) -> str:
+        """
+        Renders an international student exchange and credit transfer partner showcase.
+        """
+        from xml.sax.saxutils import escape
+        s_title = escape(program_title)
+        univ_cards = []
+        for u in universities:
+            name = escape(u.get("name", ""))
+            country = escape(u.get("country", ""))
+            quota = escape(str(u.get("quota", "Tersedia")))
+            univ_cards.append(f"""        <div class="tu-exchange-card">
+          <h5 class="tu-exchange-univ">{name}</h5>
+          <span class="tu-exchange-country">{country}</span>
+          <span class="tu-exchange-quota">Kuota: {quota}</span>
+        </div>""")
+
+        univs_html = "\n".join(univ_cards)
+        return f"""    <div class="tu-exchange-showcase">
+      <h4 class="tu-exchange-title">{s_title}</h4>
+      <div class="tu-exchange-grid">
+{univs_html}
+      </div>
+    </div>"""
+
+
 
 
 
