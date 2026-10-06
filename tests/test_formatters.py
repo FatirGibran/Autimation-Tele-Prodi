@@ -116,6 +116,29 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("2026-10-10 10:00 WIB", card)
         self.assertIn("peluncuran-lab-baru", card)
 
+    def test_format_bibtex_telegram_card(self):
+        article = {
+            "seo_title": "Riset Keamanan IoT",
+            "slug": "riset-keamanan-iot",
+            "publish_date": "2026-10-01"
+        }
+        card = TelegramFormatter.format_bibtex_telegram_card(article)
+        self.assertIn("Sitasi Akademik BibTeX", card)
+        self.assertIn("@article{telkom_bif_riset_keamanan_iot_2026", card)
+        self.assertIn("title = {Riset Keamanan IoT}", card)
+        self.assertIn("https://bif-pwt.telkomuniversity.ac.id/riset-keamanan-iot/", card)
+
+    def test_format_plagiarism_alert_card(self):
+        card_low = TelegramFormatter.format_plagiarism_alert_card("Judul Aman", 8.5, [])
+        self.assertIn("AMAN", card_low)
+        self.assertIn("8.5%", card_low)
+
+        sources = [{"url": "https://journal.org/paper1", "percent": 28.4}]
+        card_high = TelegramFormatter.format_plagiarism_alert_card("Judul Plagiat", 32.0, sources)
+        self.assertIn("DITOLAK", card_high)
+        self.assertIn("32.0%", card_high)
+        self.assertIn("https://journal.org/paper1", card_high)
+        self.assertIn("28.4%", card_high)
 
 
 class TestCommandRateLimiter(unittest.TestCase):
