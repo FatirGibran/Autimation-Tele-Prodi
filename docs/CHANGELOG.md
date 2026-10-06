@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 142 item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 172+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 179 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 203 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -198,5 +198,40 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 133. **Subcommand CLI `mdx` (`cli.py`)**: Perintah konsol konversi artikel ke berkas MDX modern.
 134. **Skrip Validator Dead Link & Broken Anchor (`scripts/check_broken_links.py`)**: Perkakas audit otomatis integritas tautan halaman dan jangkar in-page.
 135. **Pengembangan Suite Pengujian Unit Terpadu (179 Tests Passing)**: Penambahan pengujian komprehensif pada seluruh modul baru dengan tingkat kelulusan 100%.
+
+---
+
+## 12. Pembaruan Fitur & Arsitektur v2.4.0 (#136 - #172)
+
+136. **Sanitasi Rumus MathML (`sanitizer.py`)**: Penambahan dukungan aman elemen MathML (`<math>`, `<mrow>`, `<mi>`, `<mo>`, `<mn>`, dll.) dan pembersihan tag manipulatif `<annotation-xml>`.
+137. **Pembersihan Obfuskasi Data Payload & Komentar Bahaya (`sanitizer.py`)**: Eliminasi otomatis atribut `data-payload` berkode panjang dan pembersihan script tersembunyi di dalam blok komentar HTML.
+138. **Penegakan Token Sandbox Iframe Aman (`sanitizer.py`)**: Validasi token pembatas sandbox iframe tanpa izin breakout (`allow-top-navigation`) dan pembersihan atribut `frameborder`.
+139. **Normalisasi Tipografis Gelar Akademik (`parser.py`)**: Pembakuan gelar akademik Indonesia/internasional (`S.Kom.`, `M.Kom.`, `Ph.D.`, `Dr.`, `Ir.`) dengan dotting standar.
+140. **Parser Kode Kurikulum & Jenjang Mata Kuliah (`parser.py`)**: Deteksi kode mata kuliah (seperti `IF2143`, `TIF101`, `CSI402`) dan resolusi kode prodi serta tingkat semester.
+141. **Penyeimbang & Pengoreksi Tanda Petik Cerdas (`parser.py`)**: Transformasi otomatis tanda petik lurus menjadi kutip ganda tipografis Indonesia dan penyeimbangan kurung kutip tak tertutup.
+142. **Auto-Italicizer Istilah Latin Ilmiah (`parser.py`)**: Pembungkusan otomatis tag `<em>` pada terminologi ilmiah (*et al.*, *ibid.*, *de facto*, *ad hoc*, *vice versa*, *a priori*).
+143. **Evaluator Keselarasan Metadata Search & Open Graph (`seo_validator.py`)**: Analisis konsistensi dan overlap semantik antara SEO Title dan OG Title/Description.
+144. **Validator Referensi DOI & Akreditasi Jurnal Ilmiah (`seo_validator.py`)**: Verifikasi format kanonis tautan DOI HTTPS serta deteksi indeks reputasi SINTA 1-6, Scopus, dan WoS.
+145. **Auditor Aksesibilitas Struktur Tabel HTML (`seo_validator.py`)**: Audit keberadaan `<caption>`/`aria-label` dan kepatuhan atribut `scope` pada elemen header `<th>` untuk SEO & WCAG.
+146. **Evaluator Kesegaran Konten & Anomali Kronologis (`seo_validator.py`)**: Deteksi referensi tahun kadaluarsa (>5 tahun) dan peringatan anomali tahun masa depan.
+147. **Komponen Kartu Akreditasi Unggul Institusi (`components.py`)**: Kartu resmi nilai akreditasi prodi dari LAM INFOKOM / BAN-PT lengkap dengan nomor SK dan masa berlaku.
+148. **Komponen Kartu Spesifikasi Fasilitas Laboratorium (`components.py`)**: Tampilan spesifikasi perangkat komputasi, kluster GPU, dan alat riset lab.
+149. **Komponen Kartu Podium Juara & Prestasi Mahasiswa (`components.py`)**: Visualisasi medali emas/perak hackathon, Gemastik, dan kompetisi informatika.
+150. **Komponen Showcase Mitra Pertukaran Mahasiswa (`components.py`)**: Kartu profil perguruan tinggi mitra internasional untuk program credit transfer / IISMA.
+151. **Komponen Kartu Keterserapan Karir & Tracer Study (`components.py`)**: Metrik masa tunggu kerja dan statistik rata-rata gaji awal lulusan.
+152. **Formatter Kartu Sitasi BibTeX Telegram (`formatters.py`)**: Generator entri BibTeX instan siap-salin untuk memfasilitasi riset mahasiswa dan dosen.
+153. **Formatter Kartu Laporan Audit Similarity & Orisinalitas (`formatters.py`)**: Indikator visual tingkat kemiripan teks dengan ambang batas rekomendasi editorial.
+154. **Penyimpanan Pohon Taksonomi Kategori Hierarkis (`storage.py`)**: Tabel `article_categories` dan metode traversal relasi parent-child.
+155. **Manajer Lease Lock Editing Draf Konkuren (`storage.py`)**: Tabel `article_locks` dan proteksi lease locking dengan TTL untuk mencegah konflik pengeditan ganda.
+156. **Pencarian & Penggantian Transaksional Massal (`storage.py`)**: Helper `batch_replace_content` untuk update teks, istilah, atau nama pejabat secara massal.
+157. **Helper Penetapan Tag Pos WordPress REST API (`wordpress_client.py`)**: Resolusi taksonomi tag massal langsung ke pos WordPress target.
+158. **Helper Pembaruan Metadata Lampiran Media WordPress (`wordpress_client.py`)**: Pembaruan alt-text, caption, dan deskripsi berkas pustaka media.
+159. **Generator Skema EducationalOccupationalProgram JSON-LD (`exporter.py`)**: Rich snippet Schema.org untuk profil kurikulum dan program studi sarjana.
+160. **Generator Format MDX Kompatibel Next.js App Router (`exporter.py`)**: Ekspor berkas MDX modern dengan ekspor metadata bertipe TypeScript.
+161. **Subcommand CLI `lock` (`cli.py`)**: Perintah konsol pengelolaan status kunci penyuntingan draf artikel.
+162. **Subcommand CLI `replace` (`cli.py`)**: Perintah konsol batch replace teks artikel lintas database.
+163. **Subcommand CLI `schema` (`cli.py`)**: Perintah konsol generate skema JSON-LD kurikulum prodi.
+164. **Skrip Validator Aset Gambar & Optimasi Kompresi (`scripts/check_images.py`)**: Perkakas audit otomatis atribut alt, format modern WebP/AVIF, dan dimensi anti-CLS.
+165. **Pengembangan Suite Pengujian Unit Terpadu (203 Tests Passing)**: Penambahan pengujian menyeluruh pada seluruh modul baru dengan tingkat kelulusan 100%.
 
 
