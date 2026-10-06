@@ -215,6 +215,44 @@ Poin Utama:
         self.assertEqual(transitions[0]["sentence_count"], 3)
         self.assertGreater(transitions[0]["word_count"], 10)
 
+    def test_normalize_academic_degrees(self):
+        from parser import normalize_academic_degrees
+        raw = "Dosen pembimbing adalah Budi S Kom M Kom dan Dr Ir Hendra Ph D."
+        norm = normalize_academic_degrees(raw)
+        self.assertIn("S.Kom.", norm)
+        self.assertIn("M.Kom.", norm)
+        self.assertIn("Dr.", norm)
+        self.assertIn("Ir.", norm)
+        self.assertIn("Ph.D.", norm)
+
+    def test_parse_course_curriculum_codes(self):
+        from parser import parse_course_curriculum_codes
+        text = "Mata kuliah wajib IF2143 Struktur Data dan TIF101 Pemrograman Dasar serta pilihan CSI402."
+        codes = parse_course_curriculum_codes(text)
+        self.assertEqual(len(codes), 3)
+        codes_dict = {c["code"]: c for c in codes}
+        self.assertIn("IF2143", codes_dict)
+        self.assertEqual(codes_dict["IF2143"]["department_prefix"], "IF")
+        self.assertEqual(codes_dict["IF2143"]["level"], 2)
+        self.assertEqual(codes_dict["TIF101"]["department_prefix"], "TIF")
+        self.assertEqual(codes_dict["TIF101"]["level"], 1)
+
+    def test_balance_and_clean_quotes(self):
+        from parser import balance_and_clean_quotes
+        balanced = balance_and_clean_quotes('Direktur menyatakan, "Kurikulum baru siap diimplementasikan.')
+        self.assertTrue(balanced.startswith('Direktur menyatakan, “Kurikulum baru'))
+        self.assertTrue(balanced.endswith('”'))
+        self.assertEqual(balanced.count('“'), balanced.count('”'))
+
+    def test_italicize_academic_latin_terms(self):
+        from parser import italicize_academic_latin_terms
+        raw = "<p>Menurut Smith et al. metode ini ad hoc dan de facto berlaku.</p><pre><code>print('et al.')</code></pre>"
+        res = italicize_academic_latin_terms(raw)
+        self.assertIn("<em>et al.</em>", res)
+        self.assertIn("<em>ad hoc</em>", res)
+        self.assertIn("<em>de facto</em>", res)
+        self.assertIn("<code>print('et al.')</code>", res)
+
 if __name__ == "__main__":
     unittest.main()
 
