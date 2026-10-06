@@ -532,6 +532,29 @@ class ArticleExporter:
             }
         }
 
+    @staticmethod
+    def to_nextjs_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Next.js Contentlayer/App Router compatible MDX with typed metadata export.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        date = metadata.get("publish_date", "")
+        tags = metadata.get("tags", [])
+        tags_json = json.dumps(tags) if isinstance(tags, list) else "[]"
+
+        header = f"""export const metadata = {{
+  title: "{title}",
+  description: "{desc}",
+  slug: "{slug}",
+  date: "{date}",
+  tags: {tags_json},
+}};"""
+
+        return header + "\n\n" + html_content.strip()
+
+
 
 
 
