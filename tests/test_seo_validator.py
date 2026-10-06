@@ -237,6 +237,59 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_insecure["is_secure"])
         self.assertEqual(res_insecure["non_compliant_count"], 1)
 
+    def test_evaluate_meta_and_og_alignment(self):
+        # Aligned
+        res = YoastSEOValidator.evaluate_meta_and_og_alignment(
+            seo_title="Kurikulum Baru Informatika Telkom",
+            og_title="Kurikulum Baru Informatika Telkom 2026",
+            meta_description="Panduan kurikulum baru program studi teknik informatika.",
+            og_description="Panduan lengkap kurikulum baru program studi teknik informatika."
+        )
+        self.assertTrue(res["is_aligned"])
+        self.assertGreaterEqual(res["title_similarity"], 0.3)
+
+        # Mismatched titles
+        res_bad = YoastSEOValidator.evaluate_meta_and_og_alignment(
+            seo_title="Kurikulum Baru Informatika Telkom",
+            og_title="Resep Makanan Tradisional Nusantara",
+            meta_description="Deskripsi",
+            og_description="Deskripsi"
+        )
+        self.assertFalse(res_bad["is_aligned"])
+
+    def test_validate_academic_journal_references(self):
+        html = '<p>Diterbitkan pada jurnal <a href="https://doi.org/10.1109/ACCESS.2026.123456">IEEE Access</a> terindeks Scopus dan SINTA 1.</p>'
+        res = YoastSEOValidator.validate_academic_journal_references(html)
+        self.assertTrue(res["is_valid"])
+        self.assertEqual(res["doi_count"], 1)
+        self.assertIn("SINTA 1", res["sinta_tiers"])
+        self.assertTrue(res["has_scopus_mention"])
+
+        bad_html = '<p><a href="http://doi.org/10.1234/test">DOI HTTP</a></p>'
+        res_bad = YoastSEOValidator.validate_academic_journal_references(bad_html)
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_table_accessibility(self):
+        good_table = '<table><caption>Daftar Matkul</caption><thead><tr><th scope="col">Kode</th><th scope="col">Nama</th></tr></thead><tbody><tr><td>IF101</td><td>Pemrograman</td></tr></tbody></table>'
+        res = YoastSEOValidator.audit_table_accessibility(good_table)
+        self.assertTrue(res["is_compliant"])
+        self.assertEqual(res["accessible_tables"], 1)
+
+        bad_table = '<table><tr><th>Kode</th><th>Nama</th></tr></table>'
+        res_bad = YoastSEOValidator.audit_table_accessibility(bad_table)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertGreaterEqual(len(res_bad["issues"]), 2)
+
+    def test_evaluate_content_freshness_discrepancy(self):
+        fresh_html = "<p>Data penerimaan mahasiswa tahun 2025 dan proyeksi 2026.</p>"
+        res = YoastSEOValidator.evaluate_content_freshness_discrepancy(fresh_html, publish_year=2026)
+        self.assertTrue(res["is_fresh"])
+
+        stale_html = "<p>Berdasarkan survei tahun 2012 dan teknologi tahun 2015.</p>"
+        res_stale = YoastSEOValidator.evaluate_content_freshness_discrepancy(stale_html, publish_year=2026)
+        self.assertFalse(res_stale["is_fresh"])
+        self.assertGreater(res_stale["stale_reference_count"], 0)
+
 if __name__ == "__main__":
     unittest.main()
 

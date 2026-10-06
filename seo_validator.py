@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
+from bs4 import BeautifulSoup
 
 class YoastSEOValidator:
     """
