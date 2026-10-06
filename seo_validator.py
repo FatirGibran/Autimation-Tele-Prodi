@@ -1,5 +1,6 @@
 import re
-from typing import Dict, Any, List
+from datetime import datetime
+from typing import Dict, Any, List, Optional, Tuple
 
 class YoastSEOValidator:
     """
@@ -886,6 +887,52 @@ class YoastSEOValidator:
             "is_compliant": len(issues) == 0,
             "issues": issues
         }
+
+    @staticmethod
+    def evaluate_content_freshness_discrepancy(
+        html_content: str,
+        publish_year: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Evaluates temporal references in article body against the target publication year.
+        Detects legacy date references (>5 years old) that might signal stale technical content.
+        """
+        if publish_year is None:
+            publish_year = datetime.now().year
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        text = soup.get_text()
+
+        years_found = [int(y) for y in re.findall(r'\b(19\d{2}|20\d{2})\b', text)]
+        if not years_found:
+            return {
+                "years_found": [],
+                "target_year": publish_year,
+                "stale_reference_count": 0,
+                "is_fresh": True,
+                "issues": []
+            }
+
+        stale_threshold = publish_year - 5
+        stale_years = [y for y in years_found if y < stale_threshold]
+        issues = []
+
+        if stale_years:
+            unique_stale = sorted(set(stale_years))
+            issues.append(f"Ditemukan referensi tahun yang berpotensi usang (< {stale_threshold}): {unique_stale}.")
+
+        future_years = [y for y in years_found if y > publish_year + 2]
+        if future_years:
+            issues.append(f"Ditemukan referensi tahun masa depan anomali: {sorted(set(future_years))}.")
+
+        return {
+            "years_found": sorted(set(years_found)),
+            "target_year": publish_year,
+            "stale_reference_count": len(stale_years),
+            "is_fresh": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
