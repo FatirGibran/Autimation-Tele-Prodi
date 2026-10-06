@@ -202,6 +202,16 @@ class HTMLSanitizer:
 
         cleaned = re.sub(r'<img\s+[^>]*>', check_tracking_pixel, cleaned, flags=re.IGNORECASE)
 
+        # 8c. Strip suspicious high-entropy obfuscated attributes and hidden script comments
+        if "<!--" in cleaned:
+            if re.search(r'<!--[\s\S]*?(?:<script|javascript:|base64|eval\()[\s\S]*?-->', cleaned, re.IGNORECASE):
+                cleaned = re.sub(r'<!--[\s\S]*?(?:<script|javascript:|base64|eval\()[\s\S]*?-->', '', cleaned, flags=re.IGNORECASE)
+                warnings.append("Stripped suspicious hidden script or payload inside HTML comments.")
+
+        if re.search(r'\s+data-(?:payload|encoded|blob)=["\'][A-Za-z0-9+/=]{80,}["\']', cleaned, re.IGNORECASE):
+            cleaned = re.sub(r'\s+data-(?:payload|encoded|blob)=["\'][A-Za-z0-9+/=]{80,}["\']', '', cleaned, flags=re.IGNORECASE)
+            warnings.append("Stripped high-entropy obfuscated data attribute payload.")
+
         return cleaned, warnings
 
 
