@@ -202,5 +202,33 @@ class TelegramFormatter:
             f"💡 *Artikel siap dipublikasikan ke WordPress sesuai antrean jadwal.*"
         )
 
+    @staticmethod
+    def format_bibtex_telegram_card(article: Dict[str, Any], cite_key: Optional[str] = None) -> str:
+        """
+        Renders a ready-to-copy BibTeX citation block formatted for Telegram editorial channels.
+        """
+        title = article.get("seo_title", article.get("topic", "N/A"))
+        slug = article.get("slug", "article")
+        year = article.get("publish_date", "2026")[:4] if article.get("publish_date") else "2026"
+        key = cite_key or f"telkom_bif_{slug.replace('-', '_')}_{year}"
+        url = f"https://bif-pwt.telkomuniversity.ac.id/{slug}/"
+
+        bibtex_code = (
+            f"@article{{{key},\n"
+            f'  title = {{{title}}},\n'
+            f'  author = {{Tim Editorial S1 Informatika Telkom University Purwokerto}},\n'
+            f'  journal = {{Portal Publikasi Ilmiah S1 Informatika}},\n'
+            f'  year = {{{year}}},\n'
+            f'  url = {{{url}}}\n'
+            f"}}"
+        )
+
+        return (
+            f"📚 **Sitasi Akademik BibTeX**\n\n"
+            f"```bibtex\n{bibtex_code}\n```\n"
+            f"💡 *Gunakan sitasi di atas untuk rujukan riset dan tugas akhir mahasiswa.*"
+        )
+
+
 
 
