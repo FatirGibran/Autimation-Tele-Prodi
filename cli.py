@@ -311,6 +311,47 @@ def cmd_mdx(args):
     print(f"Export MDX ({framework}) berhasil -> {out_path}")
 
 
+def cmd_lock(args):
+    if args.action == "acquire":
+        if not args.id or not args.user:
+            print("Error: Argumen --id dan --user wajib disertakan.")
+            sys.exit(1)
+        ok, blocker = storage.acquire_article_lock(args.id, args.user, ttl_seconds=args.ttl)
+        if ok:
+            print(f"Lock berhasil diperoleh untuk Artikel ID {args.id} oleh '{args.user}' (TTL: {args.ttl} detik).")
+        else:
+            print(f"Gagal memperoleh lock. Artikel ID {args.id} sedang dikunci oleh '{blocker}'.")
+            sys.exit(1)
+    elif args.action == "release":
+        if not args.id or not args.user:
+            print("Error: Argumen --id dan --user wajib disertakan.")
+            sys.exit(1)
+        ok = storage.release_article_lock(args.id, args.user)
+        print(f"Lock artikel ID {args.id} {'berhasil dilepaskan' if ok else 'gagal dilepaskan (user tidak cocok/tidak ada lock)'}.")
+    elif args.action == "status":
+        if not args.id:
+            print("Error: Argumen --id wajib disertakan.")
+            sys.exit(1)
+        st = storage.get_article_lock_status(args.id)
+        if st:
+            print(f"Artikel ID {args.id} terkunci oleh '{st['locked_by']}' hingga {st['expires_at']}.")
+        else:
+            print(f"Artikel ID {args.id} tidak memiliki lock aktif.")
+
+
+def cmd_replace(args):
+    res = storage.batch_replace_content(args.target, args.replace, status_filter=args.status)
+    print(f"Batch replace selesai: {res['total_replacements']} penggantian pada {res['articles_updated']} artikel.")
+
+
+def cmd_schema(args):
+    schema_data = ArticleExporter.generate_program_json_ld()
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(schema_data, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Schema EducationalOccupationalProgram berhasil dibuat -> {out_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -425,6 +466,26 @@ def main():
     mdx_parser.add_argument("--framework", choices=["astro", "docusaurus"], default="astro", help="Target framework komponen MDX")
     mdx_parser.add_argument("--out", help="Path berkas output MDX")
     mdx_parser.set_defaults(func=cmd_mdx)
+
+    # Lock command
+    lock_parser = subparsers.add_parser("lock", help="Kelola lease lock editing draf artikel")
+    lock_parser.add_argument("--action", choices=["acquire", "release", "status"], default="status", help="Tindakan lock")
+    lock_parser.add_argument("--id", type=int, help="ID artikel")
+    lock_parser.add_argument("--user", help="Identitas pengguna/editor")
+    lock_parser.add_argument("--ttl", type=int, default=300, help="Masa aktif lock dalam detik")
+    lock_parser.set_defaults(func=cmd_lock)
+
+    # Replace command
+    replace_parser = subparsers.add_parser("replace", help="Pencarian dan penggantian massal konten artikel")
+    replace_parser.add_argument("--target", required=True, help="Teks target yang dicari")
+    replace_parser.add_argument("--replace", required=True, help="Teks pengganti")
+    replace_parser.add_argument("--status", help="Filter status artikel (opsional)")
+    replace_parser.set_defaults(func=cmd_replace)
+
+    # Schema command
+    schema_parser = subparsers.add_parser("schema", help="Generate berkas JSON-LD skema kurikulum program studi")
+    schema_parser.add_argument("--out", default="program_schema.json", help="Path berkas output JSON-LD")
+    schema_parser.set_defaults(func=cmd_schema)
 
     args = parser.parse_args()
     args.func(args)
