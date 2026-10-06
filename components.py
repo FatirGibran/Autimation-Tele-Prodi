@@ -992,6 +992,32 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lab_equipment_card(cls, lab_name: str, equipment_list: List[Dict[str, str]]) -> str:
+        """
+        Renders a research computing laboratory equipment specification card.
+        """
+        from xml.sax.saxutils import escape
+        s_lab = escape(lab_name)
+        items = []
+        for eq in equipment_list:
+            item_name = escape(eq.get("name", ""))
+            item_specs = escape(eq.get("specs", ""))
+            item_qty = escape(str(eq.get("quantity", "1")))
+            items.append(f"""        <li class="tu-equip-item">
+          <strong class="tu-equip-name">{item_name}</strong> ({item_qty} unit)
+          <span class="tu-equip-specs">{item_specs}</span>
+        </li>""")
+
+        items_html = "\n".join(items)
+        return f"""    <div class="tu-lab-equipment-card">
+      <h4 class="tu-lab-name">Fasilitas Laboratorium: {s_lab}</h4>
+      <ul class="tu-lab-equipment-list">
+{items_html}
+      </ul>
+    </div>"""
+
+
 
 
 
