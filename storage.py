@@ -1,7 +1,7 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 class StorageManager:
     def __init__(self, db_path: Path):
@@ -130,6 +130,15 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_cat_parent ON article_categories(parent_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_locks (
+                    article_id INTEGER PRIMARY KEY,
+                    locked_by TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
 
 
 
@@ -763,6 +772,60 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM article_categories WHERE slug = ?;", (slug.strip().lower(),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def acquire_article_lock(self, article_id: int, user_id: str, ttl_seconds: int = 300) -> Tuple[bool, Optional[str]]:
+        """
+        Acquires or refreshes an editing lease lock for an article.
+        Returns (True, None) on success, or (False, locked_by_user) if locked by someone else.
+        """
+        now = datetime.utcnow()
+        now_iso = now.isoformat()
+        expires_iso = (now + timedelta(seconds=ttl_seconds)).isoformat()
+
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT locked_by, expires_at FROM article_locks WHERE article_id = ?;", (article_id,))
+            row = cursor.fetchone()
+
+            if row:
+                locked_by = row["locked_by"]
+                expires_at = row["expires_at"]
+                if locked_by != user_id and expires_at > now_iso:
+                    return False, locked_by
+
+            conn.execute("""
+                INSERT INTO article_locks (article_id, locked_by, expires_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(article_id) DO UPDATE SET
+                    locked_by = excluded.locked_by,
+                    expires_at = excluded.expires_at,
+                    created_at = CURRENT_TIMESTAMP;
+            """, (article_id, user_id, expires_iso))
+            return True, None
+
+    def release_article_lock(self, article_id: int, user_id: str) -> bool:
+        """
+        Releases an active editing lease if held by the given user.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "DELETE FROM article_locks WHERE article_id = ? AND locked_by = ?;",
+                (article_id, user_id)
+            )
+            return cursor.rowcount > 0
+
+    def get_article_lock_status(self, article_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves active lock status for an article if still valid.
+        """
+        now_iso = datetime.utcnow().isoformat()
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM article_locks WHERE article_id = ? AND expires_at > ?;",
+                (article_id, now_iso)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
