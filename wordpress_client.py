@@ -263,6 +263,20 @@ class WordPressClient:
         }
         return self.update_post(post_id, payload)
 
+    def assign_post_tags(self, post_id: int, tag_names: List[str]) -> Dict[str, Any]:
+        """
+        Resolves tag names to WordPress tag IDs and assigns them to the specified post.
+        """
+        tag_ids = []
+        for name in tag_names:
+            clean = name.strip()
+            if clean:
+                t_id = self.get_or_create_tag(clean)
+                tag_ids.append(t_id)
+
+        return self.update_post(post_id, {"tags": tag_ids})
+
+
 
 
 
