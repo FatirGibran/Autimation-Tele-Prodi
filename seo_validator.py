@@ -761,6 +761,44 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def evaluate_meta_and_og_alignment(
+        seo_title: str,
+        og_title: str,
+        meta_description: str,
+        og_description: str
+    ) -> Dict[str, Any]:
+        """
+        Evaluates consistency between search engine meta tags and Open Graph social cards.
+        Detects significant discrepancy or missing fields.
+        """
+        issues = []
+        if not og_title:
+            issues.append("Open Graph title (og:title) tidak didefinisikan.")
+        elif len(og_title) > 95:
+            issues.append(f"og:title terlalu panjang ({len(og_title)} karakter, batas wajar 95).")
+
+        if not og_description:
+            issues.append("Open Graph description (og:description) tidak didefinisikan.")
+        elif len(og_description) > 200:
+            issues.append(f"og:description terlalu panjang ({len(og_description)} karakter, batas wajar 200).")
+
+        title_overlap = 1.0
+        if seo_title and og_title:
+            s_words = set(re.findall(r'\w+', seo_title.lower()))
+            o_words = set(re.findall(r'\w+', og_title.lower()))
+            if s_words and o_words:
+                title_overlap = round(len(s_words & o_words) / len(s_words | o_words), 2)
+                if title_overlap < 0.3:
+                    issues.append(f"og:title memiliki korelasi rendah dengan seo_title (kemiripan: {title_overlap}).")
+
+        return {
+            "title_similarity": title_overlap,
+            "is_aligned": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
