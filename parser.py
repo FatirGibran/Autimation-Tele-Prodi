@@ -588,6 +588,39 @@ def normalize_academic_degrees(text: str) -> str:
     return res
 
 
+def parse_course_curriculum_codes(text: str) -> List[Dict[str, Any]]:
+    """
+    Extracts university curriculum course codes (e.g. IF2143, TIF101, CSI402)
+    and resolves department prefix and semester level.
+    """
+    if not text:
+        return []
+
+    pattern = re.compile(r'\b([A-Z]{2,4})\s*([1-8])(\d{2,3})\b')
+    results = []
+    seen = set()
+
+    for match in pattern.finditer(text):
+        full_code = f"{match.group(1)}{match.group(2)}{match.group(3)}"
+        if full_code in seen:
+            continue
+        seen.add(full_code)
+
+        dept_prefix = match.group(1)
+        level_digit = int(match.group(2))
+        sub_number = match.group(3)
+
+        results.append({
+            "code": full_code,
+            "department_prefix": dept_prefix,
+            "level": level_digit,
+            "course_number": sub_number,
+        })
+
+    return results
+
+
+
 
 
 
