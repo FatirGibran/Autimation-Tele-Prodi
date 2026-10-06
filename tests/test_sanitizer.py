@@ -114,6 +114,35 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("beacon.gif", clean)
         self.assertTrue(any("tracking pixel" in w for w in warnings))
 
+    def test_sanitize_mathml_equations(self):
+        mathml_html = '<div class="tu-editorial-container"><math href="javascript:alert(1)"><annotation-xml><script>evil()</script></annotation-xml><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></math></div>'
+        clean, warnings = HTMLSanitizer.sanitize(mathml_html)
+        self.assertNotIn("href=\"javascript:", clean)
+        self.assertNotIn("<script>", clean)
+        self.assertIn("<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>", clean)
+        self.assertTrue(any("MathML" in w for w in warnings))
+
+    def test_strip_obfuscated_payloads_and_comments(self):
+        blob_html = (
+            '<div class="tu-editorial-container">'
+            '<!-- <script>hidden_exec()</script> -->'
+            '<p data-payload="' + 'A' * 90 + '">Safe text</p>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(blob_html)
+        self.assertNotIn("hidden_exec", clean)
+        self.assertNotIn("data-payload", clean)
+        self.assertIn("Safe text", clean)
+        self.assertTrue(any("obfuscated" in w or "suspicious" in w for w in warnings))
+
+    def test_sanitize_iframe_sandbox_bypass_tokens(self):
+        iframe_html = '<div class="tu-editorial-container"><iframe src="https://www.youtube.com/embed/xyz" sandbox="allow-scripts allow-top-navigation" frameborder="0"></iframe></div>'
+        clean, _ = HTMLSanitizer.sanitize(iframe_html)
+        self.assertNotIn("allow-top-navigation", clean)
+        self.assertNotIn('frameborder="0"', clean)
+        self.assertIn("allow-presentation", clean)
+        self.assertIn("allow-scripts", clean)
+
 if __name__ == "__main__":
     unittest.main()
 

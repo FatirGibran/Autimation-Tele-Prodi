@@ -74,9 +74,10 @@ class HTMLSanitizer:
                     return ""
                 src_url = src_match.group(1).lower()
                 if any(host in src_url for host in ALLOWED_IFRAME_HOSTS):
-                    # Ensure strict sandbox without dangerous breakout tokens
-                    if 'sandbox=' in tag:
-                        sb_match = re.search(r'sandbox=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                    open_tag_m = re.match(r'<iframe\b[^>]*>', tag, re.IGNORECASE)
+                    tag_open = open_tag_m.group(0) if open_tag_m else tag
+                    if 'sandbox=' in tag_open:
+                        sb_match = re.search(r'sandbox=["\']([^"\']*)["\']', tag_open, re.IGNORECASE)
                         if sb_match:
                             tokens = set(sb_match.group(1).lower().split())
                             tokens.discard("allow-top-navigation")
@@ -85,13 +86,13 @@ class HTMLSanitizer:
                             tokens.add("allow-scripts")
                             tokens.add("allow-same-origin")
                             tokens.add("allow-presentation")
-                            tag = re.sub(r'sandbox=["\'][^"\']*["\']', f'sandbox="{" ".join(sorted(tokens))}"', tag, flags=re.IGNORECASE)
+                            tag_open = re.sub(r'sandbox=["\'][^"\']*["\']', f'sandbox="{" ".join(sorted(tokens))}"', tag_open, flags=re.IGNORECASE)
                     else:
-                        tag = tag.rstrip(" />").rstrip(">") + ' sandbox="allow-presentation allow-same-origin allow-scripts"'
-                    if 'loading=' not in tag:
-                        tag = tag.rstrip(" />").rstrip(">") + ' loading="lazy"'
-                    tag = re.sub(r'\s+frameborder=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
-                    return tag.rstrip(" />").rstrip(">") + '></iframe>'
+                        tag_open = tag_open.rstrip(" />").rstrip(">") + ' sandbox="allow-scripts allow-same-origin allow-presentation"'
+                    if 'loading=' not in tag_open:
+                        tag_open = tag_open.rstrip(" />").rstrip(">") + ' loading="lazy"'
+                    tag_open = re.sub(r'\s+frameborder=["\'][^"\']*["\']', '', tag_open, flags=re.IGNORECASE)
+                    return tag_open.rstrip(" />").rstrip(">") + '></iframe>'
                 return ""
 
             old_cleaned = cleaned
@@ -180,12 +181,13 @@ class HTMLSanitizer:
 
         # 6b. Sanitize MathML equation tags and strip executable XML attributes
         if "<math" in cleaned.lower():
-            if re.search(r"<annotation-xml[^>]*>(?=.*<(?:script|object|embed|iframe)).*?</annotation-xml>", cleaned, re.DOTALL | re.IGNORECASE):
+            if "<annotation-xml" in cleaned.lower():
                 cleaned = re.sub(r"<annotation-xml[^>]*>.*?</annotation-xml>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
                 warnings.append("Stripped dangerous annotation-xml from MathML.")
-            if re.search(r'<math[^>]*\b(?:href|action)=["\']javascript:', cleaned, re.IGNORECASE):
-                cleaned = re.sub(r'(<math[^>]*\b)(?:href|action)=["\']javascript:[^"\']*["\']', r'\1', cleaned, flags=re.IGNORECASE)
-                warnings.append("Stripped executable javascript attribute from MathML tag.")
+            if re.search(r'<math[^>]*\b(?:action|target)=["\']', cleaned, re.IGNORECASE):
+                cleaned = re.sub(r'\s+(?:action|target)=["\'][^"\']*["\']', '', cleaned, flags=re.IGNORECASE)
+                warnings.append("Stripped non-standard executable attributes from MathML.")
+            warnings.append("Sanitized MathML equations.")
 
         # 7. Strip dangerous patterns from inline style attributes
         def fix_style(match):
