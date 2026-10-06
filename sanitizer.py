@@ -74,11 +74,23 @@ class HTMLSanitizer:
                     return ""
                 src_url = src_match.group(1).lower()
                 if any(host in src_url for host in ALLOWED_IFRAME_HOSTS):
-                    # Ensure sandbox and lazy loading
-                    if 'sandbox=' not in tag:
-                        tag = tag.rstrip(" />").rstrip(">") + ' sandbox="allow-scripts allow-same-origin allow-presentation"'
+                    # Ensure strict sandbox without dangerous breakout tokens
+                    if 'sandbox=' in tag:
+                        sb_match = re.search(r'sandbox=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                        if sb_match:
+                            tokens = set(sb_match.group(1).lower().split())
+                            tokens.discard("allow-top-navigation")
+                            tokens.discard("allow-top-navigation-by-user-activation")
+                            tokens.discard("allow-pointer-lock")
+                            tokens.add("allow-scripts")
+                            tokens.add("allow-same-origin")
+                            tokens.add("allow-presentation")
+                            tag = re.sub(r'sandbox=["\'][^"\']*["\']', f'sandbox="{" ".join(sorted(tokens))}"', tag, flags=re.IGNORECASE)
+                    else:
+                        tag = tag.rstrip(" />").rstrip(">") + ' sandbox="allow-presentation allow-same-origin allow-scripts"'
                     if 'loading=' not in tag:
                         tag = tag.rstrip(" />").rstrip(">") + ' loading="lazy"'
+                    tag = re.sub(r'\s+frameborder=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
                     return tag.rstrip(" />").rstrip(">") + '></iframe>'
                 return ""
 
