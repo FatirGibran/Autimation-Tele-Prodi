@@ -423,6 +423,87 @@ class TestCLI(unittest.TestCase):
             if Path(out_file).exists():
                 Path(out_file).unlink()
 
+    def test_cmd_lock(self):
+        art_id = cli.storage.save_article({
+            "topic": "CLI Lock Article",
+            "category": "Testing",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "cli lock",
+            "seo_title": "CLI Lock Article",
+            "slug": "cli-lock-article",
+            "meta_description": "Meta desc.",
+            "status": "draft"
+        })
+
+        class ArgsAcquire:
+            action = "acquire"
+            id = art_id
+            user = "editor_cli"
+            ttl = 60
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_lock(ArgsAcquire())
+            self.assertIn("Lock berhasil diperoleh", fake_out.getvalue())
+
+        class ArgsStatus:
+            action = "status"
+            id = art_id
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_lock(ArgsStatus())
+            self.assertIn("editor_cli", fake_out.getvalue())
+
+        class ArgsRelease:
+            action = "release"
+            id = art_id
+            user = "editor_cli"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_lock(ArgsRelease())
+            self.assertIn("berhasil dilepaskan", fake_out.getvalue())
+
+    def test_cmd_replace(self):
+        cli.storage.save_article({
+            "topic": "Target Replace",
+            "category": "Testing",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "replace target",
+            "seo_title": "Artikel Dengan Kata Kunci Target",
+            "slug": "target-replace-slug",
+            "meta_description": "Deskripsi artikel.",
+            "html_content": "<p>Teks Target.</p>",
+            "status": "draft"
+        })
+
+        class ArgsReplace:
+            target = "Target"
+            replace = "Pengganti"
+            status = "draft"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_replace(ArgsReplace())
+            self.assertIn("Batch replace selesai:", fake_out.getvalue())
+
+    def test_cmd_schema(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class ArgsSchema:
+                out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_schema(ArgsSchema())
+                self.assertIn("Schema EducationalOccupationalProgram berhasil dibuat", fake_out.getvalue())
+
+            import json
+            data = json.loads(Path(out_file).read_text(encoding="utf-8"))
+            self.assertEqual(data["@type"], "EducationalOccupationalProgram")
+            self.assertEqual(data["provider"]["name"], "Telkom University Purwokerto")
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
 if __name__ == "__main__":
     unittest.main()
 
