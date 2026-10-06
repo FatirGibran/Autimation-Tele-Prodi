@@ -620,6 +620,26 @@ def parse_course_curriculum_codes(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def balance_and_clean_quotes(text: str) -> str:
+    """
+    Normalizes straight quotes into Indonesian smart quotes and fixes unclosed quotation pairs.
+    """
+    if not text:
+        return ""
+
+    res = re.sub(r'(^|[\s\(\[\{])"', r'\1“', text)
+    res = re.sub(r'"($|[\s\,\.\!\?\:\;\)\]\}])', r'”\1', res)
+    res = res.replace('"', '”')
+
+    open_count = res.count('“')
+    close_count = res.count('”')
+    if open_count > close_count:
+        res += '”' * (open_count - close_count)
+
+    return res
+
+
+
 
 
 
