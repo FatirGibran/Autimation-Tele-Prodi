@@ -558,5 +558,36 @@ def extract_paragraph_transitions(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def normalize_academic_degrees(text: str) -> str:
+    """
+    Normalizes academic titles and degrees with standardized dots and non-breaking spaces.
+    Examples: 'S Kom' -> 'S.Kom.', 'M Kom' -> 'M.Kom.', 'Ph D' -> 'Ph.D.'
+    """
+    if not text:
+        return ""
+
+    degree_patterns = [
+        (r'\bS[\.\s]*Kom\b\.?', 'S.Kom.'),
+        (r'\bM[\.\s]*Kom\b\.?', 'M.Kom.'),
+        (r'\bS[\.\s]*T\b\.?', 'S.T.'),
+        (r'\bM[\.\s]*T\b\.?', 'M.T.'),
+        (r'\bS[\.\s]*Si\b\.?', 'S.Si.'),
+        (r'\bM[\.\s]*Si\b\.?', 'M.Si.'),
+        (r'\bPh[\.\s]*D\b\.?', 'Ph.D.'),
+        (r'\bM[\.\s]*Sc\b\.?', 'M.Sc.'),
+        (r'\bB[\.\s]*Sc\b\.?', 'B.Sc.'),
+        (r'\bProf\b\.?', 'Prof.'),
+        (r'\bDr\b\.?', 'Dr.'),
+        (r'\bIr\b\.?', 'Ir.'),
+    ]
+
+    res = text
+    for pattern, repl in degree_patterns:
+        res = re.sub(pattern, repl, res)
+
+    return res
+
+
+
 
 
