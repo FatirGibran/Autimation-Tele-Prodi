@@ -7,7 +7,8 @@ ALLOWED_TAGS = {
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary",
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
-    "video", "audio", "source"
+    "video", "audio", "source",
+    "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext"
 }
 
 
@@ -164,6 +165,15 @@ class HTMLSanitizer:
                 warnings.append("Stripped dangerous tags from SVG.")
                 cleaned = re.sub(r"<(script|foreignObject)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
             cleaned = re.sub(r'xlink:href=["\']javascript:[^"\']*["\']', 'xlink:href="#"', cleaned, flags=re.IGNORECASE)
+
+        # 6b. Sanitize MathML equation tags and strip executable XML attributes
+        if "<math" in cleaned.lower():
+            if re.search(r"<annotation-xml[^>]*>(?=.*<(?:script|object|embed|iframe)).*?</annotation-xml>", cleaned, re.DOTALL | re.IGNORECASE):
+                cleaned = re.sub(r"<annotation-xml[^>]*>.*?</annotation-xml>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+                warnings.append("Stripped dangerous annotation-xml from MathML.")
+            if re.search(r'<math[^>]*\b(?:href|action)=["\']javascript:', cleaned, re.IGNORECASE):
+                cleaned = re.sub(r'(<math[^>]*\b)(?:href|action)=["\']javascript:[^"\']*["\']', r'\1', cleaned, flags=re.IGNORECASE)
+                warnings.append("Stripped executable javascript attribute from MathML tag.")
 
         # 7. Strip dangerous patterns from inline style attributes
         def fix_style(match):
