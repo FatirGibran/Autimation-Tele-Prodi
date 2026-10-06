@@ -276,6 +276,35 @@ class WordPressClient:
 
         return self.update_post(post_id, {"tags": tag_ids})
 
+    def update_media_metadata(
+        self,
+        media_id: int,
+        alt_text: Optional[str] = None,
+        caption: Optional[str] = None,
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Updates metadata fields (alt text, caption, description) on an existing WordPress media attachment.
+        """
+        endpoint = f"{self.api_url}/media/{media_id}"
+        payload: Dict[str, Any] = {}
+        if alt_text is not None:
+            payload["alt_text"] = alt_text
+        if caption is not None:
+            payload["caption"] = caption
+        if description is not None:
+            payload["description"] = description
+
+        data_bytes = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint,
+            data=data_bytes,
+            headers=self._get_headers(),
+            method="POST"
+        )
+        return self._send_request(req)
+
+
 
 
 
