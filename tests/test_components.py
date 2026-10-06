@@ -313,6 +313,62 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Telkom Indonesia", banner)
         self.assertIn("Google Cloud", banner)
 
+    def test_render_accreditation_badge(self):
+        badge = EditorialComponents.render_accreditation_badge(
+            agency="LAM INFOKOM",
+            grade="Unggul",
+            decree_no="045/SK/LAM-INFOKOM/Akred/S/VIII/2026",
+            valid_until="31 Agustus 2031"
+        )
+        self.assertIn("tu-accreditation-card", badge)
+        self.assertIn("LAM INFOKOM", badge)
+        self.assertIn("Unggul", badge)
+        self.assertIn("045/SK/LAM-INFOKOM", badge)
+
+    def test_render_lab_equipment_card(self):
+        equipment = [
+            {"name": "NVIDIA DGX A100 Server", "specs": "8x A100 80GB GPU, 1TB RAM", "quantity": "2"},
+            {"name": "Oculus Quest Pro VR Headset", "specs": "Spatial computing dev kit", "quantity": "10"}
+        ]
+        card = EditorialComponents.render_lab_equipment_card("Lab Kecerdasan Buatan & Robotika", equipment)
+        self.assertIn("tu-lab-equipment-card", card)
+        self.assertIn("NVIDIA DGX A100 Server", card)
+        self.assertIn("8x A100 80GB GPU", card)
+        self.assertIn("2 unit", card)
+
+    def test_render_award_podium_card(self):
+        awards = [
+            {"medal": "Juara 1 (Emas)", "team": "Tim CyberBIF", "project": "Sistem Pertahanan IoT Post-Quantum"},
+            {"medal": "Juara 2 (Perak)", "team": "Tim TeleAlgo", "project": "Optimasi Rute Jaringan 6G"}
+        ]
+        podium = EditorialComponents.render_award_podium_card("Gemastik Divisi Keamanan Siber 2026", awards)
+        self.assertIn("tu-award-podium-card", podium)
+        self.assertIn("Gemastik Divisi Keamanan Siber 2026", podium)
+        self.assertIn("Tim CyberBIF", podium)
+        self.assertIn("Juara 1 (Emas)", podium)
+
+    def test_render_exchange_program_showcase(self):
+        univs = [
+            {"name": "Kumamoto University", "country": "Jepang", "quota": "4 Mahasiswa"},
+            {"name": "Universiti Teknologi Malaysia", "country": "Malaysia", "quota": "6 Mahasiswa"}
+        ]
+        showcase = EditorialComponents.render_exchange_program_showcase("Program Pertukaran Mahasiswa Internasional", univs)
+        self.assertIn("tu-exchange-showcase", showcase)
+        self.assertIn("Kumamoto University", showcase)
+        self.assertIn("Jepang", showcase)
+        self.assertIn("4 Mahasiswa", showcase)
+
+    def test_render_career_placement_card(self):
+        metrics = [
+            {"label": "Masa Tunggu Kerja", "value": "2.1 Bulan", "detail": "Rata-rata lulusan 2025/2026"},
+            {"label": "Gaji Pertama Rata-rata", "value": "Rp 9.500.000", "detail": "Di atas standar UMR Jabodetabek"}
+        ]
+        card = EditorialComponents.render_career_placement_card("Statistik Keterserapan Alumni Informatika", metrics)
+        self.assertIn("tu-career-placement-card", card)
+        self.assertIn("2.1 Bulan", card)
+        self.assertIn("Masa Tunggu Kerja", card)
+        self.assertIn("Rp 9.500.000", card)
+
 if __name__ == "__main__":
     unittest.main()
 
