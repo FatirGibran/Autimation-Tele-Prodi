@@ -206,6 +206,25 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(body["alt_text"], "Diagram")
         self.assertEqual(body["caption"], "Gambar 1")
 
+    @patch.object(WordPressClient, "update_post")
+    def test_set_post_visibility(self, mock_update):
+        mock_update.return_value = {"id": 101, "sticky": True, "password": "pass"}
+        res = self.client.set_post_visibility(101, sticky=True, password="pass")
+        mock_update.assert_called_once_with(101, {"sticky": True, "password": "pass"})
+        self.assertTrue(res["sticky"])
+
+    @patch("urllib.request.urlopen")
+    def test_delete_media(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"deleted": true, "previous": {"id": 55}}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.delete_media(55, force=True)
+        self.assertTrue(res["deleted"])
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "DELETE")
+        self.assertIn("/media/55?force=true", req.full_url)
+
 if __name__ == "__main__":
     unittest.main()
 
