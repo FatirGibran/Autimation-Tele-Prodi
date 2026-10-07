@@ -810,6 +810,33 @@ def extract_research_cluster_tags(text: str) -> List[str]:
     return matched_clusters
 
 
+def normalize_nested_list_indentation(markdown_text: str) -> str:
+    """
+    Normalizes markdown list indentation to standard 2-space increments for nested lists.
+    """
+    if not markdown_text:
+        return ""
+
+    lines = markdown_text.splitlines()
+    normalized_lines = []
+
+    list_item_re = re.compile(r'^(\s*)([-*+]|\d+\.)\s+(.*)$')
+
+    for line in lines:
+        m = list_item_re.match(line)
+        if m:
+            raw_indent = m.group(1).replace('\t', '  ')
+            bullet = m.group(2)
+            content = m.group(3)
+            indent_level = len(raw_indent) // 2
+            norm_indent = '  ' * indent_level
+            normalized_lines.append(f"{norm_indent}{bullet} {content}")
+        else:
+            normalized_lines.append(line)
+
+    return "\n".join(normalized_lines)
+
+
 
 
 
