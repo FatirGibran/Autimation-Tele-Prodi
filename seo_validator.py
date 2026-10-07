@@ -1075,6 +1075,42 @@ class YoastSEOValidator:
             "sentence_count": num_sentences
         }
 
+    @staticmethod
+    def validate_hreflang_alternates(alternates: List[Dict[str, str]]) -> Dict[str, Any]:
+        """
+        Validates multilingual SEO hreflang annotations.
+        """
+        valid_langs = {"id", "en", "x-default", "id-id", "en-us", "en-gb"}
+        issues = []
+        if not alternates:
+            return {"is_valid": False, "count": 0, "issues": ["Daftar hreflang alternate kosong."]}
+
+        has_x_default = False
+        for idx, alt in enumerate(alternates, 1):
+            lang = alt.get("lang", "").strip().lower()
+            href = alt.get("href", "").strip()
+
+            if not lang:
+                issues.append(f"Hreflang #{idx} tidak memiliki atribut 'lang'.")
+            elif lang not in valid_langs:
+                issues.append(f"Hreflang #{idx} menggunakan kode bahasa tidak standar: '{lang}'.")
+
+            if lang == "x-default":
+                has_x_default = True
+
+            if not href.startswith("https://"):
+                issues.append(f"Hreflang #{idx} ({lang}) harus menggunakan URL HTTPS absolut.")
+
+        if not has_x_default:
+            issues.append("Rekomendasi SEO internasional: tag 'x-default' fallback tidak ditemukan.")
+
+        return {
+            "is_valid": len([i for i in issues if "Rekomendasi" not in i]) == 0,
+            "has_x_default": has_x_default,
+            "count": len(alternates),
+            "issues": issues
+        }
+
 
 
 
