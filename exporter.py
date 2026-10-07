@@ -550,9 +550,47 @@ class ArticleExporter:
   slug: "{slug}",
   date: "{date}",
   tags: {tags_json},
-}};"""
+}};\n"""
 
-        return header + "\n\n" + html_content.strip()
+        return header + "\n" + html_content.strip()
+
+    @staticmethod
+    def generate_research_project_json_ld(
+        name: str,
+        description: str,
+        funder: str,
+        award_amount: str,
+        lead_investigator: str,
+        project_url: str = "https://bif-pwt.telkomuniversity.ac.id"
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org/ResearchProject and FundingAward structured JSON-LD.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "ResearchProject",
+            "name": name,
+            "description": description,
+            "url": project_url,
+            "funder": {
+                "@type": "Organization",
+                "name": funder
+            },
+            "funding": {
+                "@type": "Grant",
+                "name": f"Grant for {name}",
+                "amount": award_amount,
+                "funder": {
+                    "@type": "Organization",
+                    "name": funder
+                }
+            },
+            "employee": {
+                "@type": "Person",
+                "name": lead_investigator,
+                "jobTitle": "Principal Investigator"
+            }
+        }
 
 
 
