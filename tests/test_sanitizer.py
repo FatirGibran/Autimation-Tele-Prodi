@@ -167,6 +167,29 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn('autoplay', clean)
         self.assertTrue(any("autoplay" in w for w in warnings))
 
+    def test_sanitize_details_and_summary(self):
+        det_html = '<div class="tu-editorial-container"><details><summary>Panduan Praktikum</summary><p>Isi panduan.</p></details></div>'
+        clean, warnings = HTMLSanitizer.sanitize(det_html)
+        self.assertIn('<details class="tu-details">', clean)
+        self.assertIn('<summary class="tu-summary">', clean)
+        self.assertTrue(any("details and summary" in w for w in warnings))
+
+    def test_strip_unsafe_meta_refresh_and_base(self):
+        bad_html = '<div class="tu-editorial-container"><meta http-equiv="refresh" content="0;url=https://evil.com"><base href="https://evil.com"><p>Konten</p></div>'
+        clean, warnings = HTMLSanitizer.sanitize(bad_html)
+        self.assertNotIn("<meta", clean)
+        self.assertNotIn("<base", clean)
+        self.assertIn("Konten", clean)
+        self.assertTrue(any("meta refresh" in w for w in warnings))
+
+    def test_neutralize_unsafe_form_elements(self):
+        form_html = '<div class="tu-editorial-container"><form action="https://phishing.com"><input type="text" name="pwd"><textarea></textarea></form></div>'
+        clean, warnings = HTMLSanitizer.sanitize(form_html)
+        self.assertNotIn("<form", clean)
+        self.assertNotIn("</form>", clean)
+        self.assertIn("disabled", clean)
+        self.assertTrue(any("interactive form" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
 
