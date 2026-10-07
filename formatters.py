@@ -284,6 +284,28 @@ class TelegramFormatter:
             f"💡 *Mahasiswa dan dosen dianjurkan untuk mengirimkan naskah publikasi.*"
         )
 
+    @staticmethod
+    def format_compact_seo_summary(report: Dict[str, Any], slug: str) -> str:
+        """
+        Renders a compact, high-signal SEO validation summary card for Telegram bots.
+        """
+        score = report.get("score", 0)
+        grade = report.get("grade", "N/A")
+        errors = report.get("errors", [])
+        warnings = report.get("warnings", [])
+
+        status_emoji = "🟢" if score >= 80 else ("🟡" if score >= 60 else "🔴")
+        error_count = len(errors)
+        warning_count = len(warnings)
+
+        return (
+            f"🎯 **Ringkasan Audit SEO Yoast**\n\n"
+            f"🔗 **Slug:** `{slug}`\n"
+            f"{status_emoji} **Skor:** `{score}/100` ({grade})\n"
+            f"⚠️ **Errors:** `{error_count}` | **Warnings:** `{warning_count}`\n\n"
+            f"💡 *{'Semua parameter SEO optimal, siap rilis.' if error_count == 0 else 'Perlu perbaikan sebelum artikel diterbitkan.'}*"
+        )
+
 
 
 
