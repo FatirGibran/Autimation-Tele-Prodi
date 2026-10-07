@@ -330,6 +330,13 @@ class WordPressClient:
         )
         return self._send_request(req)
 
+    def update_post_excerpt(self, post_id: int, excerpt: str) -> Dict[str, Any]:
+        """
+        Updates the editorial summary excerpt for a WordPress post.
+        """
+        return self.update_post(post_id, {"excerpt": excerpt.strip()})
+
+
 
 
 
