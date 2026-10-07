@@ -400,6 +400,57 @@ def cmd_nuxt(args):
     print(f"Export Nuxt markdown berhasil -> {out_path}")
 
 
+def cmd_subscribe(args):
+    if args.action == "list":
+        subs = storage.get_subscribers(args.category or "all")
+        if not subs:
+            print(f"Tidak ada subscriber untuk kategori '{args.category or 'all'}'.")
+            return
+        print(f"=== Daftar Subscriber (Kategori: {args.category or 'all'}) ===")
+        for s in subs:
+            print(f" - [{s['channel']}] User: {s['user_id']} (Kategori: {s['category']})")
+    elif args.action == "add":
+        if not args.user or not args.channel:
+            print("Error: Argumen --user dan --channel wajib disertakan.")
+            sys.exit(1)
+        ok = storage.subscribe_user(args.user, args.channel, args.category or "all")
+        print(f"Subscriber '{args.user}' ({args.channel}) {'berhasil didaftarkan' if ok else 'sudah terdaftar'}.")
+    elif args.action == "remove":
+        if not args.user:
+            print("Error: Argumen --user wajib disertakan.")
+            sys.exit(1)
+        ok = storage.unsubscribe_user(args.user, args.category or "all")
+        print(f"Subscriber '{args.user}' {'berhasil dihapus' if ok else 'tidak ditemukan'}.")
+
+
+def cmd_diff_rev(args):
+    diff = storage.compare_revisions(args.id, args.rev_a, args.rev_b)
+    if not diff.get("found"):
+        print(f"Error: {diff.get('error', 'Revisi tidak ditemukan')}.")
+        sys.exit(1)
+    print(f"=== Komparasi Revisi Artikel ID {args.id} (Rev {args.rev_a} vs Rev {args.rev_b}) ===")
+    print(f" - Rev {args.rev_a}: {diff['rev_a']['word_count']} kata, {diff['rev_a']['char_count']} karakter")
+    print(f" - Rev {args.rev_b}: {diff['rev_b']['word_count']} kata, {diff['rev_b']['char_count']} karakter")
+    print(f" - Selisih Kata: {diff['deltas']['word_diff']:+d}")
+    print(f" - Selisih Karakter: {diff['deltas']['char_diff']:+d}")
+    print(f" - Meta Description Berubah: {'Ya' if diff['deltas']['meta_changed'] else 'Tidak'}")
+
+
+def cmd_svelte(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.svx")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    svelte_md = ArticleExporter.to_sveltekit_markdown(
+        metadata=article,
+        html_content=article.get("html_content", "")
+    )
+    out_path.write_text(svelte_md, encoding="utf-8")
+    print(f"Export SvelteKit markdown berhasil -> {out_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -552,6 +603,27 @@ def main():
     nuxt_parser.add_argument("--slug", required=True, help="Slug artikel di database")
     nuxt_parser.add_argument("--out", help="Path berkas output Markdown Nuxt")
     nuxt_parser.set_defaults(func=cmd_nuxt)
+
+    # Subscribe command
+    sub_parser = subparsers.add_parser("subscribe", help="Kelola langganan notifikasi editorial (list, add, remove)")
+    sub_parser.add_argument("--action", choices=["list", "add", "remove"], default="list", help="Tindakan subscribe")
+    sub_parser.add_argument("--user", help="ID pengguna/penerima")
+    sub_parser.add_argument("--channel", default="telegram", help="Kanal notifikasi (telegram/email)")
+    sub_parser.add_argument("--category", default="all", help="Kategori artikel")
+    sub_parser.set_defaults(func=cmd_subscribe)
+
+    # Diff-rev command
+    diff_parser = subparsers.add_parser("diff-rev", help="Bandingkan dua versi revisi tersimpan artikel")
+    diff_parser.add_argument("--id", type=int, required=True, help="ID artikel")
+    diff_parser.add_argument("--rev-a", type=int, required=True, help="Nomor revisi awal (A)")
+    diff_parser.add_argument("--rev-b", type=int, required=True, help="Nomor revisi pembanding (B)")
+    diff_parser.set_defaults(func=cmd_diff_rev)
+
+    # Svelte command
+    svelte_parser = subparsers.add_parser("svelte", help="Export artikel ke format MDSveX / SvelteKit markdown")
+    svelte_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    svelte_parser.add_argument("--out", help="Path berkas output MDSveX")
+    svelte_parser.set_defaults(func=cmd_svelte)
 
     args = parser.parse_args()
     args.func(args)
