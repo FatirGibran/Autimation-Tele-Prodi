@@ -1099,6 +1099,37 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_journal_publication_card(
+        cls,
+        title: str,
+        authors: List[str],
+        journal_name: str,
+        doi_url: str,
+        quartile: str = "Q1"
+    ) -> str:
+        """
+        Renders an academic journal publication highlight card with DOI link and quartile badge.
+        """
+        from xml.sax.saxutils import escape
+        s_title = escape(title)
+        s_authors = escape(", ".join(authors))
+        s_journal = escape(journal_name)
+        s_doi = escape(doi_url)
+        s_quartile = escape(quartile)
+
+        return f"""    <div class="tu-journal-card">
+      <div class="tu-journal-header">
+        <span class="tu-journal-badge">{s_quartile}</span>
+        <span class="tu-journal-venue">{s_journal}</span>
+      </div>
+      <h4 class="tu-journal-title">{s_title}</h4>
+      <p class="tu-journal-authors">Penulis: {s_authors}</p>
+      <div class="tu-journal-footer">
+        <a href="{s_doi}" target="_blank" rel="noopener noreferrer" class="tu-journal-doi-link">DOI: {s_doi}</a>
+      </div>
+    </div>"""
+
 
 
 
