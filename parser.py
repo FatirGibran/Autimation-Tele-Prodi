@@ -954,6 +954,39 @@ def expand_academic_acronyms(text: str, custom_acronyms: Optional[Dict[str, str]
     return "".join(processed)
 
 
+def normalize_code_block_language_tags(markdown_text: str) -> str:
+    """
+    Normalizes markdown code fence language aliases to canonical identifiers.
+    """
+    if not markdown_text:
+        return ""
+
+    lang_aliases = {
+        "py": "python",
+        "js": "javascript",
+        "ts": "typescript",
+        "sh": "bash",
+        "shell": "bash",
+        "yml": "yaml",
+        "golang": "go",
+        "rs": "rust",
+        "rb": "ruby",
+        "cs": "csharp",
+        "cpp": "cpp",
+        "c++": "cpp",
+        "htm": "html"
+    }
+
+    def replace_fence(m):
+        prefix = m.group(1)
+        fence = m.group(2)
+        raw_lang = m.group(3).lower()
+        canon_lang = lang_aliases.get(raw_lang, raw_lang)
+        return f"{prefix}{fence}{canon_lang}"
+
+    return re.sub(r'(^|\n)(```|~~~)([a-zA-Z0-9_+-]+)(?=\s|$)', replace_fence, markdown_text)
+
+
 
 
 
