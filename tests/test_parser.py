@@ -253,6 +253,44 @@ Poin Utama:
         self.assertIn("<em>de facto</em>", res)
         self.assertIn("<code>print('et al.')</code>", res)
 
+    def test_wrap_glossary_terms(self):
+        from parser import wrap_glossary_terms
+        glossary = {
+            "IoT": "Internet of Things",
+            "Machine Learning": "Cabang AI berfokus pada pembelajaran dari data",
+        }
+        text = "<p>Penerapan Machine Learning dan IoT sangat vital.</p><code>IoT</code>"
+        res = wrap_glossary_terms(text, glossary)
+        self.assertIn('<dfn title="Cabang AI berfokus pada pembelajaran dari data">Machine Learning</dfn>', res)
+        self.assertIn('<dfn title="Internet of Things">IoT</dfn>', res)
+        self.assertIn('<code>IoT</code>', res)
+
+    def test_parse_indonesian_formal_date(self):
+        from parser import parse_indonesian_formal_date
+        parsed = parse_indonesian_formal_date("Senin, 14 Oktober 2024 15:30 WIB")
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["day"], 14)
+        self.assertEqual(parsed["month"], 10)
+        self.assertEqual(parsed["year"], 2024)
+        self.assertEqual(parsed["timezone"], "WIB")
+        self.assertEqual(parsed["iso_date"], "2024-10-14T15:30:00")
+
+    def test_extract_research_cluster_tags(self):
+        from parser import extract_research_cluster_tags
+        text = "Penelitian ini mengembangkan arsitektur deep learning dan sistem sensor iot untuk smart campus."
+        tags = extract_research_cluster_tags(text)
+        self.assertIn("Artificial Intelligence & Data Science", tags)
+        self.assertIn("Internet of Things & Embedded Systems", tags)
+
+    def test_normalize_nested_list_indentation(self):
+        from parser import normalize_nested_list_indentation
+        raw = "- Level 1\n   - Level 2 misaligned\n     - Level 3"
+        norm = normalize_nested_list_indentation(raw)
+        lines = norm.splitlines()
+        self.assertEqual(lines[0], "- Level 1")
+        self.assertEqual(lines[1], "  - Level 2 misaligned")
+        self.assertEqual(lines[2], "    - Level 3")
+
 if __name__ == "__main__":
     unittest.main()
 
