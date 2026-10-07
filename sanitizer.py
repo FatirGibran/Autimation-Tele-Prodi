@@ -183,6 +183,7 @@ class HTMLSanitizer:
         if re.search(r'<(video|audio|source)\b', cleaned, re.IGNORECASE):
             def fix_media(match):
                 tag = match.group(0)
+                tag_name = match.group(1).lower()
                 src_match = re.search(r'src=["\']([^"\']*)["\']', tag, re.IGNORECASE)
                 if src_match:
                     src_url = src_match.group(1).strip()
@@ -192,8 +193,16 @@ class HTMLSanitizer:
                     elif src_url.lower().startswith("http://"):
                         warnings.append("Upgraded insecure HTTP media source to HTTPS.")
                         tag = re.sub(r'src=["\']http://', 'src="https://', tag, flags=re.IGNORECASE)
+                if tag_name in ("video", "audio"):
+                    if "controls" not in tag.lower():
+                        tag = tag.rstrip(">").rstrip("/") + ' controls>'
+                    if "preload=" not in tag.lower():
+                        tag = tag.rstrip(">").rstrip("/") + ' preload="metadata">'
+                    if "autoplay" in tag.lower() and "muted" not in tag.lower():
+                        tag = re.sub(r'\s+autoplay(=["\'][^"\']*["\'])?', '', tag, flags=re.IGNORECASE)
+                        warnings.append("Stripped unmuted autoplay from media element.")
                 return tag
-            cleaned = re.sub(r'<(video|audio|source)[^>]*>', fix_media, cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r'<((?:video|audio|source))\b[^>]*>', fix_media, cleaned, flags=re.IGNORECASE)
 
         # 6. Sanitize inline SVG: strip dangerous nested tags and attributes
 
