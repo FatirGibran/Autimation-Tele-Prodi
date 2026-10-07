@@ -434,6 +434,76 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("4 Rak Blade Server 42U", card)
         self.assertIn("Redundant 10 Gbps Fiber Optic", card)
 
+    def test_render_capstone_project_card(self):
+        card = EditorialComponents.render_capstone_project_card(
+            title="Sistem Deteksi Retinopati Diabetik Berbasis CNN",
+            students=["Fajar Nugraha", "Dewi Lestari"],
+            advisor="Dr. Budi Santoso",
+            repo_url="https://github.com/prodi/retinopathy-cnn",
+            demo_url="https://retino.prodi.ac.id",
+            tags=["AI", "Healthcare", "PyTorch"]
+        )
+        self.assertIn("tu-capstone-card", card)
+        self.assertIn("Sistem Deteksi Retinopati", card)
+        self.assertIn("Fajar Nugraha, Dewi Lestari", card)
+        self.assertIn("Dr. Budi Santoso", card)
+        self.assertIn("Kode Sumber", card)
+
+    def test_render_certification_badge_card(self):
+        card = EditorialComponents.render_certification_badge_card(
+            cert_name="AWS Certified Solutions Architect",
+            issuer="Amazon Web Services",
+            validity_period="3 Tahun",
+            credential_url="https://aws.amazon.com/verify/123"
+        )
+        self.assertIn("tu-cert-card", card)
+        self.assertIn("AWS Certified Solutions Architect", card)
+        self.assertIn("Amazon Web Services", card)
+        self.assertIn("3 Tahun", card)
+
+    def test_render_academic_calendar_banner(self):
+        milestones = [
+            {"date": "1 September 2026", "event": "Awal Perkuliahan Semester Ganjil"},
+            {"date": "20 - 31 Oktober 2026", "event": "Ujian Tengah Semester"}
+        ]
+        banner = EditorialComponents.render_academic_calendar_banner(
+            semester_name="Semester Ganjil",
+            academic_year="2026/2027",
+            milestones=milestones
+        )
+        self.assertIn("tu-calendar-banner", banner)
+        self.assertIn("Semester Ganjil", banner)
+        self.assertIn("2026/2027", banner)
+        self.assertIn("Awal Perkuliahan", banner)
+
+    def test_render_lab_reservation_card(self):
+        slots = ["08:00 - 10:00 WIB", "13:00 - 15:00 WIB"]
+        card = EditorialComponents.render_lab_reservation_card(
+            lab_name="Lab AI & Data Science",
+            equipment_name="NVIDIA DGX Station A100",
+            supervisor="Ir. Hendra",
+            booking_status="Tersedia",
+            schedule_slots=slots
+        )
+        self.assertIn("tu-reservation-card", card)
+        self.assertIn("NVIDIA DGX Station A100", card)
+        self.assertIn("Lab AI &amp; Data Science", card)
+        self.assertIn("08:00 - 10:00 WIB", card)
+
+    def test_render_exchange_testimonial_card(self):
+        transfers = ["Artificial Intelligence (4 SKS)", "Computer Vision (3 SKS)"]
+        card = EditorialComponents.render_exchange_testimonial_card(
+            student_name="Anisa Rahma",
+            host_university="Kumamoto University",
+            country="Jepang",
+            courses_transferred=transfers,
+            testimonial="Pengalaman riset yang luar biasa di laboratorium robotika Jepang."
+        )
+        self.assertIn("tu-exchange-testi-card", card)
+        self.assertIn("Anisa Rahma", card)
+        self.assertIn("Kumamoto University", card)
+        self.assertIn("Artificial Intelligence (4 SKS)", card)
+
 if __name__ == "__main__":
     unittest.main()
 
