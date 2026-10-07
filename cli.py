@@ -352,6 +352,54 @@ def cmd_schema(args):
     print(f"Schema EducationalOccupationalProgram berhasil dibuat -> {out_path}")
 
 
+def cmd_bookmark(args):
+    if args.action == "list":
+        bms = storage.list_bookmarks(args.user)
+        if not bms:
+            print(f"Tidak ada bookmark untuk user '{args.user}'.")
+            return
+        print(f"=== Bookmark Artikel untuk User: {args.user} ===")
+        for b in bms:
+            print(f" - [ID {b['article_id']}] {b['seo_title']} (Notes: {b.get('notes') or '-'})")
+    elif args.action == "add":
+        if not args.id:
+            print("Error: Argumen --id wajib untuk add bookmark.")
+            sys.exit(1)
+        bm_id = storage.add_bookmark(args.id, args.user, args.notes)
+        print(f"Bookmark berhasil ditambahkan (ID {bm_id}) untuk artikel ID {args.id}.")
+    elif args.action == "remove":
+        if not args.id:
+            print("Error: Argumen --id wajib untuk remove bookmark.")
+            sys.exit(1)
+        ok = storage.remove_bookmark(args.id, args.user)
+        print(f"Bookmark artikel ID {args.id} {'berhasil dihapus' if ok else 'gagal/tidak ditemukan'}.")
+
+
+def cmd_cat_stats(args):
+    stats = storage.get_category_analytics()
+    print("=== Analitik Artikel per Kategori ===")
+    print(f"{'KATEGORI':<25} | {'TOTAL ARTIKEL':<15} | {'TOTAL VIEWS':<12} | {'RATA-RATA VIEWS'}")
+    print("-" * 75)
+    for s in stats:
+        cat = s.get("category") or "Uncategorized"
+        print(f"{cat:<25} | {s['total_articles']:<15} | {s['total_views']:<12} | {s['avg_views']:.1f}")
+
+
+def cmd_nuxt(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    nuxt_md = ArticleExporter.to_nuxt_markdown(
+        metadata=article,
+        html_content=article.get("html_content", "")
+    )
+    out_path.write_text(nuxt_md, encoding="utf-8")
+    print(f"Export Nuxt markdown berhasil -> {out_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -486,6 +534,24 @@ def main():
     schema_parser = subparsers.add_parser("schema", help="Generate berkas JSON-LD skema kurikulum program studi")
     schema_parser.add_argument("--out", default="program_schema.json", help="Path berkas output JSON-LD")
     schema_parser.set_defaults(func=cmd_schema)
+
+    # Bookmark command
+    bm_parser = subparsers.add_parser("bookmark", help="Kelola reading list dan bookmark artikel pengguna")
+    bm_parser.add_argument("--action", choices=["list", "add", "remove"], default="list", help="Tindakan bookmark")
+    bm_parser.add_argument("--user", required=True, help="Identitas user")
+    bm_parser.add_argument("--id", type=int, help="ID artikel")
+    bm_parser.add_argument("--notes", help="Catatan bookmark")
+    bm_parser.set_defaults(func=cmd_bookmark)
+
+    # Cat-stats command
+    cat_parser = subparsers.add_parser("cat-stats", help="Tampilkan statistik agregat performa pembaca per kategori")
+    cat_parser.set_defaults(func=cmd_cat_stats)
+
+    # Nuxt command
+    nuxt_parser = subparsers.add_parser("nuxt", help="Export artikel ke format Markdown kompatibel Nuxt Content v2")
+    nuxt_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    nuxt_parser.add_argument("--out", help="Path berkas output Markdown Nuxt")
+    nuxt_parser.set_defaults(func=cmd_nuxt)
 
     args = parser.parse_args()
     args.func(args)
