@@ -157,6 +157,15 @@ class StorageManager:
                     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_reading_metrics (
+                    article_id INTEGER PRIMARY KEY,
+                    word_count INTEGER NOT NULL,
+                    reading_time_min INTEGER NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
 
 
 
@@ -968,6 +977,34 @@ class StorageManager:
         """
         with self._get_connection() as conn:
             conn.execute("INSERT OR IGNORE INTO schema_migrations (version) VALUES (?);", (version.strip(),))
+
+    def update_reading_metrics(self, article_id: int, word_count: int, reading_time_min: int) -> None:
+        """
+        Records or updates word count and calculated reading time metrics for an article.
+        """
+        with self._get_connection() as conn:
+            conn.execute("""
+                INSERT INTO article_reading_metrics (article_id, word_count, reading_time_min, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(article_id) DO UPDATE SET
+                    word_count = excluded.word_count,
+                    reading_time_min = excluded.reading_time_min,
+                    updated_at = CURRENT_TIMESTAMP;
+            """, (article_id, word_count, reading_time_min))
+
+    def get_reading_metrics(self, article_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves reading time and word count statistics for an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT article_id, word_count, reading_time_min, updated_at
+                FROM article_reading_metrics
+                WHERE article_id = ?;
+            """, (article_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
