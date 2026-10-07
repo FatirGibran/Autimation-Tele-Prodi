@@ -166,6 +166,17 @@ class StorageManager:
                     FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
                 );
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS editorial_subscribers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    channel TEXT NOT NULL,
+                    category TEXT NOT NULL DEFAULT 'all',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, channel, category)
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sub_category ON editorial_subscribers(category);")
 
 
 
@@ -1004,6 +1015,55 @@ class StorageManager:
             """, (article_id,))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def subscribe_user(self, user_id: str, channel: str, category: str = "all") -> bool:
+        """
+        Subscribes a user to editorial publication notifications for a given category.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT OR IGNORE INTO editorial_subscribers (user_id, channel, category)
+                VALUES (?, ?, ?);
+            """, (user_id.strip(), channel.strip().lower(), category.strip().lower()))
+            return cursor.rowcount > 0
+
+    def get_subscribers(self, category: str = "all") -> List[Dict[str, Any]]:
+        """
+        Retrieves active subscribers matching the category or subscribed to 'all'.
+        """
+        cat = category.strip().lower()
+        with self._get_connection() as conn:
+            if cat == "all":
+                cursor = conn.execute("""
+                    SELECT id, user_id, channel, category, created_at
+                    FROM editorial_subscribers;
+                """)
+            else:
+                cursor = conn.execute("""
+                    SELECT id, user_id, channel, category, created_at
+                    FROM editorial_subscribers
+                    WHERE category = ? OR category = 'all';
+                """, (cat,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def unsubscribe_user(self, user_id: str, category: str = "all") -> bool:
+        """
+        Unsubscribes a user from notifications for a specific category or all categories.
+        """
+        cat = category.strip().lower()
+        with self._get_connection() as conn:
+            if cat == "all":
+                cursor = conn.execute("""
+                    DELETE FROM editorial_subscribers
+                    WHERE user_id = ?;
+                """, (user_id.strip(),))
+            else:
+                cursor = conn.execute("""
+                    DELETE FROM editorial_subscribers
+                    WHERE user_id = ? AND category = ?;
+                """, (user_id.strip(), cat))
+            return cursor.rowcount > 0
+
 
 
 
