@@ -573,6 +573,100 @@ class TestCLI(unittest.TestCase):
             if Path(out_file).exists():
                 Path(out_file).unlink()
 
+    def test_cmd_subscribe(self):
+        class ArgsAdd:
+            action = "add"
+            user = "editor_sub_cli"
+            channel = "telegram"
+            category = "akademik"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_subscribe(ArgsAdd())
+            self.assertIn("berhasil didaftarkan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            category = "akademik"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_subscribe(ArgsList())
+            self.assertIn("editor_sub_cli", fake_out.getvalue())
+            self.assertIn("telegram", fake_out.getvalue())
+
+        class ArgsRemove:
+            action = "remove"
+            user = "editor_sub_cli"
+            category = "akademik"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_subscribe(ArgsRemove())
+            self.assertIn("berhasil dihapus", fake_out.getvalue())
+
+    def test_cmd_diff_rev(self):
+        art_id = cli.storage.save_article({
+            "topic": "CLI Diff Rev Target",
+            "category": "Testing",
+            "publish_date": "2026-10-07",
+            "focus_keyphrase": "cli diff rev",
+            "seo_title": "CLI Diff Rev Target",
+            "slug": "cli-diff-rev-target",
+            "meta_description": "Versi 1",
+            "html_content": "<p>Satu dua tiga.</p>",
+            "status": "draft"
+        })
+        cli.storage.create_revision(art_id)
+        with cli.storage._get_connection() as conn:
+            conn.execute(
+                "UPDATE articles SET html_content = ?, meta_description = ? WHERE id = ?",
+                ("<p>Satu dua tiga empat lima enam.</p>", "Versi 2 diperbarui", art_id)
+            )
+        cli.storage.create_revision(art_id)
+
+        class ArgsDiff:
+            id = art_id
+            rev_a = 1
+            rev_b = 2
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_diff_rev(ArgsDiff())
+            out = fake_out.getvalue()
+            self.assertIn("Komparasi Revisi Artikel ID", out)
+            self.assertIn("Selisih Kata:", out)
+            self.assertIn("Meta Description Berubah: Ya", out)
+
+    def test_cmd_svelte(self):
+        cli.storage.save_article({
+            "topic": "Svelte CLI Target",
+            "category": "Web Dev",
+            "publish_date": "2026-10-07",
+            "focus_keyphrase": "svelte cli",
+            "seo_title": "Svelte CLI Target",
+            "slug": "svelte-cli-target",
+            "meta_description": "Deskripsi svelte cli.",
+            "html_content": "<p>Konten Sveltekit CLI</p>",
+            "status": "published"
+        })
+
+        with tempfile.NamedTemporaryFile(suffix=".svx", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class ArgsSvelte:
+                slug = "svelte-cli-target"
+                out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_svelte(ArgsSvelte())
+                self.assertIn("Export SvelteKit markdown berhasil", fake_out.getvalue())
+
+            content = Path(out_file).read_text(encoding="utf-8")
+            self.assertIn('title: "Svelte CLI Target"', content)
+            self.assertIn("layout: article", content)
+            self.assertIn("<p>Konten Sveltekit CLI</p>", content)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
 if __name__ == "__main__":
     unittest.main()
 
