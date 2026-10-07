@@ -331,6 +331,51 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertIn("difficulty", res)
         self.assertGreater(res["word_count"], 10)
 
+    def test_validate_hreflang_alternates(self):
+        valid_alts = [
+            {"lang": "id", "href": "https://bif-pwt.telkomuniversity.ac.id/artikel/"},
+            {"lang": "en", "href": "https://bif-pwt.telkomuniversity.ac.id/en/article/"},
+            {"lang": "x-default", "href": "https://bif-pwt.telkomuniversity.ac.id/artikel/"}
+        ]
+        res = YoastSEOValidator.validate_hreflang_alternates(valid_alts)
+        self.assertTrue(res["is_valid"])
+        self.assertTrue(res["has_x_default"])
+
+        invalid_alts = [
+            {"lang": "xx-invalid", "href": "http://insecure.com"}
+        ]
+        res_bad = YoastSEOValidator.validate_hreflang_alternates(invalid_alts)
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_aria_landmarks(self):
+        good_html = '<main><nav aria-label="Navigasi Utama"><a>Menu</a></nav><article><p>Konten</p></article></main>'
+        res = YoastSEOValidator.audit_aria_landmarks(good_html)
+        self.assertTrue(res["is_accessible"])
+        self.assertTrue(res["has_main"])
+
+        bad_html = '<div><nav><a>Menu</a></nav><p>Konten</p></div>'
+        res_bad = YoastSEOValidator.audit_aria_landmarks(bad_html)
+        self.assertFalse(res_bad["is_accessible"])
+
+    def test_validate_canonical_url(self):
+        valid = "https://bif-pwt.telkomuniversity.ac.id/webassembly-edge-computing-iot/"
+        res = YoastSEOValidator.validate_canonical_url(valid, current_slug="webassembly-edge-computing-iot")
+        self.assertTrue(res["is_valid"])
+
+        invalid = "http://bif-pwt.telkomuniversity.ac.id/webassembly-edge-computing-iot?ref=fb"
+        res_bad = YoastSEOValidator.validate_canonical_url(invalid, current_slug="webassembly-edge-computing-iot")
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_paragraph_rhythm(self):
+        good_html = "<p>Paragraf pendek.</p><p>Paragraf kedua standar.</p>"
+        res = YoastSEOValidator.audit_paragraph_rhythm(good_html)
+        self.assertTrue(res["is_optimal"])
+
+        dense_html = "<p>" + "kata " * 130 + "</p>"
+        res_dense = YoastSEOValidator.audit_paragraph_rhythm(dense_html)
+        self.assertFalse(res_dense["is_optimal"])
+        self.assertEqual(len(res_dense["issues"]), 1)
+
 if __name__ == "__main__":
     unittest.main()
 
