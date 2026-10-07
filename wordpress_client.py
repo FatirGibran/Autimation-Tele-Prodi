@@ -318,6 +318,18 @@ class WordPressClient:
             payload["password"] = password
         return self.update_post(post_id, payload)
 
+    def delete_media(self, media_id: int, force: bool = True) -> Dict[str, Any]:
+        """
+        Deletes a media item by ID. When force is True, the media is permanently deleted.
+        """
+        endpoint = f"{self.api_url}/media/{media_id}?force={'true' if force else 'false'}"
+        req = urllib.request.Request(
+            endpoint,
+            headers=self._get_headers(),
+            method="DELETE"
+        )
+        return self._send_request(req)
+
 
 
 
