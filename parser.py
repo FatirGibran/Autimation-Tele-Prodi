@@ -837,6 +837,42 @@ def normalize_nested_list_indentation(markdown_text: str) -> str:
     return "\n".join(normalized_lines)
 
 
+def calculate_total_sks_credits(text: str) -> Dict[str, Any]:
+    """
+    Parses mentions of SKS (Sistem Kredit Semester) in curriculum descriptions
+    and computes total credits across theoretical and practical courses.
+    """
+    if not text:
+        return {"total_sks": 0, "theory_sks": 0, "practical_sks": 0, "mentions_count": 0}
+
+    pattern = re.compile(r'(\d+)\s*(?:SKS|sks)(?:\s*(teori|praktikum|lapangan|workshop))?', re.IGNORECASE)
+
+    total_sks = 0
+    theory_sks = 0
+    practical_sks = 0
+    mentions_count = 0
+
+    for match in pattern.finditer(text):
+        val = int(match.group(1))
+        modality = (match.group(2) or "").lower()
+        mentions_count += 1
+        total_sks += val
+
+        if modality in ("praktikum", "lapangan", "workshop"):
+            practical_sks += val
+        elif modality == "teori":
+            theory_sks += val
+        else:
+            theory_sks += val
+
+    return {
+        "total_sks": total_sks,
+        "theory_sks": theory_sks,
+        "practical_sks": practical_sks,
+        "mentions_count": mentions_count
+    }
+
+
 
 
 
