@@ -517,6 +517,60 @@ class TestStorageManager(unittest.TestCase):
         self.assertIn("Deskripsi baru.", updated1["meta_description"])
         self.assertIn("Teks baru di dalam", updated1["html_content"])
 
+    def test_get_category_analytics(self):
+        self.storage.save_article({
+            "topic": "Analytics 1",
+            "category": "Akademik",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "analytics satu",
+            "seo_title": "Analytics 1",
+            "slug": "analytics-1",
+            "meta_description": "Deskripsi.",
+            "status": "published"
+        })
+        self.storage.save_article({
+            "topic": "Analytics 2",
+            "category": "Riset",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "analytics dua",
+            "seo_title": "Analytics 2",
+            "slug": "analytics-2",
+            "meta_description": "Deskripsi.",
+            "status": "published"
+        })
+        stats = self.storage.get_category_analytics()
+        cats = [s["category"] for s in stats]
+        self.assertIn("Akademik", cats)
+        self.assertIn("Riset", cats)
+
+    def test_article_bookmarks_crud(self):
+        art_id = self.storage.save_article({
+            "topic": "Bookmark Target",
+            "category": "Mahasiswa",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "bookmark target",
+            "seo_title": "Bookmark Target",
+            "slug": "bookmark-target",
+            "meta_description": "Deskripsi bookmark.",
+            "status": "published"
+        })
+        self.storage.add_bookmark(art_id, "user_alpha", notes="Penting untuk skripsi")
+        bms = self.storage.list_bookmarks("user_alpha")
+        self.assertEqual(len(bms), 1)
+        self.assertEqual(bms[0]["article_id"], art_id)
+        self.assertEqual(bms[0]["notes"], "Penting untuk skripsi")
+
+        removed = self.storage.remove_bookmark(art_id, "user_alpha")
+        self.assertTrue(removed)
+        self.assertEqual(len(self.storage.list_bookmarks("user_alpha")), 0)
+
+    def test_schema_migrations_tracking(self):
+        self.storage.record_migration("v2.5.0")
+        self.storage.record_migration("v2.5.1")
+        applied = self.storage.get_applied_migrations()
+        self.assertIn("v2.5.0", applied)
+        self.assertIn("v2.5.1", applied)
+
 if __name__ == "__main__":
     unittest.main()
 
