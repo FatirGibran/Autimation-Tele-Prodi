@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 210+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 247+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 235 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 263 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -268,5 +268,41 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 200. **Subcommand CLI `nuxt` (`cli.py`)**: Perintah konsol ekspor artikel ke format Markdown Nuxt Content v2.
 201. **Skrip Auditor Aksesibilitas WCAG Otomatis (`scripts/check_accessibility.py`)**: Perkakas audit otomatis hirarki heading, alt text, tabel semantik, dan media controls.
 202. **Pengembangan Suite Pengujian Unit Terpadu (235 Tests Passing)**: Penambahan pengujian menyeluruh pada seluruh modul baru dengan tingkat kelulusan 100%.
+
+---
+
+## 14. Pembaruan Fitur & Skalabilitas v2.6.0 (Item 203 - 232)
+
+203. **Sanitasi Semantic Disclosure Details & Summary (`sanitizer.py`)**: Sanitasi elemen `<details>` dan `<summary>` dengan penegakan kelas visual `.tu-details` dan `.tu-summary` serta pembersihan atribut berbahaya.
+204. **Stripping Tag Meta Refresh & Base Terbenam (`sanitizer.py`)**: Penghapusan dan netralisasi otomatis tag `<meta http-equiv="refresh">` dan `<base href="...">` yang disusupi di dalam konten editorial.
+205. **Netralisasi Form & Input Editorial Tidak Aman (`sanitizer.py`)**: Pembersihan tag `<form>`, `<input>`, `<button>`, `<textarea>` non-resmi pada artikel untuk mencegah serangan phishing internal.
+206. **Kalkulator & Validator SKS Kurikulum Mahasiswa (`parser.py`)**: Ekstraksi dan kalkulasi otomatis total beban SKS mata kuliah teori dan praktikum dari tabel atau teks kurikulum prodi.
+207. **Validator Format Gelar Dosen Pembimbing & Penguji (`parser.py`)**: Verifikasi penulisan gelar akademik nasional (S.Kom., M.T., Ph.D., Prof., Dr.) dan kepatuhan urutan gelar depan/belakang.
+208. **Ekspansi Singkatan Akademik & Istilah Prodi (`parser.py`)**: Penggantian otomatis singkatan formal (KRS, KHS, KP, TA, MBKM, SKPI, CPL, CPMK) menjadi kepanjangan baku dalam teks editorial.
+209. **Klasifikasi & Normalisasi Bahasa Blok Kode Markdown (`parser.py`)**: Deteksi dan pemetaan otomatis alias bahasa pemrograman (py -> python, js/ts -> javascript/typescript, sh/bash -> bash) pada fenced code blocks.
+210. **Validator Multilingual Hreflang & Bahasa Alternatif (`seo_validator.py`)**: Audit keberadaan dan validitas tag link `rel="alternate" hreflang="..."` untuk lokalisasi bahasa (id, en).
+211. **Auditor ARIA Landmarks & Skip Links Aksesibilitas (`seo_validator.py`)**: Verifikasi keberadaan navigasi skip link dan landmark semantik ARIA (`role="main"`, `navigation`, `banner`).
+212. **Deteksi Canonical URL Loop & Normalisasi Domain (`seo_validator.py`)**: Pemeriksaan konsistensi tautan kanonikal, pencegahan loop pengalihan sendiri, dan penyeragaman protokol HTTPS.
+213. **Auditor Irama & Panjang Paragraf Keterbacaan (`seo_validator.py`)**: Analisis panjang kata per paragraf dan variasi ritme membaca untuk mencegah kelelahan pembaca.
+214. **Komponen Kartu Capstone Project Mahasiswa (`components.py`)**: Kartu showcase karya tugas akhir mahasiswa dengan judul, abstrak, teknologi yang digunakan, repositori GitHub, dan link demo langsung.
+215. **Komponen Badge Sertifikasi Kompetensi Internasional (`components.py`)**: Kartu showcase sertifikasi industri mahasiswa dan dosen (AWS, Cisco CCNA, Google Cloud, RedHat) dengan masa berlaku dan nomor lisensi.
+216. **Komponen Banner Milestone Kalender Akademik Semester (`components.py`)**: Banner penanda linimasa penting semester (awal perkuliahan, UTS, UAS, batas pengumpulan nilai, yudisium).
+217. **Komponen Kartu Reservasi Laboratorium & Perangkat Riset (`components.py`)**: Visualisasi peminjaman fasilitas laboratorium komputer/jaringan, kapasitas kuota, dan status ketersediaan.
+218. **Komponen Kartu Testimoni & Transfer SKS Student Exchange (`components.py`)**: Kartu showcase pengalaman mahasiswa pertukaran pelajar internasional/MBKM beserta pengakuan SKS universitas mitra.
+219. **Formatter Kartu Pengumuman Sidang Skripsi Mahasiswa Telegram (`formatters.py`)**: Desain kartu siaran jadwal sidang tugas akhir mahasiswa, dewan penguji, ruang/tautan meeting, dan topik riset.
+220. **Formatter Kartu Ringkasan Editorial Mingguan Telegram (`formatters.py`)**: Digest mingguan statistik jumlah publikasi, kategori terpopuler, dan catatan sorotan redaksi.
+221. **Caching Metrik Waktu Baca & Jumlah Kata Artikel (`storage.py`)**: Tabel `article_reading_metrics` dan metode penyimpanan/pengambilan statistik durasi membaca pembaca.
+222. **Manajer Langganan Notifikasi Editorial Multi-Kanal (`storage.py`)**: Tabel `editorial_subscribers` dan manajemen pendaftaran user ke kategori artikel tertentu (Telegram/Email).
+223. **Helper Komparasi Dift Revisi Tersimpan Artikel (`storage.py`)**: Metode `compare_revisions` untuk analisis selisih jumlah kata, karakter, dan perubahan deskripsi meta antar versi.
+224. **Pengatur Ringkasan Excerpt Postingan WordPress (`wordpress_client.py`)**: Metode `update_post_excerpt` untuk memperbarui kutipan ringkasan artikel pada WordPress REST API.
+225. **Konfigurasi Status Komentar & Pingback Postingan WordPress (`wordpress_client.py`)**: Metode `set_post_comment_status` untuk membuka/menutup interaksi komentar dan trackback.
+226. **Generator JSON-LD AcademicEvent & Seminar Ilmiah (`exporter.py`)**: Skema data terstruktur Schema.org `EducationEvent` untuk seminar, lokakarya, dan konferensi akademik prodi.
+227. **Generator Markdown Kompatibel MDSveX / SvelteKit (`exporter.py`)**: Metode `to_sveltekit_markdown` untuk ekspor draf artikel ke format SvelteKit dengan frontmatter terstruktur.
+228. **Subcommand CLI `subscribe` (`cli.py`)**: Perintah antarmuka CLI untuk manajemen pendaftaran dan peninjauan subscriber kanal redaksi.
+229. **Subcommand CLI `diff-rev` (`cli.py`)**: Perintah antarmuka CLI untuk membandingkan statistik kata dan karakter dua revisi artikel secara instan.
+230. **Subcommand CLI `svelte` (`cli.py`)**: Perintah antarmuka CLI untuk mengekspor artikel langsung ke berkas MDSveX SvelteKit.
+231. **Skrip Auditor Tipografi & Keseimbangan Kutipan Otomatis (`scripts/check_typography.py`)**: Perkakas audit konsistensi tanda petik kurawal Indonesia, gelar akademik, dan spasi tanda baca.
+232. **Ekspansi Suite Pengujian Unit Terpadu (263 Tests Passing)**: Penambahan pengujian unit menyeluruh di seluruh modul baru tanpa regresi dengan tingkat kelulusan 100%.
+
 
 
