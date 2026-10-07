@@ -592,6 +592,29 @@ class ArticleExporter:
             }
         }
 
+    @staticmethod
+    def to_nuxt_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Nuxt Content v2 / Gatsby compatible markdown with YAML frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        category = metadata.get("category", "")
+        tags = metadata.get("tags", [])
+        tags_yaml = "\n".join(f"  - {t}" for t in tags) if tags else "  - akademik"
+
+        frontmatter = f"""---
+title: "{title}"
+description: "{desc}"
+slug: "{slug}"
+category: "{category}"
+tags:
+{tags_yaml}
+navigation: true
+---"""
+        return frontmatter + "\n\n" + html_content.strip()
+
 
 
 
