@@ -328,6 +328,28 @@ class TelegramFormatter:
             f"💡 *Sidang terbuka untuk mahasiswa aktif sebagai penonton referensi akademik.*"
         )
 
+    @staticmethod
+    def format_weekly_editorial_digest(
+        week_range: str,
+        published_count: int,
+        top_categories: List[Dict[str, Any]],
+        highlights: List[str]
+    ) -> str:
+        """
+        Renders a weekly publishing summary digest card for editorial teams on Telegram.
+        """
+        categories_text = "\n".join(
+            f"  • {c.get('name', 'Umum')}: {c.get('count', 0)} artikel" for c in top_categories
+        ) if top_categories else "  • Tidak ada kategori spesifik"
+        highlights_text = "\n".join(f"  ✨ {h}" for h in highlights) if highlights else "  ✨ Tidak ada catatan khusus"
+        return (
+            f"📊 **Ringkasan Editorial Mingguan ({week_range})**\n\n"
+            f"📝 Total Diterbitkan: `{published_count}` artikel\n\n"
+            f"📂 **Distribusi Kategori:**\n{categories_text}\n\n"
+            f"🌟 **Sorotan Redaksi:**\n{highlights_text}\n\n"
+            f"🚀 *Tetap produktif dan jaga standar kualitas konten prodi!*"
+        )
+
 
 
 
