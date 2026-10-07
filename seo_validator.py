@@ -994,6 +994,43 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def validate_og_image_specifications(
+        image_url: str,
+        width: Optional[int] = None,
+        height: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Validates Open Graph image URL and dimensions according to social platform standards.
+        """
+        issues = []
+        if not image_url:
+            issues.append("OG image URL tidak boleh kosong.")
+            return {"is_valid": False, "issues": issues}
+
+        if not image_url.startswith("https://"):
+            issues.append("OG image URL harus menggunakan protokol HTTPS.")
+
+        valid_exts = (".jpg", ".jpeg", ".png", ".webp")
+        path_part = image_url.split("?")[0].lower()
+        if not any(path_part.endswith(ext) for ext in valid_exts):
+            issues.append(f"Format gambar OG harus berupa salah satu dari {valid_exts}.")
+
+        if width is not None and height is not None:
+            if width < 600 or height < 315:
+                issues.append(f"Dimensi gambar OG ({width}x{height}) terlalu kecil (minimal 600x315, disarankan 1200x630).")
+            aspect_ratio = round(width / height, 2) if height > 0 else 0
+            if aspect_ratio < 1.0 or aspect_ratio > 2.2:
+                issues.append(f"Aspek rasio gambar OG ({aspect_ratio}:1) di luar batas standar 1.91:1.")
+
+        return {
+            "image_url": image_url,
+            "width": width,
+            "height": height,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
