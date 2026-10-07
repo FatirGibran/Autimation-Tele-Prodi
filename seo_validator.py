@@ -1169,6 +1169,34 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_paragraph_rhythm(html_content: str, max_words_per_p: int = 120) -> Dict[str, Any]:
+        """
+        Audits paragraph lengths for editorial rhythm and scannability.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        paragraphs = soup.find_all("p")
+
+        issues = []
+        p_data = []
+        for idx, p in enumerate(paragraphs, 1):
+            text = p.get_text().strip()
+            words = re.findall(r'\b[A-Za-z0-9_-]+\b', text)
+            word_count = len(words)
+            p_data.append(word_count)
+
+            if word_count > max_words_per_p:
+                issues.append(f"Paragraf #{idx} terlalu padat ({word_count} kata, maksimal {max_words_per_p} kata disarankan).")
+
+        return {
+            "total_paragraphs": len(paragraphs),
+            "word_counts": p_data,
+            "max_words": max(p_data) if p_data else 0,
+            "avg_words": round(sum(p_data) / len(p_data), 1) if p_data else 0.0,
+            "is_optimal": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
