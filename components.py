@@ -1252,6 +1252,41 @@ class EditorialComponents:
       </table>
     </div>"""
 
+    @classmethod
+    def render_capstone_project_card(
+        cls,
+        title: str,
+        students: List[str],
+        advisor: str,
+        repo_url: str,
+        demo_url: str,
+        tags: List[str]
+    ) -> str:
+        """
+        Renders a student capstone project showcase card with repository and demo links.
+        """
+        from xml.sax.saxutils import escape
+        s_title = escape(title)
+        s_students = escape(", ".join(students))
+        s_advisor = escape(advisor)
+        s_repo = escape(repo_url)
+        s_demo = escape(demo_url)
+        tag_spans = "".join(f'<span class="tu-capstone-tag">{escape(t)}</span>' for t in tags)
+
+        return f"""    <div class="tu-capstone-card">
+      <div class="tu-capstone-header">
+        <span class="tu-capstone-badge">Tugas Akhir Unggulan</span>
+        <div class="tu-capstone-tags">{tag_spans}</div>
+      </div>
+      <h4 class="tu-capstone-title">{s_title}</h4>
+      <p class="tu-capstone-team">Tim Pengembang: {s_students}</p>
+      <p class="tu-capstone-advisor">Dosen Pembimbing: {s_advisor}</p>
+      <div class="tu-capstone-links">
+        <a href="{s_repo}" target="_blank" rel="noopener noreferrer" class="tu-btn-code">Kode Sumber</a>
+        <a href="{s_demo}" target="_blank" rel="noopener noreferrer" class="tu-btn-demo">Live Demo</a>
+      </div>
+    </div>"""
+
 
 
 
