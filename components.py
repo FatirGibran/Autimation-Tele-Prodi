@@ -1316,6 +1316,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_academic_calendar_banner(
+        cls,
+        semester_name: str,
+        academic_year: str,
+        milestones: List[Dict[str, str]]
+    ) -> str:
+        """
+        Renders an academic calendar semester milestone schedule banner.
+        """
+        from xml.sax.saxutils import escape
+        s_sem = escape(semester_name)
+        s_year = escape(academic_year)
+        items = []
+        for m in milestones:
+            d = escape(m.get("date", ""))
+            event = escape(m.get("event", ""))
+            items.append(f"""        <div class="tu-calendar-item">
+          <span class="tu-calendar-date">{d}</span>
+          <span class="tu-calendar-event">{event}</span>
+        </div>""")
+
+        items_html = "\n".join(items)
+        return f"""    <div class="tu-calendar-banner">
+      <div class="tu-calendar-header">
+        <span class="tu-calendar-badge">Kalender Akademik</span>
+        <h4 class="tu-calendar-title">{s_sem} Tahun Akademik {s_year}</h4>
+      </div>
+      <div class="tu-calendar-milestones">
+{items_html}
+      </div>
+    </div>"""
+
 
 
 
