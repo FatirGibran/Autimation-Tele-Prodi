@@ -615,6 +615,50 @@ navigation: true
 ---"""
         return frontmatter + "\n\n" + html_content.strip()
 
+    @staticmethod
+    def generate_academic_event_json_ld(
+        event_name: str,
+        description: str,
+        start_time: str,
+        end_time: str,
+        location_name: str,
+        speaker_name: str,
+        event_url: str = "https://bif-pwt.telkomuniversity.ac.id"
+    ) -> Dict[str, Any]:
+        """
+        Generates schema.org/Event (EducationEvent/Seminar) JSON-LD structured data.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "EducationEvent",
+            "name": event_name,
+            "description": description,
+            "startDate": start_time,
+            "endDate": end_time,
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "eventStatus": "https://schema.org/EventScheduled",
+            "location": {
+                "@type": "Place",
+                "name": location_name,
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Purwokerto",
+                    "addressRegion": "Jawa Tengah",
+                    "addressCountry": "ID"
+                }
+            },
+            "performer": {
+                "@type": "Person",
+                "name": speaker_name
+            },
+            "organizer": {
+                "@type": "Organization",
+                "name": "S1 Teknik Informatika Telkom University Purwokerto",
+                "url": event_url
+            }
+        }
+
+
 
 
 
