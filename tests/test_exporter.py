@@ -295,6 +295,37 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('- vue', md)
         self.assertIn('<p>Isi Nuxt</p>', md)
 
+    def test_generate_academic_event_json_ld(self):
+        schema = ArticleExporter.generate_academic_event_json_ld(
+            event_name="Seminar Nasional Kecerdasan Buatan & Big Data 2026",
+            description="Seminar eksplorasi masa depan LLM di era otonom.",
+            start_time="2026-11-20T09:00:00+07:00",
+            end_time="2026-11-20T16:00:00+07:00",
+            location_name="Auditorium Gedung IOT Lantai 4",
+            speaker_name="Prof. Dr. Wisnu Jatmiko"
+        )
+        self.assertEqual(schema["@type"], "EducationEvent")
+        self.assertEqual(schema["name"], "Seminar Nasional Kecerdasan Buatan & Big Data 2026")
+        self.assertEqual(schema["startDate"], "2026-11-20T09:00:00+07:00")
+        self.assertEqual(schema["location"]["name"], "Auditorium Gedung IOT Lantai 4")
+        self.assertEqual(schema["performer"]["name"], "Prof. Dr. Wisnu Jatmiko")
+
+    def test_to_sveltekit_markdown(self):
+        meta = {
+            "seo_title": "Implementasi SvelteKit 2",
+            "meta_description": "Tutorial arsitektur web modern.",
+            "slug": "implementasi-sveltekit-2",
+            "category": "Web Dev",
+            "tags": ["svelte", "sveltekit"]
+        }
+        res = ArticleExporter.to_sveltekit_markdown(meta, "<p>Konten SvelteKit</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Implementasi SvelteKit 2"', res)
+        self.assertIn('slug: "implementasi-sveltekit-2"', res)
+        self.assertIn('"svelte"', res)
+        self.assertIn("layout: article", res)
+        self.assertIn("<p>Konten SvelteKit</p>", res)
+
 if __name__ == "__main__":
     unittest.main()
 
