@@ -776,6 +776,40 @@ def parse_indonesian_formal_date(date_str: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def extract_research_cluster_tags(text: str) -> List[str]:
+    """
+    Extracts faculty research cluster tags based on Telkom Purwokerto Informatics clusters.
+    """
+    if not text:
+        return []
+
+    clusters = {
+        "Artificial Intelligence & Data Science": [
+            r"\b(machine\s+learning|deep\s+learning|kecerdasan\s+buatan|nlp|computer\s+vision|data\s+science|neural\s+network|llm|generative\s+ai)\b"
+        ],
+        "Cybersecurity & Networks": [
+            r"\b(cybersecurity|keamanan\s+siber|jaringan|penetration\s+testing|cryptography|kriptografi|firewall|infosec|network\s+security)\b"
+        ],
+        "Software Engineering & Cloud Computing": [
+            r"\b(software\s+engineering|rekayasa\s+perangkat\s+lunak|cloud\s+computing|microservices|devops|ci/cd|kubernetes|docker|rest\s+api)\b"
+        ],
+        "Internet of Things & Embedded Systems": [
+            r"\b(internet\s+of\s+things|iot|embedded\s+system|sistem\s+tertanam|sensor|microcontroller|arduino|esp32|raspberry\s+pi)\b"
+        ],
+    }
+
+    matched_clusters = []
+    clean_text = re.sub(r'<[^>]+>', ' ', text).lower()
+
+    for cluster_name, patterns in clusters.items():
+        for pat in patterns:
+            if re.search(pat, clean_text, re.IGNORECASE):
+                matched_clusters.append(cluster_name)
+                break
+
+    return matched_clusters
+
+
 
 
 
