@@ -1160,6 +1160,38 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_research_grant_banner(
+        cls,
+        grant_name: str,
+        scheme: str,
+        funding_agency: str,
+        amount: str,
+        lead_researcher: str
+    ) -> str:
+        """
+        Renders a research grant and funding announcement banner component.
+        """
+        from xml.sax.saxutils import escape
+        s_grant = escape(grant_name)
+        s_scheme = escape(scheme)
+        s_agency = escape(funding_agency)
+        s_amount = escape(amount)
+        s_lead = escape(lead_researcher)
+
+        return f"""    <div class="tu-grant-banner">
+      <div class="tu-grant-header">
+        <span class="tu-grant-tag">Hibah Riset & Pendanaan</span>
+        <span class="tu-grant-scheme">{s_scheme}</span>
+      </div>
+      <h3 class="tu-grant-title">{s_grant}</h3>
+      <div class="tu-grant-details">
+        <span class="tu-grant-agency">Sumber: {s_agency}</span>
+        <span class="tu-grant-amount">Total: {s_amount}</span>
+        <span class="tu-grant-lead">Ketua Peneliti: {s_lead}</span>
+      </div>
+    </div>"""
+
 
 
 
