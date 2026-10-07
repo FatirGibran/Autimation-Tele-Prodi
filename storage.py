@@ -1064,6 +1064,61 @@ class StorageManager:
                 """, (user_id.strip(), cat))
             return cursor.rowcount > 0
 
+    def compare_revisions(self, article_id: int, rev_a: int, rev_b: int) -> Dict[str, Any]:
+        """
+        Compares two stored revisions of an article, computing character and word count deltas.
+        """
+        with self._get_connection() as conn:
+            cur_a = conn.execute(
+                "SELECT revision_num, html_content, meta_description, created_at FROM article_revisions WHERE article_id = ? AND revision_num = ?",
+                (article_id, rev_a)
+            )
+            row_a = cur_a.fetchone()
+            cur_b = conn.execute(
+                "SELECT revision_num, html_content, meta_description, created_at FROM article_revisions WHERE article_id = ? AND revision_num = ?",
+                (article_id, rev_b)
+            )
+            row_b = cur_b.fetchone()
+
+            if not row_a or not row_b:
+                return {
+                    "article_id": article_id,
+                    "found": False,
+                    "error": "One or both revisions not found"
+                }
+
+            content_a = row_a["html_content"] or ""
+            content_b = row_b["html_content"] or ""
+            words_a = len(content_a.split())
+            words_b = len(content_b.split())
+            chars_a = len(content_a)
+            chars_b = len(content_b)
+
+            return {
+                "article_id": article_id,
+                "found": True,
+                "rev_a": {
+                    "revision_num": rev_a,
+                    "word_count": words_a,
+                    "char_count": chars_a,
+                    "meta_description": row_a["meta_description"],
+                    "created_at": row_a["created_at"]
+                },
+                "rev_b": {
+                    "revision_num": rev_b,
+                    "word_count": words_b,
+                    "char_count": chars_b,
+                    "meta_description": row_b["meta_description"],
+                    "created_at": row_b["created_at"]
+                },
+                "deltas": {
+                    "word_diff": words_b - words_a,
+                    "char_diff": chars_b - chars_a,
+                    "meta_changed": row_a["meta_description"] != row_b["meta_description"]
+                }
+            }
+
+
 
 
 
