@@ -879,6 +879,25 @@ class StorageManager:
             "total_replacements": total_replacements
         }
 
+    def get_category_analytics(self) -> List[Dict[str, Any]]:
+        """
+        Aggregates article count, total views, and average views grouped by category.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT
+                    a.category,
+                    COUNT(a.id) AS total_articles,
+                    COALESCE(SUM(e.view_count), 0) AS total_views,
+                    COALESCE(AVG(e.view_count), 0.0) AS avg_views
+                FROM articles a
+                LEFT JOIN article_engagement e ON a.id = e.article_id
+                WHERE a.is_deleted = 0
+                GROUP BY a.category
+                ORDER BY total_views DESC, total_articles DESC;
+            """)
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
