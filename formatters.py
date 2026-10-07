@@ -306,6 +306,28 @@ class TelegramFormatter:
             f"💡 *{'Semua parameter SEO optimal, siap rilis.' if error_count == 0 else 'Perlu perbaikan sebelum artikel diterbitkan.'}*"
         )
 
+    @staticmethod
+    def format_capstone_defense_card(
+        candidate_name: str,
+        thesis_title: str,
+        room_or_link: str,
+        examiners: List[str],
+        schedule_time: str
+    ) -> str:
+        """
+        Renders a thesis/capstone defense announcement card for Telegram academic broadcast channels.
+        """
+        examiners_text = "\n".join(f"  • {e}" for e in examiners) if examiners else "  • Tim Dosen Penguji Prodi"
+        return (
+            f"🎓 **Jadwal Sidang Tugas Akhir Mahasiswa**\n\n"
+            f"👤 **Mahasiswa:** {candidate_name}\n"
+            f"📖 **Judul Skripsi:** {thesis_title}\n"
+            f"⏰ **Waktu Pelaksanaan:** `{schedule_time}`\n"
+            f"📍 **Ruangan / Tautan:** `{room_or_link}`\n\n"
+            f"👥 **Dewan Penguji:**\n{examiners_text}\n\n"
+            f"💡 *Sidang terbuka untuk mahasiswa aktif sebagai penonton referensi akademik.*"
+        )
+
 
 
 
