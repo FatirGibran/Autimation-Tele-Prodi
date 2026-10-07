@@ -1031,6 +1031,50 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def calculate_indonesian_coleman_liau(text: str) -> Dict[str, Any]:
+        """
+        Calculates Coleman-Liau Readability Index adapted for Indonesian prose.
+        CLI = 0.0588 * L - 0.296 * S - 15.8
+        """
+        if not text:
+            return {"grade_level": 0, "difficulty": "Tidak ada teks", "score": 0.0}
+
+        clean = re.sub(r'<[^>]+>', ' ', text)
+        words = re.findall(r'\b[A-Za-z0-9_-]+\b', clean)
+        num_words = len(words)
+        if num_words == 0:
+            return {"grade_level": 0, "difficulty": "Tidak ada teks", "score": 0.0}
+
+        num_letters = sum(len(w) for w in words)
+        sentences = [s for s in re.split(r'[.!?]+', clean) if s.strip()]
+        num_sentences = max(1, len(sentences))
+
+        L = (num_letters / num_words) * 100.0
+        S = (num_sentences / num_words) * 100.0
+
+        cli_score = 0.0588 * L - 0.296 * S - 15.8
+        grade_level = max(1, round(cli_score))
+
+        if grade_level <= 6:
+            difficulty = "Sangat Mudah (SD)"
+        elif grade_level <= 9:
+            difficulty = "Mudah (SMP)"
+        elif grade_level <= 12:
+            difficulty = "Menengah (SMA / Umum)"
+        elif grade_level <= 16:
+            difficulty = "Tinggi (Sarjana)"
+        else:
+            difficulty = "Sangat Spesifik / Akademik Lanjut"
+
+        return {
+            "score": round(cli_score, 2),
+            "grade_level": grade_level,
+            "difficulty": difficulty,
+            "word_count": num_words,
+            "sentence_count": num_sentences
+        }
+
 
 
 
