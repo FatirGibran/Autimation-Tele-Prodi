@@ -678,6 +678,53 @@ def italicize_academic_latin_terms(text: str) -> str:
     return "".join(processed)
 
 
+def wrap_glossary_terms(text: str, glossary: Dict[str, str]) -> str:
+    """
+    Wraps known academic glossary terms outside of HTML tags and code blocks with <dfn title="..."> tags.
+    """
+    if not text or not glossary:
+        return text or ""
+
+    sorted_terms = sorted(glossary.keys(), key=len, reverse=True)
+    pattern = re.compile(r'\b(' + '|'.join(re.escape(k) for k in sorted_terms) + r')\b', re.IGNORECASE)
+
+    tokens = re.split(r'(<[^>]+>)', text)
+    processed = []
+    in_code = False
+    in_link = False
+
+    for token in tokens:
+        if token.startswith("<"):
+            lower = token.lower()
+            if "<code" in lower or "<pre" in lower:
+                in_code = True
+            elif "</code" in lower or "</pre" in lower:
+                in_code = False
+            elif "<a" in lower:
+                in_link = True
+            elif "</a" in lower:
+                in_link = False
+            processed.append(token)
+        else:
+            if not in_code and not in_link:
+                def replace_term(m):
+                    matched = m.group(1)
+                    meaning = glossary.get(matched) or glossary.get(matched.lower()) or glossary.get(matched.upper())
+                    if not meaning:
+                        for k, v in glossary.items():
+                            if k.lower() == matched.lower():
+                                meaning = v
+                                break
+                    if meaning:
+                        return f'<dfn title="{meaning}">{matched}</dfn>'
+                    return matched
+
+                token = pattern.sub(replace_term, token)
+            processed.append(token)
+
+    return "".join(processed)
+
+
 
 
 
