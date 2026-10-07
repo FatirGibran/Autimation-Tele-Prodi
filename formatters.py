@@ -265,6 +265,25 @@ class TelegramFormatter:
             f"💡 *Saran:* {advice}"
         )
 
+    @staticmethod
+    def format_conference_call_card(
+        conf_name: str,
+        deadline_str: str,
+        tracks: List[str],
+        submission_url: str
+    ) -> str:
+        """
+        Renders an academic conference call for papers (CFP) alert card for Telegram.
+        """
+        tracks_text = "\n".join(f"  • {t}" for t in tracks) if tracks else "  • Informatika & Ilmu Komputer"
+        return (
+            f"📢 **Call for Papers: {conf_name}**\n\n"
+            f"📅 **Batas Pengumpulan (Deadline):** `{deadline_str}`\n\n"
+            f"📑 **Bidang / Track Riset:**\n{tracks_text}\n\n"
+            f"🔗 **Tautan Pengumpulan:** {submission_url}\n\n"
+            f"💡 *Mahasiswa dan dosen dianjurkan untuk mengirimkan naskah publikasi.*"
+        )
+
 
 
 
