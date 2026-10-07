@@ -571,6 +571,85 @@ class TestStorageManager(unittest.TestCase):
         self.assertIn("v2.5.0", applied)
         self.assertIn("v2.5.1", applied)
 
+    def test_article_reading_metrics(self):
+        art_id = self.storage.save_article({
+            "topic": "Reading Time Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-07",
+            "focus_keyphrase": "reading time",
+            "seo_title": "Reading Time Test",
+            "slug": "reading-time-test",
+            "meta_description": "Deskripsi reading time.",
+            "status": "draft"
+        })
+        self.storage.update_reading_metrics(art_id, word_count=850, reading_time_min=4)
+        metrics = self.storage.get_reading_metrics(art_id)
+        self.assertIsNotNone(metrics)
+        self.assertEqual(metrics["word_count"], 850)
+        self.assertEqual(metrics["reading_time_min"], 4)
+
+        # Upsert
+        self.storage.update_reading_metrics(art_id, word_count=1200, reading_time_min=6)
+        updated = self.storage.get_reading_metrics(art_id)
+        self.assertEqual(updated["word_count"], 1200)
+        self.assertEqual(updated["reading_time_min"], 6)
+
+    def test_editorial_subscribers_manager(self):
+        # Subscribe users
+        self.assertTrue(self.storage.subscribe_user("user_1", "telegram", "akademik"))
+        self.assertTrue(self.storage.subscribe_user("user_2", "telegram", "all"))
+        self.assertTrue(self.storage.subscribe_user("user_3", "email", "riset"))
+
+        # Query all
+        all_subs = self.storage.get_subscribers("all")
+        self.assertEqual(len(all_subs), 3)
+
+        # Query specific category
+        akademik_subs = self.storage.get_subscribers("akademik")
+        # Should include user_1 (akademik) and user_2 (all)
+        user_ids = [s["user_id"] for s in akademik_subs]
+        self.assertIn("user_1", user_ids)
+        self.assertIn("user_2", user_ids)
+        self.assertNotIn("user_3", user_ids)
+
+        # Unsubscribe
+        self.assertTrue(self.storage.unsubscribe_user("user_1", "akademik"))
+        akademik_subs_after = self.storage.get_subscribers("akademik")
+        self.assertNotIn("user_1", [s["user_id"] for s in akademik_subs_after])
+
+    def test_compare_revisions(self):
+        art_id = self.storage.save_article({
+            "topic": "Diff Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-07",
+            "focus_keyphrase": "diff test",
+            "seo_title": "Diff Test",
+            "slug": "diff-test",
+            "meta_description": "Versi awal meta.",
+            "html_content": "<p>Satu dua tiga empat.</p>",
+            "status": "draft"
+        })
+        rev1 = self.storage.create_revision(art_id)
+        # Update article content and make rev 2
+        with self.storage._get_connection() as conn:
+            conn.execute(
+                "UPDATE articles SET html_content = ?, meta_description = ? WHERE id = ?",
+                ("<p>Satu dua tiga empat lima enam tujuh delapan sembilan sepuluh.</p>", "Versi kedua meta diperbarui.", art_id)
+            )
+        rev2 = self.storage.create_revision(art_id)
+
+        diff = self.storage.compare_revisions(art_id, 1, 2)
+        self.assertTrue(diff["found"])
+        self.assertEqual(diff["rev_a"]["revision_num"], 1)
+        self.assertEqual(diff["rev_b"]["revision_num"], 2)
+        self.assertGreater(diff["deltas"]["word_diff"], 0)
+        self.assertTrue(diff["deltas"]["meta_changed"])
+
+        # Not found case
+        not_found = self.storage.compare_revisions(art_id, 1, 99)
+        self.assertFalse(not_found["found"])
+
+
 if __name__ == "__main__":
     unittest.main()
 
