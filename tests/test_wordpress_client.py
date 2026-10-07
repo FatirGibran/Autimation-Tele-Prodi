@@ -225,6 +225,21 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "DELETE")
         self.assertIn("/media/55?force=true", req.full_url)
 
+    @patch.object(WordPressClient, "update_post")
+    def test_update_post_excerpt(self, mock_update):
+        mock_update.return_value = {"id": 105, "excerpt": "Ringkasan kurikulum baru."}
+        res = self.client.update_post_excerpt(105, "Ringkasan kurikulum baru.")
+        mock_update.assert_called_once_with(105, {"excerpt": "Ringkasan kurikulum baru."})
+        self.assertEqual(res["excerpt"], "Ringkasan kurikulum baru.")
+
+    @patch.object(WordPressClient, "update_post")
+    def test_set_post_comment_status(self, mock_update):
+        mock_update.return_value = {"id": 106, "comment_status": "open", "ping_status": "closed"}
+        res = self.client.set_post_comment_status(106, allow_comments=True, allow_pings=False)
+        mock_update.assert_called_once_with(106, {"comment_status": "open", "ping_status": "closed"})
+        self.assertEqual(res["comment_status"], "open")
+        self.assertEqual(res["ping_status"], "closed")
+
 if __name__ == "__main__":
     unittest.main()
 
