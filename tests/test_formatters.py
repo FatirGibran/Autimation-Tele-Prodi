@@ -167,6 +167,32 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("**Errors:** `0`", card)
         self.assertIn("**Warnings:** `1`", card)
 
+    def test_format_capstone_defense_card(self):
+        card = TelegramFormatter.format_capstone_defense_card(
+            candidate_name="Fatir Gibran",
+            thesis_title="Sistem Automasi Editorial Publikasi Program Studi Berbasis NLP",
+            room_or_link="Lab Jaringan Komputer Lt. 3",
+            examiners=["Dr. Eng. Ir. Budi Raharjo, M.T.", "Prof. Dr. Ir. Sri Wahyuni, M.Sc."],
+            schedule_time="Kamis, 15 Oktober 2026 09:00 WIB"
+        )
+        self.assertIn("Jadwal Sidang Tugas Akhir Mahasiswa", card)
+        self.assertIn("Fatir Gibran", card)
+        self.assertIn("Lab Jaringan Komputer Lt. 3", card)
+        self.assertIn("Dr. Eng. Ir. Budi Raharjo, M.T.", card)
+        self.assertIn("Prof. Dr. Ir. Sri Wahyuni, M.Sc.", card)
+
+    def test_format_weekly_editorial_digest(self):
+        digest = TelegramFormatter.format_weekly_editorial_digest(
+            week_range="5 - 11 Oktober 2026",
+            published_count=12,
+            top_categories=[{"name": "Akademik", "count": 7}, {"name": "Riset & Pengabdian", "count": 5}],
+            highlights=["Publikasi jurnal bereputasi Q1", "Pembukaan pendaftaran capstone batch 2"]
+        )
+        self.assertIn("Ringkasan Editorial Mingguan (5 - 11 Oktober 2026)", digest)
+        self.assertIn("Total Diterbitkan: `12` artikel", digest)
+        self.assertIn("Akademik: 7 artikel", digest)
+        self.assertIn("Publikasi jurnal bereputasi Q1", digest)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
     def test_rate_limiter_allows_and_blocks(self):
