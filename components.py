@@ -1222,6 +1222,36 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_data_center_facility_card(
+        cls,
+        facility_name: str,
+        specs: List[Dict[str, str]],
+        status: str = "Operasional"
+    ) -> str:
+        """
+        Renders a campus tech facility and data center specification card.
+        """
+        from xml.sax.saxutils import escape
+        s_name = escape(facility_name)
+        s_status = escape(status)
+        specs_rows = "".join(
+            f'<tr><td class="tu-spec-key">{escape(item.get("key", ""))}</td><td class="tu-spec-val">{escape(item.get("value", ""))}</td></tr>'
+            for item in specs
+        )
+
+        return f"""    <div class="tu-facility-card">
+      <div class="tu-facility-header">
+        <h4 class="tu-facility-name">{s_name}</h4>
+        <span class="tu-facility-status">{s_status}</span>
+      </div>
+      <table class="tu-facility-specs">
+        <tbody>
+          {specs_rows}
+        </tbody>
+      </table>
+    </div>"""
+
 
 
 
