@@ -1192,6 +1192,36 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_specialization_track_card(
+        cls,
+        track_name: str,
+        description: str,
+        core_courses: List[str],
+        career_roles: List[str]
+    ) -> str:
+        """
+        Renders a curriculum elective track specialization card component.
+        """
+        from xml.sax.saxutils import escape
+        s_track = escape(track_name)
+        s_desc = escape(description)
+        courses_html = "".join(f"<li>{escape(c)}</li>" for c in core_courses)
+        roles_html = "".join(f'<span class="tu-role-tag">{escape(r)}</span>' for r in career_roles)
+
+        return f"""    <div class="tu-track-card">
+      <h4 class="tu-track-title">{s_track}</h4>
+      <p class="tu-track-desc">{s_desc}</p>
+      <div class="tu-track-courses">
+        <strong>Mata Kuliah Pilihan Utama:</strong>
+        <ul>{courses_html}</ul>
+      </div>
+      <div class="tu-track-roles">
+        <strong>Prospek Profesi:</strong>
+        <div class="tu-role-tags">{roles_html}</div>
+      </div>
+    </div>"""
+
 
 
 
