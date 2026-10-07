@@ -266,6 +266,35 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('slug: "nextjs-app-router"', mdx)
         self.assertIn('<p>Konten Next.js</p>', mdx)
 
+    def test_generate_research_project_json_ld(self):
+        schema = ArticleExporter.generate_research_project_json_ld(
+            name="Sistem IoT Pertanian Cerdas",
+            description="Pengembangan sensor kelembapan tanah berbasis LoRaWAN.",
+            funder="Kemendikbudristek",
+            award_amount="Rp 120.000.000",
+            lead_investigator="Dr. Ir. Hendra"
+        )
+        self.assertEqual(schema["@type"], "ResearchProject")
+        self.assertEqual(schema["name"], "Sistem IoT Pertanian Cerdas")
+        self.assertEqual(schema["funder"]["name"], "Kemendikbudristek")
+        self.assertEqual(schema["funding"]["amount"], "Rp 120.000.000")
+        self.assertEqual(schema["employee"]["name"], "Dr. Ir. Hendra")
+
+    def test_to_nuxt_markdown(self):
+        meta = {
+            "seo_title": "Panduan Nuxt Content 2",
+            "meta_description": "Dokumentasi headless CMS.",
+            "slug": "panduan-nuxt-content",
+            "category": "Frontend",
+            "tags": ["vue", "nuxt"]
+        }
+        md = ArticleExporter.to_nuxt_markdown(meta, "<p>Isi Nuxt</p>")
+        self.assertTrue(md.startswith("---"))
+        self.assertIn('title: "Panduan Nuxt Content 2"', md)
+        self.assertIn('category: "Frontend"', md)
+        self.assertIn('- vue', md)
+        self.assertIn('<p>Isi Nuxt</p>', md)
+
 if __name__ == "__main__":
     unittest.main()
 
