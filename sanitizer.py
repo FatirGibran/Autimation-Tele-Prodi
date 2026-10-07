@@ -75,6 +75,30 @@ class HTMLSanitizer:
             if cleaned != fig_before:
                 warnings.append("Sanitized figure and figcaption elements with editorial class attributes.")
 
+        # 1d. Sanitize details and summary disclosure elements with editorial classes
+        if "<details" in cleaned.lower() or "<summary" in cleaned.lower():
+            def fix_details(match):
+                tag = match.group(0)
+                if 'class=' not in tag:
+                    tag = tag.rstrip(">") + ' class="tu-details">'
+                elif 'tu-details' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-details"', tag)
+                return tag
+
+            def fix_summary(match):
+                tag = match.group(0)
+                if 'class=' not in tag:
+                    tag = tag.rstrip(">") + ' class="tu-summary">'
+                elif 'tu-summary' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-summary"', tag)
+                return tag
+
+            det_before = cleaned
+            cleaned = re.sub(r'<details\b[^>]*>', fix_details, cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r'<summary\b[^>]*>', fix_summary, cleaned, flags=re.IGNORECASE)
+            if cleaned != det_before:
+                warnings.append("Sanitized details and summary elements with editorial class attributes.")
+
 
 
         # 2. Strip dangerous script, object, and embed tags; sanitize/whitelist educational iframes
