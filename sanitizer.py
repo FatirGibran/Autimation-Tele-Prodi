@@ -294,6 +294,17 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<base\b[^>]*>', '', cleaned, flags=re.IGNORECASE)
             warnings.append("Stripped dangerous meta refresh or base hijacking tags.")
 
+        # 8f. Neutralize unsafe interactive form elements
+        if re.search(r'<(form|input|textarea|select)\b', cleaned, re.IGNORECASE):
+            cleaned = re.sub(r'</?form\b[^>]*>', '', cleaned, flags=re.IGNORECASE)
+            def disable_input(m):
+                tag = m.group(0)
+                if 'disabled' not in tag.lower():
+                    tag = tag.rstrip(">").rstrip("/") + ' disabled>'
+                return tag
+            cleaned = re.sub(r'<(?:input|textarea|select)\b[^>]*>', disable_input, cleaned, flags=re.IGNORECASE)
+            warnings.append("Neutralized interactive form and input elements.")
+
         return cleaned, warnings
 
 
