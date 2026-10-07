@@ -873,6 +873,39 @@ def calculate_total_sks_credits(text: str) -> Dict[str, Any]:
     }
 
 
+def validate_academic_advisor_credentials(text: str) -> List[Dict[str, Any]]:
+    """
+    Extracts names of academic supervisors or thesis examiners with their credentials/degrees
+    and validates postgraduate credential qualifications.
+    """
+    if not text:
+        return []
+
+    pattern = re.compile(
+        r'(?:(Pembimbing(?:\s+[12I|II])?|Penguji(?:\s+[123I|II|III])?|Dosen\s+Wali|Promotor))\s*:\s*'
+        r'((?:(?:Prof\.|Dr\.|Ir\.)\s*)*[A-Z][a-zA-Z\s\',.]+(?:,\s*(?:S\.[A-Za-z.]+|M\.[A-Za-z.]+|Ph\.D\.|M\.Sc\.|M\.T\.|M\.Kom\.))*)\b',
+        re.MULTILINE
+    )
+
+    results = []
+    for match in pattern.finditer(text):
+        role = match.group(1).strip()
+        full_name_with_degrees = match.group(2).strip()
+
+        has_doctorate = bool(re.search(r'\b(Dr\.|Ph\.D\.|Prof\.)\b', full_name_with_degrees))
+        has_masters = bool(re.search(r'\b(M\.[A-Za-z.]+|M\.Sc\.|M\.T\.|M\.Kom\.)\b', full_name_with_degrees))
+
+        results.append({
+            "role": role,
+            "raw_name": full_name_with_degrees,
+            "has_doctorate": has_doctorate,
+            "has_masters": has_masters,
+            "is_qualified_for_defense": has_doctorate or has_masters
+        })
+
+    return results
+
+
 
 
 
