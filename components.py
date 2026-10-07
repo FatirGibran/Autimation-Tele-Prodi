@@ -1381,6 +1381,38 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_exchange_testimonial_card(
+        cls,
+        student_name: str,
+        host_university: str,
+        country: str,
+        courses_transferred: List[str],
+        testimonial: str
+    ) -> str:
+        """
+        Renders an international student exchange testimonial and credit transfer showcase card.
+        """
+        from xml.sax.saxutils import escape
+        s_student = escape(student_name)
+        s_host = escape(host_university)
+        s_country = escape(country)
+        s_testi = escape(testimonial)
+        courses_html = "".join(f"<li>{escape(c)}</li>" for c in courses_transferred)
+
+        return f"""    <div class="tu-exchange-testi-card">
+      <div class="tu-exchange-testi-header">
+        <span class="tu-exchange-badge">Testimoni IISMA & Exchange</span>
+        <h4 class="tu-exchange-student">{s_student}</h4>
+        <span class="tu-exchange-dest">{s_host}, {s_country}</span>
+      </div>
+      <blockquote class="tu-exchange-quote">"{s_testi}"</blockquote>
+      <div class="tu-exchange-transfer">
+        <strong>Mata Kuliah Konversi:</strong>
+        <ul>{courses_html}</ul>
+      </div>
+    </div>"""
+
 
 
 
