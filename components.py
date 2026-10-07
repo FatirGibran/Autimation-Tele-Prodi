@@ -1349,6 +1349,38 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lab_reservation_card(
+        cls,
+        lab_name: str,
+        equipment_name: str,
+        supervisor: str,
+        booking_status: str,
+        schedule_slots: List[str]
+    ) -> str:
+        """
+        Renders a research laboratory equipment booking and availability card.
+        """
+        from xml.sax.saxutils import escape
+        s_lab = escape(lab_name)
+        s_equip = escape(equipment_name)
+        s_super = escape(supervisor)
+        s_stat = escape(booking_status)
+        slots_html = "".join(f'<span class="tu-slot-pill">{escape(s)}</span>' for s in schedule_slots)
+
+        return f"""    <div class="tu-reservation-card">
+      <div class="tu-reservation-header">
+        <h4 class="tu-reservation-title">{s_equip}</h4>
+        <span class="tu-reservation-status">{s_stat}</span>
+      </div>
+      <p class="tu-reservation-lab">Laboratorium: {s_lab}</p>
+      <p class="tu-reservation-supervisor">Penanggung Jawab: {s_super}</p>
+      <div class="tu-reservation-slots">
+        <strong>Slot Tersedia:</strong>
+        <div class="tu-slots-container">{slots_html}</div>
+      </div>
+    </div>"""
+
 
 
 
