@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 172+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 210+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 203 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 235 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -233,5 +233,40 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 163. **Subcommand CLI `schema` (`cli.py`)**: Perintah konsol generate skema JSON-LD kurikulum prodi.
 164. **Skrip Validator Aset Gambar & Optimasi Kompresi (`scripts/check_images.py`)**: Perkakas audit otomatis atribut alt, format modern WebP/AVIF, dan dimensi anti-CLS.
 165. **Pengembangan Suite Pengujian Unit Terpadu (203 Tests Passing)**: Penambahan pengujian menyeluruh pada seluruh modul baru dengan tingkat kelulusan 100%.
+
+---
+
+## 13. Pembaruan Fitur & Arsitektur v2.5.0 (#173 - #210)
+
+173. **Sanitasi Figure & Figcaption Semantik (`sanitizer.py`)**: Penegakan kelas editorial `.tu-figure` dan `.tu-figcaption`.
+174. **Pembersihan Injeksi Atribut Kustom `data-*` (`sanitizer.py`)**: Netralisasi muatan script dan uri berbahaya pada atribut data kustom.
+175. **Penegakan Kontrol Aksesibilitas & Preload Media (`sanitizer.py`)**: Penegakan otomatis atribut `controls`, `preload="metadata"`, dan penghapusan autoplay bersuara.
+176. **Glosarium Istilah Akademik & Tooltip Otomatis (`parser.py`)**: Pembungkusan otomatis tag `<dfn title="...">` pada terminologi akademik prodi.
+177. **Parser Tanggal & Waktu Formal Indonesia (`parser.py`)**: Ekstraksi tanggal, hari, jam, zona waktu (WIB/WITA/WIT), dan konversi ISO standar.
+178. **Ekstraktor Kluster Riset Dosen Informatika (`parser.py`)**: Deteksi otomatis 4 kluster riset prodi Telkom Purwokerto (AI, Cyber, SE/Cloud, IoT).
+179. **Normalisasi Indentasi Daftar Bertingkat Markdown (`parser.py`)**: Penyeragaman spasi hierarki nested unordered dan ordered list.
+180. **Validator Hierarki & Kedalaman Breadcrumb (`seo_validator.py`)**: Verifikasi kedalaman navigasi remah roti dan validitas tautan beranda.
+181. **Auditor Rasio Kontras Warna CSS Inline (`seo_validator.py`)**: Deteksi warna teks dan latar belakang beresiko kontras nol sesuai WCAG AA.
+182. **Validator Spesifikasi & Aspek Rasio Gambar Open Graph (`seo_validator.py`)**: Audit dimensi minimal 600x315/1200x630 dan rasio aspek 1.91:1.
+183. **Kalkulator Indeks Keterbacaan Coleman-Liau Indonesia (`seo_validator.py`)**: Pengukuran formula keterbacaan berbasis panjang kata dan kalimat.
+184. **Komponen Kartu Publikasi Jurnal Ilmiah Unggulan (`components.py`)**: Visualisasi jurnal terindeks dengan badge Quartile (Q1-Q4) dan tautan DOI.
+185. **Komponen Showcase Kelompok Belajar & Coding Club Mahasiswa (`components.py`)**: Kartu profil komunitas mahasiswa, koordinator, dan jadwal berkumpul.
+186. **Komponen Banner Pengumuman Hibah Riset & Pendanaan (`components.py`)**: Banner capaian hibah penelitian fundamental dan kemitraan industri.
+187. **Komponen Kartu Jalur Peminatan Kurikulum Pilihan (`components.py`)**: Tampilan mata kuliah pilihan utama dan prospek profesi per keminatan.
+188. **Komponen Kartu Fasilitas Data Center & Infrastruktur Kampus (`components.py`)**: Tabel spesifikasi teknis rak server, jaringan, dan status operasional.
+189. **Formatter Kartu Call for Papers Konferensi Ilmiah Telegram (`formatters.py`)**: Notifikasi batas waktu pengumpulan artikel dan bidang riset CFP.
+190. **Formatter Kartu Ringkasan Audit SEO Yoast Ringkas (`formatters.py`)**: Ringkasan performa skor, grade, error, dan peringatan SEO untuk bot Telegram.
+191. **Agregasi Analitik Pembaca per Kategori Artikel (`storage.py`)**: Query agregat jumlah artikel, total views, dan rata-rata pembaca per kategori.
+192. **Manajer Daftar Bacaan & Bookmark Artikel Pengguna (`storage.py`)**: Tabel `article_bookmarks` dan manajemen CRUD bookmark pengguna.
+193. **Pelacak Versi Migrasi Skema Database (`storage.py`)**: Tabel `schema_migrations` untuk pencatatan riwayat versi migrasi terstruktur.
+194. **Pengatur Status Post Sticky & Proteksi Sandi WordPress (`wordpress_client.py`)**: Pembaruan visibilitas artikel unggulan dan proteksi kata sandi.
+195. **Helper Penghapusan & Detasemen Media WordPress (`wordpress_client.py`)**: Penghapusan permanen lampiran pustaka media REST API.
+196. **Generator JSON-LD ResearchProject & FundingAward (`exporter.py`)**: Skema data terstruktur Schema.org untuk proyek riset dan hibah dosen.
+197. **Generator Markdown Kompatibel Nuxt Content v2 / Gatsby (`exporter.py`)**: Ekspor frontmatter YAML lengkap dengan navigasi dan taksonomi.
+198. **Subcommand CLI `bookmark` (`cli.py`)**: Perintah konsol pengelolaan reading list dan bookmark artikel.
+199. **Subcommand CLI `cat-stats` (`cli.py`)**: Perintah konsol analitik performa pembaca per kategori artikel.
+200. **Subcommand CLI `nuxt` (`cli.py`)**: Perintah konsol ekspor artikel ke format Markdown Nuxt Content v2.
+201. **Skrip Auditor Aksesibilitas WCAG Otomatis (`scripts/check_accessibility.py`)**: Perkakas audit otomatis hirarki heading, alt text, tabel semantik, dan media controls.
+202. **Pengembangan Suite Pengujian Unit Terpadu (235 Tests Passing)**: Penambahan pengujian menyeluruh pada seluruh modul baru dengan tingkat kelulusan 100%.
 
 
