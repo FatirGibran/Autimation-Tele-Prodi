@@ -143,6 +143,30 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("allow-presentation", clean)
         self.assertIn("allow-scripts", clean)
 
+    def test_sanitize_figure_and_figcaption(self):
+        fig_html = '<div class="tu-editorial-container"><figure><img src="https://example.com/demo.jpg" alt="demo" /><figcaption>Laboratorium IoT</figcaption></figure></div>'
+        clean, warnings = HTMLSanitizer.sanitize(fig_html)
+        self.assertIn('<figure class="tu-figure">', clean)
+        self.assertIn('<figcaption class="tu-figcaption">', clean)
+        self.assertTrue(any("figure and figcaption" in w for w in warnings))
+
+    def test_strip_unsafe_custom_data_attributes(self):
+        payload_html = '<div class="tu-editorial-container"><p data-payload-action="javascript:alert(1)" data-extra="data:text/html,<script>eval()</script>">Aman</p></div>'
+        clean, warnings = HTMLSanitizer.sanitize(payload_html)
+        self.assertNotIn("javascript:alert", clean)
+        self.assertNotIn("data-payload-action", clean)
+        self.assertNotIn("data-extra", clean)
+        self.assertIn("Aman", clean)
+        self.assertTrue(any("dangerous executable payload" in w for w in warnings))
+
+    def test_enforce_media_controls_and_preload(self):
+        media_html = '<div class="tu-editorial-container"><video src="https://example.com/demo.mp4" autoplay></video></div>'
+        clean, warnings = HTMLSanitizer.sanitize(media_html)
+        self.assertIn('controls', clean)
+        self.assertIn('preload="metadata"', clean)
+        self.assertNotIn('autoplay', clean)
+        self.assertTrue(any("autoplay" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
 
