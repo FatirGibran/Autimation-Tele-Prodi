@@ -139,6 +139,18 @@ class StorageManager:
                     FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
                 );
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_bookmarks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    user_identifier TEXT NOT NULL,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(article_id, user_identifier),
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_bm_user ON article_bookmarks(user_identifier);")
 
 
 
@@ -897,6 +909,44 @@ class StorageManager:
                 ORDER BY total_views DESC, total_articles DESC;
             """)
             return [dict(row) for row in cursor.fetchall()]
+
+    def add_bookmark(self, article_id: int, user_identifier: str, notes: Optional[str] = None) -> int:
+        """
+        Adds an article to the user's reading list or bookmarks.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_bookmarks (article_id, user_identifier, notes)
+                VALUES (?, ?, ?)
+                ON CONFLICT(article_id, user_identifier) DO UPDATE SET notes = excluded.notes;
+            """, (article_id, user_identifier.strip(), notes.strip() if notes else None))
+            return cursor.lastrowid
+
+    def list_bookmarks(self, user_identifier: str) -> List[Dict[str, Any]]:
+        """
+        Lists all bookmarked articles for a specific user.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT b.id AS bookmark_id, b.article_id, b.notes, b.created_at AS bookmarked_at,
+                       a.seo_title, a.slug, a.category, a.status
+                FROM article_bookmarks b
+                JOIN articles a ON b.article_id = a.id
+                WHERE b.user_identifier = ? AND a.is_deleted = 0
+                ORDER BY b.created_at DESC;
+            """, (user_identifier.strip(),))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def remove_bookmark(self, article_id: int, user_identifier: str) -> bool:
+        """
+        Removes an article from the user's reading list.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                DELETE FROM article_bookmarks
+                WHERE article_id = ? AND user_identifier = ?;
+            """, (article_id, user_identifier.strip()))
+            return cursor.rowcount > 0
 
 
 
