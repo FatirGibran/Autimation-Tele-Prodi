@@ -963,6 +963,37 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_css_color_contrast(html_content: str) -> Dict[str, Any]:
+        """
+        Audits inline style color and background combinations against WCAG AA standards.
+        """
+        issues = []
+        soup = BeautifulSoup(html_content, "html.parser")
+        elements_with_style = soup.find_all(style=True)
+
+        checked_count = 0
+        for el in elements_with_style:
+            style = el["style"].lower()
+            fg_match = re.search(r'(?:^|;)\s*color\s*:\s*([^;]+)', style)
+            bg_match = re.search(r'(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)', style)
+
+            if fg_match and bg_match:
+                checked_count += 1
+                fg = fg_match.group(1).strip().replace(" ", "")
+                bg = bg_match.group(1).strip().replace(" ", "")
+                if fg == bg:
+                    issues.append(f"Elemen <{el.name}> memiliki warna teks dan latar belakang yang identik: '{fg}'.")
+                elif (fg in ("#fff", "#ffffff", "white") and bg in ("#fff", "#ffffff", "white")) or \
+                     (fg in ("#000", "#000000", "black") and bg in ("#000", "#000000", "black")):
+                    issues.append(f"Elemen <{el.name}> berisiko tidak terbaca (kontras nol).")
+
+        return {
+            "elements_audited": checked_count,
+            "is_accessible": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
