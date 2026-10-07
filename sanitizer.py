@@ -51,6 +51,30 @@ class HTMLSanitizer:
                 cleaned = re.sub(r'(</tr>)\s*</(?:p|div|span)>\s*(</tbody[^>]*>|</table[^>]*>)', r'\1\2', cleaned, flags=re.IGNORECASE)
                 warnings.append("Sanitized malformed container tags inside table structure.")
 
+        # 1c. Sanitize figure and figcaption elements with strict editorial classes
+        if "<figure" in cleaned.lower() or "<figcaption" in cleaned.lower():
+            def fix_figure(match):
+                tag = match.group(0)
+                if 'class=' not in tag:
+                    tag = tag.rstrip(">") + ' class="tu-figure">'
+                elif 'tu-figure' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-figure"', tag)
+                return tag
+
+            def fix_figcaption(match):
+                tag = match.group(0)
+                if 'class=' not in tag:
+                    tag = tag.rstrip(">") + ' class="tu-figcaption">'
+                elif 'tu-figcaption' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-figcaption"', tag)
+                return tag
+
+            fig_before = cleaned
+            cleaned = re.sub(r'<figure\b[^>]*>', fix_figure, cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r'<figcaption\b[^>]*>', fix_figcaption, cleaned, flags=re.IGNORECASE)
+            if cleaned != fig_before:
+                warnings.append("Sanitized figure and figcaption elements with editorial class attributes.")
+
 
 
         # 2. Strip dangerous script, object, and embed tags; sanitize/whitelist educational iframes
