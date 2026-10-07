@@ -290,6 +290,47 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_stale["is_fresh"])
         self.assertGreater(res_stale["stale_reference_count"], 0)
 
+    def test_validate_breadcrumb_hierarchy(self):
+        valid_trail = [
+            {"name": "Beranda", "url": "/"},
+            {"name": "Akademik", "url": "/akademik"},
+            {"name": "Kurikulum", "url": "/akademik/kurikulum"}
+        ]
+        res = YoastSEOValidator.validate_breadcrumb_hierarchy(valid_trail)
+        self.assertTrue(res["is_valid"])
+        self.assertEqual(res["depth"], 3)
+
+        invalid_trail = [{"name": "Artikel", "url": "/artikel"}]
+        res_bad = YoastSEOValidator.validate_breadcrumb_hierarchy(invalid_trail)
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_css_color_contrast(self):
+        good_css = '<p style="color: #ffffff; background-color: #003366;">Kontras Bagus</p>'
+        res = YoastSEOValidator.audit_css_color_contrast(good_css)
+        self.assertTrue(res["is_accessible"])
+
+        bad_css = '<p style="color: #ffffff; background-color: #ffffff;">Teks Tak Terbaca</p>'
+        res_bad = YoastSEOValidator.audit_css_color_contrast(bad_css)
+        self.assertFalse(res_bad["is_accessible"])
+
+    def test_validate_og_image_specifications(self):
+        valid_url = "https://bif-pwt.telkomuniversity.ac.id/wp-content/uploads/banner.jpg"
+        res = YoastSEOValidator.validate_og_image_specifications(valid_url, width=1200, height=630)
+        self.assertTrue(res["is_valid"])
+
+        invalid_url = "http://example.com/banner.gif"
+        res_bad = YoastSEOValidator.validate_og_image_specifications(invalid_url, width=200, height=100)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertGreaterEqual(len(res_bad["issues"]), 2)
+
+    def test_calculate_indonesian_coleman_liau(self):
+        text = "Program Studi Informatika Institut Teknologi Telkom Purwokerto terus berinovasi dalam riset kecerdasan buatan. Mahasiswa dibekali keterampilan praktis dan teoritis."
+        res = YoastSEOValidator.calculate_indonesian_coleman_liau(text)
+        self.assertIn("score", res)
+        self.assertIn("grade_level", res)
+        self.assertIn("difficulty", res)
+        self.assertGreater(res["word_count"], 10)
+
 if __name__ == "__main__":
     unittest.main()
 
