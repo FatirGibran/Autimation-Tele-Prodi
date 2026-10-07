@@ -336,6 +336,22 @@ class WordPressClient:
         """
         return self.update_post(post_id, {"excerpt": excerpt.strip()})
 
+    def set_post_comment_status(
+        self,
+        post_id: int,
+        allow_comments: bool = True,
+        allow_pings: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Configures comment and ping status ('open' or 'closed') on a WordPress post.
+        """
+        payload = {
+            "comment_status": "open" if allow_comments else "closed",
+            "ping_status": "open" if allow_pings else "closed"
+        }
+        return self.update_post(post_id, payload)
+
+
 
 
 
