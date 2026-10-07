@@ -882,8 +882,8 @@ def validate_academic_advisor_credentials(text: str) -> List[Dict[str, Any]]:
         return []
 
     pattern = re.compile(
-        r'(?:(Pembimbing(?:\s+[12I|II])?|Penguji(?:\s+[123I|II|III])?|Dosen\s+Wali|Promotor))\s*:\s*'
-        r'((?:(?:Prof\.|Dr\.|Ir\.)\s*)*[A-Z][a-zA-Z\s\',.]+(?:,\s*(?:S\.[A-Za-z.]+|M\.[A-Za-z.]+|Ph\.D\.|M\.Sc\.|M\.T\.|M\.Kom\.))*)\b',
+        r'^[ \t]*(Pembimbing(?:\s+[12I|II])?|Penguji(?:\s+[123I|II|III])?|Dosen\s+Wali|Promotor)\s*:\s*'
+        r'([^\n\r]+)',
         re.MULTILINE
     )
 
@@ -892,8 +892,8 @@ def validate_academic_advisor_credentials(text: str) -> List[Dict[str, Any]]:
         role = match.group(1).strip()
         full_name_with_degrees = match.group(2).strip()
 
-        has_doctorate = bool(re.search(r'\b(Dr\.|Ph\.D\.|Prof\.)\b', full_name_with_degrees))
-        has_masters = bool(re.search(r'\b(M\.[A-Za-z.]+|M\.Sc\.|M\.T\.|M\.Kom\.)\b', full_name_with_degrees))
+        has_doctorate = bool(re.search(r'(?:Dr\.|Ph\.D\.|Prof\.)', full_name_with_degrees))
+        has_masters = bool(re.search(r'(?:M\.[A-Za-z.]+|M\.Sc\.|M\.T\.|M\.Kom\.)', full_name_with_degrees))
 
         results.append({
             "role": role,

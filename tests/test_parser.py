@@ -291,6 +291,39 @@ Poin Utama:
         self.assertEqual(lines[1], "  - Level 2 misaligned")
         self.assertEqual(lines[2], "    - Level 3")
 
+    def test_calculate_total_sks_credits(self):
+        from parser import calculate_total_sks_credits
+        text = "Mata kuliah terdiri dari 3 SKS Teori dan 1 SKS Praktikum di Lab Informatika."
+        credits = calculate_total_sks_credits(text)
+        self.assertEqual(credits["total_sks"], 4)
+        self.assertEqual(credits["theory_sks"], 3)
+        self.assertEqual(credits["practical_sks"], 1)
+        self.assertEqual(credits["mentions_count"], 2)
+
+    def test_validate_academic_advisor_credentials(self):
+        from parser import validate_academic_advisor_credentials
+        text = "Pembimbing 1: Dr. Ir. Budi Santoso, S.Kom., M.Kom.\nPenguji 1: Prof. Dr. Hendra, Ph.D."
+        advisors = validate_academic_advisor_credentials(text)
+        self.assertEqual(len(advisors), 2)
+        self.assertTrue(advisors[0]["has_doctorate"])
+        self.assertTrue(advisors[0]["is_qualified_for_defense"])
+        self.assertEqual(advisors[1]["role"], "Penguji 1")
+
+    def test_expand_academic_acronyms(self):
+        from parser import expand_academic_acronyms
+        text = "<p>Mahasiswa wajib mengikuti program MBKM dan mengisi KRS semester ganjil.</p><code>KRS</code>"
+        expanded = expand_academic_acronyms(text)
+        self.assertIn('<abbr title="Merdeka Belajar Kampus Merdeka">MBKM</abbr>', expanded)
+        self.assertIn('<abbr title="Kartu Rencana Studi">KRS</abbr>', expanded)
+        self.assertIn('<code>KRS</code>', expanded)
+
+    def test_normalize_code_block_language_tags(self):
+        from parser import normalize_code_block_language_tags
+        md = "Contoh kode:\n```py\nprint('hello')\n```\nDan skrip bash:\n```sh\necho hi\n```"
+        norm = normalize_code_block_language_tags(md)
+        self.assertIn("```python", norm)
+        self.assertIn("```bash", norm)
+
 if __name__ == "__main__":
     unittest.main()
 
