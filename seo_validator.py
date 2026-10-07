@@ -1111,6 +1111,30 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_aria_landmarks(html_content: str) -> Dict[str, Any]:
+        """
+        Audits accessibility landmark regions and checks for accessible labelling.
+        """
+        issues = []
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        has_main_or_article = bool(soup.find(["main", "article"]) or soup.find(attrs={"role": "main"}))
+        if not has_main_or_article:
+            issues.append("Dokumen tidak memiliki landmark semantik utama (<main>, <article>, atau role='main').")
+
+        navs = soup.find_all(["nav", lambda el: el.has_attr("role") and el["role"] == "navigation"])
+        unlabelled_navs = [n for n in navs if not (n.get("aria-label") or n.get("aria-labelledby"))]
+        if unlabelled_navs:
+            issues.append(f"{len(unlabelled_navs)} elemen navigasi (<nav>) tidak memiliki label aksesibilitas (aria-label).")
+
+        return {
+            "has_main": has_main_or_article,
+            "total_navs": len(navs),
+            "is_accessible": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
