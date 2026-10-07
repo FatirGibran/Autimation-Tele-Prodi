@@ -288,6 +288,12 @@ class HTMLSanitizer:
             cleaned = re.sub(r'\s+data-[a-z0-9_-]+=["\'][^"\']*(?:javascript:|data:text/html|<script|eval\()[^"\']*["\']', '', cleaned, flags=re.IGNORECASE)
             warnings.append("Stripped dangerous executable payload from custom data attribute.")
 
+        # 8e. Strip unsafe meta refresh and base hijacking tags
+        if re.search(r'<(meta\b[^>]*http-equiv|base\b)', cleaned, re.IGNORECASE):
+            cleaned = re.sub(r'<meta\b[^>]*http-equiv=["\']?refresh["\']?[^>]*>', '', cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r'<base\b[^>]*>', '', cleaned, flags=re.IGNORECASE)
+            warnings.append("Stripped dangerous meta refresh or base hijacking tags.")
+
         return cleaned, warnings
 
 
