@@ -658,6 +658,35 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_sveltekit_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to MDSveX / SvelteKit markdown format with structured metadata.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        date = metadata.get("publish_date", "2026-10-01")
+        category = metadata.get("category", "")
+        tags = metadata.get("tags", [])
+        tags_json = json.dumps(tags if isinstance(tags, list) else [t.strip() for t in tags.split(",") if t.strip()])
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'date: "{date}"',
+            f'slug: "{slug}"',
+            f'category: "{category}"',
+            f'tags: {tags_json}',
+            "layout: article",
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
