@@ -140,6 +140,33 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("https://journal.org/paper1", card_high)
         self.assertIn("28.4%", card_high)
 
+    def test_format_conference_call_card(self):
+        tracks = ["Artificial Intelligence", "Cybersecurity", "IoT Systems"]
+        card = TelegramFormatter.format_conference_call_card(
+            conf_name="ICITACEE 2026",
+            deadline_str="15 November 2026",
+            tracks=tracks,
+            submission_url="https://icess.org/submit"
+        )
+        self.assertIn("ICITACEE 2026", card)
+        self.assertIn("15 November 2026", card)
+        self.assertIn("Artificial Intelligence", card)
+        self.assertIn("https://icess.org/submit", card)
+
+    def test_format_compact_seo_summary(self):
+        report = {
+            "score": 88,
+            "grade": "Bagus Sekali",
+            "errors": [],
+            "warnings": ["Heading structure needs improvement"]
+        }
+        card = TelegramFormatter.format_compact_seo_summary(report, "webassembly-edge-computing-iot")
+        self.assertIn("Ringkasan Audit SEO Yoast", card)
+        self.assertIn("webassembly-edge-computing-iot", card)
+        self.assertIn("88/100", card)
+        self.assertIn("**Errors:** `0`", card)
+        self.assertIn("**Warnings:** `1`", card)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
     def test_rate_limiter_allows_and_blocks(self):
