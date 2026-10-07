@@ -1135,6 +1135,40 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def validate_canonical_url(
+        canonical_url: str,
+        current_slug: str,
+        domain: str = "bif-pwt.telkomuniversity.ac.id"
+    ) -> Dict[str, Any]:
+        """
+        Validates canonical URL structure and ensures proper trailing slash and domain formatting.
+        """
+        issues = []
+        if not canonical_url:
+            return {"is_valid": False, "issues": ["URL kanonikal tidak boleh kosong."]}
+
+        if not canonical_url.startswith("https://"):
+            issues.append("URL kanonikal harus menggunakan protokol aman HTTPS.")
+
+        if domain not in canonical_url:
+            issues.append(f"URL kanonikal harus mengarah ke domain resmi prodi ({domain}).")
+
+        if current_slug and current_slug not in canonical_url:
+            issues.append(f"URL kanonikal tidak memuat slug artikel '{current_slug}'.")
+
+        if "?" in canonical_url or "#" in canonical_url:
+            issues.append("URL kanonikal tidak boleh memuat query parameter atau fragment hash.")
+
+        if not canonical_url.endswith("/"):
+            issues.append("URL kanonikal harus berakhiran trailing slash ('/') sesuai standar WordPress prodi.")
+
+        return {
+            "canonical_url": canonical_url,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
