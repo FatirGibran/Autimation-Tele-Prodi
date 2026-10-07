@@ -906,6 +906,54 @@ def validate_academic_advisor_credentials(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def expand_academic_acronyms(text: str, custom_acronyms: Optional[Dict[str, str]] = None) -> str:
+    """
+    Expands common higher-education Indonesian academic acronyms into structured abbr tags.
+    """
+    if not text:
+        return ""
+
+    defaults = {
+        "MBKM": "Merdeka Belajar Kampus Merdeka",
+        "KRS": "Kartu Rencana Studi",
+        "KHS": "Kartu Hasil Studi",
+        "BAP": "Berita Acara Perkuliahan",
+        "KKN": "Kuliah Kerja Nyata",
+        "TA": "Tugas Akhir / Skripsi",
+        "PKL": "Praktik Kerja Lapangan",
+        "SKPI": "Surat Keterangan Pendamping Ijazah",
+        "SKS": "Sistem Kredit Semester",
+    }
+    if custom_acronyms:
+        defaults.update(custom_acronyms)
+
+    sorted_keys = sorted(defaults.keys(), key=len, reverse=True)
+    pattern = re.compile(r'\b(' + '|'.join(re.escape(k) for k in sorted_keys) + r')\b')
+
+    tokens = re.split(r'(<[^>]+>)', text)
+    processed = []
+    in_code = False
+
+    for token in tokens:
+        if token.startswith("<"):
+            lower = token.lower()
+            if "<code" in lower or "<pre" in lower:
+                in_code = True
+            elif "</code" in lower or "</pre" in lower:
+                in_code = False
+            processed.append(token)
+        else:
+            if not in_code:
+                def replace_acr(m):
+                    term = m.group(1)
+                    exp = defaults.get(term)
+                    return f'<abbr title="{exp}">{term}</abbr>' if exp else term
+                token = pattern.sub(replace_acr, token)
+            processed.append(token)
+
+    return "".join(processed)
+
+
 
 
 
