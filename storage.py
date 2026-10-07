@@ -151,6 +151,12 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_bm_user ON article_bookmarks(user_identifier);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS schema_migrations (
+                    version TEXT PRIMARY KEY,
+                    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
 
 
 
@@ -947,6 +953,21 @@ class StorageManager:
                 WHERE article_id = ? AND user_identifier = ?;
             """, (article_id, user_identifier.strip()))
             return cursor.rowcount > 0
+
+    def get_applied_migrations(self) -> List[str]:
+        """
+        Retrieves all applied migration versions ordered chronologically.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT version FROM schema_migrations ORDER BY applied_at ASC;")
+            return [row["version"] for row in cursor.fetchall()]
+
+    def record_migration(self, version: str) -> None:
+        """
+        Records an applied migration version into the tracking table.
+        """
+        with self._get_connection() as conn:
+            conn.execute("INSERT OR IGNORE INTO schema_migrations (version) VALUES (?);", (version.strip(),))
 
 
 
