@@ -504,6 +504,75 @@ class TestCLI(unittest.TestCase):
             if Path(out_file).exists():
                 Path(out_file).unlink()
 
+    def test_cmd_bookmark(self):
+        art_id = cli.storage.save_article({
+            "topic": "Bookmark CLI Target",
+            "category": "Testing",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "bookmark cli",
+            "seo_title": "Bookmark CLI Target",
+            "slug": "bookmark-cli-target",
+            "meta_description": "Deskripsi bookmark cli.",
+            "status": "published"
+        })
+
+        class ArgsAdd:
+            action = "add"
+            id = art_id
+            user = "tester_cli"
+            notes = "Catatan penting"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bookmark(ArgsAdd())
+            self.assertIn("Bookmark berhasil ditambahkan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            user = "tester_cli"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bookmark(ArgsList())
+            self.assertIn("Bookmark Artikel untuk User", fake_out.getvalue())
+            self.assertIn("Bookmark CLI Target", fake_out.getvalue())
+
+    def test_cmd_cat_stats(self):
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_cat_stats(None)
+            self.assertIn("Analitik Artikel per Kategori", fake_out.getvalue())
+            self.assertIn("TOTAL ARTIKEL", fake_out.getvalue())
+
+    def test_cmd_nuxt(self):
+        cli.storage.save_article({
+            "topic": "Nuxt Export Target",
+            "category": "Testing",
+            "publish_date": "2026-10-06",
+            "focus_keyphrase": "nuxt export",
+            "seo_title": "Nuxt Export Target",
+            "slug": "nuxt-export-target",
+            "meta_description": "Deskripsi nuxt export.",
+            "html_content": "<p>Konten Nuxt CLI</p>",
+            "status": "published"
+        })
+
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class ArgsNuxt:
+                slug = "nuxt-export-target"
+                out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_nuxt(ArgsNuxt())
+                self.assertIn("Export Nuxt markdown berhasil", fake_out.getvalue())
+
+            content = Path(out_file).read_text(encoding="utf-8")
+            self.assertIn('title: "Nuxt Export Target"', content)
+            self.assertIn("<p>Konten Nuxt CLI</p>", content)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
 if __name__ == "__main__":
     unittest.main()
 
