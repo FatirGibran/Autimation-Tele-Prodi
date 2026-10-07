@@ -725,6 +725,57 @@ def wrap_glossary_terms(text: str, glossary: Dict[str, str]) -> str:
     return "".join(processed)
 
 
+def parse_indonesian_formal_date(date_str: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses formal Indonesian date string (e.g., 'Senin, 14 Oktober 2024 15:30 WIB'
+    or '25 Desember 2024') into structured date fields and ISO format.
+    """
+    if not date_str:
+        return None
+
+    months_map = {
+        "januari": "01", "februari": "02", "maret": "03", "april": "04",
+        "mei": "05", "juni": "06", "juli": "07", "agustus": "08",
+        "september": "09", "oktober": "10", "november": "11", "desember": "12"
+    }
+
+    pattern = re.compile(
+        r'(?:(Senin|Selasa|Rabu|Kamis|Jumat|Jum\'at|Sabtu|Minggu),\s*)?'
+        r'(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})'
+        r'(?:\s+(\d{1,2}:\d{2})(?:\s*(WIB|WITA|WIT))?)?',
+        re.IGNORECASE
+    )
+
+    match = pattern.search(date_str.strip())
+    if not match:
+        return None
+
+    day_name = match.group(1).capitalize() if match.group(1) else None
+    day_num = int(match.group(2))
+    month_name = match.group(3).lower()
+    year_num = int(match.group(4))
+    time_str = match.group(5)
+    tz_str = match.group(6)
+
+    month_code = months_map.get(month_name)
+    if not month_code or not (1 <= day_num <= 31):
+        return None
+
+    iso_date = f"{year_num:04d}-{month_code}-{day_num:02d}"
+    iso_str = f"{iso_date}T{time_str}:00" if time_str else iso_date
+
+    return {
+        "day_name": day_name,
+        "day": day_num,
+        "month_name": match.group(3).capitalize(),
+        "month": int(month_code),
+        "year": year_num,
+        "time": time_str,
+        "timezone": tz_str.upper() if tz_str else None,
+        "iso_date": iso_str
+    }
+
+
 
 
 
