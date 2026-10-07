@@ -369,6 +369,71 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Masa Tunggu Kerja", card)
         self.assertIn("Rp 9.500.000", card)
 
+    def test_render_journal_publication_card(self):
+        card = EditorialComponents.render_journal_publication_card(
+            title="Optimasi Deep Learning pada Edge IoT",
+            authors=["Budi Santoso", "Siti Rahma"],
+            journal_name="IEEE Internet of Things Journal",
+            doi_url="https://doi.org/10.1109/JIOT.2026.123456",
+            quartile="Q1"
+        )
+        self.assertIn("tu-journal-card", card)
+        self.assertIn("Q1", card)
+        self.assertIn("IEEE Internet of Things Journal", card)
+        self.assertIn("Budi Santoso, Siti Rahma", card)
+        self.assertIn("https://doi.org/10.1109/JIOT.2026.123456", card)
+
+    def test_render_student_club_card(self):
+        card = EditorialComponents.render_student_club_card(
+            club_name="Cyber Security Club Purwokerto",
+            focus_area="Ethical Hacking & CTF",
+            leader="Rian Pratama",
+            meet_schedule="Setiap Kamis 16:00 WIB",
+            member_count=35
+        )
+        self.assertIn("tu-club-card", card)
+        self.assertIn("Cyber Security Club Purwokerto", card)
+        self.assertIn("Ethical Hacking &amp; CTF", card)
+        self.assertIn("Rian Pratama", card)
+        self.assertIn("35 Mahasiswa", card)
+
+    def test_render_research_grant_banner(self):
+        banner = EditorialComponents.render_research_grant_banner(
+            grant_name="Pengembangan Smart Campus Digital Twin Berbasis IoT",
+            scheme="Hibah Penelitian Fundamental",
+            funding_agency="Kemendikbudristek",
+            amount="Rp 150.000.000",
+            lead_researcher="Dr. Ir. Hendra"
+        )
+        self.assertIn("tu-grant-banner", banner)
+        self.assertIn("Smart Campus Digital Twin", banner)
+        self.assertIn("Kemendikbudristek", banner)
+        self.assertIn("Rp 150.000.000", banner)
+
+    def test_render_specialization_track_card(self):
+        card = EditorialComponents.render_specialization_track_card(
+            track_name="Keminatan Artificial Intelligence",
+            description="Fokus mendalam pada machine learning, vision, dan NLP.",
+            core_courses=["Deep Learning", "Pengolahan Citra Digital", "NLP"],
+            career_roles=["AI Engineer", "Data Scientist", "MLOps Engineer"]
+        )
+        self.assertIn("tu-track-card", card)
+        self.assertIn("Keminatan Artificial Intelligence", card)
+        self.assertIn("Deep Learning", card)
+        self.assertIn("AI Engineer", card)
+
+    def test_render_data_center_facility_card(self):
+        specs = [
+            {"key": "Kapasitas Server", "value": "4 Rak Blade Server 42U"},
+            {"key": "Konektivitas", "value": "Redundant 10 Gbps Fiber Optic"},
+            {"key": "Sistem Pendingin", "value": "Precision In-Row Cooling"}
+        ]
+        card = EditorialComponents.render_data_center_facility_card("Data Center Laboratorium Informatika", specs)
+        self.assertIn("tu-facility-card", card)
+        self.assertIn("Data Center Laboratorium Informatika", card)
+        self.assertIn("4 Rak Blade Server 42U", card)
+        self.assertIn("Redundant 10 Gbps Fiber Optic", card)
+
 if __name__ == "__main__":
     unittest.main()
 
