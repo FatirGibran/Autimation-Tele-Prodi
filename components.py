@@ -1130,6 +1130,36 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_student_club_card(
+        cls,
+        club_name: str,
+        focus_area: str,
+        leader: str,
+        meet_schedule: str,
+        member_count: int
+    ) -> str:
+        """
+        Renders a student study group and coding club showcase component.
+        """
+        from xml.sax.saxutils import escape
+        s_club = escape(club_name)
+        s_focus = escape(focus_area)
+        s_leader = escape(leader)
+        s_sched = escape(meet_schedule)
+
+        return f"""    <div class="tu-club-card">
+      <div class="tu-club-header">
+        <h4 class="tu-club-name">{s_club}</h4>
+        <span class="tu-club-badge">{s_focus}</span>
+      </div>
+      <div class="tu-club-meta">
+        <span class="tu-club-leader">Koordinator: {s_leader}</span>
+        <span class="tu-club-sched">Jadwal: {s_sched}</span>
+        <span class="tu-club-count">Total Anggota: {member_count} Mahasiswa</span>
+      </div>
+    </div>"""
+
 
 
 
