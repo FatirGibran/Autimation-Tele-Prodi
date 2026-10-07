@@ -934,6 +934,35 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def validate_breadcrumb_hierarchy(breadcrumbs: List[Dict[str, str]]) -> Dict[str, Any]:
+        """
+        Validates breadcrumb navigation trail structure for SEO hierarchy standards.
+        """
+        issues = []
+        if not breadcrumbs or len(breadcrumbs) < 2:
+            issues.append("Breadcrumb hierarchy must contain at least 2 levels.")
+            return {
+                "depth": len(breadcrumbs) if breadcrumbs else 0,
+                "is_valid": False,
+                "issues": issues
+            }
+
+        depth = len(breadcrumbs)
+        for idx, item in enumerate(breadcrumbs):
+            name = item.get("name", "").strip()
+            url = item.get("url", "").strip()
+            if not name:
+                issues.append(f"Breadcrumb item at level {idx + 1} has empty name.")
+            if idx == 0 and not (url == "/" or "telkomuniversity.ac.id" in url or "home" in name.lower() or "beranda" in name.lower()):
+                issues.append("Root breadcrumb item must represent Home or site root.")
+
+        return {
+            "depth": depth,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
