@@ -304,6 +304,20 @@ class WordPressClient:
         )
         return self._send_request(req)
 
+    def set_post_visibility(
+        self,
+        post_id: int,
+        sticky: bool = False,
+        password: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Updates sticky status and password protection on a WordPress post.
+        """
+        payload: Dict[str, Any] = {"sticky": sticky}
+        if password is not None:
+            payload["password"] = password
+        return self.update_post(post_id, payload)
+
 
 
 
