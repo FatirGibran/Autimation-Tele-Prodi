@@ -1287,6 +1287,35 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_certification_badge_card(
+        cls,
+        cert_name: str,
+        issuer: str,
+        validity_period: str,
+        credential_url: str
+    ) -> str:
+        """
+        Renders an international industry certification badge showcase card.
+        """
+        from xml.sax.saxutils import escape
+        s_cert = escape(cert_name)
+        s_issuer = escape(issuer)
+        s_val = escape(validity_period)
+        s_url = escape(credential_url)
+
+        return f"""    <div class="tu-cert-card">
+      <div class="tu-cert-header">
+        <span class="tu-cert-badge">Sertifikasi Internasional</span>
+        <span class="tu-cert-issuer">{s_issuer}</span>
+      </div>
+      <h4 class="tu-cert-title">{s_cert}</h4>
+      <p class="tu-cert-validity">Masa Berlaku: {s_val}</p>
+      <div class="tu-cert-footer">
+        <a href="{s_url}" target="_blank" rel="noopener noreferrer" class="tu-cert-verify">Verifikasi Kredensial</a>
+      </div>
+    </div>"""
+
 
 
 
