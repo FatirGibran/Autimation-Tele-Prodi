@@ -250,6 +250,11 @@ class HTMLSanitizer:
             cleaned = re.sub(r'\s+data-(?:payload|encoded|blob)=["\'][A-Za-z0-9+/=]{80,}["\']', '', cleaned, flags=re.IGNORECASE)
             warnings.append("Stripped high-entropy obfuscated data attribute payload.")
 
+        # 8d. Strip unsafe data-* attributes containing executable or script payloads
+        if re.search(r'\s+data-[a-z0-9_-]+=["\'][^"\']*(?:javascript:|data:text/html|<script|eval\()[^"\']*["\']', cleaned, re.IGNORECASE):
+            cleaned = re.sub(r'\s+data-[a-z0-9_-]+=["\'][^"\']*(?:javascript:|data:text/html|<script|eval\()[^"\']*["\']', '', cleaned, flags=re.IGNORECASE)
+            warnings.append("Stripped dangerous executable payload from custom data attribute.")
+
         return cleaned, warnings
 
 
