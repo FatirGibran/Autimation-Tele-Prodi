@@ -686,6 +686,39 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_university_organization_json_ld(
+        name: str = "Telkom University Purwokerto",
+        url: str = "https://bif-pwt.telkomuniversity.ac.id",
+        faculty_name: str = "Fakultas Informatika",
+        accreditation: str = "Baik Sekali"
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org/CollegeOrUniversity structured data for institutional knowledge graph.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "CollegeOrUniversity",
+            "name": name,
+            "url": url,
+            "department": {
+                "@type": "EducationalOrganization",
+                "name": faculty_name
+            },
+            "hasCredential": {
+                "@type": "EducationalOccupationalCredential",
+                "credentialCategory": "Akreditasi Institusi",
+                "name": accreditation
+            },
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Purwokerto",
+                "addressRegion": "Jawa Tengah",
+                "addressCountry": "ID"
+            }
+        }
+
+
 
 
 
