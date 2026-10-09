@@ -1413,19 +1413,32 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_cpl_curriculum_card(
+        cls,
+        cpl_code: str,
+        title: str,
+        domain: str,
+        descriptions: List[str]
+    ) -> str:
+        """
+        Renders an academic curriculum learning outcomes (CPL / Capaian Pembelajaran Lulusan) card.
+        """
+        from xml.sax.saxutils import escape
+        s_code = escape(cpl_code)
+        s_title = escape(title)
+        s_domain = escape(domain)
+        items_html = "".join(f"<li>{escape(d)}</li>" for d in descriptions)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return f"""    <div class="tu-cpl-card">
+      <div class="tu-cpl-header">
+        <span class="tu-cpl-code">{s_code}</span>
+        <span class="tu-cpl-domain">{s_domain}</span>
+      </div>
+      <h4 class="tu-cpl-title">{s_title}</h4>
+      <div class="tu-cpl-body">
+        <strong>Deskripsi Capaian:</strong>
+        <ul class="tu-cpl-list">{items_html}</ul>
+      </div>
+    </div>"""
 
