@@ -1046,6 +1046,56 @@ def parse_curriculum_semester_plan(text_or_markdown: str) -> List[Dict[str, Any]
     return results
 
 
+def parse_lab_safety_guidelines(content: str) -> List[Dict[str, str]]:
+    """
+    Parses laboratory safety instructions and emergency rules into categorized guideline entries.
+    Categories include: APD (PPE), Bahaya Listrik/Alat (Equipment/Electrical),
+    Tanggap Darurat (Emergency), and Tata Tertib (Protocol).
+    """
+    if not content:
+        return []
+
+    lines = content.splitlines()
+    guidelines: List[Dict[str, str]] = []
+
+    cat_map = {
+        "apd": "Alat Pelindung Diri (APD)",
+        "ppe": "Alat Pelindung Diri (APD)",
+        "bahaya": "Pencegahan Bahaya",
+        "hazard": "Pencegahan Bahaya",
+        "darurat": "Tanggap Darurat",
+        "emergency": "Tanggap Darurat",
+        "tata tertib": "Tata Tertib Laboratorium",
+        "protokol": "Tata Tertib Laboratorium",
+    }
+
+    current_cat = "Tata Tertib Laboratorium"
+
+    for line in lines:
+        line_clean = line.strip()
+        if not line_clean:
+            continue
+
+        cat_match = re.match(r'^(?:[#*]{1,3}\s*|\*\*)([A-Za-z\s/]+)(?:\*\*|:)?$', line_clean)
+        if cat_match:
+            candidate = cat_match.group(1).strip().lower()
+            for key, val in cat_map.items():
+                if key in candidate:
+                    current_cat = val
+                    break
+            continue
+
+        item_match = re.match(r'^(?:[-*+]|\d+\.)\s+(.*)$', line_clean)
+        if item_match:
+            guidelines.append({
+                "category": current_cat,
+                "rule": item_match.group(1).strip()
+            })
+
+    return guidelines
+
+
+
 
 
 
