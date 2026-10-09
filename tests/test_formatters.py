@@ -193,6 +193,34 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Akademik: 7 artikel", digest)
         self.assertIn("Publikasi jurnal bereputasi Q1", digest)
 
+    def test_format_conference_reminder_card(self):
+        card = TelegramFormatter.format_conference_reminder_card(
+            conf_name="IEEE CyberTech 2026",
+            deadline="1 November 2026",
+            venue="Bali Nusa Dua Convention Center",
+            registration_fee="Rp 2.500.000 (Author)",
+            submit_url="https://cybertech2026.org/cfp"
+        )
+        self.assertIn("Pemberitahuan Call for Papers", card)
+        self.assertIn("IEEE CyberTech 2026", card)
+        self.assertIn("1 November 2026", card)
+        self.assertIn("Bali Nusa Dua Convention Center", card)
+        self.assertIn("https://cybertech2026.org/cfp", card)
+
+    def test_format_student_achievement_broadcast(self):
+        card = TelegramFormatter.format_student_achievement_broadcast(
+            event_name="National Hackathon AI Kemendikbud 2026",
+            winner_names=["Aditya Pratama", "Nabila Putri"],
+            award_title="Juara 1 Grand Winner",
+            level="Tingkat Nasional",
+            supervisor_name="Dr. Ir. Hendra, M.T."
+        )
+        self.assertIn("Prestasi Membanggakan Mahasiswa Informatika", card)
+        self.assertIn("Juara 1 Grand Winner (Tingkat Nasional)", card)
+        self.assertIn("National Hackathon AI Kemendikbud 2026", card)
+        self.assertIn("Aditya Pratama", card)
+        self.assertIn("Dr. Ir. Hendra, M.T.", card)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
     def test_rate_limiter_allows_and_blocks(self):
