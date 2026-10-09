@@ -1442,3 +1442,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_internship_partner_card(
+        cls,
+        company_name: str,
+        industry: str,
+        city: str,
+        quota: int,
+        roles: List[str],
+        logo_url: str = ""
+    ) -> str:
+        """
+        Renders an industry internship partner company profile card for student internship opportunities.
+        """
+        from xml.sax.saxutils import escape
+        s_comp = escape(company_name)
+        s_ind = escape(industry)
+        s_city = escape(city)
+        logo_html = f'<img src="{escape(logo_url)}" alt="{s_comp} Logo" class="tu-partner-logo" loading="lazy" />' if logo_url else ""
+        roles_html = "".join(f'<span class="tu-partner-role">{escape(r)}</span>' for r in roles)
+
+        return f"""    <div class="tu-intern-partner-card">
+      <div class="tu-intern-header">
+        {logo_html}
+        <div class="tu-intern-info">
+          <h4 class="tu-intern-company">{s_comp}</h4>
+          <span class="tu-intern-industry">{s_ind} &bull; {s_city}</span>
+        </div>
+        <span class="tu-intern-quota">Kuota: {quota} Posisi</span>
+      </div>
+      <div class="tu-intern-roles">
+        <strong>Posisi Magang:</strong>
+        <div class="tu-intern-roles-list">{roles_html}</div>
+      </div>
+    </div>"""
+
+
