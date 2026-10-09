@@ -1530,5 +1530,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_course_reserve_book_card(
+        cls,
+        title: str,
+        author: str,
+        call_number: str,
+        course_code: str,
+        available_copies: int
+    ) -> str:
+        """
+        Renders a university library course reserve textbook availability card.
+        """
+        from xml.sax.saxutils import escape
+        s_title = escape(title)
+        s_author = escape(author)
+        s_call = escape(call_number)
+        s_course = escape(course_code)
+        status_label = f"{available_copies} Eksemplar Tersedia" if available_copies > 0 else "Sedang Dipinjam Semua"
+        badge_cls = "tu-reserve-avail" if available_copies > 0 else "tu-reserve-empty"
+
+        return f"""    <div class="tu-reserve-card">
+      <div class="tu-reserve-header">
+        <span class="tu-reserve-badge">Buku Teks Wajib</span>
+        <span class="tu-reserve-course">{s_course}</span>
+      </div>
+      <h4 class="tu-reserve-title">{s_title}</h4>
+      <p class="tu-reserve-author">Penulis: {s_author}</p>
+      <div class="tu-reserve-meta">
+        <span class="tu-reserve-call">Nomor Panggil: <code>{s_call}</code></span>
+        <span class="tu-reserve-status {badge_cls}">{status_label}</span>
+      </div>
+    </div>"""
+
+
 
 
