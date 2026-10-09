@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 247+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 277+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 263 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 291 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -303,6 +303,42 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 230. **Subcommand CLI `svelte` (`cli.py`)**: Perintah antarmuka CLI untuk mengekspor artikel langsung ke berkas MDSveX SvelteKit.
 231. **Skrip Auditor Tipografi & Keseimbangan Kutipan Otomatis (`scripts/check_typography.py`)**: Perkakas audit konsistensi tanda petik kurawal Indonesia, gelar akademik, dan spasi tanda baca.
 232. **Ekspansi Suite Pengujian Unit Terpadu (263 Tests Passing)**: Penambahan pengujian unit menyeluruh di seluruh modul baru tanpa regresi dengan tingkat kelulusan 100%.
+
+---
+
+## 15. Pembaruan Fitur & Arsitektur v2.7.0 (Item 233 - 262+)
+
+233. **Sanitasi Semantic Modal & Dialog HTML5 (`sanitizer.py`)**: Sanitasi elemen `<dialog>` dengan penegakan kelas visual dan pembersihan atribut/backdrop skrip manipulatif.
+234. **Stripping Tag Animasi & Font SVG Berbahaya (`sanitizer.py`)**: Pembersihan tag `<animate>`, `<set>`, dan `<font-face>` pada aset grafik SVG inline guna mencegah eksploitasi visual denial-of-service.
+235. **Sanitasi Art-Direction Gambar Responsif (`sanitizer.py`)**: Sanitasi elemen `<picture>` dan `<source>` dengan penegakan tipe MIME dan protokol gambar HTTPS terpercaya.
+236. **Parser Rencana Studi Semester Kurikulum RPS (`parser.py`)**: Ekstraksi dan pengelompokan mata kuliah semester ganjil/genap dari format teks dan tabel markdown kurikulum.
+237. **Parser Peringatan Keselamatan Laboratorium Komputasi (`parser.py`)**: Konversi otomatis format pedoman keselamatan K3 laboratorium komputer ke blok kartu peringatan visual.
+238. **Validator Nomor Identifikasi Bibliografi ISBN & ISSN (`parser.py`)**: Verifikasi format ISBN-10, ISBN-13, dan ISSN internasional lengkap dengan kalkulasi checksum.
+239. **Parser Rentang Tanggal Kalender Akademik Indonesia (`parser.py`)**: Ekstraksi rentang tanggal berformat bahasa Indonesia menjadi rentang representasi waktu standar ISO.
+240. **Auditor Heading Skip Level SEO (`seo_validator.py`)**: Deteksi anomali hierarki heading yang melompati level (seperti H2 langsung melompat ke H4).
+241. **Matcher Kata Kunci Morfologi & Imbuhan Bahasa Indonesia (`seo_validator.py`)**: Identifikasi variasi kata kunci fokus dengan prefiks dan sufiks morfologi bahasa Indonesia.
+242. **Validator Rasio Aspek Gambar Twitter Summary Card (`seo_validator.py`)**: Audit dimensi dan rasio aspek gambar pratinjau media sosial Twitter card.
+243. **Adapter Nilai Keterbacaan ke Hasil Audit Yoast SEO (`seo_validator.py`)**: Integrasi metrik kemudahan membaca Flesch-Kincaid bahasa Indonesia ke evaluasi Yoast.
+244. **Komponen Kartu Capaian Pembelajaran Lulusan CPL (`components.py`)**: Visualisasi capaian pembelajaran kurikulum (CPL) per mata kuliah dengan kode dan domain kompetensi.
+245. **Komponen Showcase Mitra Magang Industri (`components.py`)**: Kartu profil industri mitra magang mahasiswa lengkap dengan kuota posisi dan bidang teknologi.
+246. **Komponen Realisasi Anggaran Hibah Riset Dosen (`components.py`)**: Visualisasi progress bar realisasi anggaran belanja dan milestone tahapan hibah penelitian.
+247. **Komponen Kartu Buku Teks Wajib Perpustakaan (`components.py`)**: Kartu ketersediaan buku cadangan perpustakaan (course reserves) dengan nomor panggil resmi.
+248. **Komponen Statistik Tracer Study Lulusan (`components.py`)**: Visualisasi KPI respon tracer study, rata-rata masa tunggu kerja, dan distribusi penyerapan karir alumni.
+249. **Formatter Kartu Pengingat Call for Papers Konferensi Telegram (`formatters.py`)**: Format kartu siaran Telegram pengingat tenggat waktu submit makalah konferensi ilmiah.
+250. **Formatter Siaran Prestasi Juara Mahasiswa Telegram (`formatters.py`)**: Format siaran cepat berita prestasi mahasiswa pemenang hackathon dan kompetisi nasional.
+251. **Pencatatan Time-Series Tayangan Artikel (`storage.py`)**: Tabel `article_view_logs` dan query agregasi harian performa artikel untuk analitik historis.
+252. **Manajer Penugasan Editorial Artikel (`storage.py`)**: Tabel `editorial_tasks` dan pelacakan alur kerja tugas delegasi review, fact-checking, dan proofreading.
+253. **Manajer Metadata Istilah Taksonomi (`storage.py`)**: Tabel `taxonomy_meta` untuk penyimpanan atribut visual warna, url banner, dan deskripsi kategori/tag.
+254. **Helper Post Sticky Toggle WordPress REST API (`wordpress_client.py`)**: Metode pengaktifan status sematan pos utama (pinned post) via API WordPress.
+255. **Filter Query Media berdasarkan MIME Type WordPress (`wordpress_client.py`)**: Metode penyaringan koleksi pustaka berkas berdasarkan prefiks tipe konten (`image/`, `application/pdf`).
+256. **Generator Skema CollegeOrUniversity Schema.org (`exporter.py`)**: Skema data terstruktur identitas institusi dan akreditasi untuk Google Knowledge Graph.
+257. **Generator Markdown Kompatibel Eleventy (11ty) (`exporter.py`)**: Ekspor artikel ke format SSG Eleventy dengan layout nunjucks dan penugasan permalink dinamis.
+258. **Subcommand CLI `task` (`cli.py`)**: Perintah konsol penugasan, pemantauan, dan pembaruan status tugas editorial tim prodi.
+259. **Subcommand CLI `view-stats` (`cli.py`)**: Perintah konsol visualisasi riwayat tayangan harian artikel berdasarkan ID database.
+260. **Subcommand CLI `eleventy` (`cli.py`)**: Perintah konsol konversi artikel langsung ke format markdown Eleventy SSG.
+261. **Skrip Auditor Hyperlink & Anchor Target (`scripts/check_hyperlinks.py`)**: Perkakas otomatisasi verifikasi tautan `#fragment` lokal, penegakan HTTPS internal, dan audit keamanan rel link.
+262. **Ekspansi Suite Pengujian Unit Terpadu (291 Tests Passing)**: Verifikasi penuh 291 unit test tanpa kegagalan (100% pass rate) pada seluruh modul arsitektur.
+
 
 
 
