@@ -1277,6 +1277,56 @@ class YoastSEOValidator:
             "is_present": len(all_matches) > 0
         }
 
+    @staticmethod
+    def validate_twitter_card_meta(meta_tags_html: str) -> Dict[str, Any]:
+        """
+        Validates Twitter Card metadata markup (twitter:card, title, description, and image URL).
+        """
+        if not meta_tags_html:
+            return {"is_valid": False, "issues": ["Meta tags HTML kosong."]}
+
+        soup = BeautifulSoup(meta_tags_html, "html.parser")
+        issues = []
+
+        def get_meta_content(name: str) -> str:
+            tag = soup.find("meta", attrs={"name": name}) or soup.find("meta", attrs={"property": name})
+            return tag.get("content", "").strip() if tag else ""
+
+        card = get_meta_content("twitter:card")
+        title = get_meta_content("twitter:title")
+        desc = get_meta_content("twitter:description")
+        image = get_meta_content("twitter:image")
+
+        if not card:
+            issues.append("Tag 'twitter:card' tidak ditemukan.")
+        elif card not in ("summary", "summary_large_image", "app", "player"):
+            issues.append(f"Nilai 'twitter:card' tidak standar: '{card}'.")
+
+        if not title:
+            issues.append("Tag 'twitter:title' tidak ditemukan.")
+        elif len(title) > 70:
+            issues.append(f"Nilai 'twitter:title' terlalu panjang ({len(title)} chars, optimal <= 70).")
+
+        if not desc:
+            issues.append("Tag 'twitter:description' tidak ditemukan.")
+        elif len(desc) > 200:
+            issues.append(f"Nilai 'twitter:description' terlalu panjang ({len(desc)} chars, optimal <= 200).")
+
+        if not image:
+            issues.append("Tag 'twitter:image' tidak ditemukan.")
+        elif not image.startswith("https://"):
+            issues.append("Tag 'twitter:image' harus menggunakan URL absolut HTTPS.")
+
+        return {
+            "card": card,
+            "title": title,
+            "description": desc,
+            "image": image,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
