@@ -189,6 +189,21 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_view_article ON article_view_logs(article_id);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_view_time ON article_view_logs(viewed_at);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS editorial_tasks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    assignee TEXT NOT NULL,
+                    task_type TEXT NOT NULL,
+                    due_date TEXT NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_task_assignee ON editorial_tasks(assignee);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_task_status ON editorial_tasks(status);")
+
 
 
 
@@ -1161,6 +1176,50 @@ class StorageManager:
                 ORDER BY view_date ASC;
             """, (article_id, f"-{days}"))
             return [{"date": row["view_date"], "views": row["views"]} for row in cursor.fetchall()]
+
+    def create_editorial_task(self, article_id: int, assignee: str, task_type: str, due_date: str) -> int:
+        """
+        Creates an editorial review, proofreading, or fact-checking task assignment.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO editorial_tasks (article_id, assignee, task_type, due_date, status)
+                VALUES (?, ?, ?, ?, 'pending')
+            """, (article_id, assignee.strip(), task_type.strip(), due_date.strip()))
+            return cursor.lastrowid
+
+    def list_editorial_tasks(self, status: str = "pending") -> List[Dict[str, Any]]:
+        """
+        Lists editorial tasks optionally filtered by status ('pending', 'in_progress', 'completed', 'all').
+        """
+        with self._get_connection() as conn:
+            if status.lower() == "all":
+                cursor = conn.execute("""
+                    SELECT id, article_id, assignee, task_type, due_date, status, created_at
+                    FROM editorial_tasks
+                    ORDER BY id DESC;
+                """)
+            else:
+                cursor = conn.execute("""
+                    SELECT id, article_id, assignee, task_type, due_date, status, created_at
+                    FROM editorial_tasks
+                    WHERE status = ?
+                    ORDER BY id DESC;
+                """, (status.strip().lower(),))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def update_task_status(self, task_id: int, status: str) -> bool:
+        """
+        Updates the completion status of an editorial task.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                UPDATE editorial_tasks
+                SET status = ?
+                WHERE id = ?;
+            """, (status.strip().lower(), task_id))
+            return cursor.rowcount > 0
+
 
 
 
