@@ -1139,6 +1139,87 @@ def validate_and_format_bibliographic_ids(text: str) -> Dict[str, List[str]]:
     return {"isbn": found_isbns, "issn": found_issns}
 
 
+def parse_academic_calendar_range(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses formal Indonesian academic calendar date ranges (single month or cross-month/year).
+    Examples:
+      - '12 - 24 Agustus 2026'
+      - '28 Juli - 15 Agustus 2026'
+      - '15 Desember 2026 - 10 Januari 2027'
+    """
+    if not text:
+        return None
+
+    from datetime import date
+
+    months_map = {
+        "januari": 1, "februari": 2, "maret": 3, "april": 4,
+        "mei": 5, "juni": 6, "juli": 7, "agustus": 8,
+        "september": 9, "oktober": 10, "november": 11, "desember": 12
+    }
+
+    pattern_cross = re.compile(
+        r'(\d{1,2})\s+([A-Za-z]+)(?:\s+(\d{4}))?\s*[-–—]\s*(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})',
+        re.IGNORECASE
+    )
+    pattern_single = re.compile(
+        r'(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})',
+        re.IGNORECASE
+    )
+
+    m_cross = pattern_cross.search(text.strip())
+    if m_cross:
+        d1 = int(m_cross.group(1))
+        m1_name = m_cross.group(2).lower()
+        y1 = int(m_cross.group(3)) if m_cross.group(3) else int(m_cross.group(6))
+        d2 = int(m_cross.group(4))
+        m2_name = m_cross.group(5).lower()
+        y2 = int(m_cross.group(6))
+
+        if m1_name in months_map and m2_name in months_map:
+            mo1 = months_map[m1_name]
+            mo2 = months_map[m2_name]
+            try:
+                dt1 = date(y1, mo1, d1)
+                dt2 = date(y2, mo2, d2)
+                span = (dt2 - dt1).days + 1
+                return {
+                    "start_day": d1, "start_month": mo1, "start_year": y1,
+                    "end_day": d2, "end_month": mo2, "end_year": y2,
+                    "start_iso": dt1.isoformat(),
+                    "end_iso": dt2.isoformat(),
+                    "days_span": span
+                }
+            except ValueError:
+                pass
+
+    m_single = pattern_single.search(text.strip())
+    if m_single:
+        d1 = int(m_single.group(1))
+        d2 = int(m_single.group(2))
+        m_name = m_single.group(3).lower()
+        y = int(m_single.group(4))
+
+        if m_name in months_map:
+            mo = months_map[m_name]
+            try:
+                dt1 = date(y, mo, d1)
+                dt2 = date(y, mo, d2)
+                span = (dt2 - dt1).days + 1
+                return {
+                    "start_day": d1, "start_month": mo, "start_year": y,
+                    "end_day": d2, "end_month": mo, "end_year": y,
+                    "start_iso": dt1.isoformat(),
+                    "end_iso": dt2.isoformat(),
+                    "days_span": span
+                }
+            except ValueError:
+                pass
+
+    return None
+
+
+
 
 
 
