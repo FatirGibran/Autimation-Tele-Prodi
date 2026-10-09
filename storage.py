@@ -177,6 +177,18 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sub_category ON editorial_subscribers(category);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_view_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    referrer TEXT,
+                    user_agent_hash TEXT,
+                    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_view_article ON article_view_logs(article_id);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_view_time ON article_view_logs(viewed_at);")
 
 
 
@@ -1117,6 +1129,39 @@ class StorageManager:
                     "meta_changed": row_a["meta_description"] != row_b["meta_description"]
                 }
             }
+
+    def record_article_view(self, article_id: int, referrer: str = "", user_agent_hash: str = "") -> int:
+        """
+        Records an individual timestamped article view event for analytics.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_view_logs (article_id, referrer, user_agent_hash)
+                VALUES (?, ?, ?)
+            """, (article_id, referrer.strip(), user_agent_hash.strip()))
+            conn.execute("""
+                INSERT INTO article_engagement (article_id, view_count, share_count)
+                VALUES (?, 1, 0)
+                ON CONFLICT(article_id) DO UPDATE SET
+                    view_count = view_count + 1,
+                    last_updated = CURRENT_TIMESTAMP;
+            """, (article_id,))
+            return cursor.lastrowid
+
+    def get_article_views_by_date(self, article_id: int, days: int = 7) -> List[Dict[str, Any]]:
+        """
+        Returns time-series daily view count aggregates for the specified article over recent days.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT DATE(viewed_at) as view_date, COUNT(1) as views
+                FROM article_view_logs
+                WHERE article_id = ? AND viewed_at >= DATETIME('now', ? || ' days')
+                GROUP BY DATE(viewed_at)
+                ORDER BY view_date ASC;
+            """, (article_id, f"-{days}"))
+            return [{"date": row["view_date"], "views": row["views"]} for row in cursor.fetchall()]
+
 
 
 
