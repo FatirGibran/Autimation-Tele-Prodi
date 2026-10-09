@@ -649,8 +649,83 @@ class TestStorageManager(unittest.TestCase):
         not_found = self.storage.compare_revisions(art_id, 1, 99)
         self.assertFalse(not_found["found"])
 
+    def test_record_article_view_and_time_series(self):
+        art_id = self.storage.save_article({
+            "topic": "View Tracking Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-08",
+            "focus_keyphrase": "view tracking",
+            "seo_title": "View Tracking Test",
+            "slug": "view-tracking-test",
+            "meta_description": "Deskripsi view tracking.",
+            "status": "published"
+        })
+        log_id1 = self.storage.record_article_view(art_id, referrer="https://google.com", user_agent_hash="abc123hash")
+        log_id2 = self.storage.record_article_view(art_id, referrer="https://t.me", user_agent_hash="def456hash")
+        self.assertGreater(log_id1, 0)
+        self.assertGreater(log_id2, log_id1)
+
+        # Verify time-series retrieval
+        stats = self.storage.get_article_views_by_date(art_id, days=7)
+        self.assertGreaterEqual(len(stats), 1)
+        total_views = sum(s["views"] for s in stats)
+        self.assertEqual(total_views, 2)
+
+    def test_editorial_tasks_crud_and_status(self):
+        art_id = self.storage.save_article({
+            "topic": "Task Article",
+            "category": "Riset",
+            "publish_date": "2026-10-08",
+            "focus_keyphrase": "task article",
+            "seo_title": "Task Article",
+            "slug": "task-article",
+            "meta_description": "Deskripsi task.",
+            "status": "draft"
+        })
+        task_id = self.storage.create_editorial_task(
+            article_id=art_id,
+            assignee="fatir",
+            task_type="proofreading",
+            due_date="2026-10-15"
+        )
+        self.assertGreater(task_id, 0)
+
+        tasks = self.storage.list_editorial_tasks(status="pending")
+        self.assertTrue(any(t["id"] == task_id for t in tasks))
+
+        # Update status
+        updated = self.storage.update_task_status(task_id, "completed")
+        self.assertTrue(updated)
+
+        pending_tasks = self.storage.list_editorial_tasks(status="pending")
+        self.assertFalse(any(t["id"] == task_id for t in pending_tasks))
+
+        all_tasks = self.storage.list_editorial_tasks(status="all")
+        self.assertTrue(any(t["id"] == task_id and t["status"] == "completed" for t in all_tasks))
+
+    def test_taxonomy_meta_crud(self):
+        self.storage.set_taxonomy_meta("category", "akademik", "featured_color", "#1E88E5")
+        self.storage.set_taxonomy_meta("category", "akademik", "banner_url", "https://cdn.example.com/banner.jpg")
+
+        meta = self.storage.get_taxonomy_meta("category", "akademik")
+        self.assertEqual(meta.get("featured_color"), "#1E88E5")
+        self.assertEqual(meta.get("banner_url"), "https://cdn.example.com/banner.jpg")
+
+        # Update existing
+        self.storage.set_taxonomy_meta("category", "akademik", "featured_color", "#D32F2F")
+        updated_meta = self.storage.get_taxonomy_meta("category", "akademik")
+        self.assertEqual(updated_meta.get("featured_color"), "#D32F2F")
+
+        # Delete key
+        deleted = self.storage.delete_taxonomy_meta("category", "akademik", "featured_color")
+        self.assertTrue(deleted)
+        after_delete = self.storage.get_taxonomy_meta("category", "akademik")
+        self.assertNotIn("featured_color", after_delete)
+        self.assertIn("banner_url", after_delete)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
