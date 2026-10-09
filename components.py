@@ -1563,6 +1563,58 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_alumni_tracer_stat_card(
+        cls,
+        cohort_year: int,
+        response_rate: float,
+        avg_wait_months: float,
+        top_industries: List[Dict[str, Any]]
+    ) -> str:
+        """
+        Renders a graduate tracer study statistical summary card for alumni career tracking.
+        """
+        from xml.sax.saxutils import escape
+        resp_pct = f"{response_rate:.1f}%"
+        wait_str = f"{avg_wait_months:.1f} Bulan"
+
+        industry_items = []
+        for ind in top_industries:
+            name = escape(ind.get("industry", ""))
+            pct = ind.get("percentage", 0)
+            industry_items.append(
+                f"""        <div class="tu-tracer-ind-item">
+          <span class="tu-tracer-ind-name">{name}</span>
+          <span class="tu-tracer-ind-bar-wrap">
+            <span class="tu-tracer-ind-bar" style="width: {pct}%;"></span>
+          </span>
+          <span class="tu-tracer-ind-pct">{pct}%</span>
+        </div>"""
+            )
+
+        ind_html = "\n".join(industry_items)
+        return f"""    <div class="tu-tracer-card">
+      <div class="tu-tracer-header">
+        <h4 class="tu-tracer-title">Tracer Study Lulusan Angkatan {cohort_year}</h4>
+        <span class="tu-tracer-badge">Karier Alumni</span>
+      </div>
+      <div class="tu-tracer-kpis">
+        <div class="tu-tracer-kpi">
+          <span class="tu-tracer-kpi-val">{resp_pct}</span>
+          <span class="tu-tracer-kpi-lbl">Tingkat Respon</span>
+        </div>
+        <div class="tu-tracer-kpi">
+          <span class="tu-tracer-kpi-val">{wait_str}</span>
+          <span class="tu-tracer-kpi-lbl">Rata-rata Masa Tunggu Kerja</span>
+        </div>
+      </div>
+      <div class="tu-tracer-industries">
+        <strong>Distribusi Bidang Industri:</strong>
+{ind_html}
+      </div>
+    </div>"""
+
+
 
 
 
