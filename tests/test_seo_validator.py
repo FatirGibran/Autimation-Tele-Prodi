@@ -376,6 +376,52 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_dense["is_optimal"])
         self.assertEqual(len(res_dense["issues"]), 1)
 
+    def test_audit_heading_hierarchy_skips(self):
+        good_h = '<div class="tu-editorial-container"><h1>Judul</h1><h2>Sub 1</h2><h3>Detail 1</h3><h2>Sub 2</h2></div>'
+        res1 = YoastSEOValidator.audit_heading_hierarchy_skips(good_h)
+        self.assertTrue(res1["is_valid"])
+        self.assertEqual(res1["h1_count"], 1)
+
+        bad_h = '<div class="tu-editorial-container"><h1>Judul</h1><h2>Sub 1</h2><h4>Langsung H4</h4></div>'
+        res2 = YoastSEOValidator.audit_heading_hierarchy_skips(bad_h)
+        self.assertFalse(res2["is_valid"])
+        self.assertTrue(any("skipped from <h2" in iss for iss in res2["issues"]))
+
+    def test_check_indonesian_inflected_keyphrase(self):
+        text = "Dosen dan mahasiswa aktif meriset kecerdasan buatan dalam berbagai penelitian unggulan."
+        res = YoastSEOValidator.check_indonesian_inflected_keyphrase("riset kecerdasan buatan", text)
+        self.assertTrue(res["is_present"])
+        self.assertEqual(res["total_matches"], 1)
+        self.assertIn("meriset kecerdasan buatan", res["found_forms"])
+
+    def test_validate_twitter_card_meta(self):
+        meta_html = (
+            '<meta name="twitter:card" content="summary_large_image">'
+            '<meta name="twitter:title" content="Kurikulum Baru Informatika Telkom">'
+            '<meta name="twitter:description" content="Informasi pembaruan silabus perkuliahan komprehensif.">'
+            '<meta name="twitter:image" content="https://bif-pwt.telkomuniversity.ac.id/banner.jpg">'
+        )
+        res = YoastSEOValidator.validate_twitter_card_meta(meta_html)
+        self.assertTrue(res["is_valid"])
+        self.assertEqual(res["card"], "summary_large_image")
+
+        bad_meta = '<meta name="twitter:card" content="invalid_card">'
+        res_bad = YoastSEOValidator.validate_twitter_card_meta(bad_meta)
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_yoast_audit_coleman_liau_integration(self):
+        html = '<div class="tu-editorial-container"><p class="lead">Teknologi kecerdasan buatan terus berkembang pesat.</p><p>' + 'kata ' * 320 + '</p></div>'
+        meta = {
+            "seo_title": "Teknologi kecerdasan buatan masa depan",
+            "slug": "teknologi-kecerdasan-buatan-masa-depan",
+            "focus_keyphrase": "teknologi kecerdasan buatan",
+            "meta_description": "Ulasan mendalam tentang teknologi kecerdasan buatan di era modern yang sangat relevan dan bermanfaat untuk masa depan digital prodi."
+        }
+        res = YoastSEOValidator.evaluate(meta, html)
+        self.assertIn("coleman_liau", res)
+        self.assertIn("grade_level", res["coleman_liau"])
+        self.assertIn("difficulty", res["coleman_liau"])
+
 if __name__ == "__main__":
     unittest.main()
 
