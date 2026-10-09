@@ -516,6 +516,7 @@ class YoastSEOValidator:
             results["warnings"].append(f"Ditemukan {anchor_audit['flagged_count']} tautan dengan anchor text generik.")
 
         results["readability"] = cls.analyze_readability(body_text)
+        results["coleman_liau"] = cls.calculate_indonesian_coleman_liau(body_text)
         if results["readability"]["has_consecutive_duplicates"]:
             results["warnings"].append("Terdapat 3 atau lebih kalimat berurutan yang diawali kata yang sama.")
 
