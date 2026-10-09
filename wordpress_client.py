@@ -351,6 +351,13 @@ class WordPressClient:
         }
         return self.update_post(post_id, payload)
 
+    def toggle_post_sticky(self, post_id: int, is_sticky: bool) -> Dict[str, Any]:
+        """
+        Toggles the sticky (pinned) attribute on a WordPress post.
+        """
+        return self.update_post(post_id, {"sticky": bool(is_sticky)})
+
+
 
 
 
