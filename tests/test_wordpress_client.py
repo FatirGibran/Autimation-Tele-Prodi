@@ -240,7 +240,31 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["comment_status"], "open")
         self.assertEqual(res["ping_status"], "closed")
 
+    @patch.object(WordPressClient, "update_post")
+    def test_toggle_post_sticky(self, mock_update):
+        mock_update.return_value = {"id": 107, "sticky": True}
+        res = self.client.toggle_post_sticky(107, True)
+        mock_update.assert_called_once_with(107, {"sticky": True})
+        self.assertTrue(res["sticky"])
+
+    @patch("urllib.request.urlopen")
+    def test_list_media_by_mime_type(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 1, "mime_type": "image/jpeg"}, {"id": 2, "mime_type": "application/pdf"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        # Filter image/
+        images = self.client.list_media_by_mime_type(mime_prefix="image/")
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0]["id"], 1)
+
+        # No filter
+        mock_resp.read.return_value = b'[{"id": 1, "mime_type": "image/jpeg"}, {"id": 2, "mime_type": "application/pdf"}]'
+        all_media = self.client.list_media_by_mime_type(mime_prefix="")
+        self.assertEqual(len(all_media), 2)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
