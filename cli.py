@@ -451,6 +451,58 @@ def cmd_svelte(args):
     print(f"Export SvelteKit markdown berhasil -> {out_path}")
 
 
+def cmd_task(args):
+    if args.action == "list":
+        tasks = storage.list_editorial_tasks(status=args.status or "all")
+        if not tasks:
+            print(f"Tidak ada task dengan status '{args.status or 'all'}'.")
+            return
+        print(f"=== Daftar Tugas Editorial (Status: {args.status or 'all'}) ===")
+        print(f"{'ID':<4} | {'ARTICLE ID':<10} | {'ASSIGNEE':<15} | {'TYPE':<15} | {'DUE DATE':<12} | {'STATUS'}")
+        print("-" * 75)
+        for t in tasks:
+            print(f"{t['id']:<4} | {t['article_id']:<10} | {t['assignee']:<15} | {t['task_type']:<15} | {t['due_date']:<12} | {t['status']}")
+    elif args.action == "add":
+        if not args.id or not args.assignee or not args.type or not args.due:
+            print("Error: Argumen --id, --assignee, --type, dan --due wajib disertakan.")
+            sys.exit(1)
+        task_id = storage.create_editorial_task(args.id, args.assignee, args.type, args.due)
+        print(f"Tugas editorial #{task_id} berhasil ditugaskan ke {args.assignee}.")
+    elif args.action == "update":
+        if not args.task_id or not args.status:
+            print("Error: Argumen --task-id dan --status wajib disertakan.")
+            sys.exit(1)
+        ok = storage.update_task_status(args.task_id, args.status)
+        print(f"Status tugas #{args.task_id} {'berhasil diperbarui ke ' + args.status if ok else 'gagal diperbarui'}.")
+
+
+def cmd_view_stats(args):
+    views = storage.get_article_views_by_date(args.id, days=args.days or 7)
+    if not views:
+        print(f"Tidak ada log tayangan untuk artikel ID {args.id} dalam {args.days or 7} hari terakhir.")
+        return
+    print(f"=== Statistik Tayangan Artikel ID {args.id} ({args.days or 7} Hari Terakhir) ===")
+    print(f"{'TANGGAL':<15} | {'TAYANGAN':<10}")
+    print("-" * 30)
+    for v in views:
+        print(f"{v['date']:<15} | {v['views']:<10}")
+
+
+def cmd_eleventy(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    eleventy_md = ArticleExporter.to_eleventy_markdown(
+        metadata=article,
+        html_content=article.get("html_content", "")
+    )
+    out_path.write_text(eleventy_md, encoding="utf-8")
+    print(f"Export Eleventy markdown berhasil -> {out_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -625,7 +677,31 @@ def main():
     svelte_parser.add_argument("--out", help="Path berkas output MDSveX")
     svelte_parser.set_defaults(func=cmd_svelte)
 
+    # Task command
+    task_parser = subparsers.add_parser("task", help="Kelola penugasan editorial artikel (list, add, update)")
+    task_parser.add_argument("--action", choices=["list", "add", "update"], default="list", help="Tindakan task")
+    task_parser.add_argument("--id", type=int, help="ID artikel")
+    task_parser.add_argument("--task-id", type=int, help="ID tugas")
+    task_parser.add_argument("--assignee", help="Nama penerima tugas")
+    task_parser.add_argument("--type", help="Jenis tugas (review/proofreading/fact_check)")
+    task_parser.add_argument("--due", help="Batas waktu tugas (YYYY-MM-DD)")
+    task_parser.add_argument("--status", default="pending", help="Filter atau status baru")
+    task_parser.set_defaults(func=cmd_task)
+
+    # View-stats command
+    view_parser = subparsers.add_parser("view-stats", help="Tampilkan time-series tayangan harian artikel")
+    view_parser.add_argument("--id", type=int, required=True, help="ID artikel")
+    view_parser.add_argument("--days", type=int, default=7, help="Rentang hari historis")
+    view_parser.set_defaults(func=cmd_view_stats)
+
+    # Eleventy command
+    eleventy_parser = subparsers.add_parser("eleventy", help="Export artikel ke format Markdown kompatibel Eleventy SSG")
+    eleventy_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    eleventy_parser.add_argument("--out", help="Path berkas output Markdown Eleventy")
+    eleventy_parser.set_defaults(func=cmd_eleventy)
+
     args = parser.parse_args()
+
     args.func(args)
 
 
