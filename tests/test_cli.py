@@ -667,6 +667,96 @@ class TestCLI(unittest.TestCase):
             if Path(out_file).exists():
                 Path(out_file).unlink()
 
+    def test_cmd_task(self):
+        art_id = cli.storage.save_article({
+            "topic": "Task CLI Article",
+            "category": "Testing",
+            "publish_date": "2026-10-08",
+            "focus_keyphrase": "task cli",
+            "seo_title": "Task CLI Article",
+            "slug": "task-cli-article",
+            "meta_description": "Deskripsi task cli.",
+            "status": "draft"
+        })
+        class ArgsAdd:
+            action = "add"
+            id = art_id
+            assignee = "budi"
+            type = "fact_check"
+            due = "2026-10-20"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_task(ArgsAdd())
+            self.assertIn("berhasil ditugaskan ke budi", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            status = "pending"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_task(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Daftar Tugas Editorial", out)
+            self.assertIn("budi", out)
+            self.assertIn("fact_check", out)
+
+    def test_cmd_view_stats(self):
+        art_id = cli.storage.save_article({
+            "topic": "View Stats CLI",
+            "category": "Testing",
+            "publish_date": "2026-10-08",
+            "focus_keyphrase": "view stats cli",
+            "seo_title": "View Stats CLI",
+            "slug": "view-stats-cli",
+            "meta_description": "Deskripsi view stats cli.",
+            "status": "published"
+        })
+        cli.storage.record_article_view(art_id, referrer="https://google.com")
+
+        class ArgsViews:
+            id = art_id
+            days = 7
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_view_stats(ArgsViews())
+            out = fake_out.getvalue()
+            self.assertIn(f"Statistik Tayangan Artikel ID {art_id}", out)
+            self.assertIn("TAYANGAN", out)
+
+    def test_cmd_eleventy(self):
+        cli.storage.save_article({
+            "topic": "Eleventy CLI Target",
+            "category": "Jamstack",
+            "publish_date": "2026-10-08",
+            "focus_keyphrase": "eleventy cli",
+            "seo_title": "Eleventy CLI Target",
+            "slug": "eleventy-cli-target",
+            "meta_description": "Deskripsi eleventy cli.",
+            "html_content": "<p>Konten 11ty CLI</p>",
+            "status": "published"
+        })
+
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class Args11ty:
+                slug = "eleventy-cli-target"
+                out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_eleventy(Args11ty())
+                self.assertIn("Export Eleventy markdown berhasil", fake_out.getvalue())
+
+            content = Path(out_file).read_text(encoding="utf-8")
+            self.assertIn('title: "Eleventy CLI Target"', content)
+            self.assertIn("layout: layouts/post.njk", content)
+            self.assertIn("<p>Konten 11ty CLI</p>", content)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
 if __name__ == "__main__":
     unittest.main()
+
 
