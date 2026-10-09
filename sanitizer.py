@@ -4,7 +4,7 @@ from typing import Tuple, List
 ALLOWED_TAGS = {
     "div", "style", "article", "header", "section", "figure", "figcaption",
     "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
-    "span", "strong", "em", "code", "pre", "blockquote", "details", "summary",
+    "span", "strong", "em", "code", "pre", "blockquote", "details", "summary", "dialog",
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
     "video", "audio", "source",
@@ -98,6 +98,22 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<summary\b[^>]*>', fix_summary, cleaned, flags=re.IGNORECASE)
             if cleaned != det_before:
                 warnings.append("Sanitized details and summary elements with editorial class attributes.")
+
+        # 1e. Sanitize HTML5 dialog and modal elements with editorial classes
+        if "<dialog" in cleaned.lower():
+            def fix_dialog(match):
+                tag = match.group(0)
+                if 'class=' not in tag:
+                    tag = tag.rstrip(">") + ' class="tu-dialog">'
+                elif 'tu-dialog' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-dialog"', tag)
+                return tag
+
+            dia_before = cleaned
+            cleaned = re.sub(r'<dialog\b[^>]*>', fix_dialog, cleaned, flags=re.IGNORECASE)
+            if cleaned != dia_before:
+                warnings.append("Sanitized dialog elements with editorial class attributes.")
+
 
 
 
