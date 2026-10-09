@@ -203,6 +203,19 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_task_assignee ON editorial_tasks(assignee);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_task_status ON editorial_tasks(status);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS taxonomy_meta (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    taxonomy TEXT NOT NULL,
+                    term_slug TEXT NOT NULL,
+                    meta_key TEXT NOT NULL,
+                    meta_value TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(taxonomy, term_slug, meta_key)
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_tax_slug ON taxonomy_meta(taxonomy, term_slug);")
+
 
 
 
@@ -1219,6 +1232,43 @@ class StorageManager:
                 WHERE id = ?;
             """, (status.strip().lower(), task_id))
             return cursor.rowcount > 0
+
+    def set_taxonomy_meta(self, taxonomy: str, term_slug: str, meta_key: str, meta_value: str) -> None:
+        """
+        Sets a key-value metadata attribute for a taxonomy term (category, tag, series).
+        """
+        with self._get_connection() as conn:
+            conn.execute("""
+                INSERT INTO taxonomy_meta (taxonomy, term_slug, meta_key, meta_value)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(taxonomy, term_slug, meta_key) DO UPDATE SET
+                    meta_value = excluded.meta_value,
+                    created_at = CURRENT_TIMESTAMP;
+            """, (taxonomy.strip().lower(), term_slug.strip().lower(), meta_key.strip(), meta_value.strip()))
+
+    def get_taxonomy_meta(self, taxonomy: str, term_slug: str) -> Dict[str, str]:
+        """
+        Retrieves all metadata key-value pairs associated with a taxonomy term.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT meta_key, meta_value
+                FROM taxonomy_meta
+                WHERE taxonomy = ? AND term_slug = ?;
+            """, (taxonomy.strip().lower(), term_slug.strip().lower()))
+            return {row["meta_key"]: row["meta_value"] for row in cursor.fetchall()}
+
+    def delete_taxonomy_meta(self, taxonomy: str, term_slug: str, meta_key: str) -> bool:
+        """
+        Removes a specific metadata entry from a taxonomy term.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                DELETE FROM taxonomy_meta
+                WHERE taxonomy = ? AND term_slug = ? AND meta_key = ?;
+            """, (taxonomy.strip().lower(), term_slug.strip().lower(), meta_key.strip()))
+            return cursor.rowcount > 0
+
 
 
 
