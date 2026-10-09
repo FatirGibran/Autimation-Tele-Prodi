@@ -324,6 +324,62 @@ Poin Utama:
         self.assertIn("```python", norm)
         self.assertIn("```bash", norm)
 
+    def test_parse_curriculum_semester_plan(self):
+        from parser import parse_curriculum_semester_plan
+        md = (
+            "### Semester 1\n"
+            "- CS101 Pengantar Pemrograman (3 SKS) [Wajib]\n"
+            "- MA101 Kalkulus 1 (4 SKS)\n\n"
+            "### Semester 2\n"
+            "- IF201 Struktur Data (3 SKS)\n"
+            "- IF202 Bahasa Inggris Teknis (2 SKS) [Pilihan]\n"
+        )
+        plan = parse_curriculum_semester_plan(md)
+        self.assertEqual(len(plan), 2)
+        self.assertEqual(plan[0]["semester"], 1)
+        self.assertEqual(plan[0]["total_credits"], 7)
+        self.assertFalse(plan[0]["courses"][0]["is_elective"])
+        self.assertEqual(plan[1]["semester"], 2)
+        self.assertEqual(plan[1]["total_credits"], 5)
+        self.assertTrue(plan[1]["courses"][1]["is_elective"])
+
+    def test_parse_lab_safety_guidelines(self):
+        from parser import parse_lab_safety_guidelines
+        text = (
+            "**Aturan APD Laboratorium**:\n"
+            "- Wajib memakai jas laboratorium berwarna putih\n"
+            "- Gunakan kacamata pelindung saat menyolder\n\n"
+            "**Tanggap Darurat**:\n"
+            "- Segera tekan tombol darurat bila terjadi korsleting\n"
+        )
+        rules = parse_lab_safety_guidelines(text)
+        self.assertEqual(len(rules), 3)
+        self.assertEqual(rules[0]["category"], "Alat Pelindung Diri (APD)")
+        self.assertIn("jas laboratorium", rules[0]["rule"])
+        self.assertEqual(rules[2]["category"], "Tanggap Darurat")
+
+    def test_validate_and_format_bibliographic_ids(self):
+        from parser import validate_and_format_bibliographic_ids
+        text = "Referensi buku: ISBN 9786022620128 dan versi lama ISBN 0131103628 serta jurnal dengan ISSN 2088-3285."
+        res = validate_and_format_bibliographic_ids(text)
+        self.assertIn("978-60-22620-12-8", res["isbn"])
+        self.assertIn("01-3110-362-8", res["isbn"])
+        self.assertIn("2088-3285", res["issn"])
+
+    def test_parse_academic_calendar_range(self):
+        from parser import parse_academic_calendar_range
+        res1 = parse_academic_calendar_range("12 - 24 Agustus 2026")
+        self.assertIsNotNone(res1)
+        self.assertEqual(res1["start_iso"], "2026-08-12")
+        self.assertEqual(res1["end_iso"], "2026-08-24")
+        self.assertEqual(res1["days_span"], 13)
+
+        res2 = parse_academic_calendar_range("28 Juli - 15 Agustus 2026")
+        self.assertIsNotNone(res2)
+        self.assertEqual(res2["start_iso"], "2026-07-28")
+        self.assertEqual(res2["end_iso"], "2026-08-15")
+        self.assertEqual(res2["days_span"], 19)
+
 if __name__ == "__main__":
     unittest.main()
 

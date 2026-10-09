@@ -1076,7 +1076,7 @@ def parse_lab_safety_guidelines(content: str) -> List[Dict[str, str]]:
         if not line_clean:
             continue
 
-        cat_match = re.match(r'^(?:[#*]{1,3}\s*|\*\*)([A-Za-z\s/]+)(?:\*\*|:)?$', line_clean)
+        cat_match = re.search(r'(?:[#*]{1,3}\s*|\*\*)([A-Za-z\s/]+?)(?:\*\*|:|$)', line_clean)
         if cat_match:
             candidate = cat_match.group(1).strip().lower()
             for key, val in cat_map.items():
