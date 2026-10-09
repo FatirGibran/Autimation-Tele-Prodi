@@ -987,6 +987,66 @@ def normalize_code_block_language_tags(markdown_text: str) -> str:
     return re.sub(r'(^|\n)(```|~~~)([a-zA-Z0-9_+-]+)(?=\s|$)', replace_fence, markdown_text)
 
 
+def parse_curriculum_semester_plan(text_or_markdown: str) -> List[Dict[str, Any]]:
+    """
+    Parses curriculum semester study plans extracting semester numbers,
+    courses, course codes, SKS credit weights, and elective flags.
+    """
+    if not text_or_markdown:
+        return []
+
+    sem_pattern = re.compile(r'(?:###?\s*|Semester\s+)(\d+)', re.IGNORECASE)
+    course_pattern = re.compile(
+        r'[-*]\s*([A-Z]{2,4}\d{3,4})?\s*([^(]+?)\s*\(\s*(\d+)\s*(?:SKS|sks)\s*\)(?:\s*\[(Wajib|Pilihan|Elective)\])?',
+        re.IGNORECASE
+    )
+
+    results: List[Dict[str, Any]] = []
+    current_sem: Optional[int] = None
+    current_courses: List[Dict[str, Any]] = []
+
+    for line in text_or_markdown.splitlines():
+        line_str = line.strip()
+        sem_match = sem_pattern.search(line_str)
+        if sem_match and ("semester" in line_str.lower() or line_str.startswith("#")):
+            if current_sem is not None:
+                tot_credits = sum(c["credits"] for c in current_courses)
+                results.append({
+                    "semester": current_sem,
+                    "courses": current_courses,
+                    "total_credits": tot_credits
+                })
+            current_sem = int(sem_match.group(1))
+            current_courses = []
+            continue
+
+        if current_sem is not None:
+            c_match = course_pattern.search(line_str)
+            if c_match:
+                code = (c_match.group(1) or "").strip()
+                name = c_match.group(2).strip()
+                credits = int(c_match.group(3))
+                flag = (c_match.group(4) or "").lower()
+                is_elective = flag in ("pilihan", "elective")
+                current_courses.append({
+                    "code": code,
+                    "name": name,
+                    "credits": credits,
+                    "is_elective": is_elective
+                })
+
+    if current_sem is not None:
+        tot_credits = sum(c["credits"] for c in current_courses)
+        results.append({
+            "semester": current_sem,
+            "courses": current_courses,
+            "total_credits": tot_credits
+        })
+
+    return results
+
+
+
 
 
 
