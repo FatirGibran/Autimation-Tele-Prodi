@@ -718,6 +718,36 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_eleventy_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Eleventy (11ty) static site generator markdown format with layout and permalink.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        date = metadata.get("publish_date", "2026-10-01")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = "\n".join(f"  - {t}" for t in tags) if tags else "  - post"
+
+        frontmatter = [
+            "---",
+            "layout: layouts/post.njk",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'date: {date}',
+            f'permalink: "/posts/{slug}/"' if slug else 'permalink: "/posts/"',
+            "tags:",
+            tags_yaml,
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
