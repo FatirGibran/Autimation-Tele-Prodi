@@ -190,6 +190,39 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("disabled", clean)
         self.assertTrue(any("interactive form" in w for w in warnings))
 
+    def test_sanitize_dialog_element(self):
+        dia_html = '<div class="tu-editorial-container"><dialog open><p>Modal pengumuman akademik.</p></dialog></div>'
+        clean, warnings = HTMLSanitizer.sanitize(dia_html)
+        self.assertIn('<dialog open class="tu-dialog">', clean)
+        self.assertIn("Modal pengumuman akademik.", clean)
+        self.assertTrue(any("dialog elements" in w for w in warnings))
+
+    def test_strip_svg_animation_tags(self):
+        svg_html = (
+            '<div class="tu-editorial-container"><svg viewBox="0 0 100 100">'
+            '<circle cx="50" cy="50" r="40"/>'
+            '<animate attributeName="r" from="40" to="20" dur="1s"/>'
+            '<set attributeName="fill" to="red"/>'
+            '</svg></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(svg_html)
+        self.assertNotIn("<animate", clean)
+        self.assertNotIn("<set", clean)
+        self.assertIn("<circle", clean)
+        self.assertTrue(any("animation or embedded font" in w for w in warnings))
+
+    def test_sanitize_picture_and_source(self):
+        pic_html = (
+            '<div class="tu-editorial-container"><picture>'
+            '<source srcset="http://cdn.example.com/hero.webp" type="image/webp">'
+            '<img src="https://cdn.example.com/hero.jpg" alt="Hero">'
+            '</picture></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(pic_html)
+        self.assertIn('<picture class="tu-picture">', clean)
+        self.assertIn('srcset="https://cdn.example.com/hero.webp"', clean)
+        self.assertTrue(any("picture containers" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
 
