@@ -504,7 +504,86 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Kumamoto University", card)
         self.assertIn("Artificial Intelligence (4 SKS)", card)
 
+    def test_render_cpl_curriculum_card(self):
+        desc = ["Mampu merancang arsitektur sistem berbasis awan", "Mampu menerapkan etika profesi rekayasa perangkat lunak"]
+        card = EditorialComponents.render_cpl_curriculum_card(
+            cpl_code="CPL-03",
+            title="Kemampuan Perancangan Rekayasa Perangkat Lunak",
+            domain="Keterampilan Khusus",
+            descriptions=desc
+        )
+        self.assertIn("tu-cpl-card", card)
+        self.assertIn("CPL-03", card)
+        self.assertIn("Kemampuan Perancangan", card)
+        self.assertIn("Mampu merancang arsitektur sistem", card)
+
+    def test_render_internship_partner_card(self):
+        roles = ["Cloud Engineer Intern", "Backend Developer"]
+        card = EditorialComponents.render_internship_partner_card(
+            company_name="PT Telkom Indonesia Tbk",
+            industry="Telekomunikasi & Digital",
+            city="Bandung",
+            quota=5,
+            roles=roles,
+            logo_url="https://example.com/logo.png"
+        )
+        self.assertIn("tu-intern-partner-card", card)
+        self.assertIn("PT Telkom Indonesia Tbk", card)
+        self.assertIn("Bandung", card)
+        self.assertIn("Kuota: 5 Posisi", card)
+        self.assertIn("Cloud Engineer Intern", card)
+
+    def test_render_grant_expenditure_card(self):
+        milestones = [
+            {"milestone": "Survei Literatur & Dataset", "spent_idr": 25000000, "status": "Selesai"},
+            {"milestone": "Pengembangan Model Prototype", "spent_idr": 45000000, "status": "Berjalan"}
+        ]
+        card = EditorialComponents.render_grant_expenditure_card(
+            grant_title="Sistem Deteksi Anomali IoT Jaringan Kampus",
+            scheme="Hibah Riset Terapan",
+            budget_idr=100000000,
+            progress_pct=70,
+            milestones=milestones
+        )
+        self.assertIn("tu-grant-exp-card", card)
+        self.assertIn("Sistem Deteksi Anomali IoT", card)
+        self.assertIn("Rp 100.000.000", card)
+        self.assertIn("70%", card)
+        self.assertIn("Survei Literatur", card)
+
+    def test_render_course_reserve_book_card(self):
+        card = EditorialComponents.render_course_reserve_book_card(
+            title="Clean Architecture: A Craftsman's Guide",
+            author="Robert C. Martin",
+            call_number="QA76.76.D47 M37 2018",
+            course_code="IF2143 Rekayasa Perangkat Lunak",
+            available_copies=3
+        )
+        self.assertIn("tu-reserve-card", card)
+        self.assertIn("Clean Architecture", card)
+        self.assertIn("Robert C. Martin", card)
+        self.assertIn("QA76.76.D47 M37 2018", card)
+        self.assertIn("3 Eksemplar Tersedia", card)
+
+    def test_render_alumni_tracer_stat_card(self):
+        industries = [
+            {"industry": "Teknologi Finansial & Perbankan", "percentage": 42},
+            {"industry": "Software House & Konsultan IT", "percentage": 35}
+        ]
+        card = EditorialComponents.render_alumni_tracer_stat_card(
+            cohort_year=2024,
+            response_rate=88.5,
+            avg_wait_months=2.4,
+            top_industries=industries
+        )
+        self.assertIn("tu-tracer-card", card)
+        self.assertIn("Angkatan 2024", card)
+        self.assertIn("88.5%", card)
+        self.assertIn("2.4 Bulan", card)
+        self.assertIn("Teknologi Finansial", card)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
