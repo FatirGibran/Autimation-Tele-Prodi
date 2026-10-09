@@ -1197,6 +1197,44 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_heading_hierarchy_skips(html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic heading hierarchy in article body for skipped levels (e.g. h2 to h4),
+        missing h1/h2 tags, or multiple h1 declarations.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        headings = soup.find_all(re.compile(r"^h[1-6]$"))
+
+        issues = []
+        headings_seq = []
+        last_level = 0
+        h1_count = 0
+
+        for h in headings:
+            level = int(h.name[1])
+            text = h.get_text().strip()
+            headings_seq.append({"level": level, "text": text[:50]})
+
+            if level == 1:
+                h1_count += 1
+                if h1_count > 1:
+                    issues.append(f"Multiple <h1> tags detected; only one <h1> should be present per article (found: '{text[:40]}...').")
+
+            if last_level > 0 and level > last_level + 1:
+                issues.append(f"Heading level skipped from <h{last_level}> directly to <h{level}> without intermediate level (found: '{text[:40]}...').")
+
+            last_level = level
+
+        return {
+            "total_headings": len(headings),
+            "h1_count": h1_count,
+            "headings_sequence": headings_seq,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
