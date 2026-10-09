@@ -357,6 +357,21 @@ class WordPressClient:
         """
         return self.update_post(post_id, {"sticky": bool(is_sticky)})
 
+    def list_media_by_mime_type(self, mime_prefix: str = "image/", per_page: int = 20) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress media items filtered by media_type or MIME prefix.
+        """
+        endpoint = f"{self.api_url}/media?per_page={per_page}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if not isinstance(results, list):
+            return []
+        if not mime_prefix:
+            return results
+        prefix = mime_prefix.lower()
+        return [m for m in results if m.get("mime_type", "").lower().startswith(prefix)]
+
+
 
 
 
