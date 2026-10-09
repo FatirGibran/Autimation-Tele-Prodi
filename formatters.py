@@ -350,6 +350,28 @@ class TelegramFormatter:
             f"🚀 *Tetap produktif dan jaga standar kualitas konten prodi!*"
         )
 
+    @staticmethod
+    def format_conference_reminder_card(
+        conf_name: str,
+        deadline: str,
+        venue: str,
+        registration_fee: str,
+        submit_url: str
+    ) -> str:
+        """
+        Renders an academic call-for-papers and conference deadline reminder card for Telegram.
+        """
+        return (
+            f"📢 **Pemberitahuan Call for Papers Konferensi Ilmiah**\n\n"
+            f"🏛 **Konferensi:** {conf_name}\n"
+            f"⏳ **Batas Akhir (Deadline):** `{deadline}`\n"
+            f"📍 **Lokasi / Venue:** {venue}\n"
+            f"💰 **Biaya Registrasi:** {registration_fee}\n"
+            f"🔗 **Tautan Submit:** {submit_url}\n\n"
+            f"💡 *Mahasiswa dan dosen disarankan segera menyelesaikan naskah sebelum batas akhir.*"
+        )
+
+
 
 
 
