@@ -371,6 +371,28 @@ class TelegramFormatter:
             f"💡 *Mahasiswa dan dosen disarankan segera menyelesaikan naskah sebelum batas akhir.*"
         )
 
+    @staticmethod
+    def format_student_achievement_broadcast(
+        event_name: str,
+        winner_names: List[str],
+        award_title: str,
+        level: str,
+        supervisor_name: str
+    ) -> str:
+        """
+        Renders a fast-breaking student achievement and competition victory card for Telegram broadcasts.
+        """
+        winners_text = "\n".join(f"  🏆 {w}" for w in winner_names) if winner_names else "  🏆 Mahasiswa Prestasi Prodi"
+        return (
+            f"🎉 **Prestasi Membanggakan Mahasiswa Informatika!**\n\n"
+            f"🏅 **Peringkat / Gelar:** {award_title} ({level})\n"
+            f"🎪 **Ajang Kompetisi:** {event_name}\n\n"
+            f"👥 **Nama Pemenang:**\n{winners_text}\n\n"
+            f"👨‍🏫 **Dosen Pembimbing:** {supervisor_name}\n\n"
+            f"👏 *Selamat atas pencapaian gemilang yang mengharumkan almamater!*"
+        )
+
+
 
 
 
