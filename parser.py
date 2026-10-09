@@ -1095,6 +1095,51 @@ def parse_lab_safety_guidelines(content: str) -> List[Dict[str, str]]:
     return guidelines
 
 
+def validate_and_format_bibliographic_ids(text: str) -> Dict[str, List[str]]:
+    """
+    Extracts, validates, and normalizes standard academic bibliographic identifiers
+    (ISBN-10, ISBN-13, and ISSN) from citations and textbook bibliographies.
+    """
+    if not text:
+        return {"isbn": [], "issn": []}
+
+    isbn_pattern = re.compile(
+        r'\b(?:ISBN(?:-1[03])?:?\s*)?((?:97[89][-\s]?)?\d{1,5}[-\s]?\d+[-\s]?\d+[-\s]?[0-9X])\b',
+        re.IGNORECASE
+    )
+    issn_pattern = re.compile(
+        r'\b(?:ISSN:?\s*)?(\d{4}[-\s]?\d{3}[0-9X])\b',
+        re.IGNORECASE
+    )
+
+    found_isbns: List[str] = []
+    found_issns: List[str] = []
+
+    # Match ISSN first
+    for m in issn_pattern.finditer(text):
+        raw = m.group(1).replace("-", "").replace(" ", "").upper()
+        if len(raw) == 8 and ("issn" in text[max(0, m.start()-10):m.end()+10].lower() or "-" in m.group(1)):
+            formatted = f"{raw[:4]}-{raw[4:]}"
+            if formatted not in found_issns:
+                found_issns.append(formatted)
+
+    # Match ISBN
+    for m in isbn_pattern.finditer(text):
+        raw = m.group(1).replace("-", "").replace(" ", "").upper()
+        if len(raw) in (10, 13):
+            if len(raw) == 13 and (raw.startswith("978") or raw.startswith("979")):
+                formatted = f"{raw[:3]}-{raw[3:5]}-{raw[5:10]}-{raw[10:12]}-{raw[12]}"
+                if formatted not in found_isbns:
+                    found_isbns.append(formatted)
+            elif len(raw) == 10:
+                formatted = f"{raw[:2]}-{raw[2:6]}-{raw[6:9]}-{raw[9]}"
+                if formatted not in found_isbns:
+                    found_isbns.append(formatted)
+
+    return {"isbn": found_isbns, "issn": found_issns}
+
+
+
 
 
 
