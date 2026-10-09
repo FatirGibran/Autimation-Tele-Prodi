@@ -1234,6 +1234,50 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def check_indonesian_inflected_keyphrase(keyphrase: str, text: str) -> Dict[str, Any]:
+        """
+        Validates presence and frequency of keyphrase including Indonesian morphological
+        inflections (prefixes: me-, mem-, men-, meng-, meny-, di-, ber-, ter-, pe-, per-,
+        suffixes: -kan, -i, -an).
+        """
+        if not keyphrase or not text:
+            return {
+                "keyphrase": keyphrase,
+                "exact_matches": 0,
+                "inflected_matches": 0,
+                "total_matches": 0,
+                "found_forms": [],
+                "is_present": False
+            }
+
+        clean_text = re.sub(r'<[^>]+>', ' ', text).lower()
+        words = keyphrase.strip().lower().split()
+
+        prefixes = r'(?:me(?:ng|m|n|ny)?|di|ber|ter|pe(?:ng|m|n|ny)?|per)?'
+        suffixes = r'(?:kan|i|an)?'
+
+        pattern_parts = []
+        for w in words:
+            pattern_parts.append(rf'\b{prefixes}{re.escape(w)}{suffixes}\b')
+
+        pattern = re.compile(r'\s+'.join(pattern_parts), re.IGNORECASE)
+
+        exact_matches = clean_text.count(keyphrase.strip().lower())
+        all_matches = [m.group(0) for m in pattern.finditer(clean_text)]
+        unique_forms = sorted(set(all_matches))
+        inflected_count = len(all_matches) - exact_matches
+
+        return {
+            "keyphrase": keyphrase,
+            "exact_matches": exact_matches,
+            "inflected_matches": max(0, inflected_count),
+            "total_matches": len(all_matches),
+            "found_forms": unique_forms,
+            "is_present": len(all_matches) > 0
+        }
+
+
 
 
 
