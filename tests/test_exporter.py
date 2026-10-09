@@ -326,7 +326,37 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("layout: article", res)
         self.assertIn("<p>Konten SvelteKit</p>", res)
 
+    def test_generate_university_organization_json_ld(self):
+        schema = ArticleExporter.generate_university_organization_json_ld(
+            name="Telkom University Purwokerto",
+            url="https://bif-pwt.telkomuniversity.ac.id",
+            faculty_name="Fakultas Informatika",
+            accreditation="Unggul"
+        )
+        self.assertEqual(schema["@type"], "CollegeOrUniversity")
+        self.assertEqual(schema["name"], "Telkom University Purwokerto")
+        self.assertEqual(schema["department"]["name"], "Fakultas Informatika")
+        self.assertEqual(schema["hasCredential"]["name"], "Unggul")
+        self.assertEqual(schema["address"]["addressLocality"], "Purwokerto")
+
+    def test_to_eleventy_markdown(self):
+        meta = {
+            "seo_title": "Panduan Eleventy SSG",
+            "meta_description": "Static site generator cepat dan fleksibel.",
+            "slug": "panduan-eleventy-ssg",
+            "publish_date": "2026-10-08",
+            "tags": ["11ty", "ssg", "jamstack"]
+        }
+        res = ArticleExporter.to_eleventy_markdown(meta, "<p>Konten 11ty Eleventy</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('layout: layouts/post.njk', res)
+        self.assertIn('title: "Panduan Eleventy SSG"', res)
+        self.assertIn('permalink: "/posts/panduan-eleventy-ssg/"', res)
+        self.assertIn('- 11ty', res)
+        self.assertIn('<p>Konten 11ty Eleventy</p>', res)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
