@@ -250,6 +250,10 @@ class HTMLSanitizer:
             if re.search(r"<(script|foreignObject)", cleaned, re.IGNORECASE):
                 warnings.append("Stripped dangerous tags from SVG.")
                 cleaned = re.sub(r"<(script|foreignObject)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+            if re.search(r"<(animate|animateTransform|set|handler|font|font-face)\b", cleaned, re.IGNORECASE):
+                warnings.append("Stripped animation or embedded font elements from SVG.")
+                cleaned = re.sub(r"<(animate|animateTransform|set|handler|font|font-face)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+                cleaned = re.sub(r"<(animate|animateTransform|set|handler|font|font-face)[^>]*/>", "", cleaned, flags=re.IGNORECASE)
             cleaned = re.sub(r'xlink:href=["\']javascript:[^"\']*["\']', 'xlink:href="#"', cleaned, flags=re.IGNORECASE)
 
         # 6b. Sanitize MathML equation tags and strip executable XML attributes
