@@ -1477,4 +1477,58 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_grant_expenditure_card(
+        cls,
+        grant_title: str,
+        scheme: str,
+        budget_idr: int,
+        progress_pct: int,
+        milestones: List[Dict[str, Any]]
+    ) -> str:
+        """
+        Renders a research grant expenditure progress and milestone timeline card.
+        """
+        from xml.sax.saxutils import escape
+        s_title = escape(grant_title)
+        s_scheme = escape(scheme)
+        formatted_budget = f"Rp {budget_idr:,.0f}".replace(",", ".")
+        pct = max(0, min(100, progress_pct))
+
+        milestone_rows = []
+        for m in milestones:
+            m_name = escape(m.get("milestone", ""))
+            m_status = escape(m.get("status", "pending"))
+            m_cost = m.get("spent_idr", 0)
+            cost_str = f"Rp {m_cost:,.0f}".replace(",", ".")
+            badge_cls = "tu-status-done" if m_status.lower() in ("selesai", "completed", "done") else "tu-status-wait"
+            milestone_rows.append(
+                f"""        <div class="tu-grant-row">
+          <span class="tu-grant-ms-name">{m_name}</span>
+          <span class="tu-grant-ms-cost">{cost_str}</span>
+          <span class="tu-grant-ms-badge {badge_cls}">{m_status}</span>
+        </div>"""
+            )
+
+        rows_html = "\n".join(milestone_rows)
+        return f"""    <div class="tu-grant-exp-card">
+      <div class="tu-grant-exp-header">
+        <h4 class="tu-grant-exp-title">{s_title}</h4>
+        <span class="tu-grant-exp-scheme">{s_scheme}</span>
+      </div>
+      <div class="tu-grant-budget-bar">
+        <div class="tu-grant-budget-meta">
+          <span>Total Anggaran: <strong>{formatted_budget}</strong></span>
+          <span>Realisasi: <strong>{pct}%</strong></span>
+        </div>
+        <div class="tu-progress-track">
+          <div class="tu-progress-fill" style="width: {pct}%;"></div>
+        </div>
+      </div>
+      <div class="tu-grant-milestones">
+{rows_html}
+      </div>
+    </div>"""
+
+
 
