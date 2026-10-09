@@ -7,7 +7,7 @@ ALLOWED_TAGS = {
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary", "dialog",
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
-    "video", "audio", "source",
+    "video", "audio", "source", "picture",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext"
 }
 
@@ -113,6 +113,22 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<dialog\b[^>]*>', fix_dialog, cleaned, flags=re.IGNORECASE)
             if cleaned != dia_before:
                 warnings.append("Sanitized dialog elements with editorial class attributes.")
+
+        # 1f. Sanitize picture responsive art-direction containers
+        if "<picture" in cleaned.lower():
+            def fix_picture(match):
+                tag = match.group(0)
+                if 'class=' not in tag:
+                    tag = tag.rstrip(">") + ' class="tu-picture">'
+                elif 'tu-picture' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-picture"', tag)
+                return tag
+
+            pic_before = cleaned
+            cleaned = re.sub(r'<picture\b[^>]*>', fix_picture, cleaned, flags=re.IGNORECASE)
+            if cleaned != pic_before:
+                warnings.append("Sanitized picture containers with editorial class attributes.")
+
 
 
 
@@ -233,6 +249,15 @@ class HTMLSanitizer:
                     elif src_url.lower().startswith("http://"):
                         warnings.append("Upgraded insecure HTTP media source to HTTPS.")
                         tag = re.sub(r'src=["\']http://', 'src="https://', tag, flags=re.IGNORECASE)
+                srcset_match = re.search(r'srcset=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if srcset_match:
+                    srcset_val = srcset_match.group(1).strip()
+                    if srcset_val.lower().startswith(("javascript:", "data:")):
+                        warnings.append("Stripped dangerous media srcset protocol.")
+                        tag = re.sub(r'srcset=["\'][^"\']*["\']', 'srcset=""', tag, flags=re.IGNORECASE)
+                    elif "http://" in srcset_val.lower():
+                        warnings.append("Upgraded insecure HTTP source srcset to HTTPS.")
+                        tag = re.sub(r'http://', 'https://', tag, flags=re.IGNORECASE)
                 if tag_name in ("video", "audio"):
                     if "controls" not in tag.lower():
                         tag = tag.rstrip(">").rstrip("/") + ' controls>'
