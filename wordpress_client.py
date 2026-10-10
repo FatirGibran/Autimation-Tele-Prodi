@@ -371,6 +371,25 @@ class WordPressClient:
         prefix = mime_prefix.lower()
         return [m for m in results if m.get("mime_type", "").lower().startswith(prefix)]
 
+    def batch_trash_posts(self, post_ids: List[int], force: bool = False) -> Dict[str, Any]:
+        """
+        Trashes or permanently deletes a batch of WordPress posts sequentially.
+        """
+        success = []
+        failed = []
+        for pid in post_ids:
+            try:
+                self.delete_post(pid, force=force)
+                success.append(pid)
+            except Exception as e:
+                failed.append({"post_id": pid, "error": str(e)})
+
+        return {
+            "success": success,
+            "failed": failed,
+            "total": len(post_ids)
+        }
+
 
 
 
