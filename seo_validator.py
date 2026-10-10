@@ -1412,6 +1412,38 @@ class YoastSEOValidator:
             "details": details
         }
 
+    @staticmethod
+    def validate_meta_description_cta(meta_description: str) -> Dict[str, Any]:
+        """
+        Validates presence of call-to-action (CTA) engagement verbs in meta description.
+        Encourages higher search engine result click-through rates (CTR).
+        """
+        if not meta_description:
+            return {"has_cta": False, "matched_ctas": [], "is_optimal": False, "warning": "Meta description is empty."}
+
+        clean = meta_description.strip().lower()
+        cta_keywords = [
+            "pelajari", "simak", "temukan", "baca", "daftar", "ketahui", "dapatkan",
+            "lihat", "eksplorasi", "kunjungi", "pahami", "ikuti", "cek",
+            "learn", "discover", "explore", "read", "check", "find"
+        ]
+
+        matched = []
+        for kw in cta_keywords:
+            if re.search(r'\b' + re.escape(kw) + r'\b', clean):
+                matched.append(kw)
+
+        has_cta = len(matched) > 0
+        warning = "" if has_cta else "Meta description disarankan memuat ajakan bertindak (CTA seperti 'pelajari', 'simak', 'temukan')."
+
+        return {
+            "has_cta": has_cta,
+            "matched_ctas": matched,
+            "is_optimal": has_cta,
+            "warning": warning
+        }
+
+
 
 
 
