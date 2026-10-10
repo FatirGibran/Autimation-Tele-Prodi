@@ -1718,6 +1718,59 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_exchange_quota_table(
+        cls,
+        program_name: str,
+        partners: List[Dict[str, Any]],
+        academic_year: str
+    ) -> str:
+        """
+        Renders an international student exchange and study abroad partner quota table.
+        """
+        from xml.sax.saxutils import escape
+
+        prog_esc = escape(program_name.strip())
+        year_esc = escape(academic_year.strip())
+
+        rows = []
+        for p in partners:
+            univ = escape(str(p.get("university", "")))
+            country = escape(str(p.get("country", "")))
+            quota = p.get("quota", 0)
+            min_gpa = f"{float(p.get('min_gpa', 3.0)):.2f}"
+            lang = escape(str(p.get("language_requirement", "-")))
+            rows.append(f"""          <tr>
+            <td><strong>{univ}</strong></td>
+            <td>{country}</td>
+            <td><span class="tu-quota-badge">{quota} Mahasiswa</span></td>
+            <td><code>IPK &ge; {min_gpa}</code></td>
+            <td>{lang}</td>
+          </tr>""")
+
+        tbody = "\n".join(rows) if rows else "          <tr><td colspan='5'><em>Belum ada mitra pertukaran terdaftar.</em></td></tr>"
+
+        return f"""    <div class="tu-exchange-quota-container">
+      <div class="tu-exchange-header">
+        <h4 class="tu-exchange-title">Program Pertukaran Mahasiswa: {prog_esc}</h4>
+        <span class="tu-exchange-year">Tahun Akademik {year_esc}</span>
+      </div>
+      <table class="tu-exchange-quota-table">
+        <thead>
+          <tr>
+            <th>Universitas Mitra</th>
+            <th>Negara</th>
+            <th>Kuota</th>
+            <th>Syarat IPK</th>
+            <th>Syarat Bahasa</th>
+          </tr>
+        </thead>
+        <tbody>
+{tbody}
+        </tbody>
+      </table>
+    </div>"""
+
 
 
 
