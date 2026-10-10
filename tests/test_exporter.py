@@ -355,6 +355,41 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('- 11ty', res)
         self.assertIn('<p>Konten 11ty Eleventy</p>', res)
 
+    def test_generate_scholarly_article_json_ld(self):
+        schema = ArticleExporter.generate_scholarly_article_json_ld(
+            title="Optimasi Jaringan 5G Millimeter Wave",
+            authors=["Dr. Ir. Hendra", "Fajar Nugraha"],
+            abstract="Penelitian ini menganalisis propagasi sinyal pada frekuensi 28 GHz.",
+            date_published="2026-10-10",
+            doi_url="https://doi.org/10.1109/MW.2026.98765",
+            publisher="Telkom University Purwokerto"
+        )
+        self.assertEqual(schema["@type"], "ScholarlyArticle")
+        self.assertEqual(schema["headline"], "Optimasi Jaringan 5G Millimeter Wave")
+        self.assertEqual(len(schema["author"]), 2)
+        self.assertEqual(schema["author"][0]["name"], "Dr. Ir. Hendra")
+        self.assertEqual(schema["publisher"]["name"], "Telkom University Purwokerto")
+        self.assertEqual(schema["url"], "https://doi.org/10.1109/MW.2026.98765")
+
+    def test_to_zola_markdown(self):
+        meta = {
+            "seo_title": "Panduan Rust untuk Pemula",
+            "meta_description": "Belajar konsep ownership dan borrowing.",
+            "slug": "panduan-rust-pemula",
+            "publish_date": "2026-10-10",
+            "category": "Pemrograman",
+            "tags": ["rust", "systems", "concurrency"]
+        }
+        res = ArticleExporter.to_zola_markdown(meta, "<p>Halo Dunia Rust</p>")
+        self.assertTrue(res.startswith("+++"))
+        self.assertIn('title = "Panduan Rust untuk Pemula"', res)
+        self.assertIn('date = 2026-10-10', res)
+        self.assertIn('slug = "panduan-rust-pemula"', res)
+        self.assertIn('[taxonomies]', res)
+        self.assertIn('categories = ["Pemrograman"]', res)
+        self.assertIn('"rust", "systems", "concurrency"', res)
+        self.assertIn("<p>Halo Dunia Rust</p>", res)
+
 if __name__ == "__main__":
     unittest.main()
 
