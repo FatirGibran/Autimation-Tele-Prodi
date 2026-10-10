@@ -1277,6 +1277,55 @@ def parse_lab_inventory_specs(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def parse_apa_journal_citations(text: str) -> List[Dict[str, Any]]:
+    """
+    Parses APA 7th edition journal article citations from reference lists.
+    Extracts authors, publication year, article title, journal name, volume, issue, pages, and DOI.
+    """
+    if not text:
+        return []
+
+    pattern = re.compile(
+        r'([A-Za-z\s,\.&-]+?)\s*\((19\d{2}|20\d{2})\)\.\s*'
+        r'([^.]+?\??)\.\s*'
+        r'([A-Za-z0-9\s,\.&-]+?),\s*'
+        r'(\d+)(?:\((\d+)\))?,\s*'
+        r'(\d+[-–]\d+)\.?'
+        r'(?:\s*(https?://(?:dx\.)?doi\.org/[^\s]+|doi:[^\s]+))?',
+        re.MULTILINE
+    )
+
+    results: List[Dict[str, Any]] = []
+    for line in text.splitlines():
+        line_clean = line.strip()
+        if not line_clean:
+            continue
+        m = pattern.search(line_clean)
+        if m:
+            authors_str = m.group(1).strip()
+            year = int(m.group(2))
+            title = m.group(3).strip()
+            journal = m.group(4).strip()
+            volume = m.group(5).strip()
+            issue = m.group(6).strip() if m.group(6) else None
+            pages = m.group(7).strip()
+            doi = m.group(8).strip() if m.group(8) else None
+
+            results.append({
+                "authors": authors_str,
+                "year": year,
+                "title": title,
+                "journal": journal,
+                "volume": volume,
+                "issue": issue,
+                "pages": pages,
+                "doi": doi
+            })
+
+    return results
+
+
+
 
 
 
