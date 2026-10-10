@@ -221,6 +221,37 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Aditya Pratama", card)
         self.assertIn("Dr. Ir. Hendra, M.T.", card)
 
+    def test_format_scholarship_announcement_card(self):
+        card = TelegramFormatter.format_scholarship_announcement_card(
+            scholarship_name="Beasiswa Unggulan Prestasi 2026",
+            sponsor="Yayasan Pendidikan Telkom",
+            coverage="Bebas BPP 100% + Uang Saku Bulanan",
+            deadline="25 Oktober 2026",
+            eligibility=["Mahasiswa aktif semester 3 - 5", "IPK minimal 3.50"],
+            apply_url="https://beasiswa.telkomuniversity.ac.id/apply"
+        )
+        self.assertIn("Informasi Pembukaan Beasiswa Pendidikan", card)
+        self.assertIn("Beasiswa Unggulan Prestasi 2026", card)
+        self.assertIn("Yayasan Pendidikan Telkom", card)
+        self.assertIn("Bebas BPP 100%", card)
+        self.assertIn("25 Oktober 2026", card)
+        self.assertIn("IPK minimal 3.50", card)
+
+    def test_format_journal_publication_alert(self):
+        card = TelegramFormatter.format_journal_publication_alert(
+            paper_title="Reinforcement Learning for Edge Drone Trajectory",
+            authors=["Fajar Nugraha", "Budi Santoso"],
+            journal_name="IEEE Transactions on Communications",
+            quartile="Q1 - Scopus Top 5%",
+            doi_url="https://doi.org/10.1109/TCOMM.2026.12345"
+        )
+        self.assertIn("Publikasi Jurnal Ilmiah Internasional Baru", card)
+        self.assertIn("Reinforcement Learning for Edge Drone Trajectory", card)
+        self.assertIn("Fajar Nugraha, Budi Santoso", card)
+        self.assertIn("IEEE Transactions on Communications", card)
+        self.assertIn("Q1 - Scopus Top 5%", card)
+        self.assertIn("https://doi.org/10.1109/TCOMM.2026.12345", card)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
     def test_rate_limiter_allows_and_blocks(self):
