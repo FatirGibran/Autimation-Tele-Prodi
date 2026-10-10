@@ -539,7 +539,7 @@ def cmd_zola(args):
         sys.exit(1)
     out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    tags = storage.get_tags(article["id"])
+    tags = storage.get_article_tags(article["id"])
     meta = {
         "seo_title": article.get("seo_title", ""),
         "meta_description": article.get("meta_description", ""),

@@ -756,6 +756,89 @@ class TestCLI(unittest.TestCase):
             if Path(out_file).exists():
                 Path(out_file).unlink()
 
+    def test_cmd_note(self):
+        art_id = cli.storage.save_article({
+            "topic": "Note CLI Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "note cli",
+            "seo_title": "Note CLI Test",
+            "slug": "note-cli-test",
+            "meta_description": "Deskripsi catatan cli.",
+            "status": "draft"
+        })
+
+        class ArgsAdd:
+            action = "add"
+            id = art_id
+            note_id = None
+            author = "editor_bima"
+            text = "Tinjau bab metodologi"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_note(ArgsAdd())
+            self.assertIn("Catatan editorial berhasil ditambahkan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            id = art_id
+            note_id = None
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_note(ArgsList())
+            self.assertIn("editor_bima", fake_out.getvalue())
+            self.assertIn("Tinjau bab metodologi", fake_out.getvalue())
+
+    def test_cmd_zola(self):
+        cli.storage.save_article({
+            "topic": "Zola CLI Target",
+            "category": "Akademik",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "zola cli",
+            "seo_title": "Zola CLI Target",
+            "slug": "zola-cli-target",
+            "meta_description": "Deskripsi zola cli.",
+            "html_content": "<p>Konten Zola CLI</p>",
+            "status": "published"
+        })
+
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class ArgsZola:
+                slug = "zola-cli-target"
+                out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_zola(ArgsZola())
+                self.assertIn("Export Zola markdown berhasil", fake_out.getvalue())
+
+            content = Path(out_file).read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("+++"))
+            self.assertIn('title = "Zola CLI Target"', content)
+            self.assertIn('<p>Konten Zola CLI</p>', content)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
+    def test_cmd_webhook_logs(self):
+        cli.storage.log_webhook_dispatch(
+            event="test_dispatch",
+            target_url="https://api.telkomuniversity.ac.id/hook",
+            status_code=200,
+            payload_snippet="payload test snippet"
+        )
+
+        class ArgsLogs:
+            limit = 5
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_webhook_logs(ArgsLogs())
+            out = fake_out.getvalue()
+            self.assertIn("EVENT", out)
+            self.assertIn("test_dispatch", out)
+
 if __name__ == "__main__":
     unittest.main()
 
