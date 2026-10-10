@@ -263,6 +263,36 @@ class TestWordPressClient(unittest.TestCase):
         all_media = self.client.list_media_by_mime_type(mime_prefix="")
         self.assertEqual(len(all_media), 2)
 
+    @patch.object(WordPressClient, "delete_post")
+    def test_batch_trash_posts(self, mock_delete):
+        def side_effect(pid, force=False):
+            if pid == 102:
+                raise RuntimeError("Post 102 not found")
+            return {"deleted": True, "id": pid}
+
+        mock_delete.side_effect = side_effect
+        res = self.client.batch_trash_posts([101, 102, 103], force=False)
+        self.assertEqual(res["total"], 3)
+        self.assertEqual(res["success"], [101, 103])
+        self.assertEqual(len(res["failed"]), 1)
+        self.assertEqual(res["failed"][0]["post_id"], 102)
+
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_slug(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 42, "slug": "telkom-header", "source_url": "https://bif.telkom.ac.id/header.jpg"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        media = self.client.get_media_by_slug("telkom-header")
+        self.assertIsNotNone(media)
+        self.assertEqual(media["id"], 42)
+        self.assertEqual(media["slug"], "telkom-header")
+
+        # Not found test
+        mock_resp.read.return_value = b'[]'
+        not_found = self.client.get_media_by_slug("non-existent")
+        self.assertIsNone(not_found)
+
 if __name__ == "__main__":
     unittest.main()
 
