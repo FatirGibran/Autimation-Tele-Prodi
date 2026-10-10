@@ -416,6 +416,28 @@ class TelegramFormatter:
             f"✨ *Manfaatkan kesempatan ini untuk mendukung kelancaran studi Anda!*"
         )
 
+    @staticmethod
+    def format_journal_publication_alert(
+        paper_title: str,
+        authors: List[str],
+        journal_name: str,
+        quartile: str,
+        doi_url: str
+    ) -> str:
+        """
+        Renders a fast-breaking academic journal publication alert card for Telegram broadcast.
+        """
+        authors_text = ", ".join(authors) if authors else "Dosen & Peneliti Prodi"
+        return (
+            f"📑 **Publikasi Jurnal Ilmiah Internasional Baru!**\n\n"
+            f"📖 **Judul Paper:** \"{paper_title}\"\n"
+            f"👥 **Penulis:** {authors_text}\n"
+            f"🏛 **Jurnal:** {journal_name}\n"
+            f"📊 **Klaster / Reputasi:** `{quartile}`\n"
+            f"🔗 **Tautan DOI:** {doi_url}\n\n"
+            f"🚀 *Kontribusi nyata civitas akademika dalam kemajuan riset dan teknologi.*"
+        )
+
 
 
 
