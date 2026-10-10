@@ -1771,6 +1771,59 @@ class EditorialComponents:
       </table>
     </div>"""
 
+    @classmethod
+    def render_grant_funding_milestone_card(
+        cls,
+        project_title: str,
+        grant_agency: str,
+        budget_idr: int,
+        milestones: List[Dict[str, Any]]
+    ) -> str:
+        """
+        Renders a faculty research grant milestone progress tracker card
+        with IDR budget localization and status indicators.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(project_title.strip())
+        agency_esc = escape(grant_agency.strip())
+        # Format IDR currency with thousand dot separators
+        budget_str = f"Rp {budget_idr:,.0f}".replace(",", ".")
+
+        milestone_items = []
+        for idx, m in enumerate(milestones, 1):
+            phase = escape(str(m.get("phase", f"Tahap {idx}")))
+            status = escape(str(m.get("status", "Pending")))
+            desc = escape(str(m.get("description", "")))
+            pct = int(m.get("progress_pct", 0))
+            milestone_items.append(f"""        <div class="tu-grant-milestone-item">
+          <div class="tu-grant-ms-meta">
+            <span class="tu-grant-ms-phase">{phase}</span>
+            <span class="tu-grant-ms-status">{status} ({pct}%)</span>
+          </div>
+          <p class="tu-grant-ms-desc">{desc}</p>
+          <div class="tu-grant-ms-bar-wrap">
+            <div class="tu-grant-ms-bar" style="width: {pct}%;"></div>
+          </div>
+        </div>""")
+
+        ms_html = "\n".join(milestone_items) if milestone_items else "        <p><em>Belum ada rincian tahapan capaian riset.</em></p>"
+
+        return f"""    <div class="tu-grant-card">
+      <div class="tu-grant-header">
+        <span class="tu-grant-agency-badge">{agency_esc}</span>
+        <h4 class="tu-grant-title">{title_esc}</h4>
+      </div>
+      <div class="tu-grant-meta">
+        <span class="tu-grant-budget-lbl">Total Dana Hibah:</span>
+        <strong class="tu-grant-budget-val">{budget_str}</strong>
+      </div>
+      <div class="tu-grant-milestones">
+        <strong>Tahapan Capaian Luaran:</strong>
+{ms_html}
+      </div>
+    </div>"""
+
 
 
 
