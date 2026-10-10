@@ -1659,6 +1659,65 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lab_safety_equipment_card(
+        cls,
+        lab_name: str,
+        ppe_items: List[Dict[str, str]],
+        emergency_contacts: List[Dict[str, str]]
+    ) -> str:
+        """
+        Renders a laboratory safety protocol and PPE requirement checklist card
+        for compliance with campus OHS (K3) and ISO standards.
+        """
+        from xml.sax.saxutils import escape
+
+        lab_esc = escape(lab_name.strip())
+
+        ppe_rows = []
+        for p in ppe_items:
+            item = escape(str(p.get("item", "")))
+            req = escape(str(p.get("required", "Wajib")))
+            std = escape(str(p.get("standard", "-")))
+            ppe_rows.append(f"""          <tr>
+            <td><strong>{item}</strong></td>
+            <td><span class="tu-safety-req-badge">{req}</span></td>
+            <td><code>{std}</code></td>
+          </tr>""")
+        ppe_tbody = "\n".join(ppe_rows) if ppe_rows else "          <tr><td colspan='3'><em>Tidak ada daftar APD khusus.</em></td></tr>"
+
+        contact_items = []
+        for c in emergency_contacts:
+            name = escape(str(c.get("name", "")))
+            phone = escape(str(c.get("phone", "")))
+            contact_items.append(f'<li><strong>{name}:</strong> <a href="tel:{phone}">{phone}</a></li>')
+        contacts_html = "\n            ".join(contact_items) if contact_items else "<li><em>Kontak darurat belum diset.</em></li>"
+
+        return f"""    <div class="tu-lab-safety-card">
+      <div class="tu-safety-header">
+        <span class="tu-safety-icon">&#9888;</span>
+        <h4 class="tu-safety-title">Protokol Keselamatan Laboratorium: {lab_esc}</h4>
+      </div>
+      <table class="tu-safety-table">
+        <thead>
+          <tr>
+            <th>Alat Pelindung Diri (APD)</th>
+            <th>Status</th>
+            <th>Standar / Spesifikasi</th>
+          </tr>
+        </thead>
+        <tbody>
+{ppe_tbody}
+        </tbody>
+      </table>
+      <div class="tu-safety-emergency">
+        <strong>Kontak Darurat Tanggap Cepat:</strong>
+        <ul class="tu-safety-contacts">
+            {contacts_html}
+        </ul>
+      </div>
+    </div>"""
+
 
 
 
