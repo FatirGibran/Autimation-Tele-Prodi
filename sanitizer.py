@@ -384,6 +384,13 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<(?:input|textarea|select)\b[^>]*>', disable_input, cleaned, flags=re.IGNORECASE)
             warnings.append("Neutralized interactive form and input elements.")
 
+        # 8g. Neutralize unsafe template and slot shadow DOM declarative markup
+        if re.search(r'<(template|slot)\b', cleaned, re.IGNORECASE):
+            cleaned = re.sub(r'<template\b[^>]*>.*?</template>', '', cleaned, flags=re.DOTALL | re.IGNORECASE)
+            cleaned = re.sub(r'</?slot\b[^>]*>', '', cleaned, flags=re.IGNORECASE)
+            warnings.append("Stripped dangerous template and slot shadow DOM declarative elements.")
+
         return cleaned, warnings
+
 
 
