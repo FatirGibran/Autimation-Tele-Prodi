@@ -723,6 +723,65 @@ class TestStorageManager(unittest.TestCase):
         self.assertNotIn("featured_color", after_delete)
         self.assertIn("banner_url", after_delete)
 
+    def test_article_editorial_notes(self):
+        art_id = self.storage.save_article({
+            "topic": "Collab Test",
+            "category": "Riset",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "collab note",
+            "seo_title": "Collab Note Test",
+            "slug": "collab-note-test",
+            "meta_description": "Deskripsi catatan kolaborasi.",
+            "status": "draft"
+        })
+        n1 = self.storage.add_editorial_note(art_id, "editor_chief", "Perlu tambahkan kutipan IEEE terbaru.")
+        n2 = self.storage.add_editorial_note(art_id, "peer_reviewer", "Format gambar sudah rapi dan jelas.")
+        self.assertGreater(n1, 0)
+        self.assertGreater(n2, 0)
+
+        notes = self.storage.list_editorial_notes(art_id)
+        self.assertEqual(len(notes), 2)
+        self.assertEqual(notes[0]["author"], "editor_chief")
+        self.assertEqual(notes[1]["author"], "peer_reviewer")
+
+        # Delete note 1
+        self.assertTrue(self.storage.delete_editorial_note(n1))
+        remaining = self.storage.list_editorial_notes(art_id)
+        self.assertEqual(len(remaining), 1)
+        self.assertEqual(remaining[0]["id"], n2)
+
+    def test_publishing_webhook_logs(self):
+        log_id = self.storage.log_webhook_dispatch(
+            event="article_published",
+            target_url="https://webhook.telkomuniversity.ac.id/notify",
+            status_code=200,
+            payload_snippet='{"slug": "5g-antenna", "title": "5G Antenna"}'
+        )
+        self.assertGreater(log_id, 0)
+
+        logs = self.storage.get_recent_webhook_logs(limit=5)
+        self.assertTrue(any(l["id"] == log_id for l in logs))
+        target_log = next(l for l in logs if l["id"] == log_id)
+        self.assertEqual(target_log["event"], "article_published")
+        self.assertEqual(target_log["status_code"], 200)
+        self.assertIn("5g-antenna", target_log["payload_snippet"])
+
+    def test_taxonomy_synonyms_resolution(self):
+        self.assertTrue(self.storage.add_taxonomy_synonym("kecerdasan buatan", "artificial intelligence"))
+        self.assertTrue(self.storage.add_taxonomy_synonym("kecerdasan buatan", "ai"))
+        self.assertTrue(self.storage.add_taxonomy_synonym("jaringan nirkabel", "wireless network"))
+
+        # Resolve known aliases
+        self.assertEqual(self.storage.resolve_canonical_term("artificial intelligence"), "kecerdasan buatan")
+        self.assertEqual(self.storage.resolve_canonical_term("ai"), "kecerdasan buatan")
+        self.assertEqual(self.storage.resolve_canonical_term("wireless network"), "jaringan nirkabel")
+
+        # Unregistered alias resolves to itself
+        self.assertEqual(self.storage.resolve_canonical_term("cloud computing"), "cloud computing")
+
+        # List synonyms
+        synonyms = self.storage.list_taxonomy_synonyms()
+        self.assertGreaterEqual(len(synonyms), 3)
 
 if __name__ == "__main__":
     unittest.main()
