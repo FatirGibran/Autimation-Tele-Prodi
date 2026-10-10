@@ -503,6 +503,67 @@ def cmd_eleventy(args):
     print(f"Export Eleventy markdown berhasil -> {out_path}")
 
 
+def cmd_note(args):
+    if args.action == "add":
+        if not args.id or not args.author or not args.text:
+            print("Error: --id, --author, dan --text wajib disertakan untuk menambahkan catatan.")
+            sys.exit(1)
+        note_id = storage.add_editorial_note(args.id, args.author, args.text)
+        print(f"Catatan editorial berhasil ditambahkan [ID: {note_id}] ke artikel #{args.id}")
+    elif args.action == "delete":
+        if not args.note_id:
+            print("Error: --note-id wajib disertakan untuk menghapus catatan.")
+            sys.exit(1)
+        deleted = storage.delete_editorial_note(args.note_id)
+        if deleted:
+            print(f"Catatan editorial #{args.note_id} berhasil dihapus.")
+        else:
+            print(f"Catatan editorial #{args.note_id} tidak ditemukan.")
+    else:
+        if not args.id:
+            print("Error: --id artikel wajib disertakan untuk melihat catatan.")
+            sys.exit(1)
+        notes = storage.list_editorial_notes(args.id)
+        if not notes:
+            print(f"Tidak ada catatan editorial untuk artikel #{args.id}.")
+            return
+        print(f"=== Catatan Editorial Artikel #{args.id} ===")
+        for n in notes:
+            print(f"[{n['id']}] {n['author']} ({n['created_at']}): {n['note_text']}")
+
+
+def cmd_zola(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tags = storage.get_tags(article["id"])
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "meta_description": article.get("meta_description", ""),
+        "slug": article.get("slug", ""),
+        "publish_date": article.get("publish_date", ""),
+        "category": article.get("category", ""),
+        "tags": tags
+    }
+    zola_md = ArticleExporter.to_zola_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(zola_md, encoding="utf-8")
+    print(f"Export Zola markdown berhasil -> {out_path}")
+
+
+def cmd_webhook_logs(args):
+    logs = storage.get_recent_webhook_logs(limit=args.limit)
+    if not logs:
+        print("Belum ada riwayat pengiriman webhook di database.")
+        return
+    print(f"{'ID':<4} | {'STATUS':<6} | {'EVENT':<20} | {'TARGET':<35} | {'WAKTU'}")
+    print("-" * 85)
+    for l in logs:
+        print(f"{l['id']:<4} | {l['status_code']:<6} | {l['event']:<20} | {l['target_url'][:33]:<35} | {l['created_at']}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -699,6 +760,26 @@ def main():
     eleventy_parser.add_argument("--slug", required=True, help="Slug artikel di database")
     eleventy_parser.add_argument("--out", help="Path berkas output Markdown Eleventy")
     eleventy_parser.set_defaults(func=cmd_eleventy)
+
+    # Note command
+    note_parser = subparsers.add_parser("note", help="Kelola catatan kolaborasi editorial artikel (list, add, delete)")
+    note_parser.add_argument("--action", choices=["list", "add", "delete"], default="list", help="Tindakan catatan")
+    note_parser.add_argument("--id", type=int, help="ID artikel")
+    note_parser.add_argument("--note-id", type=int, help="ID catatan untuk dihapus")
+    note_parser.add_argument("--author", help="Penulis/editor catatan")
+    note_parser.add_argument("--text", help="Isi teks catatan")
+    note_parser.set_defaults(func=cmd_note)
+
+    # Zola command
+    zola_parser = subparsers.add_parser("zola", help="Export artikel ke format Markdown kompatibel Zola SSG")
+    zola_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    zola_parser.add_argument("--out", help="Path berkas output Markdown Zola")
+    zola_parser.set_defaults(func=cmd_zola)
+
+    # Webhook-logs command
+    wh_parser = subparsers.add_parser("webhook-logs", help="Tampilkan riwayat log pengiriman webhook publikasi")
+    wh_parser.add_argument("--limit", type=int, default=10, help="Jumlah maksimal riwayat log")
+    wh_parser.set_defaults(func=cmd_webhook_logs)
 
     args = parser.parse_args()
 
