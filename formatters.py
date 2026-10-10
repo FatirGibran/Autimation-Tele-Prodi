@@ -392,6 +392,30 @@ class TelegramFormatter:
             f"👏 *Selamat atas pencapaian gemilang yang mengharumkan almamater!*"
         )
 
+    @staticmethod
+    def format_scholarship_announcement_card(
+        scholarship_name: str,
+        sponsor: str,
+        coverage: str,
+        deadline: str,
+        eligibility: List[str],
+        apply_url: str
+    ) -> str:
+        """
+        Renders an academic scholarship call-for-application announcement card for Telegram broadcast.
+        """
+        elig_text = "\n".join(f"  • {e.strip()}" for e in eligibility) if eligibility else "  • Mahasiswa aktif prodi"
+        return (
+            f"🎓 **Informasi Pembukaan Beasiswa Pendidikan**\n\n"
+            f"📌 **Program:** {scholarship_name}\n"
+            f"🏢 **Penyelenggara / Sponsor:** {sponsor}\n"
+            f"💵 **Cakupan Beasiswa:** {coverage}\n"
+            f"⏳ **Batas Pendaftaran:** `{deadline}`\n\n"
+            f"📋 **Persyaratan Utama:**\n{elig_text}\n\n"
+            f"🔗 **Pendaftaran Resmi:** {apply_url}\n\n"
+            f"✨ *Manfaatkan kesempatan ini untuk mendukung kelancaran studi Anda!*"
+        )
+
 
 
 
