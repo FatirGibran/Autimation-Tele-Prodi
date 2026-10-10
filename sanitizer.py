@@ -7,7 +7,7 @@ ALLOWED_TAGS = {
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary", "dialog",
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
-    "video", "audio", "source", "picture",
+    "video", "audio", "source", "picture", "track",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext"
 }
 
@@ -268,6 +268,32 @@ class HTMLSanitizer:
                         warnings.append("Stripped unmuted autoplay from media element.")
                 return tag
             cleaned = re.sub(r'<((?:video|audio|source))\b[^>]*>', fix_media, cleaned, flags=re.IGNORECASE)
+
+        # 5c. Sanitize track subtitle elements inside audio/video
+        if "<track" in cleaned.lower():
+            def fix_track(match):
+                tag = match.group(0)
+                # Verify kind attribute
+                kind_m = re.search(r'kind=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                valid_kinds = {"subtitles", "captions", "descriptions", "chapters", "metadata"}
+                if not kind_m or kind_m.group(1).lower() not in valid_kinds:
+                    if kind_m:
+                        tag = re.sub(r'kind=["\'][^"\']*["\']', 'kind="subtitles"', tag, flags=re.IGNORECASE)
+                    else:
+                        tag = tag.rstrip(" />").rstrip(">") + ' kind="subtitles">'
+                # Verify src attribute
+                src_m = re.search(r'src=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if src_m:
+                    src_url = src_m.group(1).strip()
+                    if src_url.lower().startswith(("javascript:", "data:")):
+                        tag = re.sub(r'src=["\'][^"\']*["\']', 'src=""', tag, flags=re.IGNORECASE)
+                    elif src_url.lower().startswith("http://"):
+                        tag = re.sub(r'src=["\']http://', 'src="https://', tag, flags=re.IGNORECASE)
+                return tag
+            track_before = cleaned
+            cleaned = re.sub(r'<track\b[^>]*>', fix_track, cleaned, flags=re.IGNORECASE)
+            if cleaned != track_before:
+                warnings.append("Sanitized media track subtitle elements.")
 
         # 6. Sanitize inline SVG: strip dangerous nested tags and attributes
 
