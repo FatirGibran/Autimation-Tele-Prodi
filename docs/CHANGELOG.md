@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 277+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 300+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 291 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 319 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -338,6 +338,40 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 260. **Subcommand CLI `eleventy` (`cli.py`)**: Perintah konsol konversi artikel langsung ke format markdown Eleventy SSG.
 261. **Skrip Auditor Hyperlink & Anchor Target (`scripts/check_hyperlinks.py`)**: Perkakas otomatisasi verifikasi tautan `#fragment` lokal, penegakan HTTPS internal, dan audit keamanan rel link.
 262. **Ekspansi Suite Pengujian Unit Terpadu (291 Tests Passing)**: Verifikasi penuh 291 unit test tanpa kegagalan (100% pass rate) pada seluruh modul arsitektur.
+
+---
+
+## 16. Ekspansi Arsitektural v2.8.0
+
+263. **Sanitasi Elemen Subtitle/Caption Track HTML5 (`sanitizer.py`)**: Penegakan validitas atribut `kind`, `srclang`, `label`, serta penyaringan atribut berbahaya pada elemen `<track>`.
+264. **Pelucutan Primitif Filter SVG Berbahaya (`sanitizer.py`)**: Stripping elemen `<filter>`, `<feImage>`, dan atribut manipulasi filter SVG yang berpotensi memicu kebocoran data.
+265. **Sanitasi Shadow DOM Template & Slot (`sanitizer.py`)**: Pembersihan markup deklaratif shadow DOM pada elemen `<template>` dan `<slot>`.
+266. **Parser Inventaris Spesifikasi Alat Lab (`parser.py`)**: Parsing tabel perangkat keras laboratorium, nomor seri, dan kondisi peralatan.
+267. **Parser Sitasi Ilmiah Format APA Edisi ke-7 (`parser.py`)**: Ekstraksi terstruktur daftar pustaka jurnal ilmiah standar APA 7th edition.
+268. **Parser Rubrik Penilaian Sidang Tugas Akhir (`parser.py`)**: Parsing kriteria dan bobot evaluasi sidang skripsi mahasiswa.
+269. **Konverter Skala Mutu Nilai Huruf ke IPK (`parser.py`)**: Konversi otomatis nilai mutu huruf (A, AB, B, BC, C, D, E) ke angka IPK 4.00.
+270. **Detektor Kalimat Berurutan Berawalan Kata Sama (`seo_validator.py`)**: Analisis streak repetisi kata awal kalimat untuk menjaga variasi diksi teks.
+271. **Evaluator Distribusi Konjungsi Transisi Paragraf (`seo_validator.py`)**: Evaluasi proporsi sebaran penanda transisi bahasa Indonesia antar paragraf.
+272. **Validator Ajakan Bertindak (CTA) Meta Description (`seo_validator.py`)**: Pengecekan engagement verbs penelusuran (pelajari, temukan, simak, dll.).
+273. **Validator Otomatis Sintaks & Atribut JSON-LD Schema.org (`seo_validator.py`)**: Audit validitas sintaks dan kelengkapan properti wajib embedded script Schema.org.
+274. **Komponen Alur Prasyarat Mata Kuliah Kurikulum (`components.py`)**: Kartu visual relasi prasyarat pengambilan mata kuliah dan mata kuliah terminal.
+275. **Komponen Checklist APD Keselamatan Lab (`components.py`)**: Visualisasi protokol OHS (K3) laboratorium, status APD wajib, dan nomor darurat.
+276. **Komponen Tabel Kuota Pertukaran Mahasiswa Internasional (`components.py`)**: Visualisasi universitas mitra, negara, kuota, syarat IPK, dan syarat bahasa.
+277. **Komponen Milestone Progres Hibah Riset Dosen (`components.py`)**: Kartu pelacakan anggaran Rupiah dan persentase capaian luaran penelitian.
+278. **Komponen Histogram Distribusi Gaji Alumni (`components.py`)**: Kartu grafik batang sebaran pendapatan lulusan disertai median gaji.
+279. **Formatter Pengumuman Beasiswa Pendidikan Telegram (`formatters.py`)**: Format pesan siaran pembukaan beasiswa dan syarat pendaftaran mahasiswa.
+280. **Formatter Siaran Cepat Publikasi Jurnal Internasional (`formatters.py`)**: Format pesan siaran kilat artikel jurnal ilmiah Scopus bereputasi dengan DOI.
+281. **Manajer Papan Catatan Kolaborasi Editorial (`storage.py`)**: Tabel `article_notes` untuk penambahan, pencarian, dan penghapusan catatan tim editorial.
+282. **Manajer Log Webhook Publikasi Outbound (`storage.py`)**: Tabel `publishing_webhook_logs` dan audit rekaman riwayat pengiriman sinyal webhook.
+283. **Resolver Sinonim & Alias Istilah Taksonomi (`storage.py`)**: Tabel `taxonomy_synonyms` dan resolusi otomatis istilah alias ke kanonikal prodi.
+284. **Helper Bulk Trash Posts Klien WordPress (`wordpress_client.py`)**: Pembersihan pos jamak secara berurutan dengan laporan status keberhasilan.
+285. **Helper Pencarian Media Berdasarkan Slug WordPress (`wordpress_client.py`)**: Pengambilan data berkas media dari REST API berdasarkan slug berkas.
+286. **Generator Skema ScholarlyArticle Schema.org (`exporter.py`)**: Konstruksi metadata JSON-LD artikel ilmiah dengan entitas author dan DOI.
+287. **Generator Markdown Kompatibel Zola SSG (`exporter.py`)**: Ekspor artikel ke format Zola static site generator dengan frontmatter TOML `+++`.
+288. **Subcommand CLI `note` (`cli.py`)**: Manajemen konsol catatan editorial artikel (list, add, delete).
+289. **Subcommand CLI `zola` (`cli.py`)**: Ekspor konsol artikel langsung ke format markdown Zola SSG.
+290. **Subcommand CLI `webhook-logs` (`cli.py`)**: Pemantauan konsol riwayat pengiriman notifikasi webhook publikasi.
+291. **Ekspansi Suite Pengujian Unit Terpadu (319 Tests Passing)**: Verifikasi penuh 319 unit test terverifikasi (100% pass rate) pada seluruh modul arsitektur.
 
 
 
