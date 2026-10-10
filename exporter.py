@@ -786,6 +786,37 @@ navigation: true
 
         return data
 
+    @staticmethod
+    def to_zola_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Zola static site generator markdown format using TOML frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        date = metadata.get("publish_date", "2026-10-01")
+        category = metadata.get("category", "Akademik").replace('"', '\\"')
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        tags_toml = ", ".join(f'"{t}"' for t in tags)
+
+        lines = [
+            "+++",
+            f'title = "{title}"',
+            f'description = "{desc}"',
+            f'date = {date}',
+            f'slug = "{slug}"',
+            "[taxonomies]",
+            f'categories = ["{category}"]',
+            f'tags = [{tags_toml}]',
+            "+++",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(lines)
+
 
 
 
