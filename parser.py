@@ -1219,6 +1219,65 @@ def parse_academic_calendar_range(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def parse_lab_inventory_specs(text: str) -> List[Dict[str, Any]]:
+    """
+    Parses laboratory equipment inventory records from markdown tables or bulleted specifications.
+    Extracts item name, category, quantity, condition/status, and hardware specifications.
+    """
+    if not text:
+        return []
+
+    results: List[Dict[str, Any]] = []
+
+    lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
+    table_lines = [l for l in lines if l.startswith("|") and l.endswith("|")]
+
+    if len(table_lines) >= 3:
+        for row_str in table_lines[2:]:
+            cells = [c.strip() for c in row_str.split("|")[1:-1]]
+            if len(cells) < 2:
+                continue
+            name = cells[0]
+            cat = cells[1] if len(cells) > 1 else "Peralatan Umum"
+            qty_str = cells[2] if len(cells) > 2 else "1"
+            qty_match = re.search(r'\d+', qty_str)
+            qty = int(qty_match.group(0)) if qty_match else 1
+            cond = cells[3] if len(cells) > 3 else "Baik / Siap Pakai"
+            specs = cells[4] if len(cells) > 4 else ""
+
+            results.append({
+                "name": name,
+                "category": cat,
+                "quantity": qty,
+                "condition": cond,
+                "specs": specs
+            })
+        if results:
+            return results
+
+    bullet_pattern = re.compile(
+        r'[-*]\s*([^:\[(]+?)(?::\s*(\d+)\s*(?:unit|buah)?)?(?:\s*\[(?:Kondisi:\s*)?([^\]]+)\])?(?:\s*\(([^)]+)\))?$',
+        re.MULTILINE
+    )
+    for m in bullet_pattern.finditer(text):
+        name = m.group(1).strip()
+        if not name or name.startswith("|"):
+            continue
+        qty = int(m.group(2)) if m.group(2) else 1
+        cond = m.group(3).strip() if m.group(3) else "Baik / Siap Pakai"
+        specs = m.group(4).strip() if m.group(4) else ""
+        results.append({
+            "name": name,
+            "category": "Peralatan Laboratorium",
+            "quantity": qty,
+            "condition": cond,
+            "specs": specs
+        })
+
+    return results
+
+
+
 
 
 
