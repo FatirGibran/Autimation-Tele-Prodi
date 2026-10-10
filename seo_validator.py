@@ -1375,6 +1375,44 @@ class YoastSEOValidator:
             "total_sentences": len(sentences)
         }
 
+    @classmethod
+    def evaluate_paragraph_transition_distribution(cls, html_content: str, min_ratio: float = 0.3) -> Dict[str, Any]:
+        """
+        Evaluates the distribution of Indonesian transitional markers across all content paragraphs.
+        Ensures smooth reading flow where at least 30% of multi-sentence paragraphs feature transition words.
+        """
+        if not html_content:
+            return {"total_paragraphs": 0, "paragraphs_with_transitions": 0, "ratio": 0.0, "is_optimal": False}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        paragraphs = soup.find_all("p")
+        if not paragraphs:
+            return {"total_paragraphs": 0, "paragraphs_with_transitions": 0, "ratio": 0.0, "is_optimal": True}
+
+        with_transitions = 0
+        details = []
+
+        for idx, p in enumerate(paragraphs, 1):
+            text = p.get_text().strip().lower()
+            found_tw = [tw for tw in cls.INDONESIAN_TRANSITION_WORDS if re.search(r'\b' + re.escape(tw) + r'\b', text)]
+            has_tw = len(found_tw) > 0
+            if has_tw:
+                with_transitions += 1
+            details.append({"index": idx, "has_transition": has_tw, "transitions_found": found_tw[:3]})
+
+        ratio = round(with_transitions / len(paragraphs), 2)
+        is_optimal = ratio >= min_ratio
+
+        return {
+            "total_paragraphs": len(paragraphs),
+            "paragraphs_with_transitions": with_transitions,
+            "ratio": ratio,
+            "percentage": round(ratio * 100, 1),
+            "is_optimal": is_optimal,
+            "details": details
+        }
+
+
 
 
 
