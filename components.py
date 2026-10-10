@@ -1614,6 +1614,51 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_curriculum_prerequisite_flow(
+        cls,
+        course_code: str,
+        course_name: str,
+        direct_prereqs: List[str],
+        unlocks_courses: List[str],
+        min_credits_required: int = 0
+    ) -> str:
+        """
+        Renders an academic curriculum prerequisite pathway flow card
+        showing course requirements and forward course unlocking chains.
+        """
+        from xml.sax.saxutils import escape
+
+        code_esc = escape(course_code.strip())
+        name_esc = escape(course_name.strip())
+
+        prereq_lis = "".join(f"<li>{escape(p.strip())}</li>" for p in direct_prereqs) if direct_prereqs else "<li><em>Tidak ada prasyarat mata kuliah langsung</em></li>"
+        unlock_lis = "".join(f"<li>{escape(u.strip())}</li>" for u in unlocks_courses) if unlocks_courses else "<li><em>Mata kuliah terminal / tingkat akhir</em></li>"
+
+        sks_note = f'<div class="tu-prereq-credits-req">&#9888; Syarat minimal kelulusan: <strong>{min_credits_required} SKS</strong></div>' if min_credits_required > 0 else ""
+
+        return f"""    <div class="tu-prereq-flow-card">
+      <div class="tu-prereq-header">
+        <span class="tu-prereq-badge">{code_esc}</span>
+        <h4 class="tu-prereq-title">{name_esc}</h4>
+      </div>
+      {sks_note}
+      <div class="tu-prereq-columns">
+        <div class="tu-prereq-col">
+          <span class="tu-prereq-col-label">&#9664; Prasyarat Sebelumnya:</span>
+          <ul class="tu-prereq-list">
+            {prereq_lis}
+          </ul>
+        </div>
+        <div class="tu-prereq-col">
+          <span class="tu-prereq-col-label">&#9654; Membuka Mata Kuliah:</span>
+          <ul class="tu-prereq-list">
+            {unlock_lis}
+          </ul>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
