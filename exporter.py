@@ -747,6 +747,45 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_scholarly_article_json_ld(
+        title: str,
+        authors: List[str],
+        abstract: str,
+        date_published: str,
+        doi_url: str,
+        publisher: str = "Telkom University Purwokerto"
+    ) -> Dict[str, Any]:
+        """
+        Generates a Schema.org ScholarlyArticle JSON-LD structured data payload.
+        """
+        author_entries = [
+            {"@type": "Person", "name": a.strip()}
+            for a in authors
+            if a.strip()
+        ]
+        if not author_entries:
+            author_entries = [{"@type": "Organization", "name": publisher}]
+
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "ScholarlyArticle",
+            "headline": title.strip(),
+            "name": title.strip(),
+            "author": author_entries,
+            "description": abstract.strip(),
+            "datePublished": date_published.strip(),
+            "publisher": {
+                "@type": "Organization",
+                "name": publisher
+            }
+        }
+        if doi_url.strip():
+            data["sameAs"] = doi_url.strip()
+            data["url"] = doi_url.strip()
+
+        return data
+
 
 
 
