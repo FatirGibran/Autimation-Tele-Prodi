@@ -582,6 +582,81 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("2.4 Bulan", card)
         self.assertIn("Teknologi Finansial", card)
 
+    def test_render_curriculum_prerequisite_flow(self):
+        html = EditorialComponents.render_curriculum_prerequisite_flow(
+            course_code="TT302",
+            course_name="Komunikasi Nirkabel",
+            direct_prereqs=["TT201 Sinyal & Sistem", "TT203 Probabilitas"],
+            unlocks_courses=["TT401 Jaringan Seluler Lanjut", "TT405 Radar"],
+            min_credits_required=72
+        )
+        self.assertIn("tu-prereq-flow-card", html)
+        self.assertIn("TT302", html)
+        self.assertIn("Komunikasi Nirkabel", html)
+        self.assertIn("TT201 Sinyal &amp; Sistem", html)
+        self.assertIn("72 SKS", html)
+
+    def test_render_lab_safety_equipment_card(self):
+        ppes = [
+            {"item": "Jas Laboratorium Katun", "required": "Wajib", "standard": "SNI 0115"},
+            {"item": "Kacamata Pelindung (Goggles)", "required": "Wajib saat solder", "standard": "ANSI Z87.1"}
+        ]
+        contacts = [
+            {"name": "Kepala Lab", "phone": "0281-641555"},
+            {"name": "Satpam Kampus", "phone": "0812-9999-8888"}
+        ]
+        html = EditorialComponents.render_lab_safety_equipment_card("Lab Antena & Propagasi", ppes, contacts)
+        self.assertIn("tu-lab-safety-card", html)
+        self.assertIn("Lab Antena &amp; Propagasi", html)
+        self.assertIn("Jas Laboratorium Katun", html)
+        self.assertIn("0281-641555", html)
+
+    def test_render_exchange_quota_table(self):
+        partners = [
+            {"university": "Universiti Teknologi Malaysia", "country": "Malaysia", "quota": 4, "min_gpa": 3.25, "language_requirement": "TOEFL 500"},
+            {"university": "Kumamoto University", "country": "Jepang", "quota": 2, "min_gpa": 3.50, "language_requirement": "IELTS 6.0"}
+        ]
+        html = EditorialComponents.render_exchange_quota_table("IISMA Mandiri 2026", partners, "2026/2027")
+        self.assertIn("tu-exchange-quota-container", html)
+        self.assertIn("IISMA Mandiri 2026", html)
+        self.assertIn("Universiti Teknologi Malaysia", html)
+        self.assertIn("4 Mahasiswa", html)
+        self.assertIn("IPK &ge; 3.25", html)
+
+    def test_render_grant_funding_milestone_card(self):
+        milestones = [
+            {"phase": "Desain Prototipe", "status": "Selesai", "description": "Skema sirkuit RF selesai dirancang.", "progress_pct": 100},
+            {"phase": "Uji Lapangan", "status": "Sedang Berjalan", "description": "Pengukuran redaman gelombang milimeter.", "progress_pct": 60}
+        ]
+        html = EditorialComponents.render_grant_funding_milestone_card(
+            project_title="Rancang Bangun Antena MIMO 5G Purwokerto",
+            grant_agency="Kemendikbudristek BIMA",
+            budget_idr=125000000,
+            milestones=milestones
+        )
+        self.assertIn("tu-grant-card", html)
+        self.assertIn("Kemendikbudristek BIMA", html)
+        self.assertIn("Rp 125.000.000", html)
+        self.assertIn("Desain Prototipe", html)
+        self.assertIn("100%", html)
+
+    def test_render_tracer_salary_histogram(self):
+        brackets = [
+            {"bracket": "< Rp 5 Juta", "percentage": 12.5, "count": 10},
+            {"bracket": "Rp 5 - 10 Juta", "percentage": 55.0, "count": 44},
+            {"bracket": "> Rp 10 Juta", "percentage": 32.5, "count": 26}
+        ]
+        html = EditorialComponents.render_tracer_salary_histogram(
+            cohort_year=2024,
+            salary_brackets=brackets,
+            median_salary_idr=8500000
+        )
+        self.assertIn("tu-salary-histogram-card", html)
+        self.assertIn("Angkatan 2024", html)
+        self.assertIn("Rp 8.500.000", html)
+        self.assertIn("55.0%", html)
+        self.assertIn("44 orang", html)
+
 if __name__ == "__main__":
     unittest.main()
 
