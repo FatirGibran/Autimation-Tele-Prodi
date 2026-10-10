@@ -1327,6 +1327,55 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def check_consecutive_sentence_starts(text: str, threshold: int = 3) -> Dict[str, Any]:
+        """
+        Audits consecutive sentences starting with the same initial word (Yoast readability rule).
+        Flags when threshold or more consecutive sentences begin with identical wording.
+        """
+        if not text:
+            return {"consecutive_groups": [], "has_repetitive_starts": False, "total_sentences": 0}
+
+        clean = re.sub(r'<[^>]+>', ' ', text)
+        sentences = [s.strip() for s in re.split(r'[.!?]+', clean) if s.strip()]
+
+        first_words = []
+        for s in sentences:
+            m = re.match(r'^[^\w]*([A-Za-z0-9_-]+)', s)
+            if m:
+                first_words.append((m.group(1).lower(), s[:40]))
+            else:
+                first_words.append(("", ""))
+
+        consecutive_groups = []
+        if len(first_words) >= threshold:
+            current_word = None
+            current_count = 0
+            for w, snippet in first_words:
+                if w and w == current_word:
+                    current_count += 1
+                else:
+                    if current_count >= threshold:
+                        consecutive_groups.append({
+                            "word": current_word,
+                            "occurrences": current_count
+                        })
+                    current_word = w if w else None
+                    current_count = 1 if w else 0
+
+            if current_count >= threshold:
+                consecutive_groups.append({
+                    "word": current_word,
+                    "occurrences": current_count
+                })
+
+        return {
+            "consecutive_groups": consecutive_groups,
+            "has_repetitive_starts": len(consecutive_groups) > 0,
+            "total_sentences": len(sentences)
+        }
+
+
 
 
 
