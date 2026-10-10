@@ -1325,6 +1325,59 @@ def parse_apa_journal_citations(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def parse_defense_rubric_criteria(text: str) -> List[Dict[str, Any]]:
+    """
+    Parses capstone/thesis defense rubric evaluation components from markdown tables or lists.
+    Extracts assessment criteria name, weight percentage, target CPL, and description.
+    """
+    if not text:
+        return []
+
+    results: List[Dict[str, Any]] = []
+
+    lines = [l.strip() for l in text.strip().splitlines() if l.strip()]
+    table_lines = [l for l in lines if l.startswith("|") and l.endswith("|")]
+    if len(table_lines) >= 3:
+        for row in table_lines[2:]:
+            cells = [c.strip() for c in row.split("|")[1:-1]]
+            if len(cells) < 2:
+                continue
+            name = cells[0]
+            pct_m = re.search(r'(\d+)\s*%', cells[1])
+            weight = int(pct_m.group(1)) if pct_m else 0
+            cpl = cells[2] if len(cells) > 2 else "CPL Umum"
+            desc = cells[3] if len(cells) > 3 else ""
+            results.append({
+                "criteria": name,
+                "weight_percentage": weight,
+                "cpl_target": cpl,
+                "description": desc
+            })
+        if results:
+            return results
+
+    list_pattern = re.compile(
+        r'[-*]\s*([^(\[]+?)(?:\s*\(\s*(\d+)\s*%\s*\))?(?:\s*\[([^\]]+)\])?(?::\s*(.*))?$',
+        re.MULTILINE
+    )
+    for m in list_pattern.finditer(text):
+        name = m.group(1).strip()
+        if not name or name.startswith("|"):
+            continue
+        weight = int(m.group(2)) if m.group(2) else 0
+        cpl = m.group(3).strip() if m.group(3) else "CPL Umum"
+        desc = m.group(4).strip() if m.group(4) else ""
+        results.append({
+            "criteria": name,
+            "weight_percentage": weight,
+            "cpl_target": cpl,
+            "description": desc
+        })
+
+    return results
+
+
+
 
 
 
