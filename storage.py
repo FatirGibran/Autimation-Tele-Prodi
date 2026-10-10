@@ -226,6 +226,17 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_note_article ON article_notes(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS publishing_webhook_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event TEXT NOT NULL,
+                    target_url TEXT NOT NULL,
+                    status_code INTEGER NOT NULL,
+                    payload_snippet TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_webhook_event ON publishing_webhook_logs(event);")
 
 
 
@@ -1311,6 +1322,36 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute("DELETE FROM article_notes WHERE id = ?;", (note_id,))
             return cursor.rowcount > 0
+
+    def log_webhook_dispatch(
+        self,
+        event: str,
+        target_url: str,
+        status_code: int,
+        payload_snippet: str = ""
+    ) -> int:
+        """
+        Records an outbound publishing webhook notification attempt and HTTP status code.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO publishing_webhook_logs (event, target_url, status_code, payload_snippet)
+                VALUES (?, ?, ?, ?);
+            """, (event.strip(), target_url.strip(), int(status_code), payload_snippet.strip()))
+            return cursor.lastrowid
+
+    def get_recent_webhook_logs(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent webhook dispatch logs ordered by latest creation timestamp.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, event, target_url, status_code, payload_snippet, created_at
+                FROM publishing_webhook_logs
+                ORDER BY id DESC
+                LIMIT ?;
+            """, (int(limit),))
+            return [dict(row) for row in cursor.fetchall()]
 
 
 
