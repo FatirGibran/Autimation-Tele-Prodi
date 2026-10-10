@@ -1443,6 +1443,65 @@ class YoastSEOValidator:
             "warning": warning
         }
 
+    @staticmethod
+    def validate_embedded_json_ld(html_content: str) -> Dict[str, Any]:
+        """
+        Parses and validates embedded Schema.org JSON-LD scripts in HTML content.
+        Verifies valid JSON syntax, @context, @type, and schema-specific essential properties.
+        """
+        if not html_content:
+            return {"total_schemas": 0, "schemas": [], "is_valid": True, "issues": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        scripts = soup.find_all("script", attrs={"type": "application/ld+json"})
+        if not scripts:
+            return {"total_schemas": 0, "schemas": [], "is_valid": True, "issues": []}
+
+        import json
+        issues = []
+        schemas_info = []
+
+        for idx, s in enumerate(scripts, 1):
+            raw_text = s.string or s.get_text() or ""
+            if not raw_text.strip():
+                issues.append(f"JSON-LD script #{idx} kosong.")
+                continue
+
+            try:
+                data = json.loads(raw_text.strip())
+            except Exception as e:
+                issues.append(f"JSON-LD script #{idx} gagal diparse: {str(e)}.")
+                continue
+
+            context = data.get("@context", "")
+            schema_type = data.get("@type", "")
+
+            if not context or "schema.org" not in context.lower():
+                issues.append(f"JSON-LD script #{idx} tidak memiliki @context 'https://schema.org'.")
+
+            if not schema_type:
+                issues.append(f"JSON-LD script #{idx} tidak memiliki properti '@type'.")
+
+            if schema_type in ("Article", "ScholarlyArticle", "NewsArticle"):
+                if not (data.get("headline") or data.get("name")):
+                    issues.append(f"Schema {schema_type} #{idx} memerlukan properti 'headline' atau 'name'.")
+            elif schema_type == "Course":
+                if not data.get("name"):
+                    issues.append(f"Schema Course #{idx} memerlukan properti 'name'.")
+            elif schema_type in ("Event", "EducationEvent"):
+                if not data.get("name") or not data.get("startDate"):
+                    issues.append(f"Schema {schema_type} #{idx} memerlukan 'name' dan 'startDate'.")
+
+            schemas_info.append({"index": idx, "type": schema_type, "context": context})
+
+        return {
+            "total_schemas": len(scripts),
+            "schemas": schemas_info,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
