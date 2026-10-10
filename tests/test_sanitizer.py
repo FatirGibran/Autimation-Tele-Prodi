@@ -223,6 +223,46 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('srcset="https://cdn.example.com/hero.webp"', clean)
         self.assertTrue(any("picture containers" in w for w in warnings))
 
+    def test_sanitize_track_subtitle_elements(self):
+        video_html = (
+            '<div class="tu-editorial-container"><video src="https://example.com/lecture.mp4">'
+            '<track src="http://example.com/sub.vtt" kind="captions" srclang="id">'
+            '<track src="javascript:alert(1)" kind="invalid_kind">'
+            '</video></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(video_html)
+        self.assertIn('src="https://example.com/sub.vtt"', clean)
+        self.assertIn('kind="captions"', clean)
+        self.assertNotIn('src="javascript:alert(1)"', clean)
+        self.assertIn('kind="subtitles"', clean)
+        self.assertTrue(any("track subtitle" in w for w in warnings))
+
+    def test_strip_svg_feimage_external_payload(self):
+        svg_html = (
+            '<div class="tu-editorial-container"><svg>'
+            '<filter id="blur"><feImage xlink:href="https://attacker.com/evil.svg"/></filter>'
+            '</svg></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(svg_html)
+        self.assertNotIn('xlink:href="https://attacker.com/evil.svg"', clean)
+        self.assertTrue(any("SVG feImage" in w for w in warnings))
+
+    def test_sanitize_template_and_slot_elements(self):
+        bad_html = (
+            '<div class="tu-editorial-container">'
+            '<template shadowroot="open"><p>Shadow DOM Injected</p></template>'
+            '<slot name="custom-slot"></slot>'
+            '<p>Konten Sah</p>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(bad_html)
+        self.assertNotIn('<template', clean)
+        self.assertNotIn('Shadow DOM Injected', clean)
+        self.assertNotIn('<slot', clean)
+        self.assertIn('Konten Sah', clean)
+        self.assertTrue(any("template and slot" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
+
 
