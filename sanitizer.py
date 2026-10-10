@@ -305,6 +305,14 @@ class HTMLSanitizer:
                 warnings.append("Stripped animation or embedded font elements from SVG.")
                 cleaned = re.sub(r"<(animate|animateTransform|set|handler|font|font-face)[^>]*>.*?</\1>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
                 cleaned = re.sub(r"<(animate|animateTransform|set|handler|font|font-face)[^>]*/>", "", cleaned, flags=re.IGNORECASE)
+            if re.search(r"<feImage\b", cleaned, re.IGNORECASE):
+                def clean_feimage(m):
+                    tag = m.group(0)
+                    if re.search(r'(?:xlink:href|href)=["\'](?:https?://|javascript:|data:text/html)', tag, re.IGNORECASE):
+                        warnings.append("Stripped unsafe external or script payload in SVG feImage.")
+                        return ""
+                    return tag
+                cleaned = re.sub(r'<feImage\b[^>]*>', clean_feimage, cleaned, flags=re.IGNORECASE)
             cleaned = re.sub(r'xlink:href=["\']javascript:[^"\']*["\']', 'xlink:href="#"', cleaned, flags=re.IGNORECASE)
 
         # 6b. Sanitize MathML equation tags and strip executable XML attributes
