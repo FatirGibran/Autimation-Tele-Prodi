@@ -380,6 +380,80 @@ Poin Utama:
         self.assertEqual(res2["end_iso"], "2026-08-15")
         self.assertEqual(res2["days_span"], 19)
 
+    def test_parse_lab_inventory_specs_table_and_list(self):
+        from parser import parse_lab_inventory_specs
+        # Table format
+        table_md = """
+| Nama Alat | Kategori | Jumlah | Kondisi | Spesifikasi |
+|---|---|---|---|---|
+| NVIDIA DGX Station | Server AI | 2 unit | Siap Pakai | 4x A100 GPU 320GB |
+| Switch Cisco 2960 | Jaringan | 6 unit | Berfungsi Baik | 24-Port Gigabit |
+"""
+        res_table = parse_lab_inventory_specs(table_md)
+        self.assertEqual(len(res_table), 2)
+        self.assertEqual(res_table[0]["name"], "NVIDIA DGX Station")
+        self.assertEqual(res_table[0]["quantity"], 2)
+        self.assertEqual(res_table[1]["category"], "Jaringan")
+
+        # List format
+        list_md = "- Workstation Dell Precision: 8 unit [Kondisi: Baik] (Intel Xeon, 64GB RAM)"
+        res_list = parse_lab_inventory_specs(list_md)
+        self.assertEqual(len(res_list), 1)
+        self.assertEqual(res_list[0]["name"], "Workstation Dell Precision")
+        self.assertEqual(res_list[0]["quantity"], 8)
+        self.assertEqual(res_list[0]["condition"], "Baik")
+
+    def test_parse_apa_journal_citations(self):
+        from parser import parse_apa_journal_citations
+        cite_text = "Santoso, B., & Rahma, S. (2024). Deep learning optimization on edge devices. IEEE Internet of Things Journal, 11(2), 1234-1245. https://doi.org/10.1109/JIOT.2024.123456"
+        res = parse_apa_journal_citations(cite_text)
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0]["year"], 2024)
+        self.assertEqual(res[0]["journal"], "IEEE Internet of Things Journal")
+        self.assertEqual(res[0]["volume"], "11")
+        self.assertEqual(res[0]["issue"], "2")
+        self.assertEqual(res[0]["pages"], "1234-1245")
+        self.assertEqual(res[0]["doi"], "https://doi.org/10.1109/JIOT.2024.123456")
+
+    def test_parse_defense_rubric_criteria(self):
+        from parser import parse_defense_rubric_criteria
+        rubric_md = """
+- Metodologi Riset & Analisis Kebutuhan (30%) [CPL-02]: Ketepatan metode perancangan perangkat lunak
+- Penguasaan Teori & Argumentasi (40%) [CPL-01]: Penguasaan substansi komputasi
+- Kualitas Prototipe Aplikasi (30%) [CPL-03]: Fungsionalitas produk
+"""
+        res = parse_defense_rubric_criteria(rubric_md)
+        self.assertEqual(len(res), 3)
+        self.assertEqual(res[0]["criteria"], "Metodologi Riset & Analisis Kebutuhan")
+        self.assertEqual(res[0]["weight_percentage"], 30)
+        self.assertEqual(res[0]["cpl_target"], "CPL-02")
+
+    def test_convert_indonesian_grade_letter_and_gpa(self):
+        from parser import convert_indonesian_grade_letter, calculate_weighted_semester_gpa
+        g_a = convert_indonesian_grade_letter("A")
+        self.assertEqual(g_a["gpa_point"], 4.0)
+        self.assertTrue(g_a["is_passing"])
+
+        g_ab = convert_indonesian_grade_letter("AB")
+        self.assertEqual(g_ab["gpa_point"], 3.5)
+
+        g_e = convert_indonesian_grade_letter("E")
+        self.assertEqual(g_e["gpa_point"], 0.0)
+        self.assertFalse(g_e["is_passing"])
+
+        # Semester GPA calculation
+        courses = [
+            {"code": "IF2143", "credits": 4, "grade": "A"},   # 4 * 4.0 = 16.0
+            {"code": "IF2144", "credits": 3, "grade": "AB"},  # 3 * 3.5 = 10.5
+            {"code": "IF2145", "credits": 3, "grade": "B"},   # 3 * 3.0 = 9.0
+        ]
+        # Total SKS = 10, total points = 35.5, GPA = 3.55
+        calc = calculate_weighted_semester_gpa(courses)
+        self.assertEqual(calc["total_credits"], 10)
+        self.assertEqual(calc["gpa"], 3.55)
+        self.assertEqual(calc["academic_standing"], "Dengan Pujian (Cum Laude)")
+
 if __name__ == "__main__":
     unittest.main()
+
 
