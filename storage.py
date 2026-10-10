@@ -215,6 +215,17 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_tax_slug ON taxonomy_meta(taxonomy, term_slug);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_notes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    author TEXT NOT NULL,
+                    note_text TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_note_article ON article_notes(article_id);")
 
 
 
@@ -1267,6 +1278,38 @@ class StorageManager:
                 DELETE FROM taxonomy_meta
                 WHERE taxonomy = ? AND term_slug = ? AND meta_key = ?;
             """, (taxonomy.strip().lower(), term_slug.strip().lower(), meta_key.strip()))
+            return cursor.rowcount > 0
+
+    def add_editorial_note(self, article_id: int, author: str, note_text: str) -> int:
+        """
+        Creates a new editorial collaboration note or feedback item on an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_notes (article_id, author, note_text)
+                VALUES (?, ?, ?);
+            """, (article_id, author.strip(), note_text.strip()))
+            return cursor.lastrowid
+
+    def list_editorial_notes(self, article_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves all editorial notes attached to an article ordered chronologically.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, article_id, author, note_text, created_at
+                FROM article_notes
+                WHERE article_id = ?
+                ORDER BY id ASC;
+            """, (article_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def delete_editorial_note(self, note_id: int) -> bool:
+        """
+        Removes an editorial note by its primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("DELETE FROM article_notes WHERE id = ?;", (note_id,))
             return cursor.rowcount > 0
 
 
