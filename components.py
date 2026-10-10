@@ -1824,6 +1824,51 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_tracer_salary_histogram(
+        cls,
+        cohort_year: int,
+        salary_brackets: List[Dict[str, Any]],
+        median_salary_idr: int
+    ) -> str:
+        """
+        Renders a graduate tracer study salary distribution bar histogram
+        with Indonesian median wage indicator.
+        """
+        from xml.sax.saxutils import escape
+
+        median_str = f"Rp {median_salary_idr:,.0f}".replace(",", ".")
+
+        bar_items = []
+        for b in salary_brackets:
+            label = escape(str(b.get("bracket", "")))
+            pct = float(b.get("percentage", 0.0))
+            count = b.get("count", 0)
+            bar_items.append(f"""        <div class="tu-salary-bar-item">
+          <div class="tu-salary-bar-meta">
+            <span class="tu-salary-bracket-label">{label}</span>
+            <span class="tu-salary-bracket-pct">{pct:.1f}% ({count} orang)</span>
+          </div>
+          <div class="tu-salary-bar-track">
+            <div class="tu-salary-bar-fill" style="width: {pct}%;"></div>
+          </div>
+        </div>""")
+
+        bars_html = "\n".join(bar_items) if bar_items else "        <p><em>Data distribusi gaji belum tersedia.</em></p>"
+
+        return f"""    <div class="tu-salary-histogram-card">
+      <div class="tu-salary-hist-header">
+        <h4 class="tu-salary-hist-title">Distribusi Gaji Pertama Lulusan (Angkatan {cohort_year})</h4>
+        <div class="tu-salary-median-badge">
+          <span>Median Gaji:</span>
+          <strong>{median_str}</strong>
+        </div>
+      </div>
+      <div class="tu-salary-bars-wrap">
+{bars_html}
+      </div>
+    </div>"""
+
 
 
 
