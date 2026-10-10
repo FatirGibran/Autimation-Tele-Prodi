@@ -1377,6 +1377,74 @@ def parse_defense_rubric_criteria(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def convert_indonesian_grade_letter(letter_grade: str) -> Optional[Dict[str, Any]]:
+    """
+    Converts Indonesian higher education letter grade (A, AB, B, BC, C, D, E)
+    to standard 4.0 numerical scale and qualitative predicate.
+    """
+    if not letter_grade:
+        return None
+
+    clean = letter_grade.strip().upper()
+    grade_table = {
+        "A": {"point": 4.0, "predicate": "Sangat Baik Sekali (Istimewa)", "passing": True},
+        "AB": {"point": 3.5, "predicate": "Sangat Baik", "passing": True},
+        "B": {"point": 3.0, "predicate": "Baik", "passing": True},
+        "BC": {"point": 2.5, "predicate": "Cukup Baik", "passing": True},
+        "C": {"point": 2.0, "predicate": "Cukup", "passing": True},
+        "D": {"point": 1.0, "predicate": "Kurang", "passing": False},
+        "E": {"point": 0.0, "predicate": "Gagal", "passing": False},
+    }
+
+    if clean not in grade_table:
+        return None
+
+    entry = grade_table[clean]
+    return {
+        "letter": clean,
+        "gpa_point": entry["point"],
+        "predicate": entry["predicate"],
+        "is_passing": entry["passing"]
+    }
+
+
+def calculate_weighted_semester_gpa(courses: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Calculates weighted Grade Point Average (IPK/IPS) from a list of courses with SKS credits and letter grades.
+    """
+    total_credits = 0
+    total_points = 0.0
+
+    for c in courses:
+        credits = int(c.get("credits", 0))
+        grade_str = str(c.get("grade", ""))
+        grade_info = convert_indonesian_grade_letter(grade_str)
+        if grade_info and credits > 0:
+            total_credits += credits
+            total_points += credits * grade_info["gpa_point"]
+
+    gpa = round(total_points / total_credits, 2) if total_credits > 0 else 0.0
+
+    if gpa >= 3.51:
+        standing = "Dengan Pujian (Cum Laude)"
+    elif gpa >= 3.00:
+        standing = "Sangat Memuaskan"
+    elif gpa >= 2.50:
+        standing = "Memuaskan"
+    elif gpa >= 2.00:
+        standing = "Cukup"
+    else:
+        standing = "Percobaan (Perlu Perbaikan)"
+
+    return {
+        "total_credits": total_credits,
+        "total_grade_points": round(total_points, 2),
+        "gpa": gpa,
+        "academic_standing": standing
+    }
+
+
+
 
 
 
