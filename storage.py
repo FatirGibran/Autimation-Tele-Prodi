@@ -237,6 +237,15 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_webhook_event ON publishing_webhook_logs(event);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS taxonomy_synonyms (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    canonical_term TEXT NOT NULL,
+                    alias_term TEXT NOT NULL UNIQUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_tax_synonym ON taxonomy_synonyms(alias_term);")
 
 
 
@@ -1351,6 +1360,47 @@ class StorageManager:
                 ORDER BY id DESC
                 LIMIT ?;
             """, (int(limit),))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def add_taxonomy_synonym(self, canonical_term: str, alias_term: str) -> bool:
+        """
+        Registers an alias term mapping to a canonical academic taxonomy term.
+        """
+        can = canonical_term.strip().lower()
+        alias = alias_term.strip().lower()
+        if not can or not alias or can == alias:
+            return False
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT OR REPLACE INTO taxonomy_synonyms (canonical_term, alias_term)
+                VALUES (?, ?);
+            """, (can, alias))
+            return cursor.rowcount > 0
+
+    def resolve_canonical_term(self, alias_term: str) -> str:
+        """
+        Resolves an alias term to its canonical academic taxonomy term, or returns the term itself if none found.
+        """
+        cleaned = alias_term.strip().lower()
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT canonical_term
+                FROM taxonomy_synonyms
+                WHERE alias_term = ?;
+            """, (cleaned,))
+            row = cursor.fetchone()
+            return row["canonical_term"] if row else cleaned
+
+    def list_taxonomy_synonyms(self) -> List[Dict[str, str]]:
+        """
+        Lists all registered taxonomy alias-to-canonical term mappings.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT canonical_term, alias_term
+                FROM taxonomy_synonyms
+                ORDER BY canonical_term ASC, alias_term ASC;
+            """)
             return [dict(row) for row in cursor.fetchall()]
 
 
