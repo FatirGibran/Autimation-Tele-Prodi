@@ -422,6 +422,62 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertIn("grade_level", res["coleman_liau"])
         self.assertIn("difficulty", res["coleman_liau"])
 
+    def test_check_consecutive_sentence_starts(self):
+        text_repeating = "Penelitian ini mengkaji AI. Penelitian ini menguji model. Penelitian ini menyimpulkan akurasi tinggi."
+        res_rep = YoastSEOValidator.check_consecutive_sentence_starts(text_repeating, threshold=3)
+        self.assertTrue(res_rep["has_repetitive_starts"])
+        self.assertEqual(len(res_rep["consecutive_groups"]), 1)
+        self.assertEqual(res_rep["consecutive_groups"][0]["word"], "penelitian")
+
+        text_varied = "Penelitian ini mengkaji AI. Selanjutnya kami menguji model. Hasil akhir menyimpulkan akurasi tinggi."
+        res_var = YoastSEOValidator.check_consecutive_sentence_starts(text_varied, threshold=3)
+        self.assertFalse(res_var["has_repetitive_starts"])
+
+    def test_evaluate_paragraph_transition_distribution(self):
+        html_good = (
+            "<p>Kecerdasan buatan berkembang pesat. Oleh karena itu, kurikulum diperbarui.</p>"
+            "<p>Selain itu, laboratorium komputasi juga ditingkatkan fasilitasnya.</p>"
+            "<p>Mahasiswa antusias menyambut pembaruan sarana dan prasarana.</p>"
+        )
+        res_good = YoastSEOValidator.evaluate_paragraph_transition_distribution(html_good, min_ratio=0.3)
+        self.assertEqual(res_good["total_paragraphs"], 3)
+        self.assertEqual(res_good["paragraphs_with_transitions"], 2)
+        self.assertTrue(res_good["is_optimal"])
+
+        html_empty = ""
+        res_empty = YoastSEOValidator.evaluate_paragraph_transition_distribution(html_empty)
+        self.assertEqual(res_empty["total_paragraphs"], 0)
+
+    def test_validate_meta_description_cta(self):
+        cta_desc = "Pelajari kurikulum program studi S1 Teknik Telekomunikasi dan temukan peluang riset IoT."
+        res_cta = YoastSEOValidator.validate_meta_description_cta(cta_desc)
+        self.assertTrue(res_cta["has_cta"])
+        self.assertIn("pelajari", res_cta["matched_ctas"])
+        self.assertIn("temukan", res_cta["matched_ctas"])
+
+        no_cta_desc = "Kurikulum program studi Teknik Telekomunikasi tahun ajaran baru."
+        res_no_cta = YoastSEOValidator.validate_meta_description_cta(no_cta_desc)
+        self.assertFalse(res_no_cta["has_cta"])
+
+    def test_validate_embedded_json_ld(self):
+        valid_html = (
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "ScholarlyArticle", "name": "Deep Learning Edge"}'
+            '</script>'
+        )
+        res_valid = YoastSEOValidator.validate_embedded_json_ld(valid_html)
+        self.assertTrue(res_valid["is_valid"])
+        self.assertEqual(res_valid["total_schemas"], 1)
+
+        invalid_html = (
+            '<script type="application/ld+json">'
+            '{"@type": "ScholarlyArticle"}'
+            '</script>'
+        )
+        res_invalid = YoastSEOValidator.validate_embedded_json_ld(invalid_html)
+        self.assertFalse(res_invalid["is_valid"])
+        self.assertGreater(len(res_invalid["issues"]), 0)
+
 if __name__ == "__main__":
     unittest.main()
 
