@@ -1966,6 +1966,61 @@ class EditorialComponents:
       </table>
     </div>"""
 
+    @classmethod
+    def render_credit_transfer_matrix(
+        cls,
+        host_university: str,
+        course_mappings: List[Dict[str, Any]]
+    ) -> str:
+        """
+        Renders an academic credit transfer matrix card mapping study abroad/exchange
+        host university courses to home curriculum courses and recognized SKS credits.
+        """
+        from xml.sax.saxutils import escape
+
+        univ_esc = escape(host_university.strip())
+
+        rows = []
+        for m in course_mappings:
+            h_code = escape(str(m.get("host_course_code", "")))
+            h_name = escape(str(m.get("host_course_name", "")))
+            h_cred = escape(str(m.get("host_credits", "")))
+            d_code = escape(str(m.get("home_course_code", "")))
+            d_name = escape(str(m.get("home_course_name", "")))
+            d_sks = int(m.get("home_sks", 0))
+            stat = escape(str(m.get("status", "Disetujui")))
+
+            rows.append(f"""          <tr>
+            <td><strong>{h_code}</strong> {h_name}</td>
+            <td>{h_cred}</td>
+            <td><strong>{d_code}</strong> {d_name}</td>
+            <td>{d_sks} SKS</td>
+            <td><span class="tu-credit-status">{stat}</span></td>
+          </tr>""")
+
+        tbody_html = "\n".join(rows) if rows else "          <tr><td colspan=\"5\"><em>Tidak ada mata kuliah terpetakan.</em></td></tr>"
+
+        return f"""    <div class="tu-credit-transfer-card">
+      <div class="tu-credit-transfer-header">
+        <span class="tu-credit-badge">Matriks Transfer Kredit</span>
+        <h4 class="tu-credit-host-univ">{univ_esc}</h4>
+      </div>
+      <table class="tu-credit-table">
+        <thead>
+          <tr>
+            <th>Mata Kuliah Mitra</th>
+            <th>Kredit Mitra</th>
+            <th>Mata Kuliah Diakui</th>
+            <th>SKS Diakui</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+{tbody_html}
+        </tbody>
+      </table>
+    </div>"""
+
 
 
 
