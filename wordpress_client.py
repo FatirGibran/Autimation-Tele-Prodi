@@ -421,6 +421,18 @@ class WordPressClient:
             "total": len(post_ids)
         }
 
+    def get_user_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a WordPress user author matching the given slug, or None if not found.
+        """
+        clean_slug = urllib.parse.quote(slug.strip().lower())
+        endpoint = f"{self.api_url}/users?slug={clean_slug}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list) and len(results) > 0:
+            return results[0]
+        return None
+
 
 
 
