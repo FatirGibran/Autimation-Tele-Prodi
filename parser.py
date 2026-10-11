@@ -1558,6 +1558,63 @@ def parse_laboratory_sop(text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def parse_scholarship_eligibility(criteria_text: str) -> Dict[str, Any]:
+    """
+    Parses scholarship call-for-application bullet points or free text
+    into a structured qualification profile.
+    """
+    if not criteria_text:
+        return {
+            "min_gpa": 0.0,
+            "target_semesters": [],
+            "required_documents": [],
+            "requires_interview": False,
+            "is_full_coverage": False
+        }
+
+    clean = criteria_text.strip()
+
+    gpa = 0.0
+    gpa_match = re.search(r'(?:ipk|gpa)\s*(?:minimal|min|&gt;=|>=)?\s*([234]\.\d{1,2})', clean, re.IGNORECASE)
+    if gpa_match:
+        gpa = float(gpa_match.group(1))
+
+    semesters = []
+    sem_range_match = re.search(r'semester\s*([1-8])\s*[-–]\s*([1-8])', clean, re.IGNORECASE)
+    if sem_range_match:
+        s1 = int(sem_range_match.group(1))
+        s2 = int(sem_range_match.group(2))
+        semesters = list(range(s1, s2 + 1))
+    else:
+        for m in re.finditer(r'semester\s*([1-8])\b', clean, re.IGNORECASE):
+            semesters.append(int(m.group(1)))
+        semesters = sorted(list(set(semesters)))
+
+    doc_keywords = {
+        "KTM / Kartu Tanda Mahasiswa": ["ktm", "kartu tanda mahasiswa"],
+        "Transkrip Nilai": ["transkrip", "khs", "transkrip nilai"],
+        "Surat Rekomendasi Dosen": ["surat rekomendasi", "rekomendasi dosen", "rekomendasi kaprodi"],
+        "Sertifikat Prestasi / Portofolio": ["sertifikat", "portofolio", "piagam"],
+        "Surat Keterangan Tidak Mampu (SKTM)": ["sktm", "tidak mampu"],
+        "Motivation Letter": ["motivation letter", "surat motivasi", "esai"]
+    }
+    required_docs = []
+    for doc_name, kw_list in doc_keywords.items():
+        if any(re.search(r'\b' + re.escape(kw) + r'\b', clean, re.IGNORECASE) for kw in kw_list):
+            required_docs.append(doc_name)
+
+    requires_interview = bool(re.search(r'\b(?:wawancara|interview|tahap\s+wawancara)\b', clean, re.IGNORECASE))
+    is_full = bool(re.search(r'\b(?:full\s+coverage|bebas\s+bpp\s+100%|penuh|beasiswa\s+penuh)\b', clean, re.IGNORECASE))
+
+    return {
+        "min_gpa": gpa,
+        "target_semesters": semesters,
+        "required_documents": required_docs,
+        "requires_interview": requires_interview,
+        "is_full_coverage": is_full
+    }
+
+
 
 
 
