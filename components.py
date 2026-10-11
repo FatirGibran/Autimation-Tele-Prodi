@@ -2021,6 +2021,43 @@ class EditorialComponents:
       </table>
     </div>"""
 
+    @classmethod
+    def render_patent_grant_card(
+        cls,
+        patent_title: str,
+        patent_number: str,
+        inventors: List[str],
+        filing_date: str,
+        status: str,
+        abstract: str = ""
+    ) -> str:
+        """
+        Renders a faculty research intellectual property right (IPR/Paten) grant showcase card
+        highlighting patent number, inventors, filing timeline, and legal registration status.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(patent_title.strip())
+        num_esc = escape(patent_number.strip())
+        date_esc = escape(filing_date.strip())
+        stat_esc = escape(status.strip())
+        invs_esc = escape(", ".join(inv.strip() for inv in inventors if inv.strip()))
+
+        abstract_html = f'\n      <p class="tu-patent-abstract">{escape(abstract.strip())}</p>' if abstract.strip() else ""
+
+        return f"""    <div class="tu-patent-card">
+      <div class="tu-patent-badge">Paten &amp; Hak Kekayaan Intelektual</div>
+      <h4 class="tu-patent-title">{title_esc}</h4>
+      <div class="tu-patent-meta">
+        <span class="tu-patent-number">No: <strong>{num_esc}</strong></span>
+        <span class="tu-patent-status">Status: <strong>{stat_esc}</strong></span>
+        <span class="tu-patent-date">Tanggal: <strong>{date_esc}</strong></span>
+      </div>
+      <div class="tu-patent-inventors">
+        <span>Inventor:</span> <strong>{invs_esc}</strong>
+      </div>{abstract_html}
+    </div>"""
+
 
 
 
