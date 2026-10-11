@@ -252,6 +252,40 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Q1 - Scopus Top 5%", card)
         self.assertIn("https://doi.org/10.1109/TCOMM.2026.12345", card)
 
+    def test_format_patent_registration_card(self):
+        card = TelegramFormatter.format_patent_registration_card(
+            patent_title="Metode Kompresi Sinyal Bio-Medis Berbasis Wavelet",
+            patent_number="IDS000004512",
+            inventors=["Dr. Wahyu Sedikit", "Fatir Gibran"],
+            filing_date="10 Oktober 2026",
+            official_url="https://pdki-indonesia.dgip.go.id/patent/IDS000004512"
+        )
+        self.assertIn("Paten & Hak Kekayaan Intelektual Resmi Terdaftar", card)
+        self.assertIn("Metode Kompresi Sinyal Bio-Medis", card)
+        self.assertIn("IDS000004512", card)
+        self.assertIn("Dr. Wahyu Sedikit, Fatir Gibran", card)
+        self.assertIn("10 Oktober 2026", card)
+        self.assertIn("https://pdki-indonesia.dgip.go.id/patent/IDS000004512", card)
+
+    def test_format_credit_transfer_approval_card(self):
+        courses = [
+            {"host_course": "ECE 302 Signals", "home_course": "Pengolahan Sinyal", "sks": "3"},
+            {"host_course": "ECE 401 Antennas", "home_course": "Antena & Propagasi", "sks": "4"}
+        ]
+        card = TelegramFormatter.format_credit_transfer_approval_card(
+            student_name="Ahmad Fauzi",
+            host_univ="Universiti Malaya",
+            approved_courses=courses,
+            total_ects=12.0,
+            total_sks=7
+        )
+        self.assertIn("Persetujuan Konversi & Transfer Kredit Akademik", card)
+        self.assertIn("Ahmad Fauzi", card)
+        self.assertIn("Universiti Malaya", card)
+        self.assertIn("12.0 ECTS", card)
+        self.assertIn("7 SKS", card)
+        self.assertIn("ECE 302 Signals", card)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
     def test_rate_limiter_allows_and_blocks(self):
