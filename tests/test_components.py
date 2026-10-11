@@ -657,6 +657,87 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("55.0%", html)
         self.assertIn("44 orang", html)
 
+    def test_render_bloom_taxonomy_level_card(self):
+        bloom_levels = [
+            {"level": "C3", "cpl_code": "CPL-02", "description": "Menerapkan modulasi digital.", "weight_pct": 30},
+            {"level": "C5", "cpl_code": "CPL-04", "description": "Mengevaluasi performa link radio.", "weight_pct": 40}
+        ]
+        html = EditorialComponents.render_bloom_taxonomy_level_card("TT-2103", "Sistem Komunikasi Radio", bloom_levels)
+        self.assertIn("tu-bloom-card", html)
+        self.assertIn("TT-2103", html)
+        self.assertIn("Sistem Komunikasi Radio", html)
+        self.assertIn("C3", html)
+        self.assertIn("CPL-02", html)
+        self.assertIn("Bobot: 30%", html)
+        self.assertIn("Menerapkan modulasi digital", html)
+
+    def test_render_hazardous_waste_protocol_card(self):
+        waste = [
+            {"category": "Limbah Asam Kuat", "container_type": "HDPE Biru", "storage_location": "Lemari B3", "safety_notes": "Sarung tangan nitril"}
+        ]
+        html = EditorialComponents.render_hazardous_waste_protocol_card(
+            "Lab Kimia Material Telekomunikasi",
+            waste,
+            "Tiap akhir semester gasal"
+        )
+        self.assertIn("tu-waste-protocol-card", html)
+        self.assertIn("Lab Kimia Material Telekomunikasi", html)
+        self.assertIn("Limbah Asam Kuat", html)
+        self.assertIn("HDPE Biru", html)
+        self.assertIn("Tiap akhir semester gasal", html)
+
+    def test_render_credit_transfer_matrix(self):
+        mappings = [
+            {
+                "host_course_code": "ECE-301",
+                "host_course_name": "Digital Signal Processing",
+                "host_credits": 3,
+                "home_course_code": "TT-3101",
+                "home_course_name": "Pengolahan Sinyal Digital",
+                "home_sks": 3,
+                "status": "Disetujui"
+            }
+        ]
+        html = EditorialComponents.render_credit_transfer_matrix("Universiti Teknologi Malaysia", mappings)
+        self.assertIn("tu-credit-transfer-card", html)
+        self.assertIn("Universiti Teknologi Malaysia", html)
+        self.assertIn("ECE-301", html)
+        self.assertIn("Digital Signal Processing", html)
+        self.assertIn("TT-3101", html)
+        self.assertIn("3 SKS", html)
+
+    def test_render_patent_grant_card(self):
+        html = EditorialComponents.render_patent_grant_card(
+            patent_title="Antena Mikrostrip MIMO Fraktal Multi-Pita",
+            patent_number="IDP000088921",
+            inventors=["Dr. Wahyu Sedikit", "Fajar Hidayat"],
+            filing_date="12 Maret 2025",
+            status="Granted / Terdaftar",
+            abstract="Inovasi antena mikrostrip untuk transceiver 5G pita gelombang milimeter."
+        )
+        self.assertIn("tu-patent-card", html)
+        self.assertIn("Antena Mikrostrip MIMO Fraktal Multi-Pita", html)
+        self.assertIn("IDP000088921", html)
+        self.assertIn("Dr. Wahyu Sedikit, Fajar Hidayat", html)
+        self.assertIn("Granted / Terdaftar", html)
+        self.assertIn("Inovasi antena mikrostrip", html)
+
+    def test_render_industry_partner_testimonial(self):
+        html = EditorialComponents.render_industry_partner_testimonial(
+            company_name="PT Telkom Indonesia",
+            representative_name="Eko Prasetyo",
+            position="VP Network Infrastructure",
+            quote="Lulusan prodi memiliki kompetensi jaringan yang sangat siap pakai.",
+            partner_logo_url="https://example.com/telkom.png",
+            hired_alumni_count=18
+        )
+        self.assertIn("tu-partner-testimonial-card", html)
+        self.assertIn("PT Telkom Indonesia", html)
+        self.assertIn("Eko Prasetyo, VP Network Infrastructure", html)
+        self.assertIn("siap pakai", html)
+        self.assertIn("18 alumni", html)
+        self.assertIn("https://example.com/telkom.png", html)
+
 if __name__ == "__main__":
     unittest.main()
 
