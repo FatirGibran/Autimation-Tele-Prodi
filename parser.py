@@ -1444,6 +1444,70 @@ def calculate_weighted_semester_gpa(courses: List[Dict[str, Any]]) -> Dict[str, 
     }
 
 
+def parse_ieee_journal_citation(citation_text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses IEEE journal transaction and conference proceedings citation string
+    into a structured bibliographic dictionary.
+    """
+    if not citation_text:
+        return None
+
+    clean = citation_text.strip()
+    title_match = re.search(r'["“]([^"”]+)["”]', clean)
+    if not title_match:
+        return None
+
+    title = title_match.group(1).strip().rstrip(",")
+    before_title = clean[:title_match.start()].strip().rstrip(",")
+    after_title = clean[title_match.end():].strip().lstrip(",").strip()
+
+    author_str = before_title
+    authors = [a.strip() for a in re.split(r',?\s+(?:and|&)\s+|,\s+', author_str) if a.strip()]
+
+    doi = ""
+    doi_match = re.search(r'(?:doi:\s*|https?://doi\.org/)(10\.\d{4,9}/[-._;()/:A-Za-z0-9]+)', after_title, re.IGNORECASE)
+    if doi_match:
+        doi = doi_match.group(1).rstrip(".")
+
+    vol = ""
+    vol_match = re.search(r'\bvol\.\s*(\d+)', after_title, re.IGNORECASE)
+    if vol_match:
+        vol = vol_match.group(1)
+
+    issue = ""
+    issue_match = re.search(r'\bno\.\s*(\d+)', after_title, re.IGNORECASE)
+    if issue_match:
+        issue = issue_match.group(1)
+
+    pages = ""
+    pages_match = re.search(r'\bpp?\.\s*([\d-]+)', after_title, re.IGNORECASE)
+    if pages_match:
+        pages = pages_match.group(1)
+
+    year = 0
+    year_match = re.search(r'\b(19\d\d|20\d\d)\b', after_title)
+    if year_match:
+        year = int(year_match.group(1))
+
+    journal_part = after_title
+    for token in ["vol.", "no.", "pp.", "doi:"]:
+        idx = journal_part.lower().find(token)
+        if idx != -1:
+            journal_part = journal_part[:idx]
+    journal = journal_part.strip().rstrip(",").strip()
+
+    return {
+        "authors": authors,
+        "title": title,
+        "journal": journal,
+        "volume": vol,
+        "issue": issue,
+        "pages": pages,
+        "year": year,
+        "doi": doi
+    }
+
+
 
 
 
