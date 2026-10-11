@@ -2058,6 +2058,40 @@ class EditorialComponents:
       </div>{abstract_html}
     </div>"""
 
+    @classmethod
+    def render_industry_partner_testimonial(
+        cls,
+        company_name: str,
+        representative_name: str,
+        position: str,
+        quote: str,
+        partner_logo_url: str = "",
+        hired_alumni_count: int = 0
+    ) -> str:
+        """
+        Renders an industry employer testimonial card for graduate tracer studies,
+        showcasing corporate feedback and total alumni absorbed into the workforce.
+        """
+        from xml.sax.saxutils import escape
+
+        comp_esc = escape(company_name.strip())
+        rep_esc = escape(representative_name.strip())
+        pos_esc = escape(position.strip())
+        quote_esc = escape(quote.strip())
+
+        logo_html = f'<img src="{escape(partner_logo_url)}" alt="{comp_esc}" class="tu-partner-logo" loading="lazy" />\n        ' if partner_logo_url.strip() else ""
+        hired_html = f'\n      <div class="tu-partner-hired-badge">Telah merekrut <strong>{hired_alumni_count} alumni</strong></div>' if hired_alumni_count > 0 else ""
+
+        return f"""    <div class="tu-partner-testimonial-card">
+      <div class="tu-partner-header">
+        {logo_html}<div class="tu-partner-info">
+          <h4 class="tu-partner-company">{comp_esc}</h4>
+          <span class="tu-partner-rep">{rep_esc}, {pos_esc}</span>
+        </div>
+      </div>
+      <blockquote class="tu-partner-quote">&ldquo;{quote_esc}&rdquo;</blockquote>{hired_html}
+    </div>"""
+
 
 
 
