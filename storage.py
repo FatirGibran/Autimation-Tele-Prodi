@@ -246,6 +246,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_tax_synonym ON taxonomy_synonyms(alias_term);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_reviewers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    reviewer_name TEXT NOT NULL,
+                    reviewer_email TEXT NOT NULL,
+                    status TEXT DEFAULT 'assigned',
+                    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_rev_article ON article_reviewers(article_id);")
 
 
 
@@ -1402,6 +1415,42 @@ class StorageManager:
                 ORDER BY canonical_term ASC, alias_term ASC;
             """)
             return [dict(row) for row in cursor.fetchall()]
+
+    def assign_article_reviewer(self, article_id: int, reviewer_name: str, reviewer_email: str) -> int:
+        """
+        Assigns an academic peer reviewer to an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_reviewers (article_id, reviewer_name, reviewer_email, status)
+                VALUES (?, ?, ?, 'assigned')
+            """, (article_id, reviewer_name.strip(), reviewer_email.strip()))
+            return cursor.lastrowid
+
+    def list_article_reviewers(self, article_id: int) -> List[Dict[str, Any]]:
+        """
+        Lists all peer reviewers assigned to an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, article_id, reviewer_name, reviewer_email, status, assigned_at, updated_at
+                FROM article_reviewers
+                WHERE article_id = ?
+                ORDER BY id ASC
+            """, (article_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def update_reviewer_status(self, review_id: int, status: str) -> bool:
+        """
+        Updates the peer review status (e.g., 'in_review', 'accepted', 'rejected', 'changes_requested').
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                UPDATE article_reviewers
+                SET status = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (status.strip(), review_id))
+            return cursor.rowcount > 0
 
 
 
