@@ -7,7 +7,7 @@ ALLOWED_TAGS = {
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary", "dialog",
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
-    "video", "audio", "source", "picture", "track",
+    "video", "audio", "source", "picture", "track", "canvas",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext"
 }
 
@@ -389,6 +389,16 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<template\b[^>]*>.*?</template>', '', cleaned, flags=re.DOTALL | re.IGNORECASE)
             cleaned = re.sub(r'</?slot\b[^>]*>', '', cleaned, flags=re.IGNORECASE)
             warnings.append("Stripped dangerous template and slot shadow DOM declarative elements.")
+
+        # 8h. Sanitize HTML5 canvas elements and strip scriptable context attributes
+        if "<canvas" in cleaned.lower():
+            def sanitize_canvas(m):
+                tag = m.group(0)
+                # Strip non-standard or scriptable attributes like context, oncontextrestored, etc.
+                tag = re.sub(r'\s+(?:context|on[a-z]+)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<canvas\b[^>]*>', sanitize_canvas, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 canvas element and stripped scriptable context attributes.")
 
         return cleaned, warnings
 
