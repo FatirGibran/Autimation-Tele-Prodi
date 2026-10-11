@@ -8,7 +8,8 @@ ALLOWED_TAGS = {
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
     "video", "audio", "source", "picture", "track", "canvas",
-    "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext"
+    "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
+    "ruby", "rt", "rp", "rb", "rtc"
 }
 
 
@@ -399,6 +400,15 @@ class HTMLSanitizer:
                 return tag
             cleaned = re.sub(r'<canvas\b[^>]*>', sanitize_canvas, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 canvas element and stripped scriptable context attributes.")
+
+        # 8i. Sanitize linguistic ruby annotation pronunciation elements
+        if "<ruby" in cleaned.lower():
+            def clean_ruby(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<(?:ruby|rt|rp|rb|rtc)\b[^>]*>', clean_ruby, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized linguistic ruby annotation elements.")
 
         return cleaned, warnings
 
