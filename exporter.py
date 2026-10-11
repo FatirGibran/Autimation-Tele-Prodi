@@ -844,6 +844,33 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_pelican_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Pelican static site generator Markdown format with colon-separated headers.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        date = metadata.get("publish_date", "2026-10-01").strip()
+        category = metadata.get("category", "Akademik").strip()
+        slug = metadata.get("slug", "").strip()
+        summary = metadata.get("meta_description", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_str = ", ".join(tags)
+
+        lines = [
+            f"Title: {title}",
+            f"Date: {date}",
+            f"Category: {category}",
+            f"Tags: {tags_str}",
+            f"Slug: {slug}",
+            f"Summary: {summary}",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(lines)
+
 
 
 
