@@ -1615,6 +1615,27 @@ def parse_scholarship_eligibility(criteria_text: str) -> Dict[str, Any]:
     }
 
 
+def calculate_sks_to_ects(sks_credits: int, ects_ratio: float = 1.6) -> Dict[str, Any]:
+    """
+    Calculates Indonesian national credit system (SKS) to European Credit Transfer
+    and Accumulation System (ECTS) conversion along with student workload hours.
+    Standard ratio: 1 SKS ≈ 1.6 ECTS (based on Permendikbudristek learning workload standards).
+    """
+    sks = max(0, int(sks_credits))
+    ratio = float(ects_ratio) if ects_ratio > 0 else 1.6
+    ects = round(sks * ratio, 1)
+
+    workload_hours = round(sks * 45.33, 1)
+
+    return {
+        "sks_credits": sks,
+        "ects_ratio": ratio,
+        "ects_credits": ects,
+        "workload_hours_per_semester": workload_hours,
+        "workload_hours_per_week": round((workload_hours / 16), 1) if sks > 0 else 0.0
+    }
+
+
 
 
 
