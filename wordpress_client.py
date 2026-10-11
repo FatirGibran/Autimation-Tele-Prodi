@@ -402,6 +402,25 @@ class WordPressClient:
             return results[0]
         return None
 
+    def batch_update_post_categories(self, post_ids: List[int], category_ids: List[int]) -> Dict[str, Any]:
+        """
+        Bulk updates categories for multiple WordPress posts in batch.
+        """
+        success = []
+        failed = []
+        for pid in post_ids:
+            try:
+                self.update_post(pid, {"categories": category_ids})
+                success.append(pid)
+            except Exception as e:
+                failed.append({"post_id": pid, "error": str(e)})
+
+        return {
+            "success": success,
+            "failed": failed,
+            "total": len(post_ids)
+        }
+
 
 
 
