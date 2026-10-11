@@ -293,6 +293,36 @@ class TestWordPressClient(unittest.TestCase):
         not_found = self.client.get_media_by_slug("non-existent")
         self.assertIsNone(not_found)
 
+    @patch.object(WordPressClient, "update_post")
+    def test_batch_update_post_categories(self, mock_update):
+        def side_effect(pid, updates):
+            if pid == 202:
+                raise RuntimeError("Failed to update post 202")
+            return {"id": pid, "categories": updates["categories"]}
+
+        mock_update.side_effect = side_effect
+        res = self.client.batch_update_post_categories([201, 202, 203], [5, 12])
+        self.assertEqual(res["total"], 3)
+        self.assertEqual(res["success"], [201, 203])
+        self.assertEqual(len(res["failed"]), 1)
+        self.assertEqual(res["failed"][0]["post_id"], 202)
+
+    @patch("urllib.request.urlopen")
+    def test_get_user_by_slug(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 7, "slug": "fatir-gibran", "name": "Fatir Gibran"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        user = self.client.get_user_by_slug("fatir-gibran")
+        self.assertIsNotNone(user)
+        self.assertEqual(user["id"], 7)
+        self.assertEqual(user["name"], "Fatir Gibran")
+
+        # Not found test
+        mock_resp.read.return_value = b'[]'
+        not_found = self.client.get_user_by_slug("ghost-user")
+        self.assertIsNone(not_found)
+
 if __name__ == "__main__":
     unittest.main()
 
