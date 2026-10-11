@@ -259,6 +259,17 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rev_article ON article_reviewers(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS syndication_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    platform TEXT NOT NULL,
+                    external_url TEXT NOT NULL,
+                    syndicated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_synd_article ON syndication_logs(article_id);")
 
 
 
@@ -1451,6 +1462,30 @@ class StorageManager:
                 WHERE id = ?
             """, (status.strip(), review_id))
             return cursor.rowcount > 0
+
+    def record_syndication_log(self, article_id: int, platform: str, external_url: str) -> int:
+        """
+        Records an external syndication or republication of an article (e.g. Medium, LinkedIn, ResearchGate).
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO syndication_logs (article_id, platform, external_url)
+                VALUES (?, ?, ?)
+            """, (article_id, platform.strip(), external_url.strip()))
+            return cursor.lastrowid
+
+    def get_syndication_logs(self, article_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves all external syndication logs recorded for an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, article_id, platform, external_url, syndicated_at
+                FROM syndication_logs
+                WHERE article_id = ?
+                ORDER BY id ASC
+            """, (article_id,))
+            return [dict(row) for row in cursor.fetchall()]
 
 
 
