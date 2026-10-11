@@ -1586,6 +1586,49 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def validate_author_academic_credentials(cls, author_name: str, bio_text: str = "") -> Dict[str, Any]:
+        """
+        Validates academic credentials, titles, and persistent researcher identifiers (ORCID)
+        to reinforce Google E-E-A-T signals for university faculty authors.
+        """
+        combined = f"{author_name or ''} {bio_text or ''}".strip()
+        if not combined:
+            return {
+                "has_credentials": False,
+                "detected_titles": [],
+                "has_orcid": False,
+                "orcid_id": None,
+                "is_authoritative": False
+            }
+
+        title_patterns = [
+            r'\bProf(?:\.|\b)', r'\bDr(?:\.|\b)', r'\bPh\.?D\b',
+            r'\bM\.?Kom\b\.?', r'\bS\.?Kom\b\.?', r'\bM\.?T\b\.?', r'\bS\.?T\b\.?',
+            r'\bM\.?Sc\b\.?', r'\bB\.?Sc\b\.?', r'\bM\.?Si\b\.?', r'\bS\.?Si\b\.?',
+            r'\bIr(?:\.|\b)'
+        ]
+        detected = []
+        for pat in title_patterns:
+            m = re.search(pat, combined, re.IGNORECASE)
+            if m:
+                detected.append(m.group(0).strip())
+
+        orcid_match = re.search(r'\b(?:https?://orcid\.org/)?(000[0-9]-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X])\b', combined, re.IGNORECASE)
+        orcid_id = orcid_match.group(1) if orcid_match else None
+
+        has_cred = len(detected) > 0
+        has_orcid = orcid_id is not None
+        is_auth = has_cred or has_orcid
+
+        return {
+            "has_credentials": has_cred,
+            "detected_titles": sorted(list(set(detected))),
+            "has_orcid": has_orcid,
+            "orcid_id": orcid_id,
+            "is_authoritative": is_auth
+        }
+
 
 
 
