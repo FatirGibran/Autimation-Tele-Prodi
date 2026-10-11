@@ -390,6 +390,40 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('"rust", "systems", "concurrency"', res)
         self.assertIn("<p>Halo Dunia Rust</p>", res)
 
+    def test_generate_tech_article_json_ld(self):
+        schema = ArticleExporter.generate_tech_article_json_ld(
+            title="Setup Lab Jaringan SDN Menggunakan Mininet",
+            dependencies=["Ubuntu 24.04", "OpenFlow 1.3", "Python 3.12"],
+            proficiency_level="Intermediate / Mahasiswa Semester 5",
+            content="Langkah instalasi dan konfigurasi kontroler SDN Ryu dengan Mininet.",
+            date_published="2026-10-11",
+            publisher="Telkom University Purwokerto"
+        )
+        self.assertEqual(schema["@type"], "TechArticle")
+        self.assertEqual(schema["headline"], "Setup Lab Jaringan SDN Menggunakan Mininet")
+        self.assertIn("Ubuntu 24.04, OpenFlow 1.3, Python 3.12", schema["dependencies"])
+        self.assertEqual(schema["proficiencyLevel"], "Intermediate / Mahasiswa Semester 5")
+        self.assertEqual(schema["datePublished"], "2026-10-11")
+        self.assertEqual(schema["publisher"]["name"], "Telkom University Purwokerto")
+
+    def test_to_pelican_markdown(self):
+        meta = {
+            "seo_title": "Tutorial Pemrograman Python 3.12",
+            "publish_date": "2026-10-11",
+            "category": "Tutorial",
+            "tags": ["python", "pemrograman", "pelican"],
+            "slug": "tutorial-python-3-12",
+            "meta_description": "Panduan dasar sintaks Python 3.12 modern."
+        }
+        res = ArticleExporter.to_pelican_markdown(meta, "<p>Halo Dunia Python</p>")
+        self.assertIn("Title: Tutorial Pemrograman Python 3.12", res)
+        self.assertIn("Date: 2026-10-11", res)
+        self.assertIn("Category: Tutorial", res)
+        self.assertIn("Tags: python, pemrograman, pelican", res)
+        self.assertIn("Slug: tutorial-python-3-12", res)
+        self.assertIn("Summary: Panduan dasar sintaks Python 3.12 modern.", res)
+        self.assertIn("<p>Halo Dunia Python</p>", res)
+
 if __name__ == "__main__":
     unittest.main()
 
