@@ -1546,6 +1546,46 @@ class YoastSEOValidator:
             "difficulty": difficulty
         }
 
+    @classmethod
+    def audit_in_page_anchors(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits in-page hash anchor links (href="#...") against element id and name attributes
+        to prevent dead intra-page navigational jumps and broken table-of-contents targets.
+        """
+        if not html_content:
+            return {"total_anchors": 0, "valid_anchors": [], "broken_anchors": [], "is_valid": True, "warnings": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        existing_ids = set()
+        for tag in soup.find_all(True):
+            if tag.get("id"):
+                existing_ids.add(tag["id"].strip())
+            if tag.get("name"):
+                existing_ids.add(tag["name"].strip())
+
+        valid = []
+        broken = []
+        for a in soup.find_all("a", href=True):
+            href = a["href"].strip()
+            if href.startswith("#") and len(href) > 1:
+                target_id = href[1:]
+                if target_id in existing_ids:
+                    valid.append(href)
+                else:
+                    broken.append(href)
+
+        warnings = []
+        if broken:
+            warnings.append(f"Ditemukan {len(broken)} tautan jangkar internal tanpa elemen tujuan: {', '.join(broken)}")
+
+        return {
+            "total_anchors": len(valid) + len(broken),
+            "valid_anchors": valid,
+            "broken_anchors": broken,
+            "is_valid": len(broken) == 0,
+            "warnings": warnings
+        }
+
 
 
 
