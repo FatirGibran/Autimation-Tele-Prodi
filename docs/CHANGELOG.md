@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 300+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 335+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 319 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 347 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -372,6 +372,40 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 289. **Subcommand CLI `zola` (`cli.py`)**: Ekspor konsol artikel langsung ke format markdown Zola SSG.
 290. **Subcommand CLI `webhook-logs` (`cli.py`)**: Pemantauan konsol riwayat pengiriman notifikasi webhook publikasi.
 291. **Ekspansi Suite Pengujian Unit Terpadu (319 Tests Passing)**: Verifikasi penuh 319 unit test terverifikasi (100% pass rate) pada seluruh modul arsitektur.
+
+---
+
+## 17. Ekspansi Arsitektural v2.9.0
+
+292. **Sanitasi Elemen Fallback Canvas HTML5 (`sanitizer.py`)**: Sanitasi elemen fallback aksesibilitas pada tag `<canvas>` dan pemblokiran atribut scriptable context.
+293. **Sanitasi Anotasi Ruby Fonetik Linguistik (`sanitizer.py`)**: Validasi dan pembersihan struktur penanda fonetik `<ruby>`, `<rt>`, `<rp>`, `<rb>`, `<rtc>`.
+294. **Netralisasi Skrip & Tautan Eksternal MathML (`sanitizer.py`)**: Pembersihan formula matematis MathML dengan pelucutan atribut `href` dan `xlink:href`.
+295. **Parser Sitasi IEEE Journal & Transactions (`parser.py`)**: Parsing format sitasi IEEE standar (penulis, judul artikel, jurnal, volume, nomor, halaman, tahun, DOI).
+296. **Parser Standar Operasional Prosedur (SOP) Lab (`parser.py`)**: Ekstraksi urutan tahapan SOP praktikum, nomor langkah, arahan teknis, dan catatan K3.
+297. **Parser Kriteria Kelayakan Beasiswa Akademik (`parser.py`)**: Ekstraksi informasi eligibilitas beasiswa (IPK minimal, semester, berkas, batas pendaftaran).
+298. **Kalkulator Konversi Beban SKS ke ECTS (`parser.py`)**: Konversi beban jam studi SKS ke standar European Credit Transfer System (1 SKS ≈ 1.6 ECTS).
+299. **Kalkulator Indeks Keterbacaan Gunning Fog Akademik Indonesia (`seo_validator.py`)**: Evaluasi kompleksitas kalimat dan persentase kata bersuku kata tinggi pada teks akademik.
+300. **Detektor Orphan Links & Broken Internal Anchors (`seo_validator.py`)**: Audit konsistensi tautan jangkar internal (`href="#..."`) terhadap ID elemen tujuan.
+301. **Validator Kredensial Akademik & ORCID ID Penulis (`seo_validator.py`)**: Validasi format 16-digit ORCID ID dan gelar akademik penulis resmi.
+302. **Validator Lisensi Open Access & Creative Commons (`seo_validator.py`)**: Pemeriksaan kelengkapan klausul lisensi terbuka (CC BY / CC BY-SA) dan hak cipta.
+303. **Komponen Pemetaan Level Taksonomi Bloom C1-C6 (`components.py`)**: Kartu visual capaian kompetensi pembelajaran kurikulum OBE (Outcome-Based Education).
+304. **Komponen Protokol Pengelolaan Limbah B3 Laboratorium (`components.py`)**: Tabel semantik visual klasifikasi limbah kimia/B3, kontainer, lokasi simpan, dan jadwal disposal.
+305. **Komponen Matriks Transfer Kredit Pertukaran Pelajar (`components.py`)**: Tabel perbandingan mata kuliah kampus mitra dengan kurikulum prodi dan konversi SKS.
+306. **Komponen Kartu Pameran Hak Paten & HKI Dosen (`components.py`)**: Showcase resmi perlindungan hukum invensi riset dosen, nomor paten DJKI, dan abstrak teknologi.
+307. **Komponen Testimoni Mitra Industri Tracer Study (`components.py`)**: Kartu feedback pimpinan industri mitra dan indikator serapan alumni di dunia kerja.
+308. **Formatter Pengumuman Pendaftaran Paten Telegram (`formatters.py`)**: Format pesan siaran resmi perolehan hak paten terdaftar untuk kanal Telegram prodi.
+309. **Formatter Persetujuan Transfer Kredit Telegram (`formatters.py`)**: Format pesan notifikasi resmi hasil konversi nilai dan kredit mata kuliah pertukaran mahasiswa.
+310. **Manajer Penugasan Peer Reviewer Artikel (`storage.py`)**: Tabel `article_reviewers` dan pelacakan penugasan editorial peer reviewer, email, dan status review.
+311. **Manajer Log Sindikasi Eksternal Artikel (`storage.py`)**: Tabel `syndication_logs` untuk pelacakan distribusi konten ke Medium, LinkedIn, dan portal riset.
+312. **Manajer Checklist Alur Kerja Editorial (`storage.py`)**: Tabel `editorial_checklists` untuk verifikasi kelayakan praterbit (plagiarism check, fact check, proofreading).
+313. **Helper Batch Update Kategori Pos WordPress (`wordpress_client.py`)**: Metode batch update kategori pada sekumpulan pos WordPress via REST API.
+314. **Helper Pencarian Pengguna Berdasarkan Slug WordPress (`wordpress_client.py`)**: Pengambilan detail entitas user penulis berdasarkan slug akun dari REST API.
+315. **Generator Schema.org TechArticle JSON-LD (`exporter.py`)**: Metadata terstruktur panduan teknis laboratorium dan tutorial rekayasa dengan dependensi teknis.
+316. **Generator Markdown Kompatibel Pelican SSG (`exporter.py`)**: Ekspor artikel ke format Pelican static site generator dengan format header metadata.
+317. **Subcommand CLI `reviewer` (`cli.py`)**: Manajemen konsol penugasan peer reviewer artikel (assign, status, list).
+318. **Subcommand CLI `pelican` (`cli.py`)**: Perintah konsol ekspor artikel langsung ke format markdown Pelican SSG.
+319. **Subcommand CLI `checklist` (`cli.py`)**: Perintah konsol manajemen dan verifikasi checklist alur kerja editorial (list, set).
+320. **Ekspansi Suite Pengujian Unit Terpadu (347 Tests Passing)**: Verifikasi penuh seluruh modul dengan 347 unit test terverifikasi (100% pass rate).
 
 
 
