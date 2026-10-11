@@ -324,8 +324,8 @@ class HTMLSanitizer:
             if re.search(r'<math[^>]*\b(?:action|target)=["\']', cleaned, re.IGNORECASE):
                 cleaned = re.sub(r'\s+(?:action|target)=["\'][^"\']*["\']', '', cleaned, flags=re.IGNORECASE)
                 warnings.append("Stripped non-standard executable attributes from MathML.")
-            if re.search(r'<(?:math|mrow|mi|mo|mn|mtext)[^>]*\s+(?:href|xlink:href)=["\'](?:javascript:|data:text/html)', cleaned, re.IGNORECASE):
-                cleaned = re.sub(r'\s+(?:href|xlink:href)=["\'](?:javascript:|data:text/html)[^"\']*["\']', '', cleaned, flags=re.IGNORECASE)
+            if re.search(r'<(?:math|mrow|mi|mo|mn|mtext)[^>]*\s+(?:href|xlink:href)=', cleaned, re.IGNORECASE):
+                cleaned = re.sub(r'(<(?:math|mrow|mi|mo|mn|mtext)[^>]*?)\s+(?:href|xlink:href)=["\'][^"\']*["\']', r'\1', cleaned, flags=re.IGNORECASE)
                 warnings.append("Neutralized dangerous script link inside MathML elements.")
             warnings.append("Sanitized MathML equations.")
 

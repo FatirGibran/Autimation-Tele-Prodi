@@ -262,6 +262,44 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('Konten Sah', clean)
         self.assertTrue(any("template and slot" in w for w in warnings))
 
+    def test_sanitize_canvas_fallback_and_attributes(self):
+        canvas_html = (
+            '<div class="tu-editorial-container">'
+            '<canvas width="600" height="400" context="webgl" oncontextlost="evil()">'
+            '<p>Browser Anda tidak mendukung canvas rendering.</p>'
+            '</canvas></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(canvas_html)
+        self.assertIn('<canvas width="600" height="400">', clean)
+        self.assertNotIn('context="webgl"', clean)
+        self.assertNotIn('oncontextlost', clean)
+        self.assertIn('Browser Anda tidak mendukung canvas', clean)
+        self.assertTrue(any("canvas element" in w for w in warnings))
+
+    def test_sanitize_ruby_annotation_markup(self):
+        ruby_html = (
+            '<div class="tu-editorial-container">'
+            '<ruby onclick="evil()">明日 <rp>(</rp><rt>Ashita</rt><rp>)</rp></ruby>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(ruby_html)
+        self.assertIn('<ruby>', clean)
+        self.assertNotIn('onclick', clean)
+        self.assertIn('<rt>Ashita</rt>', clean)
+        self.assertTrue(any("ruby annotation" in w for w in warnings))
+
+    def test_neutralize_mathml_script_links(self):
+        math_html = (
+            '<div class="tu-editorial-container"><math>'
+            '<mi href="javascript:steal()">x</mi>'
+            '<mo>+</mo><mn>2</mn>'
+            '</math></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(math_html)
+        self.assertNotIn('javascript:steal()', clean)
+        self.assertIn('<mi>x</mi>', clean)
+        self.assertTrue(any("script link inside MathML" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
 
