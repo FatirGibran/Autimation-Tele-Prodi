@@ -1501,6 +1501,51 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def calculate_gunning_fog_index(cls, text: str) -> Dict[str, Any]:
+        """
+        Calculates the Gunning Fog readability index adapted for Indonesian academic prose,
+        classifying complex polysyllabic words (>= 4 syllables) and average sentence length.
+        """
+        if not text:
+            return {"grade_level": 0.0, "total_words": 0, "total_sentences": 0, "complex_words": 0, "difficulty": "Tidak Cukup Data"}
+
+        clean = re.sub(r'<[^>]+>', ' ', text)
+        sentences = [s.strip() for s in re.split(r'[\.\?!]+', clean) if s.strip() and len(s.split()) >= 2]
+        words = [w.strip() for w in re.findall(r'\b[a-zA-Z0-9_-]+\b', clean) if w.strip()]
+
+        total_words = len(words)
+        total_sentences = len(sentences)
+        if total_words < 5 or total_sentences == 0:
+            return {"grade_level": 0.0, "total_words": total_words, "total_sentences": total_sentences, "complex_words": 0, "difficulty": "Tidak Cukup Data"}
+
+        complex_count = 0
+        for w in words:
+            if cls.count_syllables_indonesian(w) >= 4:
+                complex_count += 1
+
+        asl = total_words / total_sentences
+        complex_pct = (complex_count / total_words) * 100.0
+        fog = round(0.4 * (asl + complex_pct), 1)
+
+        if fog <= 10.0:
+            difficulty = "Mudah Dipahami (Pembaca Umum)"
+        elif fog <= 14.0:
+            difficulty = "Menengah (Mahasiswa Sarjana)"
+        elif fog <= 18.0:
+            difficulty = "Tinggi (Akademik & Jurnal Ilmiah)"
+        else:
+            difficulty = "Sangat Sulit (Pascasarjana / Spesialis)"
+
+        return {
+            "grade_level": fog,
+            "total_words": total_words,
+            "total_sentences": total_sentences,
+            "complex_words": complex_count,
+            "complex_percentage": round(complex_pct, 1),
+            "difficulty": difficulty
+        }
+
 
 
 
