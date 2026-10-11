@@ -478,6 +478,61 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_invalid["is_valid"])
         self.assertGreater(len(res_invalid["issues"]), 0)
 
+    def test_calculate_gunning_fog_index(self):
+        text = (
+            "Penelitian kecerdasan buatan membutuhkan metodologi komprehensif. "
+            "Implementasi arsitektur komputasi terdistribusi meningkatkan efisiensi pemrosesan data."
+        )
+        res = YoastSEOValidator.calculate_gunning_fog_index(text)
+        self.assertGreater(res["grade_level"], 0.0)
+        self.assertIn("total_words", res)
+        self.assertIn("difficulty", res)
+
+    def test_audit_in_page_anchors(self):
+        html_good = (
+            '<div>'
+            '<a href="#kurikulum">Lihat Kurikulum</a>'
+            '<h2 id="kurikulum">Kurikulum S1</h2>'
+            '</div>'
+        )
+        res_good = YoastSEOValidator.audit_in_page_anchors(html_good)
+        self.assertTrue(res_good["is_valid"])
+        self.assertEqual(len(res_good["valid_anchors"]), 1)
+
+        html_bad = '<div><a href="#missing-section">Bagian Hilang</a></div>'
+        res_bad = YoastSEOValidator.audit_in_page_anchors(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertIn("#missing-section", res_bad["broken_anchors"])
+
+    def test_validate_author_academic_credentials(self):
+        res1 = YoastSEOValidator.validate_author_academic_credentials(
+            "Prof. Dr. Ir. Adiwijaya, M.Kom.",
+            "Guru Besar Informatika. ORCID: https://orcid.org/0000-0002-1825-0097"
+        )
+        self.assertTrue(res1["has_credentials"])
+        self.assertTrue(res1["has_orcid"])
+        self.assertEqual(res1["orcid_id"], "0000-0002-1825-0097")
+        self.assertTrue(res1["is_authoritative"])
+
+        res2 = YoastSEOValidator.validate_author_academic_credentials("John Doe")
+        self.assertFalse(res2["has_credentials"])
+        self.assertFalse(res2["has_orcid"])
+
+    def test_validate_academic_open_access_disclaimer(self):
+        html_cc = (
+            '<div class="tu-editorial-container">'
+            '<p>Artikel ini dilisensikan di bawah Creative Commons Attribution (CC BY 4.0) Internasional.</p>'
+            '</div>'
+        )
+        res = YoastSEOValidator.validate_academic_open_access_disclaimer(html_cc)
+        self.assertTrue(res["has_license"])
+        self.assertEqual(res["license_type"], "CC BY")
+        self.assertTrue(res["is_compliant"])
+
+        html_no_cc = '<div class="tu-editorial-container"><p>Konten berita kampus biasa.</p></div>'
+        res_no = YoastSEOValidator.validate_academic_open_access_disclaimer(html_no_cc)
+        self.assertFalse(res_no["has_license"])
+
 if __name__ == "__main__":
     unittest.main()
 
