@@ -1912,6 +1912,60 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_hazardous_waste_protocol_card(
+        cls,
+        lab_name: str,
+        waste_categories: List[Dict[str, str]],
+        disposal_schedule: str
+    ) -> str:
+        """
+        Renders a laboratory chemical and hazardous waste (B3) management protocol card
+        for lab safety compliance and environmental health accreditation.
+        """
+        from xml.sax.saxutils import escape
+
+        lab_esc = escape(lab_name.strip())
+        sched_esc = escape(disposal_schedule.strip())
+
+        rows = []
+        for w in waste_categories:
+            cat = escape(str(w.get("category", "")))
+            cont = escape(str(w.get("container_type", "")))
+            loc = escape(str(w.get("storage_location", "")))
+            notes = escape(str(w.get("safety_notes", "")))
+            rows.append(f"""          <tr>
+            <td><strong>{cat}</strong></td>
+            <td>{cont}</td>
+            <td>{loc}</td>
+            <td>{notes}</td>
+          </tr>""")
+
+        tbody_html = "\n".join(rows) if rows else "          <tr><td colspan=\"4\"><em>Tidak ada kategori limbah terdaftar.</em></td></tr>"
+
+        return f"""    <div class="tu-waste-protocol-card">
+      <div class="tu-waste-header">
+        <span class="tu-waste-badge">Protokol Pengelolaan Limbah B3</span>
+        <h4 class="tu-waste-lab-name">{lab_esc}</h4>
+      </div>
+      <div class="tu-waste-schedule">
+        <strong>Jadwal Pengangkutan / Disposal:</strong> {sched_esc}
+      </div>
+      <table class="tu-waste-table">
+        <thead>
+          <tr>
+            <th>Kategori Limbah</th>
+            <th>Wadah / Kontainer</th>
+            <th>Lokasi Simpan</th>
+            <th>Catatan K3</th>
+          </tr>
+        </thead>
+        <tbody>
+{tbody_html}
+        </tbody>
+      </table>
+    </div>"""
+
 
 
 
