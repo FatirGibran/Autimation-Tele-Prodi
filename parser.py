@@ -1508,6 +1508,56 @@ def parse_ieee_journal_citation(citation_text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def parse_laboratory_sop(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses laboratory standard operating procedure (SOP / IK) text
+    into a structured dictionary of metadata, hazard level, and numbered steps.
+    """
+    if not text:
+        return None
+
+    clean = text.strip()
+    code_match = re.search(r'\b(SOP-[A-Z0-9-]+|IK-[A-Z0-9-]+)\b', clean, re.IGNORECASE)
+    sop_code = code_match.group(1).upper() if code_match else "SOP-LAB-001"
+
+    hazard = "Sedang"
+    if re.search(r'\b(?:bahaya\s+tinggi|high\s+hazard|level\s+3)\b', clean, re.IGNORECASE):
+        hazard = "Tinggi"
+    elif re.search(r'\b(?:bahaya\s+rendah|low\s+hazard|level\s+1)\b', clean, re.IGNORECASE):
+        hazard = "Rendah"
+
+    title = ""
+    title_match = re.search(r'(?:judul|prosedur|nama\s+sop)\s*:\s*([^\n\r]+)', clean, re.IGNORECASE)
+    if title_match:
+        title = title_match.group(1).strip()
+    else:
+        first_line = clean.splitlines()[0].strip()
+        title = re.sub(r'^(?:SOP-[A-Z0-9-]+\s*[:\-]?\s*)', '', first_line).strip()
+
+    step_pattern = re.compile(r'^\s*(\d+)[\.\)]\s+(.+)$', re.MULTILINE)
+    steps = []
+    for m in step_pattern.finditer(clean):
+        num = int(m.group(1))
+        desc = m.group(2).strip()
+        has_warning = bool(re.search(r'\b(?:peringatan|perhatian|awas|hazard|danger)\b', desc, re.IGNORECASE))
+        steps.append({
+            "step_number": num,
+            "instruction": desc,
+            "has_safety_warning": has_warning
+        })
+
+    if not steps:
+        return None
+
+    return {
+        "sop_code": sop_code,
+        "title": title,
+        "hazard_level": hazard,
+        "total_steps": len(steps),
+        "steps": steps
+    }
+
+
 
 
 
