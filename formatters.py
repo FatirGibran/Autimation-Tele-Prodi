@@ -460,6 +460,34 @@ class TelegramFormatter:
             f"🎉 *Selamat kepada para inventor atas perlindungan hukum karya cipta teknologi!*"
         )
 
+    @staticmethod
+    def format_credit_transfer_approval_card(
+        student_name: str,
+        host_univ: str,
+        approved_courses: List[Dict[str, str]],
+        total_ects: float,
+        total_sks: int
+    ) -> str:
+        """
+        Renders a credit transfer approval telegram card for exchange/study abroad students.
+        """
+        lines = []
+        for c in approved_courses:
+            h_name = c.get("host_course", "")
+            d_name = c.get("home_course", "")
+            sks = c.get("sks", "")
+            lines.append(f"  • {h_name} ➔ {d_name} ({sks} SKS)")
+        courses_text = "\n".join(lines) if lines else "  • Seluruh mata kuliah terdaftar telah disetujui"
+
+        return (
+            f"🎓 **Persetujuan Konversi & Transfer Kredit Akademik**\n\n"
+            f"👤 **Mahasiswa:** {student_name.strip()}\n"
+            f"🏛 **Universitas Mitra:** {host_univ.strip()}\n"
+            f"⚖️ **Total Beban:** `{total_ects:.1f} ECTS` ➔ `{total_sks} SKS`\n\n"
+            f"📚 **Daftar Ekuivalensi Matakuliah:**\n{courses_text}\n\n"
+            f"✅ *Nilai dan SKS telah diverifikasi oleh Tim Kurikulum Prodi.*"
+        )
+
 
 
 
