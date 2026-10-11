@@ -1629,6 +1629,48 @@ class YoastSEOValidator:
             "is_authoritative": is_auth
         }
 
+    @classmethod
+    def validate_academic_open_access_disclaimer(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Validates presence of Open Access licensing terms and Creative Commons notices
+        for scholarly academic repository indexing and institutional compliance.
+        """
+        if not html_content:
+            return {"has_license": False, "license_type": "None", "is_compliant": False, "warning": "Content is empty."}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        text = soup.get_text()
+
+        cc_patterns = [
+            (r'\b(?:CC[\s-]BY[\s-]NC[\s-]ND|Creative Commons Attribution-NonCommercial-NoDerivatives)\b', "CC BY-NC-ND"),
+            (r'\b(?:CC[\s-]BY[\s-]NC[\s-]SA|Creative Commons Attribution-NonCommercial-ShareAlike)\b', "CC BY-NC-SA"),
+            (r'\b(?:CC[\s-]BY[\s-]NC|Creative Commons Attribution-NonCommercial)\b', "CC BY-NC"),
+            (r'\b(?:CC[\s-]BY[\s-]SA|Creative Commons Attribution-ShareAlike)\b', "CC BY-SA"),
+            (r'\b(?:CC[\s-]BY|Creative Commons Attribution)\b', "CC BY"),
+            (r'\b(?:Open Access|Akses Terbuka|Public Domain|CC0)\b', "Open Access / Public Domain")
+        ]
+
+        detected_license = None
+        for pattern, lic_name in cc_patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                detected_license = lic_name
+                break
+
+        if not detected_license:
+            license_link = soup.find("a", rel=lambda r: r and "license" in r.lower())
+            if license_link:
+                detected_license = license_link.get_text().strip() or "Creative Commons License Link"
+
+        has_lic = detected_license is not None
+        warning = "" if has_lic else "Artikel ilmiah disarankan memuat pernyataan lisensi terbuka (Creative Commons / Open Access)."
+
+        return {
+            "has_license": has_lic,
+            "license_type": detected_license or "None",
+            "is_compliant": has_lic,
+            "warning": warning
+        }
+
 
 
 
