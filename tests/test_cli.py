@@ -839,6 +839,119 @@ class TestCLI(unittest.TestCase):
             self.assertIn("EVENT", out)
             self.assertIn("test_dispatch", out)
 
+    def test_cmd_reviewer(self):
+        art_id = cli.storage.save_article({
+            "topic": "Reviewer CLI Topic",
+            "category": "Akademik",
+            "publish_date": "2026-10-11",
+            "focus_keyphrase": "rev cli",
+            "seo_title": "Reviewer CLI Article",
+            "slug": "reviewer-cli-article",
+            "meta_description": "Meta reviewer cli",
+            "status": "draft"
+        })
+
+        class ArgsAssign:
+            action = "assign"
+            id = art_id
+            name = "Prof. Dr. Ir. Sri Wahyuni"
+            email = "sri@telkomuniversity.ac.id"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_reviewer(ArgsAssign())
+            self.assertIn("Reviewer 'Prof. Dr. Ir. Sri Wahyuni' berhasil ditugaskan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            id = art_id
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_reviewer(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Daftar Reviewer Artikel", out)
+            self.assertIn("Prof. Dr. Ir. Sri Wahyuni", out)
+
+        # Update status
+        reviewers = cli.storage.list_article_reviewers(art_id)
+        rev_id = reviewers[0]["id"]
+
+        class ArgsStatus:
+            action = "status"
+            review_id = rev_id
+            status = "accepted"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_reviewer(ArgsStatus())
+            self.assertIn("berhasil diubah menjadi 'accepted'", fake_out.getvalue())
+
+    def test_cmd_pelican(self):
+        slug = "pelican-cli-target"
+        cli.storage.save_article({
+            "topic": "Pelican CLI Article",
+            "category": "Teknologi",
+            "publish_date": "2026-10-11",
+            "focus_keyphrase": "pelican cli",
+            "seo_title": "Pelican CLI Target",
+            "slug": slug,
+            "meta_description": "Deskripsi pelican cli.",
+            "html_content": "<p>Konten Pelican CLI</p>",
+            "status": "published"
+        })
+
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tf:
+            out_file = tf.name
+
+        try:
+            class ArgsPelican:
+                slug = "pelican-cli-target"
+                out = out_file
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_pelican(ArgsPelican())
+                self.assertIn("Export Pelican markdown berhasil", fake_out.getvalue())
+
+            content = Path(out_file).read_text(encoding="utf-8")
+            self.assertIn("Title: Pelican CLI Target", content)
+            self.assertIn("Date: 2026-10-11", content)
+            self.assertIn("<p>Konten Pelican CLI</p>", content)
+        finally:
+            if Path(out_file).exists():
+                Path(out_file).unlink()
+
+    def test_cmd_checklist(self):
+        art_id = cli.storage.save_article({
+            "topic": "Checklist CLI Topic",
+            "category": "Akademik",
+            "publish_date": "2026-10-11",
+            "focus_keyphrase": "chk cli",
+            "seo_title": "Checklist CLI Article",
+            "slug": "checklist-cli-article",
+            "meta_description": "Meta checklist cli",
+            "status": "draft"
+        })
+
+        class ArgsSet:
+            action = "set"
+            id = art_id
+            key = "proofread"
+            label = "Proofread Tata Bahasa Indonesia"
+            checked = True
+            by = "Fatir Gibran"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_checklist(ArgsSet())
+            self.assertIn("diatur ke [SELESAI (V)]", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            id = art_id
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_checklist(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Status Checklist Editorial", out)
+            self.assertIn("[V] proofread: Proofread Tata Bahasa Indonesia (oleh: Fatir Gibran)", out)
+
 if __name__ == "__main__":
     unittest.main()
 
