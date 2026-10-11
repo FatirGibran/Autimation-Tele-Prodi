@@ -783,6 +783,82 @@ class TestStorageManager(unittest.TestCase):
         synonyms = self.storage.list_taxonomy_synonyms()
         self.assertGreaterEqual(len(synonyms), 3)
 
+    def test_article_reviewer_assignments(self):
+        art_id = self.storage.save_article({
+            "topic": "Reviewer Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "rev test",
+            "seo_title": "Reviewer Test",
+            "slug": "reviewer-test",
+            "meta_description": "Meta desc",
+            "html_content": "<p>Content</p>",
+            "status": "draft"
+        })
+        rev_id = self.storage.assign_article_reviewer(art_id, "Dr. Ir. Budi Raharjo", "budi@telkomuniversity.ac.id")
+        self.assertGreater(rev_id, 0)
+
+        reviewers = self.storage.list_article_reviewers(art_id)
+        self.assertEqual(len(reviewers), 1)
+        self.assertEqual(reviewers[0]["reviewer_name"], "Dr. Ir. Budi Raharjo")
+        self.assertEqual(reviewers[0]["status"], "assigned")
+
+        # Update status
+        self.assertTrue(self.storage.update_reviewer_status(rev_id, "accepted"))
+        updated_reviewers = self.storage.list_article_reviewers(art_id)
+        self.assertEqual(updated_reviewers[0]["status"], "accepted")
+
+    def test_article_syndication_logs(self):
+        art_id = self.storage.save_article({
+            "topic": "Syndication Test",
+            "category": "Riset",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "synd test",
+            "seo_title": "Syndication Test",
+            "slug": "syndication-test",
+            "meta_description": "Meta desc",
+            "html_content": "<p>Content</p>",
+            "status": "published"
+        })
+        log_id = self.storage.record_syndication_log(art_id, "Medium", "https://medium.com/@telkom/synd-test")
+        self.assertGreater(log_id, 0)
+
+        logs = self.storage.get_syndication_logs(art_id)
+        self.assertEqual(len(logs), 1)
+        self.assertEqual(logs[0]["platform"], "Medium")
+        self.assertEqual(logs[0]["external_url"], "https://medium.com/@telkom/synd-test")
+
+    def test_editorial_workflow_checklists(self):
+        art_id = self.storage.save_article({
+            "topic": "Checklist Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-10",
+            "focus_keyphrase": "chk test",
+            "seo_title": "Checklist Test",
+            "slug": "checklist-test",
+            "meta_description": "Meta desc",
+            "html_content": "<p>Content</p>",
+            "status": "draft"
+        })
+        # Set items
+        self.assertTrue(self.storage.set_checklist_item(art_id, "plagiarism_check", "Cek Turnitin < 15%", True, "Editor A"))
+        self.assertTrue(self.storage.set_checklist_item(art_id, "fact_check", "Verifikasi Data & Referensi", False))
+
+        status = self.storage.get_checklist_status(art_id)
+        self.assertEqual(len(status), 2)
+        plag_item = next(i for i in status if i["item_key"] == "plagiarism_check")
+        fact_item = next(i for i in status if i["item_key"] == "fact_check")
+        self.assertTrue(plag_item["is_checked"])
+        self.assertEqual(plag_item["checked_by"], "Editor A")
+        self.assertFalse(fact_item["is_checked"])
+
+        # Update item
+        self.assertTrue(self.storage.set_checklist_item(art_id, "fact_check", "Verifikasi Data & Referensi", True, "Editor B"))
+        status2 = self.storage.get_checklist_status(art_id)
+        fact_item2 = next(i for i in status2 if i["item_key"] == "fact_check")
+        self.assertTrue(fact_item2["is_checked"])
+        self.assertEqual(fact_item2["checked_by"], "Editor B")
+
 if __name__ == "__main__":
     unittest.main()
 
