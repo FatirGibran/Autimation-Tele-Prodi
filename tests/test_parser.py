@@ -453,6 +453,67 @@ Poin Utama:
         self.assertEqual(calc["gpa"], 3.55)
         self.assertEqual(calc["academic_standing"], "Dengan Pujian (Cum Laude)")
 
+    def test_parse_ieee_journal_citation(self):
+        from parser import parse_ieee_journal_citation
+        cit = (
+            'J. K. Author and A. B. Coauthor, "Distributed Edge Inference Architecture for IoT Sensors," '
+            'IEEE Trans. Commun., vol. 68, no. 4, pp. 2400-2412, Apr. 2020, doi: 10.1109/TCOMM.2020.1234567.'
+        )
+        res = parse_ieee_journal_citation(cit)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["title"], "Distributed Edge Inference Architecture for IoT Sensors")
+        self.assertIn("J. K. Author", res["authors"])
+        self.assertIn("A. B. Coauthor", res["authors"])
+        self.assertEqual(res["journal"], "IEEE Trans. Commun.")
+        self.assertEqual(res["volume"], "68")
+        self.assertEqual(res["issue"], "4")
+        self.assertEqual(res["pages"], "2400-2412")
+        self.assertEqual(res["year"], 2020)
+        self.assertEqual(res["doi"], "10.1109/TCOMM.2020.1234567")
+
+    def test_parse_laboratory_sop(self):
+        from parser import parse_laboratory_sop
+        raw_sop = """
+SOP-LAB-012: Pengujian Spektrum Frekuensi Radio
+Bahaya Tinggi (High Hazard Level 3)
+1. Periksa kabel catu daya dan grounding sebelum menyalakan instrumen spectrum analyzer.
+2. Pasang attenuator 30 dB pada port RF. Peringatan: daya melebihi +30 dBm dapat merusak mixer input!
+3. Nyalakan perangkat dan lakukan sweep frequency rentang 1 GHz - 6 GHz.
+"""
+        res = parse_laboratory_sop(raw_sop)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["sop_code"], "SOP-LAB-012")
+        self.assertEqual(res["hazard_level"], "Tinggi")
+        self.assertEqual(res["total_steps"], 3)
+        self.assertTrue(res["steps"][1]["has_safety_warning"])
+        self.assertFalse(res["steps"][0]["has_safety_warning"])
+
+    def test_parse_scholarship_eligibility(self):
+        from parser import parse_scholarship_eligibility
+        text = """
+Persyaratan Pendaftaran Beasiswa Riset Telkom 2026:
+- IPK minimal 3.50
+- Terbuka untuk mahasiswa aktif semester 3 - 6
+- Melampirkan KTM, Transkrip Nilai, dan Surat Rekomendasi Dosen
+- Lolos seleksi berkas dan tahap wawancara
+- Skema Beasiswa Penuh (Full Coverage)
+"""
+        res = parse_scholarship_eligibility(text)
+        self.assertEqual(res["min_gpa"], 3.50)
+        self.assertEqual(res["target_semesters"], [3, 4, 5, 6])
+        self.assertIn("Transkrip Nilai", res["required_documents"])
+        self.assertIn("Surat Rekomendasi Dosen", res["required_documents"])
+        self.assertTrue(res["requires_interview"])
+        self.assertTrue(res["is_full_coverage"])
+
+    def test_calculate_sks_to_ects(self):
+        from parser import calculate_sks_to_ects
+        res = calculate_sks_to_ects(20, ects_ratio=1.6)
+        self.assertEqual(res["sks_credits"], 20)
+        self.assertEqual(res["ects_credits"], 32.0)
+        self.assertGreater(res["workload_hours_per_semester"], 800)
+        self.assertGreater(res["workload_hours_per_week"], 50)
+
 if __name__ == "__main__":
     unittest.main()
 
