@@ -564,6 +564,79 @@ def cmd_webhook_logs(args):
         print(f"{l['id']:<4} | {l['status_code']:<6} | {l['event']:<20} | {l['target_url'][:33]:<35} | {l['created_at']}")
 
 
+def cmd_reviewer(args):
+    if args.action == "assign":
+        if not args.id or not args.name or not args.email:
+            print("Error: --id, --name, dan --email wajib disertakan untuk penugasan reviewer.")
+            sys.exit(1)
+        rev_id = storage.assign_article_reviewer(args.id, args.name, args.email)
+        print(f"Reviewer '{args.name}' berhasil ditugaskan [ID Review: {rev_id}] ke artikel #{args.id}.")
+    elif args.action == "status":
+        if not args.review_id or not args.status:
+            print("Error: --review-id dan --status wajib disertakan untuk update status review.")
+            sys.exit(1)
+        ok = storage.update_reviewer_status(args.review_id, args.status)
+        if ok:
+            print(f"Status review #{args.review_id} berhasil diubah menjadi '{args.status}'.")
+        else:
+            print(f"Penugasan review #{args.review_id} tidak ditemukan.")
+    else:
+        if not args.id:
+            print("Error: --id artikel wajib disertakan untuk melihat daftar reviewer.")
+            sys.exit(1)
+        reviewers = storage.list_article_reviewers(args.id)
+        if not reviewers:
+            print(f"Belum ada reviewer yang ditugaskan ke artikel #{args.id}.")
+            return
+        print(f"=== Daftar Reviewer Artikel #{args.id} ===")
+        for r in reviewers:
+            print(f"[{r['id']}] {r['reviewer_name']} <{r['reviewer_email']}> | Status: {r['status']}")
+
+
+def cmd_pelican(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tags = storage.get_article_tags(article["id"])
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "meta_description": article.get("meta_description", ""),
+        "slug": article.get("slug", ""),
+        "publish_date": article.get("publish_date", ""),
+        "category": article.get("category", ""),
+        "tags": tags
+    }
+    pelican_md = ArticleExporter.to_pelican_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(pelican_md, encoding="utf-8")
+    print(f"Export Pelican markdown berhasil -> {out_path}")
+
+
+def cmd_checklist(args):
+    if not args.id:
+        print("Error: --id artikel wajib disertakan untuk manajemen checklist.")
+        sys.exit(1)
+    if args.action == "set":
+        if not args.key or not args.label:
+            print("Error: --key dan --label wajib disertakan untuk verifikasi checklist.")
+            sys.exit(1)
+        storage.set_checklist_item(args.id, args.key, args.label, bool(args.checked), args.by or "")
+        state_str = "SELESAI (V)" if args.checked else "BELUM (X)"
+        print(f"Checklist '{args.key}' untuk artikel #{args.id} diatur ke [{state_str}].")
+    else:
+        items = storage.get_checklist_status(args.id)
+        if not items:
+            print(f"Belum ada checklist editorial untuk artikel #{args.id}.")
+            return
+        print(f"=== Status Checklist Editorial Artikel #{args.id} ===")
+        for item in items:
+            mark = "[V]" if item["is_checked"] else "[ ]"
+            verifier = f" (oleh: {item['checked_by']})" if item["checked_by"] else ""
+            print(f"{mark} {item['item_key']}: {item['item_label']}{verifier}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -780,6 +853,32 @@ def main():
     wh_parser = subparsers.add_parser("webhook-logs", help="Tampilkan riwayat log pengiriman webhook publikasi")
     wh_parser.add_argument("--limit", type=int, default=10, help="Jumlah maksimal riwayat log")
     wh_parser.set_defaults(func=cmd_webhook_logs)
+
+    # Reviewer command
+    rev_parser = subparsers.add_parser("reviewer", help="Kelola penugasan peer reviewer editorial artikel (assign, status, list)")
+    rev_parser.add_argument("--action", choices=["assign", "status", "list"], default="list", help="Tindakan manajemen reviewer")
+    rev_parser.add_argument("--id", type=int, help="ID artikel")
+    rev_parser.add_argument("--review-id", type=int, help="ID penugasan review")
+    rev_parser.add_argument("--name", help="Nama reviewer")
+    rev_parser.add_argument("--email", help="Email reviewer")
+    rev_parser.add_argument("--status", help="Status baru review")
+    rev_parser.set_defaults(func=cmd_reviewer)
+
+    # Pelican command
+    pelican_parser = subparsers.add_parser("pelican", help="Export artikel ke format Markdown kompatibel Pelican SSG")
+    pelican_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    pelican_parser.add_argument("--out", help="Path berkas output Markdown Pelican")
+    pelican_parser.set_defaults(func=cmd_pelican)
+
+    # Checklist command
+    chk_parser = subparsers.add_parser("checklist", help="Kelola checklist verifikasi alur kerja editorial artikel (list, set)")
+    chk_parser.add_argument("--action", choices=["list", "set"], default="list", help="Tindakan checklist")
+    chk_parser.add_argument("--id", type=int, required=True, help="ID artikel")
+    chk_parser.add_argument("--key", help="Kunci unik item checklist")
+    chk_parser.add_argument("--label", help="Label deskripsi checklist")
+    chk_parser.add_argument("--checked", action="store_true", help="Tandai checklist telah selesai/diverifikasi")
+    chk_parser.add_argument("--by", help="Nama verifikator item checklist")
+    chk_parser.set_defaults(func=cmd_checklist)
 
     args = parser.parse_args()
 
