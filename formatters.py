@@ -438,6 +438,28 @@ class TelegramFormatter:
             f"🚀 *Kontribusi nyata civitas akademika dalam kemajuan riset dan teknologi.*"
         )
 
+    @staticmethod
+    def format_patent_registration_card(
+        patent_title: str,
+        patent_number: str,
+        inventors: List[str],
+        filing_date: str,
+        official_url: str = ""
+    ) -> str:
+        """
+        Renders an intellectual property (IPR/Paten) registration card formatted for Telegram broadcasts.
+        """
+        invs_text = ", ".join(inv.strip() for inv in inventors if inv.strip()) or "Dosen & Peneliti Prodi"
+        url_text = f"\n🔗 **Pangkalan Data DJKI:** {official_url}" if official_url.strip() else ""
+        return (
+            f"💡 **Paten & Hak Kekayaan Intelektual Resmi Terdaftar!**\n\n"
+            f"📜 **Judul Invensi:** \"{patent_title.strip()}\"\n"
+            f"🔢 **Nomor Paten / Pendaftaran:** `{patent_number.strip()}`\n"
+            f"👥 **Inventor:** {invs_text}\n"
+            f"📅 **Tanggal Terdaftar / Permohonan:** `{filing_date.strip()}`{url_text}\n\n"
+            f"🎉 *Selamat kepada para inventor atas perlindungan hukum karya cipta teknologi!*"
+        )
+
 
 
 
