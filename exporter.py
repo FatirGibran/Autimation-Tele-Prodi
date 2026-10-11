@@ -817,6 +817,33 @@ navigation: true
         ]
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_tech_article_json_ld(
+        title: str,
+        dependencies: List[str],
+        proficiency_level: str,
+        content: str,
+        date_published: str,
+        publisher: str = "Telkom University Purwokerto"
+    ) -> Dict[str, Any]:
+        """
+        Generates schema.org TechArticle JSON-LD structured data for technical lab guides and engineering tutorials.
+        """
+        deps_clean = [d.strip() for d in dependencies if d.strip()]
+        return {
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            "headline": title.strip(),
+            "dependencies": ", ".join(deps_clean) if deps_clean else "None",
+            "proficiencyLevel": proficiency_level.strip(),
+            "articleBody": content.strip(),
+            "datePublished": date_published.strip(),
+            "publisher": {
+                "@type": "EducationalOrganization",
+                "name": publisher.strip()
+            }
+        }
+
 
 
 
