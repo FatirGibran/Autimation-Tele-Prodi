@@ -270,6 +270,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_synd_article ON syndication_logs(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS editorial_checklists (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    item_key TEXT NOT NULL,
+                    item_label TEXT NOT NULL,
+                    is_checked INTEGER DEFAULT 0,
+                    checked_by TEXT,
+                    checked_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(article_id, item_key),
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_chk_article ON editorial_checklists(article_id);")
 
 
 
@@ -1486,6 +1501,48 @@ class StorageManager:
                 ORDER BY id ASC
             """, (article_id,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def set_checklist_item(
+        self,
+        article_id: int,
+        item_key: str,
+        item_label: str,
+        is_checked: bool,
+        checked_by: str = ""
+    ) -> bool:
+        """
+        Sets or updates an editorial workflow checklist verification item for an article.
+        """
+        val = 1 if is_checked else 0
+        with self._get_connection() as conn:
+            conn.execute("""
+                INSERT INTO editorial_checklists (article_id, item_key, item_label, is_checked, checked_by, checked_at)
+                VALUES (?, ?, ?, ?, ?, CASE WHEN ? = 1 THEN CURRENT_TIMESTAMP ELSE NULL END)
+                ON CONFLICT(article_id, item_key) DO UPDATE SET
+                    item_label = excluded.item_label,
+                    is_checked = excluded.is_checked,
+                    checked_by = excluded.checked_by,
+                    checked_at = CASE WHEN excluded.is_checked = 1 THEN CURRENT_TIMESTAMP ELSE NULL END
+            """, (article_id, item_key.strip(), item_label.strip(), val, checked_by.strip(), val))
+            return True
+
+    def get_checklist_status(self, article_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves all checklist verification items for an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, article_id, item_key, item_label, is_checked, checked_by, checked_at, created_at
+                FROM editorial_checklists
+                WHERE article_id = ?
+                ORDER BY id ASC
+            """, (article_id,))
+            rows = []
+            for r in cursor.fetchall():
+                d = dict(r)
+                d["is_checked"] = bool(d["is_checked"])
+                rows.append(d)
+            return rows
 
 
 
