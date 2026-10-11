@@ -1869,6 +1869,49 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_bloom_taxonomy_level_card(
+        cls,
+        course_code: str,
+        course_name: str,
+        bloom_levels: List[Dict[str, Any]]
+    ) -> str:
+        """
+        Renders a curriculum learning outcome card mapping course competencies
+        across Bloom's cognitive taxonomy levels (C1 - C6) for academic accreditation.
+        """
+        from xml.sax.saxutils import escape
+
+        code_esc = escape(course_code.strip())
+        name_esc = escape(course_name.strip())
+
+        items = []
+        for b in bloom_levels:
+            lvl = escape(str(b.get("level", "C1")))
+            cpl = escape(str(b.get("cpl_code", "")))
+            desc = escape(str(b.get("description", "")))
+            weight = int(b.get("weight_pct", 0))
+            items.append(f"""        <div class="tu-bloom-item">
+          <div class="tu-bloom-meta">
+            <span class="tu-bloom-badge">{lvl}</span>
+            {f'<span class="tu-bloom-cpl">{cpl}</span>' if cpl else ''}
+            <span class="tu-bloom-weight">Bobot: {weight}%</span>
+          </div>
+          <p class="tu-bloom-desc">{desc}</p>
+        </div>""")
+
+        items_html = "\n".join(items) if items else "<p><em>Belum ada pemetaan taksonomi Bloom.</em></p>"
+
+        return f"""    <div class="tu-bloom-card">
+      <div class="tu-bloom-header">
+        <span class="tu-bloom-course-code">{code_esc}</span>
+        <h4 class="tu-bloom-title">{name_esc} - Pemetaan Taksonomi Bloom</h4>
+      </div>
+      <div class="tu-bloom-list">
+{items_html}
+      </div>
+    </div>"""
+
 
 
 
