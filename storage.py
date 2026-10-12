@@ -299,6 +299,20 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_cite_article ON article_citations(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS editorial_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    author TEXT NOT NULL,
+                    comment_text TEXT NOT NULL,
+                    paragraph_index INTEGER,
+                    is_resolved INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    resolved_at TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_comment_article ON editorial_comments(article_id);")
 
 
 
@@ -1589,6 +1603,61 @@ class StorageManager:
                 ORDER BY citation_year DESC, id DESC
             """, (article_id,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def add_editorial_comment(
+        self,
+        article_id: int,
+        author: str,
+        comment_text: str,
+        paragraph_index: Optional[int] = None
+    ) -> int:
+        """
+        Adds an inline editorial review comment on an article draft or paragraph.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO editorial_comments (article_id, author, comment_text, paragraph_index)
+                VALUES (?, ?, ?, ?)
+            """, (article_id, author.strip(), comment_text.strip(), paragraph_index))
+            return cursor.lastrowid
+
+    def list_editorial_comments(
+        self,
+        article_id: int,
+        include_resolved: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Lists editorial review comments for an article, optionally filtering out resolved comments.
+        """
+        with self._get_connection() as conn:
+            if include_resolved:
+                cursor = conn.execute("""
+                    SELECT id, article_id, author, comment_text, paragraph_index, is_resolved, created_at, resolved_at
+                    FROM editorial_comments
+                    WHERE article_id = ?
+                    ORDER BY id ASC
+                """, (article_id,))
+            else:
+                cursor = conn.execute("""
+                    SELECT id, article_id, author, comment_text, paragraph_index, is_resolved, created_at, resolved_at
+                    FROM editorial_comments
+                    WHERE article_id = ? AND is_resolved = 0
+                    ORDER BY id ASC
+                """, (article_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def resolve_editorial_comment(self, comment_id: int) -> bool:
+        """
+        Marks an editorial review comment as resolved with current timestamp.
+        """
+        with self._get_connection() as conn:
+            now_iso = datetime.now().isoformat()
+            cursor = conn.execute("""
+                UPDATE editorial_comments
+                SET is_resolved = 1, resolved_at = ?
+                WHERE id = ?
+            """, (now_iso, comment_id))
+            return cursor.rowcount > 0
 
 
 
