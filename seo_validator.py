@@ -1772,6 +1772,56 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def validate_research_grant_acknowledgment(html_content: str) -> Dict[str, Any]:
+        """
+        Validates academic research grant funding acknowledgments (e.g. Kemendikbudristek BIMA,
+        Kedaireka Matching Fund, LPDP, or internal LPPM Telkom University grant schemes)
+        and extracts grant contract/SPK numbers.
+        """
+        if not html_content or not html_content.strip():
+            return {
+                "has_acknowledgment": False,
+                "funding_agency": "None",
+                "contract_numbers": [],
+                "is_compliant": False,
+                "warning": "Artikel riset tidak memuat klausul ucapan terima kasih pendanaan (grant acknowledgment)."
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        text = soup.get_text()
+
+        agency_patterns = [
+            (r'\b(?:BIMA|Kemendikbud(?:ristek)?|Ditjen Diktiristek)\b', "Kemendikbudristek BIMA"),
+            (r'\b(?:Kedaireka|Matching Fund)\b', "Kedaireka Matching Fund"),
+            (r'\b(?:LPDP|Lembaga Pengelola Dana Pendidikan)\b', "LPDP"),
+            (r'\b(?:BRIN|Badan Riset dan Inovasi Nasional)\b', "BRIN"),
+            (r'\b(?:LPPM|Telkom University|Dana Internal Prodi)\b', "LPPM Telkom University")
+        ]
+
+        detected_agency = None
+        for pattern, agency_name in agency_patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                # Ensure context of grant/funding
+                if re.search(r'\b(?:hibah|pendanaan|didanai|kontrak|grant|dibiayai|acknowledg(?:e?ment)?)\b', text, re.IGNORECASE):
+                    detected_agency = agency_name
+                    break
+
+        # Extract contract numbers e.g., 045/E1/KS/2026, SPK-123/LPPM/2026
+        contract_patterns = re.findall(r'(?:nomor|no\.?|kontrak|spk)\s*[:=]?\s*([A-Za-z0-9/_.-]{5,35})', text, re.IGNORECASE)
+        clean_contracts = [c.strip(".,;: ") for c in contract_patterns if any(char.isdigit() for char in c)]
+
+        has_ack = detected_agency is not None
+        warning = "" if has_ack else "Artikel publikasi hasil riset disarankan memuat acknowledgment sumber pendanaan hibah dan nomor kontrak."
+
+        return {
+            "has_acknowledgment": has_ack,
+            "funding_agency": detected_agency or "None",
+            "contract_numbers": clean_contracts,
+            "is_compliant": has_ack,
+            "warning": warning
+        }
+
 
 
 
