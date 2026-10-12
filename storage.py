@@ -313,6 +313,18 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_comment_article ON editorial_comments(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS content_snippets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    snippet_key TEXT UNIQUE NOT NULL,
+                    snippet_title TEXT NOT NULL,
+                    snippet_html TEXT NOT NULL,
+                    category TEXT DEFAULT 'general',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_snippet_cat ON content_snippets(category);")
 
 
 
@@ -1658,6 +1670,62 @@ class StorageManager:
                 WHERE id = ?
             """, (now_iso, comment_id))
             return cursor.rowcount > 0
+
+    def save_content_snippet(
+        self,
+        snippet_key: str,
+        snippet_title: str,
+        snippet_html: str,
+        category: str = "general"
+    ) -> int:
+        """
+        Saves or updates a reusable content snippet by key.
+        """
+        with self._get_connection() as conn:
+            now_iso = datetime.now().isoformat()
+            cursor = conn.execute("""
+                INSERT INTO content_snippets (snippet_key, snippet_title, snippet_html, category, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(snippet_key) DO UPDATE SET
+                    snippet_title = excluded.snippet_title,
+                    snippet_html = excluded.snippet_html,
+                    category = excluded.category,
+                    updated_at = excluded.updated_at
+            """, (snippet_key.strip(), snippet_title.strip(), snippet_html.strip(), category.strip(), now_iso, now_iso))
+            return cursor.lastrowid
+
+    def get_content_snippet(self, snippet_key: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a reusable content snippet by key.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, snippet_key, snippet_title, snippet_html, category, created_at, updated_at
+                FROM content_snippets
+                WHERE snippet_key = ?
+            """, (snippet_key.strip(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def list_content_snippets(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists reusable content snippets, optionally filtered by category.
+        """
+        with self._get_connection() as conn:
+            if category:
+                cursor = conn.execute("""
+                    SELECT id, snippet_key, snippet_title, snippet_html, category, created_at, updated_at
+                    FROM content_snippets
+                    WHERE category = ?
+                    ORDER BY snippet_key ASC
+                """, (category.strip(),))
+            else:
+                cursor = conn.execute("""
+                    SELECT id, snippet_key, snippet_title, snippet_html, category, created_at, updated_at
+                    FROM content_snippets
+                    ORDER BY category ASC, snippet_key ASC
+                """)
+            return [dict(row) for row in cursor.fetchall()]
 
 
 
