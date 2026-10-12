@@ -424,8 +424,47 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("Summary: Panduan dasar sintaks Python 3.12 modern.", res)
         self.assertIn("<p>Halo Dunia Python</p>", res)
 
+    def test_generate_dataset_json_ld(self):
+        schema = ArticleExporter.generate_dataset_json_ld(
+            dataset_name="Banyumas 5G Channel Propagation Trace",
+            description="RF channel impulse response and path loss dataset recorded in Banyumas urban area.",
+            creator_name="Dr. Aris Triwiyatno",
+            license_url="https://creativecommons.org/licenses/by/4.0/",
+            keywords=["5G", "path loss", "channel sounding", "telecommunications"],
+            download_url="https://repository.telkomuniversity.ac.id/datasets/5g-banyumas.zip",
+            publisher_name="Telkom University Purwokerto"
+        )
+        self.assertEqual(schema["@type"], "Dataset")
+        self.assertEqual(schema["name"], "Banyumas 5G Channel Propagation Trace")
+        self.assertEqual(schema["creator"]["name"], "Dr. Aris Triwiyatno")
+        self.assertEqual(schema["license"], "https://creativecommons.org/licenses/by/4.0/")
+        self.assertIn("5G", schema["keywords"])
+        self.assertEqual(schema["distribution"][0]["contentUrl"], "https://repository.telkomuniversity.ac.id/datasets/5g-banyumas.zip")
+        self.assertEqual(schema["publisher"]["name"], "Telkom University Purwokerto")
+
+    def test_to_docusaurus_markdown(self):
+        meta = {
+            "seo_title": "Panduan Instalasi LoRa Gateway",
+            "topic": "LoRa Gateway",
+            "slug": "panduan-lora-gateway",
+            "sidebar_label": "Instalasi Gateway",
+            "sidebar_position": 3,
+            "meta_description": "Langkah setup gateway LoRaWAN The Things Network.",
+            "tags": ["lora", "iot", "ttn"]
+        }
+        res = ArticleExporter.to_docusaurus_markdown(meta, "<p>Hubungkan antena dan power supply.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn("id: panduan-lora-gateway", res)
+        self.assertIn('title: "Panduan Instalasi LoRa Gateway"', res)
+        self.assertIn('sidebar_label: "Instalasi Gateway"', res)
+        self.assertIn("sidebar_position: 3", res)
+        self.assertIn('description: "Langkah setup gateway LoRaWAN The Things Network."', res)
+        self.assertIn('"lora", "iot", "ttn"', res)
+        self.assertIn("<p>Hubungkan antena dan power supply.</p>", res)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
