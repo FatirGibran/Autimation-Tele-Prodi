@@ -2139,6 +2139,45 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lab_workshop_banner(
+        cls,
+        workshop_title: str,
+        speaker_name: str,
+        speaker_affiliation: str,
+        date_time: str,
+        venue: str,
+        registration_url: str,
+        quota_left: int = 0
+    ) -> str:
+        """
+        Renders an open house hands-on workshop registration banner for academic research laboratories.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(workshop_title.strip())
+        spk_esc = escape(speaker_name.strip())
+        aff_esc = escape(speaker_affiliation.strip())
+        dt_esc = escape(date_time.strip())
+        ven_esc = escape(venue.strip())
+        reg_esc = escape(registration_url.strip())
+
+        quota_html = f'<span>Sisa Kuota: <strong>{quota_left} Kursi</strong></span>' if quota_left > 0 else '<span>Sisa Kuota: <strong>Terbuka Umum</strong></span>'
+
+        return f"""    <div class="tu-workshop-card">
+      <div class="tu-workshop-badge">Workshop Riset &amp; Pelatihan Lab</div>
+      <h4 class="tu-workshop-title">{title_esc}</h4>
+      <div class="tu-workshop-speaker">
+        <strong>Narasumber:</strong> {spk_esc} ({aff_esc})
+      </div>
+      <div class="tu-workshop-meta">
+        <span>Waktu: <strong>{dt_esc}</strong></span>
+        <span>Lokasi: <strong>{ven_esc}</strong></span>
+        {quota_html}
+      </div>
+      <a href="{reg_esc}" class="tu-workshop-btn" target="_blank" rel="noopener noreferrer">Daftar Workshop &rarr;</a>
+    </div>"""
+
 
 
 
