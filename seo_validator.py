@@ -1822,6 +1822,62 @@ class YoastSEOValidator:
             "warning": warning
         }
 
+    @staticmethod
+    def audit_image_accessibility_and_dimensions(html_content: str) -> Dict[str, Any]:
+        """
+        Audits images for WCAG accessibility compliance (informative vs decorative alt text)
+        and layout shift stability (explicit width/height attributes or aspect-ratio styles
+        to prevent Cumulative Layout Shift / CLS).
+        """
+        if not html_content or not html_content.strip():
+            return {
+                "total_images": 0,
+                "has_issues": False,
+                "missing_alt_count": 0,
+                "missing_dimensions_count": 0,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        images = soup.find_all("img")
+
+        issues = []
+        missing_alt = 0
+        missing_dims = 0
+
+        for idx, img in enumerate(images, 1):
+            src = img.get("src", f"image_{idx}")
+            alt = img.get("alt")
+
+            # Check alt attribute presence
+            if alt is None:
+                missing_alt += 1
+                issues.append(f"Gambar #{idx} ('{src[:30]}...') tidak memiliki atribut 'alt'.")
+            elif not alt.strip() and img.get("role") != "presentation":
+                issues.append(f"Gambar #{idx} memiliki alt kosong tanpa role='presentation'.")
+            else:
+                alt_clean = alt.strip().lower()
+                if alt_clean in {"gambar", "foto", "image", "picture", "screenshot", "img"}:
+                    issues.append(f"Gambar #{idx} memiliki teks alt generik yang tidak deskriptif: '{alt}'.")
+
+            # Check dimensions / CLS prevention
+            has_w = bool(img.get("width"))
+            has_h = bool(img.get("height"))
+            style = img.get("style", "").lower()
+            has_aspect_ratio = "aspect-ratio" in style
+
+            if not (has_w and has_h) and not has_aspect_ratio:
+                missing_dims += 1
+                issues.append(f"Gambar #{idx} tidak memiliki dimensi lebar/tinggi eksplisit (width/height atau aspect-ratio), berpotensi memicu Cumulative Layout Shift (CLS).")
+
+        return {
+            "total_images": len(images),
+            "has_issues": len(issues) > 0,
+            "missing_alt_count": missing_alt,
+            "missing_dimensions_count": missing_dims,
+            "issues": issues
+        }
+
 
 
 
