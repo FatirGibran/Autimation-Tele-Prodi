@@ -286,6 +286,38 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("7 SKS", card)
         self.assertIn("ECE 302 Signals", card)
 
+    def test_format_workshop_invitation_card(self):
+        card = TelegramFormatter.format_workshop_invitation_card(
+            workshop_title="Kupas Tuntas Antena MIMO 5G dan Pengukuran SAR",
+            speaker_name="Dr. Ir. Wahyu Sedikit, M.T.",
+            speaker_title="Kepala Lab RF & Gelombang Mikro",
+            schedule_time="Sabtu, 21 November 2026, 09:00 WIB",
+            platform_or_room="Lab Jaringan Nirkabel Lt. 2",
+            registration_url="https://bif-pwt.telkomuniversity.ac.id/workshop-mimo",
+            quota=30
+        )
+        self.assertIn("Undangan Workshop & Pelatihan Akademik", card)
+        self.assertIn("Kupas Tuntas Antena MIMO 5G", card)
+        self.assertIn("Dr. Ir. Wahyu Sedikit, M.T.", card)
+        self.assertIn("30 kursi", card)
+        self.assertIn("https://bif-pwt.telkomuniversity.ac.id/workshop-mimo", card)
+
+    def test_format_thesis_defense_schedule_broadcast(self):
+        card = TelegramFormatter.format_thesis_defense_schedule_broadcast(
+            student_name="Fatir Gibran",
+            nim="1201220011",
+            thesis_title="Sistem Otomasi Pipeline Publikasi Berbasis Multi-Agent LLM",
+            room="Ruang Sidang Utama Fakultas Informatika",
+            schedule="Senin, 19 Oktober 2026 13:00 WIB",
+            chief_examiner="Prof. Dr. Ir. Adiwijaya, M.Kom."
+        )
+        self.assertIn("Jadwal Sidang Terbuka Tugas Akhir Mahasiswa", card)
+        self.assertIn("Fatir Gibran", card)
+        self.assertIn("1201220011", card)
+        self.assertIn("Sistem Otomasi Pipeline Publikasi", card)
+        self.assertIn("Prof. Dr. Ir. Adiwijaya, M.Kom.", card)
+        self.assertIn("Ruang Sidang Utama", card)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
     def test_rate_limiter_allows_and_blocks(self):
