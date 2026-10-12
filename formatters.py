@@ -512,6 +512,28 @@ class TelegramFormatter:
             f"✨ *Terbuka untuk civitas akademika dan mahasiswa prodi. Tempat terbatas!*"
         )
 
+    @staticmethod
+    def format_thesis_defense_schedule_broadcast(
+        student_name: str,
+        nim: str,
+        thesis_title: str,
+        room: str,
+        schedule: str,
+        chief_examiner: str
+    ) -> str:
+        """
+        Renders a final thesis examination / defense schedule broadcast card for Telegram.
+        """
+        return (
+            f"🎓 **Jadwal Sidang Terbuka Tugas Akhir Mahasiswa**\n\n"
+            f"👤 **Nama Mahasiswa:** {student_name.strip()} (`{nim.strip()}`)\n"
+            f"📖 **Judul Skripsi:** \"{thesis_title.strip()}\"\n"
+            f"🏛 **Ketua Dewan Penguji:** {chief_examiner.strip()}\n"
+            f"📅 **Waktu Pelaksanaan:** `{schedule.strip()}`\n"
+            f"📍 **Ruang Sidang / Media:** {room.strip()}\n\n"
+            f"🕊 *Mari doakan kelancaran dan kesuksesan sidang mahasiswa bersangkutan.*"
+        )
+
 
 
 
