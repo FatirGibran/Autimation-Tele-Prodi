@@ -1854,6 +1854,70 @@ def parse_internship_weekly_logbook(logbook_markdown: str) -> List[Dict[str, Any
     return entries
 
 
+def parse_lab_equipment_maintenance_log(log_text: str) -> Dict[str, Any]:
+    """
+    Parses laboratory equipment maintenance, repair, and calibration incident logs.
+    Extracts equipment name, asset ID, maintenance date, technician, issue, resolution,
+    calibration expiration date, and operational readiness status.
+    """
+    if not log_text or not log_text.strip():
+        return {
+            "equipment_name": "",
+            "equipment_id": "",
+            "maintenance_date": "",
+            "technician": "",
+            "issue": "",
+            "resolution": "",
+            "calibration_validity": "",
+            "status": "Unknown",
+            "is_operational": False
+        }
+
+    clean = log_text.strip()
+
+    eq_match = re.search(r'(?:Equipment|Alat|Perangkat):\s*([^\n]+)', clean, re.IGNORECASE)
+    raw_eq = eq_match.group(1).strip() if eq_match else ""
+    eq_name = raw_eq
+    eq_id = ""
+    # Extract asset ID from parentheses or bracket
+    id_m = re.search(r'\(([^)]+)\)|\[([^\]]+)\]', raw_eq)
+    if id_m:
+        eq_id = (id_m.group(1) or id_m.group(2)).strip()
+        eq_name = re.sub(r'\s*\([^)]+\)|\s*\[[^\]]+\]', '', raw_eq).strip()
+
+    date_match = re.search(r'(?:Date|Tanggal):\s*([^\n]+)', clean, re.IGNORECASE)
+    m_date = date_match.group(1).strip() if date_match else ""
+
+    tech_match = re.search(r'(?:Technician|Teknisi|Petugas):\s*([^\n]+)', clean, re.IGNORECASE)
+    technician = tech_match.group(1).strip() if tech_match else ""
+
+    issue_match = re.search(r'(?:Issue|Kerusakan|Kendala|Masalah):\s*([^\n]+)', clean, re.IGNORECASE)
+    issue = issue_match.group(1).strip() if issue_match else ""
+
+    res_match = re.search(r'(?:Resolution|Tindakan|Solusi|Perbaikan):\s*([^\n]+)', clean, re.IGNORECASE)
+    resolution = res_match.group(1).strip() if res_match else ""
+
+    cal_match = re.search(r'(?:Calibration Validity|Masa Kalibrasi|Valid Hingga):\s*([^\n]+)', clean, re.IGNORECASE)
+    cal_valid = cal_match.group(1).strip() if cal_match else ""
+
+    stat_match = re.search(r'(?:Status|Kondisi):\s*([^\n]+)', clean, re.IGNORECASE)
+    status = stat_match.group(1).strip() if stat_match else "Normal"
+
+    is_operational = bool(re.search(r'\b(?:operasional|siap|ready|baik|normal|passed)\b', status, re.IGNORECASE)) and not bool(re.search(r'\b(?:rusak|trouble|mati|kritis|unusable)\b', status, re.IGNORECASE))
+
+    return {
+        "equipment_name": eq_name,
+        "equipment_id": eq_id,
+        "maintenance_date": m_date,
+        "technician": technician,
+        "issue": issue,
+        "resolution": resolution,
+        "calibration_validity": cal_valid,
+        "status": status,
+        "is_operational": is_operational
+    }
+
+
 
 
 
