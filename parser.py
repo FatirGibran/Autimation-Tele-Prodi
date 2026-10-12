@@ -1791,6 +1791,69 @@ def calculate_defense_rubric_grade(scores: List[Dict[str, Any]]) -> Dict[str, An
     }
 
 
+def parse_internship_weekly_logbook(logbook_markdown: str) -> List[Dict[str, Any]]:
+    """
+    Parses MBKM (Merdeka Belajar Kampus Merdeka) or industrial internship weekly logbook reports.
+    Extracts week number, date range, activities, competencies acquired, and supervisor approval status.
+    """
+    if not logbook_markdown or not logbook_markdown.strip():
+        return []
+
+    entries: List[Dict[str, Any]] = []
+    # Split by week header: e.g., '### Minggu 1' or '## Week 1' or 'Minggu 1:'
+    sections = re.split(r'(?m)^#{2,4}\s*(?:Minggu|Week)\s*(\d+)', logbook_markdown.strip())
+
+    if len(sections) > 1:
+        # sections[0] is preamble before first week
+        for i in range(1, len(sections), 2):
+            w_num = int(sections[i])
+            w_content = sections[i + 1] if i + 1 < len(sections) else ""
+
+            # Extract date range from first line or parentheses
+            date_range = ""
+            date_match = re.search(r'\(([^)]+)\)', w_content.split("\n")[0])
+            if date_match:
+                date_range = date_match.group(1).strip()
+
+            # Extract activities
+            activities = ""
+            act_match = re.search(r'(?:Aktivitas|Kegiatan|Activities):\s*([^\n]+)', w_content, re.IGNORECASE)
+            if act_match:
+                activities = act_match.group(1).strip()
+            else:
+                # Fallback to bullet points
+                bullets = re.findall(r'^[*-]\s+(.+)$', w_content, re.MULTILINE)
+                if bullets:
+                    activities = "; ".join(b.strip() for b in bullets if not re.match(r'^(?:Kompetensi|Status):', b, re.IGNORECASE))
+
+            # Extract competencies
+            competencies = []
+            comp_match = re.search(r'(?:Kompetensi|Skills?):\s*([^\n]+)', w_content, re.IGNORECASE)
+            if comp_match:
+                competencies = [c.strip() for c in comp_match.group(1).split(",") if c.strip()]
+
+            # Extract approval status
+            status = "Pending"
+            is_approved = False
+            stat_match = re.search(r'(?:Status|Approval):\s*([^\n]+)', w_content, re.IGNORECASE)
+            if stat_match:
+                raw_stat = stat_match.group(1).strip()
+                status = raw_stat
+                if re.search(r'\b(?:disetujui|approved|acc|valid)\b', raw_stat, re.IGNORECASE):
+                    is_approved = True
+
+            entries.append({
+                "week_number": w_num,
+                "date_range": date_range,
+                "activities": activities,
+                "competencies": competencies,
+                "status": status,
+                "is_approved": is_approved
+            })
+
+    return entries
+
+
 
 
 
