@@ -2213,6 +2213,41 @@ class EditorialComponents:
       <p class="tu-internship-summary">{sum_esc}</p>
     </div>"""
 
+    @classmethod
+    def render_monograph_showcase_card(
+        cls,
+        book_title: str,
+        authors: List[str],
+        publisher: str,
+        isbn: str,
+        year: int,
+        synopsis: str,
+        purchase_url: str = ""
+    ) -> str:
+        """
+        Renders a scholarly monograph and university academic textbook publication showcase card.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(book_title.strip())
+        authors_esc = escape(", ".join(a.strip() for a in authors if a.strip()))
+        pub_esc = escape(publisher.strip())
+        isbn_esc = escape(isbn.strip())
+        syn_esc = escape(synopsis.strip())
+
+        btn_html = f'\n      <a href="{escape(purchase_url.strip())}" class="tu-monograph-btn" target="_blank" rel="noopener noreferrer">Informasi / Akses Buku &rarr;</a>' if purchase_url.strip() else ""
+
+        return f"""    <div class="tu-monograph-card">
+      <div class="tu-monograph-badge">Monograf &amp; Buku Ajar Akademik</div>
+      <h4 class="tu-monograph-title">{title_esc}</h4>
+      <div class="tu-monograph-meta">
+        <span>Penulis: <strong>{authors_esc}</strong></span>
+        <span>Penerbit: <strong>{pub_esc} ({year})</strong></span>
+        <span>ISBN: <strong>{isbn_esc}</strong></span>
+      </div>
+      <p class="tu-monograph-synopsis">{syn_esc}</p>{btn_html}
+    </div>"""
+
 
 
 
