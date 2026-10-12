@@ -738,6 +738,88 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("18 alumni", html)
         self.assertIn("https://example.com/telkom.png", html)
 
+    def test_render_capstone_milestone_stepper(self):
+        milestones = [
+            {"step_number": 1, "title": "Seminar Proposal", "due_date": "Oktober 2026", "status": "Selesai"},
+            {"step_number": 2, "title": "Seminar Hasil Riset", "due_date": "Desember 2026", "status": "Sedang Berjalan"},
+            {"step_number": 3, "title": "Sidang Skripsi", "due_date": "Januari 2027", "status": "Menunggu"}
+        ]
+        html = EditorialComponents.render_capstone_milestone_stepper(
+            "Deteksi Dini Retinopati Diabetik",
+            milestones,
+            current_step_index=2
+        )
+        self.assertIn("tu-capstone-stepper-card", html)
+        self.assertIn("Deteksi Dini Retinopati Diabetik", html)
+        self.assertIn("Seminar Proposal", html)
+        self.assertIn("tu-step-completed", html)
+        self.assertIn("tu-step-active", html)
+        self.assertIn("Sidang Skripsi", html)
+
+    def test_render_lab_workshop_banner(self):
+        html = EditorialComponents.render_lab_workshop_banner(
+            workshop_title="Hands-on Perancangan Antena 5G dengan CST Studio",
+            speaker_name="Dr. Ir. Wahyu Sedikit, M.T.",
+            speaker_affiliation="Laboratorium RF & Microwave",
+            date_time="15 November 2026, 09:00 WIB",
+            venue="Lab Antena Lt. 3",
+            registration_url="https://lab-rf.prodi.ac.id/workshop-5g",
+            quota_left=12
+        )
+        self.assertIn("tu-workshop-card", html)
+        self.assertIn("Hands-on Perancangan Antena 5G", html)
+        self.assertIn("Dr. Ir. Wahyu Sedikit, M.T.", html)
+        self.assertIn("12 Kursi", html)
+        self.assertIn("https://lab-rf.prodi.ac.id/workshop-5g", html)
+
+    def test_render_internship_experience_card(self):
+        html = EditorialComponents.render_internship_experience_card(
+            student_name="Naufal Ilham",
+            company_name="PT Telkomsel",
+            role="Radio Access Network Engineer Intern",
+            period="Agustus - Desember 2026",
+            project_summary="Optimasi parameter handover pada 45 base station 5G NR area Purwokerto.",
+            mentor_name="Budi Hartono (Senior RAN Specialist)"
+        )
+        self.assertIn("tu-internship-card", html)
+        self.assertIn("PT Telkomsel", html)
+        self.assertIn("Radio Access Network Engineer Intern", html)
+        self.assertIn("Naufal Ilham", html)
+        self.assertIn("Budi Hartono", html)
+        self.assertIn("Optimasi parameter handover", html)
+
+    def test_render_monograph_showcase_card(self):
+        html = EditorialComponents.render_monograph_showcase_card(
+            book_title="Pengolahan Sinyal Biomedis Modern",
+            authors=["Prof. Dr. Ir. Sri Wahyuni", "Fatir Gibran"],
+            publisher="Telkom University Press",
+            isbn="978-623-123-456-7",
+            year=2026,
+            synopsis="Buku ajar komprehensif analisis wavelet dan deep learning untuk sinyal ECG.",
+            purchase_url="https://press.telkomuniversity.ac.id/buku-biomedis"
+        )
+        self.assertIn("tu-monograph-card", html)
+        self.assertIn("Pengolahan Sinyal Biomedis Modern", html)
+        self.assertIn("Prof. Dr. Ir. Sri Wahyuni, Fatir Gibran", html)
+        self.assertIn("978-623-123-456-7", html)
+        self.assertIn("https://press.telkomuniversity.ac.id/buku-biomedis", html)
+
+    def test_render_partner_university_profile_card(self):
+        html = EditorialComponents.render_partner_university_profile_card(
+            univ_name="Universiti Teknologi Malaysia (UTM)",
+            country="Malaysia",
+            world_ranking="QS Top 200",
+            agreement_type="Student Exchange & Dual Degree",
+            logo_url="https://example.com/utm-logo.png",
+            contact_person="International Office UTM"
+        )
+        self.assertIn("tu-partner-univ-card", html)
+        self.assertIn("Universiti Teknologi Malaysia (UTM)", html)
+        self.assertIn("Malaysia", html)
+        self.assertIn("QS Top 200", html)
+        self.assertIn("Student Exchange &amp; Dual Degree", html)
+        self.assertIn("International Office UTM", html)
+
 if __name__ == "__main__":
     unittest.main()
 
