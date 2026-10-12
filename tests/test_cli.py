@@ -952,7 +952,117 @@ class TestCLI(unittest.TestCase):
             self.assertIn("Status Checklist Editorial", out)
             self.assertIn("[V] proofread: Proofread Tata Bahasa Indonesia (oleh: Fatir Gibran)", out)
 
+    def test_cmd_snippet(self):
+        class ArgsSave:
+            action = "save"
+            key = "telkom_cta"
+            title = "Call To Action PMB"
+            html = "<div>Daftar sekarang di Telkom Purwokerto!</div>"
+            category = "marketing"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_snippet(ArgsSave())
+            self.assertIn("Snippet 'telkom_cta' berhasil disimpan", fake_out.getvalue())
+
+        class ArgsGet:
+            action = "get"
+            key = "telkom_cta"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_snippet(ArgsGet())
+            out = fake_out.getvalue()
+            self.assertIn("Call To Action PMB", out)
+            self.assertIn("marketing", out)
+
+        class ArgsList:
+            action = "list"
+            category = None
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_snippet(ArgsList())
+            self.assertIn("telkom_cta", fake_out.getvalue())
+
+    def test_cmd_docusaurus(self):
+        slug = "docusaurus-cli-target"
+        cli.storage.save_article({
+            "topic": "Docusaurus Topic",
+            "category": "Dokumentasi",
+            "publish_date": "2026-10-11",
+            "focus_keyphrase": "docu target",
+            "seo_title": "Docusaurus CLI Target",
+            "slug": slug,
+            "meta_description": "Meta docusaurus cli",
+            "html_content": "<p>Konten Docusaurus CLI</p>",
+            "status": "published"
+        })
+        out_file = Path(self.temp_dir.name) / "test_docu.md"
+        try:
+            class ArgsDocu:
+                pass
+            args = ArgsDocu()
+            args.slug = slug
+            args.out = str(out_file)
+            args.label = "Docu Sidebar"
+            args.position = 2
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_docusaurus(args)
+                self.assertIn("Export Docusaurus markdown berhasil", fake_out.getvalue())
+
+            content = out_file.read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---"))
+            self.assertIn('title: "Docusaurus CLI Target"', content)
+            self.assertIn('sidebar_label: "Docu Sidebar"', content)
+            self.assertIn("sidebar_position: 2", content)
+            self.assertIn("<p>Konten Docusaurus CLI</p>", content)
+        finally:
+            if out_file.exists():
+                out_file.unlink()
+
+    def test_cmd_comment(self):
+        art_id = cli.storage.save_article({
+            "topic": "Comment Article",
+            "category": "Akademik",
+            "publish_date": "2026-10-11",
+            "focus_keyphrase": "comment target",
+            "seo_title": "Comment Article Target",
+            "slug": "comment-article-target",
+            "meta_description": "Meta comment",
+            "status": "draft"
+        })
+
+        class ArgsAdd:
+            action = "add"
+            id = art_id
+            author = "Reviewer B"
+            text = "Mohon tambahkan sitasi IEEE"
+            paragraph = 3
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_comment(ArgsAdd())
+            self.assertIn("Komentar editorial berhasil ditambahkan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            id = art_id
+            unresolved_only = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_comment(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Komentar Editorial Artikel", out)
+            self.assertIn("Reviewer B (Paragraf 3): Mohon tambahkan sitasi IEEE", out)
+
+        class ArgsResolve:
+            action = "resolve"
+            comment_id = 1
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_comment(ArgsResolve())
+            self.assertIn("Komentar #1 berhasil diselesaikan", fake_out.getvalue())
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
