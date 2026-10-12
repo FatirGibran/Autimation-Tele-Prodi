@@ -637,7 +637,91 @@ def cmd_checklist(args):
             print(f"{mark} {item['item_key']}: {item['item_label']}{verifier}")
 
 
+def cmd_snippet(args):
+    if args.action == "save":
+        if not args.key or not args.title or not args.html:
+            print("Error: --key, --title, dan --html wajib disertakan untuk menyimpan snippet.")
+            sys.exit(1)
+        sid = storage.save_content_snippet(args.key, args.title, args.html, args.category or "general")
+        print(f"Snippet '{args.key}' berhasil disimpan (ID: {sid}).")
+    elif args.action == "get":
+        if not args.key:
+            print("Error: --key wajib disertakan untuk mengambil snippet.")
+            sys.exit(1)
+        s = storage.get_content_snippet(args.key)
+        if not s:
+            print(f"Snippet dengan key '{args.key}' tidak ditemukan.")
+            sys.exit(1)
+        print(f"=== Snippet: {s['snippet_title']} ({s['snippet_key']}) ===")
+        print(f"Kategori : {s['category']}")
+        print(f"Konten   : {s['snippet_html']}")
+    else:
+        snippets = storage.list_content_snippets(category=args.category)
+        if not snippets:
+            print("Belum ada snippet konten tersimpan.")
+            return
+        print(f"{'KEY':<25} | {'KATEGORI':<15} | {'JUDUL'}")
+        print("-" * 65)
+        for s in snippets:
+            print(f"{s['snippet_key']:<25} | {s['category']:<15} | {s['snippet_title']}")
+
+
+def cmd_docusaurus(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tags = storage.get_article_tags(article["id"])
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "topic": article.get("topic", ""),
+        "meta_description": article.get("meta_description", ""),
+        "slug": article.get("slug", ""),
+        "sidebar_label": args.label or article.get("topic", ""),
+        "sidebar_position": args.position or 1,
+        "tags": tags
+    }
+    doc_md = ArticleExporter.to_docusaurus_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(doc_md, encoding="utf-8")
+    print(f"Export Docusaurus markdown berhasil -> {out_path}")
+
+
+def cmd_comment(args):
+    if args.action == "add":
+        if not args.id or not args.author or not args.text:
+            print("Error: --id, --author, dan --text wajib disertakan untuk menambahkan komentar.")
+            sys.exit(1)
+        cid = storage.add_editorial_comment(args.id, args.author, args.text, args.paragraph)
+        print(f"Komentar editorial berhasil ditambahkan (ID: {cid}) untuk artikel #{args.id}.")
+    elif args.action == "resolve":
+        if not args.comment_id:
+            print("Error: --comment-id wajib disertakan untuk menyelesaikan komentar.")
+            sys.exit(1)
+        ok = storage.resolve_editorial_comment(args.comment_id)
+        if ok:
+            print(f"Komentar #{args.comment_id} berhasil diselesaikan.")
+        else:
+            print(f"Komentar #{args.comment_id} tidak ditemukan.")
+            sys.exit(1)
+    else:
+        if not args.id:
+            print("Error: --id artikel wajib disertakan untuk melihat komentar.")
+            sys.exit(1)
+        comments = storage.list_editorial_comments(args.id, include_resolved=not args.unresolved_only)
+        if not comments:
+            print(f"Belum ada komentar editorial untuk artikel #{args.id}.")
+            return
+        print(f"=== Komentar Editorial Artikel #{args.id} ===")
+        for c in comments:
+            res_mark = "[V]" if c["is_resolved"] else "[ ]"
+            p_idx = f" (Paragraf {c['paragraph_index']})" if c["paragraph_index"] is not None else ""
+            print(f"{res_mark} #{c['id']} oleh {c['author']}{p_idx}: {c['comment_text']}")
+
+
 def main():
+
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -880,7 +964,36 @@ def main():
     chk_parser.add_argument("--by", help="Nama verifikator item checklist")
     chk_parser.set_defaults(func=cmd_checklist)
 
+    # Snippet command
+    snippet_parser = subparsers.add_parser("snippet", help="Kelola library snippet konten editorial (list, save, get)")
+    snippet_parser.add_argument("--action", choices=["list", "save", "get"], default="list", help="Tindakan snippet")
+    snippet_parser.add_argument("--key", help="Kunci unik snippet")
+    snippet_parser.add_argument("--title", help="Judul snippet")
+    snippet_parser.add_argument("--html", help="HTML konten snippet")
+    snippet_parser.add_argument("--category", help="Kategori snippet")
+    snippet_parser.set_defaults(func=cmd_snippet)
+
+    # Docusaurus command
+    docu_parser = subparsers.add_parser("docusaurus", help="Export artikel ke format Markdown kompatibel Docusaurus")
+    docu_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    docu_parser.add_argument("--out", help="Path berkas output Markdown Docusaurus")
+    docu_parser.add_argument("--label", help="Label sidebar Docusaurus")
+    docu_parser.add_argument("--position", type=int, default=1, help="Posisi urutan pada sidebar")
+    docu_parser.set_defaults(func=cmd_docusaurus)
+
+    # Comment command
+    comment_parser = subparsers.add_parser("comment", help="Kelola komentar review editorial artikel (list, add, resolve)")
+    comment_parser.add_argument("--action", choices=["list", "add", "resolve"], default="list", help="Tindakan komentar review")
+    comment_parser.add_argument("--id", type=int, help="ID artikel")
+    comment_parser.add_argument("--comment-id", type=int, help="ID komentar")
+    comment_parser.add_argument("--author", help="Nama editor / reviewer")
+    comment_parser.add_argument("--text", help="Isi komentar editorial")
+    comment_parser.add_argument("--paragraph", type=int, help="Indeks paragraf target")
+    comment_parser.add_argument("--unresolved-only", action="store_true", help="Tampilkan hanya komentar yang belum diselesaikan")
+    comment_parser.set_defaults(func=cmd_comment)
+
     args = parser.parse_args()
+
 
     args.func(args)
 
