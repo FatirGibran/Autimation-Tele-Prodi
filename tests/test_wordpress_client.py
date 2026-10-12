@@ -323,8 +323,39 @@ class TestWordPressClient(unittest.TestCase):
         not_found = self.client.get_user_by_slug("ghost-user")
         self.assertIsNone(not_found)
 
+    @patch.object(WordPressClient, "update_post")
+    def test_batch_update_post_tags(self, mock_update):
+        def side_effect(pid, updates):
+            if pid == 302:
+                raise RuntimeError("Failed to update post 302")
+            return {"id": pid, "tags": updates["tags"]}
+
+        mock_update.side_effect = side_effect
+        res = self.client.batch_update_post_tags([301, 302, 303], [14, 28])
+        self.assertEqual(res["total"], 3)
+        self.assertEqual(res["success"], [301, 303])
+        self.assertEqual(len(res["failed"]), 1)
+        self.assertEqual(res["failed"][0]["post_id"], 302)
+
+    @patch("urllib.request.urlopen")
+    def test_get_tag_by_slug(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 99, "slug": "kurikulum-merdeka", "name": "Kurikulum Merdeka"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        tag = self.client.get_tag_by_slug("kurikulum-merdeka")
+        self.assertIsNotNone(tag)
+        self.assertEqual(tag["id"], 99)
+        self.assertEqual(tag["name"], "Kurikulum Merdeka")
+
+        # Not found test
+        mock_resp.read.return_value = b'[]'
+        not_found = self.client.get_tag_by_slug("tag-tidak-ada")
+        self.assertIsNone(not_found)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
