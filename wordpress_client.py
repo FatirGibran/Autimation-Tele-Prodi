@@ -433,6 +433,25 @@ class WordPressClient:
             return results[0]
         return None
 
+    def batch_update_post_tags(self, post_ids: List[int], tag_ids: List[int]) -> Dict[str, Any]:
+        """
+        Bulk updates tags for multiple WordPress posts in batch.
+        """
+        success = []
+        failed = []
+        for pid in post_ids:
+            try:
+                self.update_post(pid, {"tags": tag_ids})
+                success.append(pid)
+            except Exception as e:
+                failed.append({"post_id": pid, "error": str(e)})
+
+        return {
+            "success": success,
+            "failed": failed,
+            "total": len(post_ids)
+        }
+
 
 
 
