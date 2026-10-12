@@ -1726,6 +1726,52 @@ class YoastSEOValidator:
             "sentences_per_100_words": round(s_val, 1)
         }
 
+    @staticmethod
+    def audit_heading_hierarchy_order(html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic heading hierarchy sequence to ensure logical heading progression
+        without skipped levels (e.g. H2 jumping straight to H4 skipping H3, or duplicate H1).
+        """
+        if not html_content or not html_content.strip():
+            return {
+                "is_valid": True,
+                "heading_count": 0,
+                "headings_sequence": [],
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        headings = soup.find_all(re.compile(r'^h[1-6]$', re.IGNORECASE))
+
+        seq = []
+        issues = []
+        h1_count = 0
+        prev_level = None
+
+        for h in headings:
+            lvl = int(h.name[1])
+            txt = h.get_text().strip()
+            seq.append({"level": lvl, "text": txt[:60]})
+
+            if lvl == 1:
+                h1_count += 1
+                if h1_count > 1:
+                    issues.append(f"Ditemukan lebih dari satu tag H1 ('{txt[:40]}...'). Halaman artikel hanya boleh memiliki satu H1 utama.")
+
+            if prev_level is not None:
+                # If moving deeper into subheadings, level can increase at most by 1
+                if lvl > prev_level + 1:
+                    issues.append(f"Lompatan hirarki subjudul tidak runtut: H{prev_level} langsung meloncat ke H{lvl} ('{txt[:40]}...'). Disarankan menggunakan H{prev_level + 1}.")
+
+            prev_level = lvl
+
+        return {
+            "is_valid": len(issues) == 0,
+            "heading_count": len(headings),
+            "headings_sequence": seq,
+            "issues": issues
+        }
+
 
 
 
