@@ -76,10 +76,12 @@ class HTMLSanitizer:
             if cleaned != fig_before:
                 warnings.append("Sanitized figure and figcaption elements with editorial class attributes.")
 
-        # 1d. Sanitize details and summary disclosure elements with editorial classes
+        # 1d. Sanitize details and summary disclosure elements with editorial classes and strip ontoggle/event handlers
         if "<details" in cleaned.lower() or "<summary" in cleaned.lower():
             def fix_details(match):
                 tag = match.group(0)
+                tag = re.sub(r'\s+ontoggle=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
                 if 'class=' not in tag:
                     tag = tag.rstrip(">") + ' class="tu-details">'
                 elif 'tu-details' not in tag:
@@ -88,6 +90,7 @@ class HTMLSanitizer:
 
             def fix_summary(match):
                 tag = match.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
                 if 'class=' not in tag:
                     tag = tag.rstrip(">") + ' class="tu-summary">'
                 elif 'tu-summary' not in tag:
@@ -98,7 +101,7 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<details\b[^>]*>', fix_details, cleaned, flags=re.IGNORECASE)
             cleaned = re.sub(r'<summary\b[^>]*>', fix_summary, cleaned, flags=re.IGNORECASE)
             if cleaned != det_before:
-                warnings.append("Sanitized details and summary elements with editorial class attributes.")
+                warnings.append("Sanitized details and summary disclosure elements and stripped event attributes.")
 
         # 1e. Sanitize HTML5 dialog and modal elements with editorial classes
         if "<dialog" in cleaned.lower():
