@@ -488,6 +488,30 @@ class TelegramFormatter:
             f"✅ *Nilai dan SKS telah diverifikasi oleh Tim Kurikulum Prodi.*"
         )
 
+    @staticmethod
+    def format_workshop_invitation_card(
+        workshop_title: str,
+        speaker_name: str,
+        speaker_title: str,
+        schedule_time: str,
+        platform_or_room: str,
+        registration_url: str,
+        quota: int = 0
+    ) -> str:
+        """
+        Renders an academic webinar/workshop broadcast card formatted for Telegram editorial channels.
+        """
+        quota_text = f"\n👥 **Kuota Peserta:** `{quota} kursi`" if quota > 0 else ""
+        return (
+            f"📢 **Undangan Workshop & Pelatihan Akademik**\n\n"
+            f"🎯 **Topik:** \"{workshop_title.strip()}\"\n"
+            f"🎙 **Narasumber:** {speaker_name.strip()} ({speaker_title.strip()})\n"
+            f"📅 **Waktu:** `{schedule_time.strip()}`\n"
+            f"📍 **Lokasi / Media:** {platform_or_room.strip()}{quota_text}\n"
+            f"🔗 **Pendaftaran:** {registration_url.strip()}\n\n"
+            f"✨ *Terbuka untuk civitas akademika dan mahasiswa prodi. Tempat terbatas!*"
+        )
+
 
 
 
