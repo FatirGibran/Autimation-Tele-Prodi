@@ -910,6 +910,36 @@ navigation: true
             ]
         return data
 
+    @staticmethod
+    def to_docusaurus_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Docusaurus static site Markdown with standard frontmatter and sidebar configuration.
+        """
+        sidebar_label = metadata.get("sidebar_label", metadata.get("seo_title", metadata.get("topic", ""))).strip()
+        doc_id = metadata.get("slug", "doc").strip()
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        sidebar_pos = metadata.get("sidebar_position", 1)
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        lines = [
+            "---",
+            f"id: {doc_id}",
+            f'title: "{title}"',
+            f'sidebar_label: "{sidebar_label}"',
+            f"sidebar_position: {sidebar_pos}",
+            f'description: "{desc}"',
+            f"tags: [{tags_yaml}]",
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(lines)
+
+
 
 
 
