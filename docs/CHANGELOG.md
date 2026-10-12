@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 335+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 360+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 347 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 375 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -406,6 +406,41 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 318. **Subcommand CLI `pelican` (`cli.py`)**: Perintah konsol ekspor artikel langsung ke format markdown Pelican SSG.
 319. **Subcommand CLI `checklist` (`cli.py`)**: Perintah konsol manajemen dan verifikasi checklist alur kerja editorial (list, set).
 320. **Ekspansi Suite Pengujian Unit Terpadu (347 Tests Passing)**: Verifikasi penuh seluruh modul dengan 347 unit test terverifikasi (100% pass rate).
+
+---
+
+## 18. Ekspansi Arsitektural v3.0.0 Milestone Release
+
+321. **Sanitasi Elemen Dialog & Modal HTML5 (`sanitizer.py`)**: Sanitasi elemen `<dialog>` dengan pelucutan atribut aksi skrip tak berizin.
+322. **Sanitasi Tag Interaktif Details & Summary (`sanitizer.py`)**: Sanitasi blok disclosure `<details>` dan `<summary>` dengan pembatasan atribut standar (`open`).
+323. **Sanitasi Nama Slot Web Component (`sanitizer.py`)**: Sanitasi atribut `slot` pada web components untuk mencegah prototype pollution (`__proto__`, `constructor`, `prototype`).
+324. **Parser Sitasi Konferensi & Transaksi ACM (`parser.py`)**: Parsing format rujukan sitasi ACM (Association for Computing Machinery) berstandar internasional dengan DOI dan venue.
+325. **Kalkulator Rubrik Penilaian Sidang Skripsi (`parser.py`)**: Perhitungan skor berbobot sidang tugas akhir (presentasi, penguasaan materi, naskah, produk) serta konversi huruf mutu dan IPK standar Indonesia.
+326. **Parser Logbook Mingguan Magang MBKM (`parser.py`)**: Ekstraksi catatan aktivitas mingguan magang bersertifikat industri, total jam, dan ringkasan capaian kompetensi.
+327. **Parser Log Pemeliharaan & Kalibrasi Alat Lab (`parser.py`)**: Ekstraksi riwayat perawatan alat instrumen lab, tanggal kalibrasi, teknisi, dan status kelayakan operasional.
+328. **Kalkulator Indeks Keterbacaan Coleman-Liau Teks Indonesia (`seo_validator.py`)**: Evaluasi keterbacaan teks berbasis jumlah huruf per 100 kata dan jumlah kalimat per 100 kata.
+329. **Auditor Urutan Hierarki Heading Berjenjang (`seo_validator.py`)**: Pemeriksaan pelanggaran level heading (tidak boleh melompat tingkat, misal H2 langsung ke H4 tanpa H3).
+330. **Detektor Klausul Pengakuan Dana Hibah Riset (`seo_validator.py`)**: Identifikasi keberadaan acknowledgments pendanaan penelitian (Kemendikbudristek/LPDP/BRIN/Internal) beserta nomor kontrak/SPK.
+331. **Auditor Aksesibilitas Gambar & Pencegahan CLS (`seo_validator.py`)**: Audit kelengkapan atribut `width`, `height`, dan deskriptivitas `alt` pada elemen `<img>` guna mencegah Cumulative Layout Shift.
+332. **Komponen Stepper Milestone Capstone Proyek Akhir (`components.py`)**: Generator kartu visual interaktif tahapan tugas akhir mahasiswa (proposal, seminar kemajuan, sidang terbuka).
+333. **Komponen Banner Pendaftaran Workshop Open House Lab (`components.py`)**: Kartu promosi pelatihan dan open house laboratorium riset dengan jadwal dan tautan registrasi.
+334. **Komponen Showcase Magang Industri Bersertifikat MBKM (`components.py`)**: Kartu portofolio pengalaman mahasiswa magang di industri teknologi mitra.
+335. **Komponen Pameran Monograf Publikasi Buku Dosen (`components.py`)**: Showcase penerbitan monograf dan buku referensi dosen ber-ISBN.
+336. **Komponen Profil Universitas Mitra Pertukaran Internasional (`components.py`)**: Kartu profil perguruan tinggi mitra luar negeri, QS ranking, negara, dan kuota pertukaran.
+337. **Formatter Undangan Webinar & Workshop Telegram (`formatters.py`)**: Format siaran pengumuman workshop akademik dan webinar untuk kanal Telegram prodi.
+338. **Formatter Jadwal Sidang Tugas Akhir Telegram (`formatters.py`)**: Format siaran pengumuman jadwal sidang skripsi mahasiswa, penguji, waktu, dan ruangan.
+339. **Pelacak Sitasi Akademik Eksternal Artikel (`storage.py`)**: Tabel `article_citations` dan metode pelacakan sitasi jurnal eksternal yang merujuk artikel prodi.
+340. **Manajer Komentar Review Editorial Inline (`storage.py`)**: Tabel `editorial_comments` dan alur peninjauan per paragraf oleh editor dan reviewer.
+341. **Library Snippet Konten Editorial Terpakai-Ulang (`storage.py`)**: Tabel `content_snippets` untuk penyimpanan potongan markup callout/disclaimer yang dapat disematkan berulang.
+342. **Helper Batch Update Post Tags WordPress (`wordpress_client.py`)**: Pembaruan massal tag pada sekumpulan pos WordPress via REST API.
+343. **Helper Pencarian Tag Berdasarkan Slug WordPress (`wordpress_client.py`)**: Pengambilan data tag WordPress berdasarkan slug dari REST API.
+344. **Generator Schema.org Dataset JSON-LD (`exporter.py`)**: Konstruksi metadata terstruktur untuk dataset riset terbuka laboratorium telematika.
+345. **Generator Markdown Kompatibel Docusaurus SSG (`exporter.py`)**: Ekspor artikel ke format markdown Docusaurus dengan frontmatter YAML dan konfigurasi hierarki sidebar.
+346. **Subcommand CLI `snippet` (`cli.py`)**: Manajemen konsol perpustakaan snippet konten editorial (list, save, get).
+347. **Subcommand CLI `docusaurus` (`cli.py`)**: Ekspor konsol artikel langsung ke format markdown Docusaurus.
+348. **Subcommand CLI `comment` (`cli.py`)**: Manajemen konsol komentar review editorial dan resolusi status review (list, add, resolve).
+349. **Ekspansi Suite Pengujian Unit Terpadu (375 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 375 unit test terverifikasi (100% pass rate).
+
 
 
 
