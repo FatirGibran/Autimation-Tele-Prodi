@@ -2248,6 +2248,43 @@ class EditorialComponents:
       <p class="tu-monograph-synopsis">{syn_esc}</p>{btn_html}
     </div>"""
 
+    @classmethod
+    def render_partner_university_profile_card(
+        cls,
+        univ_name: str,
+        country: str,
+        world_ranking: str,
+        agreement_type: str,
+        logo_url: str = "",
+        contact_person: str = ""
+    ) -> str:
+        """
+        Renders a global academic partner university profile card for international mobility and dual degree programs.
+        """
+        from xml.sax.saxutils import escape
+
+        name_esc = escape(univ_name.strip())
+        c_esc = escape(country.strip())
+        rank_esc = escape(world_ranking.strip())
+        agree_esc = escape(agreement_type.strip())
+
+        logo_html = f'<img src="{escape(logo_url.strip())}" alt="{name_esc}" class="tu-partner-univ-logo" loading="lazy" />\n        ' if logo_url.strip() else ""
+        contact_html = f'<span>Kontak Person: <strong>{escape(contact_person.strip())}</strong></span>' if contact_person.strip() else ""
+
+        return f"""    <div class="tu-partner-univ-card">
+      <div class="tu-partner-univ-header">
+        {logo_html}<div class="tu-partner-univ-info">
+          <span class="tu-partner-univ-country">{c_esc}</span>
+          <h4 class="tu-partner-univ-name">{name_esc}</h4>
+        </div>
+      </div>
+      <div class="tu-partner-univ-meta">
+        <span>Peringkat Dunia: <strong>{rank_esc}</strong></span>
+        <span>Skema Kerja Sama: <strong>{agree_esc}</strong></span>
+        {contact_html}
+      </div>
+    </div>"""
+
 
 
 
