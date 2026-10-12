@@ -300,6 +300,29 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('<mi>x</mi>', clean)
         self.assertTrue(any("script link inside MathML" in w for w in warnings))
 
+    def test_sanitize_dialog_modal_events(self):
+        html = '<div class="tu-editorial-container"><dialog autofocus onclose="alert(1)"><p>Modal dialog</p></dialog></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('<dialog class="tu-dialog">', clean)
+        self.assertNotIn('autofocus', clean)
+        self.assertNotIn('onclose', clean)
+        self.assertTrue(any("dialog modal" in w for w in warnings))
+
+    def test_sanitize_details_summary_ontoggle(self):
+        html = '<div class="tu-editorial-container"><details ontoggle="doBadThing()"><summary onclick="hack()">Klik</summary><p>Detail info</p></details></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('<details class="tu-details">', clean)
+        self.assertIn('<summary class="tu-summary">', clean)
+        self.assertNotIn('ontoggle', clean)
+        self.assertNotIn('onclick', clean)
+
+    def test_sanitize_slot_prototype_pollution(self):
+        html = '<div class="tu-editorial-container"><span slot="__proto__">Payload</span><p slot="valid-slot">Aman</p></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('slot="__proto__"', clean)
+        self.assertIn('slot="valid-slot"', clean)
+        self.assertTrue(any("slot attribute" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
 
