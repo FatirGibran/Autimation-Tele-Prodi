@@ -871,6 +871,45 @@ navigation: true
         ]
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_dataset_json_ld(
+        dataset_name: str,
+        description: str,
+        creator_name: str,
+        license_url: str,
+        keywords: List[str],
+        download_url: str = "",
+        publisher_name: str = "Telkom University Purwokerto"
+    ) -> Dict[str, Any]:
+        """
+        Generates schema.org Dataset JSON-LD structured data for academic lab datasets and research benchmarks.
+        """
+        kw_clean = [k.strip() for k in keywords if k.strip()]
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            "name": dataset_name.strip(),
+            "description": description.strip(),
+            "creator": {
+                "@type": "Person",
+                "name": creator_name.strip()
+            },
+            "license": license_url.strip(),
+            "keywords": kw_clean,
+            "publisher": {
+                "@type": "EducationalOrganization",
+                "name": publisher_name.strip()
+            }
+        }
+        if download_url.strip():
+            data["distribution"] = [
+                {
+                    "@type": "DataDownload",
+                    "contentUrl": download_url.strip()
+                }
+            ]
+        return data
+
 
 
 
