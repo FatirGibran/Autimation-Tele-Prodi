@@ -1671,6 +1671,61 @@ class YoastSEOValidator:
             "warning": warning
         }
 
+    @staticmethod
+    def calculate_coleman_liau_index(text: str) -> Dict[str, Any]:
+        """
+        Calculates Coleman-Liau Readability Index for Indonesian academic texts.
+        Formula: CLI = 0.0588 * L - 0.296 * S - 15.8
+        where L = letters per 100 words, S = sentences per 100 words.
+        """
+        if not text or not text.strip():
+            return {
+                "score": 0.0,
+                "grade_level": "N/A",
+                "difficulty": "Teks kosong",
+                "letters_per_100_words": 0.0,
+                "sentences_per_100_words": 0.0
+            }
+
+        # Clean HTML tags if present
+        plain = re.sub(r'<[^>]+>', ' ', text)
+        words = re.findall(r'\b[a-zA-Z0-9_-]+\b', plain)
+        word_count = len(words)
+        if word_count == 0:
+            return {
+                "score": 0.0,
+                "grade_level": "N/A",
+                "difficulty": "Tidak ada kata terdeteksi",
+                "letters_per_100_words": 0.0,
+                "sentences_per_100_words": 0.0
+            }
+
+        letter_count = sum(len(w) for w in words)
+        sentences = [s.strip() for s in re.split(r'[.!?]+', plain) if s.strip()]
+        sentence_count = max(1, len(sentences))
+
+        l_val = (letter_count / word_count) * 100.0
+        s_val = (sentence_count / word_count) * 100.0
+
+        cli_score = round(0.0588 * l_val - 0.296 * s_val - 15.8, 1)
+
+        if cli_score <= 6.0:
+            diff = "Mudah dibaca (Tingkat Sekolah Dasar / Menengah)"
+        elif cli_score <= 10.0:
+            diff = "Menengah (Tingkat SMA / Populer)"
+        elif cli_score <= 14.0:
+            diff = "Akademik Standar (Tingkat Sarjana / S1)"
+        else:
+            diff = "Kompleksitas Tinggi (Pascasarjana / Peneliti Spesialis)"
+
+        return {
+            "score": cli_score,
+            "grade_level": f"Tingkat {max(1, int(round(cli_score)))}",
+            "difficulty": diff,
+            "letters_per_100_words": round(l_val, 1),
+            "sentences_per_100_words": round(s_val, 1)
+        }
+
 
 
 
