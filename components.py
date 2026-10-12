@@ -2092,6 +2092,53 @@ class EditorialComponents:
       <blockquote class="tu-partner-quote">&ldquo;{quote_esc}&rdquo;</blockquote>{hired_html}
     </div>"""
 
+    @classmethod
+    def render_capstone_milestone_stepper(
+        cls,
+        project_title: str,
+        milestones: List[Dict[str, Any]],
+        current_step_index: int = 1
+    ) -> str:
+        """
+        Renders a sequential milestone stepper card for undergraduate final year capstone/thesis projects,
+        tracking stages from proposal seminar to manuscript publication and degree conferral.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(project_title.strip())
+
+        steps = []
+        for idx, m in enumerate(milestones, 1):
+            s_num = int(m.get("step_number", idx))
+            s_title = escape(str(m.get("title", "")))
+            s_date = escape(str(m.get("due_date", "")))
+            s_stat = escape(str(m.get("status", "Menunggu")))
+
+            is_active = (s_num == current_step_index)
+            is_completed = (s_num < current_step_index) or ("selesai" in s_stat.lower())
+            cls_state = "tu-step-completed" if is_completed else ("tu-step-active" if is_active else "tu-step-pending")
+
+            steps.append(f"""        <div class="tu-step-item {cls_state}">
+          <div class="tu-step-circle">{s_num}</div>
+          <div class="tu-step-content">
+            <h5 class="tu-step-name">{s_title}</h5>
+            <span class="tu-step-date">{s_date}</span>
+            <span class="tu-step-status">{s_stat}</span>
+          </div>
+        </div>""")
+
+        steps_html = "\n".join(steps) if steps else "        <p><em>Belum ada tahapan milestone terdefinisi.</em></p>"
+
+        return f"""    <div class="tu-capstone-stepper-card">
+      <div class="tu-stepper-header">
+        <span class="tu-stepper-badge">Alur Milestone Tugas Akhir</span>
+        <h4 class="tu-stepper-title">{title_esc}</h4>
+      </div>
+      <div class="tu-stepper-track">
+{steps_html}
+      </div>
+    </div>"""
+
 
 
 
