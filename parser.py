@@ -1636,6 +1636,75 @@ def calculate_sks_to_ects(sks_credits: int, ects_ratio: float = 1.6) -> Dict[str
     }
 
 
+def parse_acm_citation(citation_str: str) -> Dict[str, Any]:
+    """
+    Parses ACM reference citations from academic publications into structured fields.
+    Extracts author list, publication year, paper title, conference/journal name, pages, and DOI.
+    """
+    if not citation_str or not citation_str.strip():
+        return {
+            "authors": [],
+            "year": None,
+            "title": "",
+            "publication": "",
+            "pages": "",
+            "doi": ""
+        }
+
+    clean = citation_str.strip()
+
+    doi = ""
+    doi_match = re.search(r'https?://(?:dx\.)?doi\.org/(10\.\d{4,9}/[-._;()/:A-Za-z0-9]+)', clean)
+    if doi_match:
+        doi = doi_match.group(0)
+        clean = clean.replace(doi_match.group(0), "").strip()
+
+    year = None
+    year_match = re.search(r'\b(19\d\d|20\d\d)\b', clean)
+    if year_match:
+        year = int(year_match.group(1))
+
+    authors: List[str] = []
+    title = ""
+    publication = ""
+    pages = ""
+
+    if year_match:
+        y_start = year_match.start()
+        y_end = year_match.end()
+        raw_authors = clean[:y_start].rstrip(". ,")
+        raw_rest = clean[y_end:].lstrip(". ,")
+
+        raw_authors_list = [a.strip() for a in re.split(r'\band\b|,', raw_authors) if a.strip()]
+        authors = raw_authors_list
+
+        pages_match = re.search(r'\b(\d+[-–]\d+)\b', raw_rest)
+        if pages_match:
+            pages = pages_match.group(1).replace("–", "-")
+
+        in_match = re.search(r'\bIn\s+', raw_rest, re.IGNORECASE)
+        if in_match:
+            title = raw_rest[:in_match.start()].rstrip(". ,")
+            pub_part = raw_rest[in_match.end():]
+            pub_match = re.split(r'\bACM\b|\b\d+[-–]\d+\b', pub_part)
+            publication = pub_match[0].rstrip(". ,")
+        else:
+            parts = [p.strip() for p in raw_rest.split(".") if p.strip()]
+            if parts:
+                title = parts[0]
+            if len(parts) > 1:
+                publication = parts[1]
+
+    return {
+        "authors": authors,
+        "year": year,
+        "title": title.strip(),
+        "publication": publication.strip(),
+        "pages": pages.strip(),
+        "doi": doi.strip()
+    }
+
+
 
 
 
