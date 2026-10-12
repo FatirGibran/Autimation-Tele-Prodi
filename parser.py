@@ -1705,6 +1705,92 @@ def parse_acm_citation(citation_str: str) -> Dict[str, Any]:
     }
 
 
+def calculate_defense_rubric_grade(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Calculates weighted final numerical grade, Indonesian standard letter grade (A - E),
+    grade point equivalence (4.00 - 0.00), and pass/fail accreditation status
+    from thesis defense examination rubric assessment criteria.
+    """
+    if not scores:
+        return {
+            "total_score": 0.0,
+            "letter_grade": "E",
+            "grade_point": 0.0,
+            "is_passed": False,
+            "predicate": "Tidak Lulus",
+            "criteria_breakdown": []
+        }
+
+    total_weight = 0.0
+    weighted_sum = 0.0
+    breakdown = []
+
+    for item in scores:
+        crit = str(item.get("criteria", "Komponen"))
+        weight = float(item.get("weight_pct", 0.0))
+        raw_score = float(item.get("score", 0.0))
+        weighted_val = (weight / 100.0) * raw_score
+        weighted_sum += weighted_val
+        total_weight += weight
+        breakdown.append({
+            "criteria": crit,
+            "weight_pct": weight,
+            "raw_score": raw_score,
+            "weighted_score": round(weighted_val, 2)
+        })
+
+    # Normalize if total weight is around 100
+    final_score = round(weighted_sum, 2)
+    if total_weight > 0 and abs(total_weight - 100.0) > 0.01:
+        # Scale to 100% basis if weights do not sum to 100
+        final_score = round((weighted_sum / total_weight) * 100.0, 2)
+
+    if final_score >= 80.0:
+        letter = "A"
+        gp = 4.00
+        predicate = "Lulus Sangat Memuaskan (Cumlaude)"
+        passed = True
+    elif final_score >= 75.0:
+        letter = "AB"
+        gp = 3.50
+        predicate = "Lulus Memuaskan"
+        passed = True
+    elif final_score >= 70.0:
+        letter = "B"
+        gp = 3.00
+        predicate = "Lulus Baik"
+        passed = True
+    elif final_score >= 65.0:
+        letter = "BC"
+        gp = 2.50
+        predicate = "Lulus Cukup Baik"
+        passed = True
+    elif final_score >= 60.0:
+        letter = "C"
+        gp = 2.00
+        predicate = "Lulus Cukup"
+        passed = True
+    elif final_score >= 50.0:
+        letter = "D"
+        gp = 1.00
+        predicate = "Tidak Lulus (Wajib Mengulang)"
+        passed = False
+    else:
+        letter = "E"
+        gp = 0.00
+        predicate = "Tidak Lulus (Gagal)"
+        passed = False
+
+    return {
+        "total_score": final_score,
+        "letter_grade": letter,
+        "grade_point": gp,
+        "is_passed": passed,
+        "predicate": predicate,
+        "criteria_breakdown": breakdown
+    }
+
+
 
 
 
