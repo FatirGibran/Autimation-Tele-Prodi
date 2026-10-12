@@ -514,6 +514,72 @@ Persyaratan Pendaftaran Beasiswa Riset Telkom 2026:
         self.assertGreater(res["workload_hours_per_semester"], 800)
         self.assertGreater(res["workload_hours_per_week"], 50)
 
+    def test_parse_acm_citation(self):
+        from parser import parse_acm_citation
+        cit = "F. Gibran and B. Santoso. 2026. Automated Editorial Pipeline for Academic Systems. In Proceedings of the 2026 ACM Conference on Software Engineering (ICSE '26). ACM, New York, NY, USA, 101–110. https://doi.org/10.1145/1234567.8901234"
+        res = parse_acm_citation(cit)
+        self.assertEqual(len(res["authors"]), 2)
+        self.assertEqual(res["year"], 2026)
+        self.assertIn("Automated Editorial Pipeline", res["title"])
+        self.assertEqual(res["pages"], "101-110")
+        self.assertIn("10.1145/1234567.8901234", res["doi"])
+
+    def test_calculate_defense_rubric_grade(self):
+        from parser import calculate_defense_rubric_grade
+        rubrics = [
+            {"criteria": "Penguasaan Materi & Teori", "weight_pct": 30.0, "score": 85.0},
+            {"criteria": "Metodologi Riset & Analisis", "weight_pct": 30.0, "score": 80.0},
+            {"criteria": "Implementasi & Pengujian Sistem", "weight_pct": 25.0, "score": 90.0},
+            {"criteria": "Presentasi & Tanya Jawab", "weight_pct": 15.0, "score": 80.0}
+        ]
+        res = calculate_defense_rubric_grade(rubrics)
+        self.assertGreaterEqual(res["total_score"], 80.0)
+        self.assertEqual(res["letter_grade"], "A")
+        self.assertEqual(res["grade_point"], 4.00)
+        self.assertTrue(res["is_passed"])
+        self.assertIn("Cumlaude", res["predicate"])
+
+    def test_parse_internship_weekly_logbook(self):
+        from parser import parse_internship_weekly_logbook
+        logbook = """
+### Minggu 1 (1 - 5 September 2026)
+- Aktivitas: Setup lingkungan Docker dan Kubernetes cluster.
+- Kompetensi: Container orchestration, Linux administration
+- Status: Disetujui (Approved)
+
+### Minggu 2 (8 - 12 September 2026)
+- Aktivitas: Implementasi pipeline CI/CD GitLab.
+- Kompetensi: DevOps, Bash scripting
+- Status: Pending
+"""
+        entries = parse_internship_weekly_logbook(logbook)
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(entries[0]["week_number"], 1)
+        self.assertEqual(entries[0]["date_range"], "1 - 5 September 2026")
+        self.assertIn("Docker dan Kubernetes", entries[0]["activities"])
+        self.assertIn("Container orchestration", entries[0]["competencies"])
+        self.assertTrue(entries[0]["is_approved"])
+        self.assertFalse(entries[1]["is_approved"])
+
+    def test_parse_lab_equipment_maintenance_log(self):
+        from parser import parse_lab_equipment_maintenance_log
+        log_text = """
+Equipment: Spectrum Analyzer Agilent N9020A (LAB-RF-004)
+Date: 10 Oktober 2026
+Technician: Ir. Bambang Supeno, M.T.
+Issue: Drift frekuensi LO pada pita 10 GHz melebihi batas.
+Resolution: Penggantian osilator kristal TCXO dan kalibrasi ISO 17025.
+Calibration Validity: 10 Oktober 2027
+Status: Operasional Siap Pakai
+"""
+        res = parse_lab_equipment_maintenance_log(log_text)
+        self.assertEqual(res["equipment_name"], "Spectrum Analyzer Agilent N9020A")
+        self.assertEqual(res["equipment_id"], "LAB-RF-004")
+        self.assertEqual(res["maintenance_date"], "10 Oktober 2026")
+        self.assertEqual(res["technician"], "Ir. Bambang Supeno, M.T.")
+        self.assertIn("Drift frekuensi", res["issue"])
+        self.assertTrue(res["is_operational"])
+
 if __name__ == "__main__":
     unittest.main()
 
