@@ -859,8 +859,110 @@ class TestStorageManager(unittest.TestCase):
         self.assertTrue(fact_item2["is_checked"])
         self.assertEqual(fact_item2["checked_by"], "Editor B")
 
+    def test_article_academic_citations_tracker(self):
+        art_id = self.storage.save_article({
+            "topic": "Citations Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-11",
+            "focus_keyphrase": "citations test",
+            "seo_title": "Citations Test",
+            "slug": "citations-test",
+            "meta_description": "Meta desc",
+            "status": "published"
+        })
+        cite_id1 = self.storage.record_article_citation(
+            article_id=art_id,
+            citing_paper_title="MIMO Beamforming Strategies in 6G",
+            citing_authors="Alice Smith, Bob Jones",
+            journal_name="IEEE Transactions on Communications",
+            citation_year=2025,
+            doi="10.1109/TCOMM.2025.1001"
+        )
+        cite_id2 = self.storage.record_article_citation(
+            article_id=art_id,
+            citing_paper_title="Optical Wireless Integration Survey",
+            citing_authors="Carol Lee",
+            journal_name="ACM Computing Surveys",
+            citation_year=2026,
+            doi="10.1145/3600000"
+        )
+        self.assertGreater(cite_id1, 0)
+        self.assertGreater(cite_id2, 0)
+
+        citations = self.storage.get_article_citations(art_id)
+        self.assertEqual(len(citations), 2)
+        self.assertEqual(citations[0]["citation_year"], 2026)
+        self.assertEqual(citations[0]["journal_name"], "ACM Computing Surveys")
+        self.assertEqual(citations[1]["citation_year"], 2025)
+
+    def test_editorial_review_comments_manager(self):
+        art_id = self.storage.save_article({
+            "topic": "Comments Test",
+            "category": "Akademik",
+            "publish_date": "2026-10-11",
+            "focus_keyphrase": "comments test",
+            "seo_title": "Comments Test",
+            "slug": "comments-test",
+            "meta_description": "Meta desc",
+            "status": "draft"
+        })
+        c1 = self.storage.add_editorial_comment(art_id, author="Reviewer A", comment_text="Mohon perjelas metodologi", paragraph_index=2)
+        c2 = self.storage.add_editorial_comment(art_id, author="Chief Editor", comment_text="Periksa format referensi IEEE", paragraph_index=None)
+        self.assertGreater(c1, 0)
+        self.assertGreater(c2, 0)
+
+        all_comments = self.storage.list_editorial_comments(art_id, include_resolved=True)
+        self.assertEqual(len(all_comments), 2)
+        self.assertEqual(all_comments[0]["paragraph_index"], 2)
+        self.assertEqual(all_comments[0]["is_resolved"], 0)
+
+        resolved = self.storage.resolve_editorial_comment(c1)
+        self.assertTrue(resolved)
+
+        unresolved = self.storage.list_editorial_comments(art_id, include_resolved=False)
+        self.assertEqual(len(unresolved), 1)
+        self.assertEqual(unresolved[0]["id"], c2)
+
+    def test_content_snippets_library(self):
+        sid1 = self.storage.save_content_snippet(
+            snippet_key="callout_admission",
+            snippet_title="Pendaftaran Mahasiswa Baru",
+            snippet_html="<div class='callout'>Daftar segera di pmb.telkomuniversity.ac.id</div>",
+            category="pmb"
+        )
+        self.assertGreater(sid1, 0)
+
+        snippet = self.storage.get_content_snippet("callout_admission")
+        self.assertIsNotNone(snippet)
+        self.assertEqual(snippet["snippet_title"], "Pendaftaran Mahasiswa Baru")
+        self.assertIn("pmb.telkomuniversity", snippet["snippet_html"])
+
+        self.storage.save_content_snippet(
+            snippet_key="callout_admission",
+            snippet_title="Pendaftaran Jalur Beasiswa",
+            snippet_html="<div class='callout'>Beasiswa Telkom University</div>",
+            category="pmb"
+        )
+        updated = self.storage.get_content_snippet("callout_admission")
+        self.assertEqual(updated["snippet_title"], "Pendaftaran Jalur Beasiswa")
+
+        self.storage.save_content_snippet(
+            snippet_key="disclaimer_lab",
+            snippet_title="Prosedur Keselamatan Lab",
+            snippet_html="<p>Wajib menggunakan jas lab.</p>",
+            category="laboratorium"
+        )
+
+        all_snippets = self.storage.list_content_snippets()
+        self.assertEqual(len(all_snippets), 2)
+
+        pmb_snippets = self.storage.list_content_snippets(category="pmb")
+        self.assertEqual(len(pmb_snippets), 1)
+        self.assertEqual(pmb_snippets[0]["snippet_key"], "callout_admission")
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
