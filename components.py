@@ -2178,6 +2178,41 @@ class EditorialComponents:
       <a href="{reg_esc}" class="tu-workshop-btn" target="_blank" rel="noopener noreferrer">Daftar Workshop &rarr;</a>
     </div>"""
 
+    @classmethod
+    def render_internship_experience_card(
+        cls,
+        student_name: str,
+        company_name: str,
+        role: str,
+        period: str,
+        project_summary: str,
+        mentor_name: str = ""
+    ) -> str:
+        """
+        Renders an MBKM certified student industrial internship (MSIB) experience card,
+        highlighting company placement, technical role, duration, project impact, and industry mentor.
+        """
+        from xml.sax.saxutils import escape
+
+        name_esc = escape(student_name.strip())
+        comp_esc = escape(company_name.strip())
+        role_esc = escape(role.strip())
+        per_esc = escape(period.strip())
+        sum_esc = escape(project_summary.strip())
+
+        mentor_html = f'<span>Mentor Industri: <strong>{escape(mentor_name.strip())}</strong></span>' if mentor_name.strip() else ""
+
+        return f"""    <div class="tu-internship-card">
+      <div class="tu-internship-badge">Pengalaman Magang Bersertifikat (MSIB)</div>
+      <h4 class="tu-internship-company">{comp_esc} &mdash; {role_esc}</h4>
+      <div class="tu-internship-meta">
+        <span>Mahasiswa: <strong>{name_esc}</strong></span>
+        <span>Periode: <strong>{per_esc}</strong></span>
+        {mentor_html}
+      </div>
+      <p class="tu-internship-summary">{sum_esc}</p>
+    </div>"""
+
 
 
 
