@@ -430,6 +430,15 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<dialog\b[^>]*>', sanitize_dialog, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 dialog modal element and stripped autofocus/event attributes.")
 
+        # 8k. Sanitize slot attribute on elements against prototype pollution and dangerous names
+        if 'slot=' in cleaned.lower():
+            def sanitize_slot_attr(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+slot=["\'](?:__proto__|constructor|prototype)["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<[a-z0-9_-]+\b[^>]*\bslot=["\'][^"\']*["\'][^>]*>', sanitize_slot_attr, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized element slot attribute against prototype pollution keys.")
+
         return cleaned, warnings
 
 
