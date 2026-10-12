@@ -413,6 +413,20 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<(?:ruby|rt|rp|rb|rtc)\b[^>]*>', clean_ruby, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized linguistic ruby annotation elements.")
 
+        # 8j. Sanitize HTML5 dialog modal elements and strip unpermitted script/event attributes
+        if "<dialog" in cleaned.lower():
+            def sanitize_dialog(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+(?:on[a-z]+|autofocus)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+autofocus\b', '', tag, flags=re.IGNORECASE)
+                if 'class=' not in tag.lower():
+                    tag = tag.rstrip(">") + ' class="tu-dialog">'
+                elif 'tu-dialog' not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-dialog"', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<dialog\b[^>]*>', sanitize_dialog, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 dialog modal element and stripped autofocus/event attributes.")
+
         return cleaned, warnings
 
 
