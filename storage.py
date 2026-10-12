@@ -285,6 +285,20 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_chk_article ON editorial_checklists(article_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS article_citations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    article_id INTEGER NOT NULL,
+                    citing_paper_title TEXT NOT NULL,
+                    citing_authors TEXT NOT NULL,
+                    journal_name TEXT NOT NULL,
+                    citation_year INTEGER NOT NULL,
+                    doi TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_cite_article ON article_citations(article_id);")
 
 
 
@@ -1543,6 +1557,38 @@ class StorageManager:
                 d["is_checked"] = bool(d["is_checked"])
                 rows.append(d)
             return rows
+
+    def record_article_citation(
+        self,
+        article_id: int,
+        citing_paper_title: str,
+        citing_authors: str,
+        journal_name: str,
+        citation_year: int,
+        doi: str = ""
+    ) -> int:
+        """
+        Records an academic citation of an article by external papers or journals.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO article_citations (article_id, citing_paper_title, citing_authors, journal_name, citation_year, doi)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (article_id, citing_paper_title.strip(), citing_authors.strip(), journal_name.strip(), int(citation_year), doi.strip()))
+            return cursor.lastrowid
+
+    def get_article_citations(self, article_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves all academic citations recorded for an article.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, article_id, citing_paper_title, citing_authors, journal_name, citation_year, doi, created_at
+                FROM article_citations
+                WHERE article_id = ?
+                ORDER BY citation_year DESC, id DESC
+            """, (article_id,))
+            return [dict(row) for row in cursor.fetchall()]
 
 
 
