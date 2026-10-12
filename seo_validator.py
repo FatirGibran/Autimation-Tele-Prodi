@@ -1808,7 +1808,7 @@ class YoastSEOValidator:
                     break
 
         # Extract contract numbers e.g., 045/E1/KS/2026, SPK-123/LPPM/2026
-        contract_patterns = re.findall(r'(?:nomor|no\.?|kontrak|spk)\s*[:=]?\s*([A-Za-z0-9/_.-]{5,35})', text, re.IGNORECASE)
+        contract_patterns = re.findall(r'(?:nomor\s+kontrak|no\.?\s*kontrak|nomor|no\.?|kontrak|spk)\s*[:=]?\s*([A-Za-z0-9/_.-]{5,35})', text, re.IGNORECASE)
         clean_contracts = [c.strip(".,;: ") for c in contract_patterns if any(char.isdigit() for char in c)]
 
         has_ack = detected_agency is not None

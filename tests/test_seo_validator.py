@@ -533,6 +533,53 @@ class TestYoastSEOValidator(unittest.TestCase):
         res_no = YoastSEOValidator.validate_academic_open_access_disclaimer(html_no_cc)
         self.assertFalse(res_no["has_license"])
 
+    def test_calculate_coleman_liau_index(self):
+        text = "Penelitian ini mengkaji performa algoritma routing adaptif pada arsitektur jaringan berbasis perangkat lunak dengan pendekatan pembelajaran mesin mendalam."
+        res = YoastSEOValidator.calculate_coleman_liau_index(text)
+        self.assertIsInstance(res["score"], float)
+        self.assertIn("Tingkat", res["grade_level"])
+        self.assertGreater(res["letters_per_100_words"], 0)
+        self.assertGreater(res["sentences_per_100_words"], 0)
+
+    def test_audit_heading_hierarchy_order(self):
+        good_html = '<div><h1>Judul</h1><h2>Sub 1</h2><h3>Detail 1</h3><h2>Sub 2</h2></div>'
+        res_good = YoastSEOValidator.audit_heading_hierarchy_order(good_html)
+        self.assertTrue(res_good["is_valid"])
+        self.assertEqual(res_good["heading_count"], 4)
+
+        bad_html = '<div><h1>Judul 1</h1><h1>Judul 2</h1><h2>Sub 1</h2><h4>Langsung H4</h4></div>'
+        res_bad = YoastSEOValidator.audit_heading_hierarchy_order(bad_html)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertTrue(any("lebih dari satu tag H1" in i for i in res_bad["issues"]))
+        self.assertTrue(any("Lompatan hirarki" in i for i in res_bad["issues"]))
+
+    def test_validate_research_grant_acknowledgment(self):
+        html_ack = (
+            '<div class="tu-editorial-container">'
+            '<p>Penelitian ini didanai oleh program Kemendikbudristek BIMA melalui skema Penelitian Fundamental nomor kontrak 045/E1/KS/2026.</p>'
+            '</div>'
+        )
+        res = YoastSEOValidator.validate_research_grant_acknowledgment(html_ack)
+        self.assertTrue(res["has_acknowledgment"])
+        self.assertEqual(res["funding_agency"], "Kemendikbudristek BIMA")
+        self.assertIn("045/E1/KS/2026", res["contract_numbers"])
+
+        html_none = '<div><p>Hanya artikel santai.</p></div>'
+        res_none = YoastSEOValidator.validate_research_grant_acknowledgment(html_none)
+        self.assertFalse(res_none["has_acknowledgment"])
+
+    def test_audit_image_accessibility_and_dimensions(self):
+        html_good = '<div><img src="foto.jpg" alt="Foto laboratorium RF" width="800" height="600" /></div>'
+        res_good = YoastSEOValidator.audit_image_accessibility_and_dimensions(html_good)
+        self.assertFalse(res_good["has_issues"])
+        self.assertEqual(res_good["total_images"], 1)
+
+        html_bad = '<div><img src="banner.png" alt="gambar" /><img src="grafik.png" /></div>'
+        res_bad = YoastSEOValidator.audit_image_accessibility_and_dimensions(html_bad)
+        self.assertTrue(res_bad["has_issues"])
+        self.assertGreaterEqual(res_bad["missing_alt_count"], 1)
+        self.assertGreaterEqual(res_bad["missing_dimensions_count"], 2)
+
 if __name__ == "__main__":
     unittest.main()
 
