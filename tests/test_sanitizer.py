@@ -323,7 +323,49 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('slot="valid-slot"', clean)
         self.assertTrue(any("slot attribute" in w for w in warnings))
 
+    def test_sanitize_meter_and_progress_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<meter value="75" min="0" max="100" form="login_form" onchange="steal()">75%</meter>'
+            '<progress value="invalid" max="100"></progress>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('<meter value="75" min="0" max="100">', clean)
+        self.assertNotIn('form="login_form"', clean)
+        self.assertNotIn('onchange', clean)
+        self.assertIn('<progress value="0" max="100">', clean)
+        self.assertTrue(any("meter and progress" in w for w in warnings))
+
+    def test_sanitize_picture_source_responsive_markup(self):
+        html = (
+            '<div class="tu-editorial-container"><picture>'
+            '<source srcset="javascript:alert(1)" media="(min-width: 800px)">'
+            '<source srcset="/images/hero.webp" media="(min-width: 600px)" onload="run()">'
+            '<img src="/images/hero.jpg" alt="Hero">'
+            '</picture></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('srcset="javascript:alert(1)"', clean)
+        self.assertNotIn('onload="run()"', clean)
+        self.assertIn('srcset="/images/hero.webp"', clean)
+        self.assertTrue(any("picture and source" in w for w in warnings))
+
+    def test_sanitize_theme_attributes(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<div data-theme="dark" data-mode="evil:javascript:void(0)">Konten Dark</div>'
+            '<section data-color-scheme="telkom-red">Telkom Theme</section>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('data-theme="dark"', clean)
+        self.assertNotIn('data-mode="evil:javascript:void(0)"', clean)
+        self.assertIn('data-color-scheme="telkom-red"', clean)
+        self.assertTrue(any("data-theme/mode" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
