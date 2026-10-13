@@ -2349,6 +2349,40 @@ class EditorialComponents:
       <ul class="tu-competition-members">{members_html}</ul>
     </div>"""
 
+    @classmethod
+    def render_journal_badge_card(
+        cls,
+        journal_name: str,
+        sinta_rank: int,
+        issn: str,
+        publisher: str,
+        focus_scope: str,
+        archive_url: str = ""
+    ) -> str:
+        """
+        Renders an academic journal profile card with official SINTA accreditation rank badge and ISSN.
+        """
+        from xml.sax.saxutils import escape
+
+        j_esc = escape(journal_name.strip())
+        issn_esc = escape(issn.strip())
+        pub_esc = escape(publisher.strip())
+        scope_esc = escape(focus_scope.strip())
+        btn_html = f'\n      <a href="{escape(archive_url.strip())}" class="tu-journal-link" target="_blank" rel="noopener noreferrer">Kunjungi OJS Portal</a>' if archive_url.strip() else ""
+
+        return f"""    <div class="tu-journal-card">
+      <div class="tu-journal-header">
+        <span class="tu-sinta-badge sinta-{sinta_rank}">SINTA {sinta_rank}</span>
+        <span class="tu-journal-issn">E-ISSN: {issn_esc}</span>
+      </div>
+      <h4 class="tu-journal-title">{j_esc}</h4>
+      <div class="tu-journal-meta">
+        <span>Penerbit: <strong>{pub_esc}</strong></span>
+        <span>Fokus &amp; Ruang Lingkup: <strong>{scope_esc}</strong></span>
+      </div>{btn_html}
+    </div>"""
+
+
 
 
 
