@@ -2382,6 +2382,40 @@ class EditorialComponents:
       </div>{btn_html}
     </div>"""
 
+    @classmethod
+    def render_teaching_assistant_recruitment_card(
+        cls,
+        course_name: str,
+        lab_name: str,
+        semester: str,
+        min_grade: str,
+        deadline: str,
+        registration_url: str
+    ) -> str:
+        """
+        Renders a laboratory teaching assistant (Asisten Praktikum / Asprak) recruitment announcement card.
+        """
+        from xml.sax.saxutils import escape
+
+        course_esc = escape(course_name.strip())
+        lab_esc = escape(lab_name.strip())
+        sem_esc = escape(semester.strip())
+        grade_esc = escape(min_grade.strip())
+        dl_esc = escape(deadline.strip())
+        url_esc = escape(registration_url.strip())
+
+        return f"""    <div class="tu-ta-recruitment-card">
+      <div class="tu-ta-badge">Open Recruitment Asisten Praktikum</div>
+      <h4 class="tu-ta-course">{course_esc}</h4>
+      <div class="tu-ta-lab">{lab_esc} ({sem_esc})</div>
+      <div class="tu-ta-requirements">
+        <span>Nilai Minimal Mata Kuliah: <strong>{grade_esc}</strong></span>
+        <span>Batas Akhir Pendaftaran: <strong>{dl_esc}</strong></span>
+      </div>
+      <a href="{url_esc}" class="tu-ta-cta-btn" target="_blank" rel="noopener noreferrer">Daftar Asisten Sekarang</a>
+    </div>"""
+
+
 
 
 
