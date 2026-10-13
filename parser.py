@@ -2038,6 +2038,54 @@ def parse_proposal_defense_eligibility(
     }
 
 
+def parse_community_service_log(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses community service (Pengabdian kepada Masyarakat - PKM) activity reports and logs,
+    extracting title, partner organization, regency/district location, funding scheme,
+    beneficiary counts, and Sustainable Development Goals (SDGs) category.
+    """
+    clean = text.strip()
+    if not clean:
+        return None
+
+    title_m = re.search(r'(?:Judul|Title|Kegiatan):\s*([^\n]+)', clean, re.IGNORECASE)
+    title = title_m.group(1).strip() if title_m else clean.split('\n')[0].strip()
+
+    partner_m = re.search(r'(?:Mitra|Partner|Sasaran):\s*([^\n]+)', clean, re.IGNORECASE)
+    partner = partner_m.group(1).strip() if partner_m else ""
+
+    loc_m = re.search(r'(?:Lokasi|Location|Tempat|Kabupaten|Desa):\s*([^\n]+)', clean, re.IGNORECASE)
+    location = loc_m.group(1).strip() if loc_m else ""
+
+    fund_m = re.search(r'(?:Sumber Dana|Funding|Skema Dana|Pendanaan):\s*([^\n]+)', clean, re.IGNORECASE)
+    funding_source = fund_m.group(1).strip() if fund_m else "Internal Perguruan Tinggi"
+
+    ben_m = re.search(r'(?:Jumlah Penerima|Penerima Manfaat|Peserta|Beneficiaries):\s*(\d+)', clean, re.IGNORECASE)
+    beneficiaries = int(ben_m.group(1)) if ben_m else 0
+
+    sdg_m = re.search(r'(?:SDGs?|Tujuan SDGs?):\s*([^\n]+)', clean, re.IGNORECASE)
+    sdgs_label = sdg_m.group(1).strip() if sdg_m else ""
+    if not sdgs_label:
+        if re.search(r'\b(?:pendidikan|literasi|sekolah|guru|siswa|pelatihan coding)\b', clean, re.IGNORECASE):
+            sdgs_label = "SDG 4 - Pendidikan Berkualitas"
+        elif re.search(r'\b(?:teknologi|iot|digitalisasi|industri|inovasi|umkm digital)\b', clean, re.IGNORECASE):
+            sdgs_label = "SDG 9 - Industri, Inovasi, dan Infrastruktur"
+        elif re.search(r'\b(?:kesehatan|posyandu|stunting|medis|lansia)\b', clean, re.IGNORECASE):
+            sdgs_label = "SDG 3 - Kehidupan Sehat dan Sejahtera"
+        else:
+            sdgs_label = "SDG 11 - Kota dan Komunitas Berkelanjutan"
+
+    return {
+        "title": title,
+        "partner": partner,
+        "location": location,
+        "funding_source": funding_source,
+        "beneficiaries_count": beneficiaries,
+        "sdgs_theme": sdgs_label
+    }
+
+
+
 
 
 
