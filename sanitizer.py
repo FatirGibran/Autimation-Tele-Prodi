@@ -470,7 +470,22 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<source\b[^>]*>', sanitize_source_element, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized responsive picture and source elements against unsafe schemes.")
 
+        # 8n. Sanitize theme and color-scheme attributes against payload injection
+        if re.search(r'\bdata-(?:theme|mode|color-scheme)=', cleaned, re.IGNORECASE):
+            def sanitize_theme_attr(m):
+                tag = m.group(0)
+                for attr in ("data-theme", "data-mode", "data-color-scheme"):
+                    val_match = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, flags=re.IGNORECASE)
+                    if val_match:
+                        raw_val = val_match.group(1).strip()
+                        if not re.match(r'^[a-zA-Z0-9_-]{1,32}$', raw_val):
+                            tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<[a-z0-9_-]+\b[^>]*\bdata-(?:theme|mode|color-scheme)=[^>]*>', sanitize_theme_attr, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized data-theme/mode attributes against unpermitted tokens.")
+
         return cleaned, warnings
+
 
 
 
