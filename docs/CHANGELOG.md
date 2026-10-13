@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 360+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 390+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 375 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 404 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -440,6 +440,41 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 347. **Subcommand CLI `docusaurus` (`cli.py`)**: Ekspor konsol artikel langsung ke format markdown Docusaurus.
 348. **Subcommand CLI `comment` (`cli.py`)**: Manajemen konsol komentar review editorial dan resolusi status review (list, add, resolve).
 349. **Ekspansi Suite Pengujian Unit Terpadu (375 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 375 unit test terverifikasi (100% pass rate).
+
+---
+
+## 19. Ekspansi Arsitektural v3.1.0 Milestone Release
+
+350. **Sanitasi Elemen Meter & Progress HTML5 (`sanitizer.py`)**: Sanitasi elemen `<meter>` dan `<progress>` terhadap atribut nilai di luar rentang dan payload script tersembunyi.
+351. **Sanitasi Elemen Gambar Responsif Picture & Source (`sanitizer.py`)**: Validasi elemen `<picture>` dan `<source>` dengan penegakan skema URI aman dan MIME type gambar yang diizinkan.
+352. **Sanitasi Atribut Tema & Mode Tampilan (`sanitizer.py`)**: Pembersihan nilai atribut `data-theme` dan `data-mode` terhadap serangan CSS-in-attribute injection.
+353. **Parser Sitasi Springer LNCS & LSCS (`parser.py`)**: Penguraian sitasi rujukan akademik standar Springer Lecture Notes in Computer Science (LNCS/LSCS).
+354. **Validator Kelayakan Ujian Proposal Skripsi (`parser.py`)**: Validasi kelayakan checklist syarat pendaftaran seminar proposal skripsi (SKS kelulusan, IPK minimal, dan persetujuan dosen pembimbing).
+355. **Parser Log Kegiatan Pengabdian Masyarakat PKM (`parser.py`)**: Ekstraksi log aktivitas pengabdian kepada masyarakat, skema hibah, kelompok sasaran binaan, dan luaran kegiatan.
+356. **Parser Audit Checklist Keselamatan Laboratorium K3 (`parser.py`)**: Parsing audit kepatuhan standar keselamatan kerja K3 lab, inventaris APAR, kotak P3K, dan jalur evakuasi darurat.
+357. **Auditor ID Elemen Duplikat Semantik (`seo_validator.py`)**: Deteksi ID HTML duplikat yang merusak navigasi anchor internal dan standar aksesibilitas WCAG/W3C.
+358. **Detektor Akreditasi & Peringkat Jurnal SINTA (`seo_validator.py`)**: Analisis dan pengenalan otomatis status akreditasi jurnal ilmiah nasional SINTA 1 hingga SINTA 6.
+359. **Auditor Direktif Meta Robots Indexing (`seo_validator.py`)**: Evaluasi direktif indexing robots (`noindex`, `nofollow`, `noarchive`, `max-snippet`) untuk mencegah kesalahan pengindeksan mesin pencari.
+360. **Auditor Kesiapan Metadata Sosial Open Graph & Twitter Cards (`seo_validator.py`)**: Validasi kelengkapan properti `og:title`, `og:description`, `og:image`, `twitter:card`, dan `twitter:image`.
+361. **Komponen Showcase Pengabdian Masyarakat PKM (`components.py`)**: Kartu visual kegiatan PKM dosen dan mahasiswa bersama komunitas mitra binaan.
+362. **Komponen Kartu Prestasi Juara Kompetisi Mahasiswa (`components.py`)**: Showcase kejuaraan dan medali kompetisi inovasi teknologi mahasiswa (Pimnas, Gemastik, Imagine Cup, dsb.).
+363. **Komponen Badge & Profil Jurnal Terakreditasi SINTA (`components.py`)**: Kartu informasi jurnal ilmiah dengan badge peringkat SINTA 1-6 dan tautan arsip berkala.
+364. **Komponen Rekrutmen Asisten Praktikum Lab (`components.py`)**: Kartu pendaftaran asisten praktikum dengan persyaratan mata kuliah, periode seleksi, dan tautan formulir pendaftaran.
+365. **Komponen Standar K3 Laboratorium & Posisi APAR (`components.py`)**: Kartu keselamatan kerja lab dengan panduan tanggap darurat, nomor kontak P3K, dan penunjuk lokasi APAR.
+366. **Formatter Notifikasi Pengabdian Masyarakat Telegram (`formatters.py`)**: Format siaran pengumuman kegiatan PKM dan diseminasi teknologi prodi untuk kanal Telegram.
+367. **Formatter Notifikasi Prestasi Juara Mahasiswa Telegram (`formatters.py`)**: Format pesan siaran kemenangan mahasiswa dalam kompetisi inovasi teknologi untuk kanal Telegram.
+368. **Manajer Catatan Prestasi Kompetisi Mahasiswa (`storage.py`)**: Tabel `competition_achievements` dan pelacakan riwayat kemenangan tim, pembimbing, tahun, dan penyelenggara.
+369. **Manajer Direktori Indeksasi Jurnal SINTA (`storage.py`)**: Tabel `journal_indexings` dan penyimpanan katalog jurnal ilmiah terakreditasi nasional/internasional.
+370. **Manajer Log Inspeksi K3 Laboratorium (`storage.py`)**: Tabel `safety_inspections` dan pencatatan riwayat audit keselamatan kerja berkala fasilitas lab.
+371. **Helper Pengambilan Kategori Turunan WordPress (`wordpress_client.py`)**: Pengambilan seluruh kategori anak berdasarkan parent ID via REST API.
+372. **Helper Ping Kesehatan & Otentikasi REST API WordPress (`wordpress_client.py`)**: Endpoint ping diagnostik konektivitas server, latensi respons, dan validasi kredensial pengguna `/users/me`.
+373. **Generator Schema.org SpecialAnnouncement JSON-LD (`exporter.py`)**: Pembuatan metadata terstruktur pemberitahuan darurat kampus dan instruksi akademik khusus.
+374. **Generator Markdown Kompatibel MkDocs Material SSG (`exporter.py`)**: Ekspor artikel ke format Material for MkDocs static site generator dengan frontmatter YAML dan heading hierarki.
+375. **Subcommand CLI `achievement` (`cli.py`)**: Perintah konsol manajemen rekam jejak prestasi kompetisi mahasiswa (list, add).
+376. **Subcommand CLI `mkdocs` (`cli.py`)**: Perintah konsol ekspor artikel ke format markdown MkDocs.
+377. **Subcommand CLI `safety-log` (`cli.py`)**: Perintah konsol pencatatan dan peninjauan log inspeksi K3 laboratorium (list, add).
+378. **Ekspansi Suite Pengujian Unit Terpadu (404 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 404 unit test terverifikasi (100% pass rate).
+
 
 
 
