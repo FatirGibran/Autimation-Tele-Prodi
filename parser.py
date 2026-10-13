@@ -2085,6 +2085,59 @@ def parse_community_service_log(text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def parse_lab_safety_inspection(text: str) -> Dict[str, Any]:
+    """
+    Parses laboratory occupational safety & health (K3 Laboratorium) inspection checklists,
+    evaluating fire extinguisher (APAR) readiness, emergency exit, first aid kit (P3K),
+    electrical installations, ventilation, and overall compliance score.
+    """
+    clean = text.strip()
+
+    lab_m = re.search(r'(?:Lab|Laboratorium):\s*([^\n]+)', clean, re.IGNORECASE)
+    lab_name = lab_m.group(1).strip() if lab_m else "Laboratorium Komputer"
+
+    inspector_m = re.search(r'(?:Inspektur|Pemeriksa|Auditor|Teknisi):\s*([^\n]+)', clean, re.IGNORECASE)
+    inspector = inspector_m.group(1).strip() if inspector_m else "Petugas K3"
+
+    date_m = re.search(r'(?:Tanggal|Date):\s*([^\n]+)', clean, re.IGNORECASE)
+    inspection_date = date_m.group(1).strip() if date_m else ""
+
+    apar_ok = bool(re.search(r'\b(?:apar|pemadam)\s*:\s*(?:siap|lengkap|aktif|layak|ok|passed)\b', clean, re.IGNORECASE)) or (
+        "apar siap" in clean.lower() or "apar layak" in clean.lower()
+    )
+    first_aid_ok = bool(re.search(r'\b(?:p3k|first aid|kotak obat)\s*:\s*(?:lengkap|siap|tersedia|ok|passed)\b', clean, re.IGNORECASE)) or (
+        "p3k lengkap" in clean.lower() or "p3k tersedia" in clean.lower()
+    )
+    exit_ok = bool(re.search(r'\b(?:jalur evakuasi|emergency exit|pintu darurat)\s*:\s*(?:bersih|bebas hambatan|terbuka|clear|ok|passed)\b', clean, re.IGNORECASE)) or (
+        "jalur evakuasi bebas hambatan" in clean.lower() or "pintu darurat clear" in clean.lower()
+    )
+    elec_ok = bool(re.search(r'\b(?:kelistrikan|kabel|instalasi listrik|grounding)\s*:\s*(?:aman|standar|tertata|rapi|ok|passed)\b', clean, re.IGNORECASE)) or (
+        "listrik aman" in clean.lower() or "instalasi listrik rapi" in clean.lower()
+    )
+
+    items = {
+        "apar_ready": apar_ok,
+        "first_aid_complete": first_aid_ok,
+        "emergency_exit_clear": exit_ok,
+        "electrical_safe": elec_ok
+    }
+
+    passed_count = sum(1 for v in items.values() if v)
+    total_count = len(items)
+    score_pct = round((passed_count / total_count) * 100, 1)
+    is_passed = bool(score_pct >= 75.0 and apar_ok)
+
+    return {
+        "lab_name": lab_name,
+        "inspector": inspector,
+        "inspection_date": inspection_date,
+        "checks": items,
+        "compliance_score": score_pct,
+        "is_passed": is_passed
+    }
+
+
+
 
 
 
