@@ -460,7 +460,18 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<(?:meter|progress)\b[^>]*>', sanitize_meter_progress, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized meter and progress elements and normalized numeric attributes.")
 
+        # 8m. Sanitize picture and source responsive image elements
+        if "<picture" in cleaned.lower() or "<source" in cleaned.lower():
+            def sanitize_source_element(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'srcset=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<source\b[^>]*>', sanitize_source_element, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized responsive picture and source elements against unsafe schemes.")
+
         return cleaned, warnings
+
 
 
 
