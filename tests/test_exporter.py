@@ -462,8 +462,41 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('"lora", "iot", "ttn"', res)
         self.assertIn("<p>Hubungkan antena dan power supply.</p>", res)
 
+    def test_generate_special_announcement_json_ld(self):
+        schema = ArticleExporter.generate_special_announcement_json_ld(
+            title="Pemberitahuan Darurat Pemeliharaan Server Lab",
+            text="Server komputasi cloud lab akan offline untuk upgrade switch 10Gbps.",
+            date_posted="2026-10-14T08:00:00+07:00",
+            expires_date="2026-10-15T18:00:00+07:00",
+            category="Academic Advisory",
+            publisher="Telkom University Purwokerto"
+        )
+        self.assertEqual(schema["@type"], "SpecialAnnouncement")
+        self.assertEqual(schema["name"], "Pemberitahuan Darurat Pemeliharaan Server Lab")
+        self.assertEqual(schema["text"], "Server komputasi cloud lab akan offline untuk upgrade switch 10Gbps.")
+        self.assertEqual(schema["datePosted"], "2026-10-14T08:00:00+07:00")
+        self.assertEqual(schema["expires"], "2026-10-15T18:00:00+07:00")
+        self.assertEqual(schema["category"], "Academic Advisory")
+        self.assertEqual(schema["publisher"]["name"], "Telkom University Purwokerto")
+
+    def test_to_mkdocs_markdown(self):
+        meta = {
+            "seo_title": "Konfigurasi Protokol Routing OSPF di Cisco Packet Tracer",
+            "topic": "Routing OSPF",
+            "meta_description": "Modul praktikum perutean dinamik OSPF multi-area untuk mahasiswa.",
+            "tags": ["jaringan", "cisco", "ospf", "praktikum"]
+        }
+        res = ArticleExporter.to_mkdocs_markdown(meta, "<p>Buka CLI router dan masukkan perintah router ospf 1.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Konfigurasi Protokol Routing OSPF di Cisco Packet Tracer"', res)
+        self.assertIn('description: "Modul praktikum perutean dinamik OSPF multi-area untuk mahasiswa."', res)
+        self.assertIn('"jaringan", "cisco", "ospf", "praktikum"', res)
+        self.assertIn("# Konfigurasi Protokol Routing OSPF di Cisco Packet Tracer", res)
+        self.assertIn("<p>Buka CLI router dan masukkan perintah router ospf 1.</p>", res)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
