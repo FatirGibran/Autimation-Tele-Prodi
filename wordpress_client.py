@@ -475,6 +475,32 @@ class WordPressClient:
             return results
         return []
 
+    def ping_api(self) -> Dict[str, Any]:
+        """
+        Pings WordPress REST API endpoint to verify connectivity and authentication status.
+        """
+        endpoint = f"{self.api_url}/users/me"
+        start_time = time.time()
+        try:
+            req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+            user_data = self._send_request(req)
+            elapsed_ms = round((time.time() - start_time) * 1000, 2)
+            return {
+                "status": "ok",
+                "authenticated": True,
+                "latency_ms": elapsed_ms,
+                "user_id": user_data.get("id"),
+                "username": user_data.get("name") or user_data.get("slug")
+            }
+        except Exception as e:
+            elapsed_ms = round((time.time() - start_time) * 1000, 2)
+            return {
+                "status": "error",
+                "authenticated": False,
+                "latency_ms": elapsed_ms,
+                "error": str(e)
+            }
+
 
 
 
