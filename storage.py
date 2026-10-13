@@ -339,6 +339,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_comp_year ON competition_achievements(year);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS journal_indexings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    journal_name TEXT NOT NULL,
+                    sinta_rank INTEGER NOT NULL,
+                    issn TEXT NOT NULL,
+                    publisher TEXT NOT NULL,
+                    focus_scope TEXT NOT NULL,
+                    archive_url TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_journal_sinta ON journal_indexings(sinta_rank);")
 
 
 
@@ -1790,6 +1803,54 @@ class StorageManager:
                     ORDER BY year DESC, id DESC
                 """)
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_journal_indexing(
+        self,
+        journal_name: str,
+        sinta_rank: int,
+        issn: str,
+        publisher: str,
+        focus_scope: str,
+        archive_url: str = ""
+    ) -> int:
+        """
+        Records an accredited scientific journal into the department index directory.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO journal_indexings (
+                    journal_name, sinta_rank, issn, publisher, focus_scope, archive_url
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                journal_name.strip(),
+                int(sinta_rank),
+                issn.strip(),
+                publisher.strip(),
+                focus_scope.strip(),
+                archive_url.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_journal_indexings(self, min_sinta: Optional[int] = None) -> List[Dict[str, Any]]:
+        """
+        Lists registered scientific journals, optionally filtering by maximum SINTA rank (1 being highest).
+        """
+        with self._get_connection() as conn:
+            if min_sinta is not None:
+                cursor = conn.execute("""
+                    SELECT id, journal_name, sinta_rank, issn, publisher, focus_scope, archive_url, created_at
+                    FROM journal_indexings
+                    WHERE sinta_rank <= ?
+                    ORDER BY sinta_rank ASC, journal_name ASC
+                """, (int(min_sinta),))
+            else:
+                cursor = conn.execute("""
+                    SELECT id, journal_name, sinta_rank, issn, publisher, focus_scope, archive_url, created_at
+                    FROM journal_indexings
+                    ORDER BY sinta_rank ASC, journal_name ASC
+                """)
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
