@@ -820,8 +820,83 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Student Exchange &amp; Dual Degree", html)
         self.assertIn("International Office UTM", html)
 
+    def test_render_community_service_card(self):
+        html = EditorialComponents.render_community_service_card(
+            title="Pelatihan IoT & Smart Farming",
+            partner="Kelompok Tani Desa Kembaran",
+            location="Banyumas, Jawa Tengah",
+            grant_source="Hibah Pengabdian Kemendikbud",
+            beneficiaries=50,
+            sdgs_label="SDG 9 - Industri, Inovasi, dan Infrastruktur"
+        )
+        self.assertIn("tu-pkm-card", html)
+        self.assertIn("Pelatihan IoT &amp; Smart Farming", html)
+        self.assertIn("Kelompok Tani Desa Kembaran", html)
+        self.assertIn("50 Orang", html)
+        self.assertIn("SDG 9", html)
+
+    def test_render_competition_achievement_card(self):
+        html = EditorialComponents.render_competition_achievement_card(
+            competition_name="Gemastik XVII Bidang Kota Cerdas",
+            award_rank="Juara 1 (Medali Emas)",
+            team_name="Tim Telematics SmartPurwokerto",
+            team_members=["Fatir Gibran", "Ahmad Fauzi", "Rina Safitri"],
+            supervisor="Dr. Eng. Ir. Bambang, M.T.",
+            year=2026
+        )
+        self.assertIn("tu-competition-card", html)
+        self.assertIn("Juara 1 (Medali Emas)", html)
+        self.assertIn("Gemastik XVII", html)
+        self.assertIn("Tim Telematics SmartPurwokerto", html)
+        self.assertIn("Fatir Gibran", html)
+        self.assertIn("Dr. Eng. Ir. Bambang", html)
+
+    def test_render_journal_badge_card(self):
+        html = EditorialComponents.render_journal_badge_card(
+            journal_name="Jurnal Telematika dan Rekayasa Jaringan",
+            sinta_rank=2,
+            issn="2798-1234",
+            publisher="Telkom University Press",
+            focus_scope="Telekomunikasi Nirkabel, IoT, dan Antena",
+            archive_url="https://journal.telkomuniversity.ac.id/jtrj"
+        )
+        self.assertIn("tu-journal-card", html)
+        self.assertIn("SINTA 2", html)
+        self.assertIn("2798-1234", html)
+        self.assertIn("Telkom University Press", html)
+        self.assertIn("https://journal.telkomuniversity.ac.id/jtrj", html)
+
+    def test_render_teaching_assistant_recruitment_card(self):
+        html = EditorialComponents.render_teaching_assistant_recruitment_card(
+            course_name="Jaringan Komputer & Komunikasi Data",
+            lab_name="Laboratorium Jaringan & Keamanan Siber",
+            semester="Ganjil 2026/2027",
+            min_grade="AB (3.50)",
+            deadline="31 Agustus 2026",
+            registration_url="https://lab.telkomuniversity.ac.id/recruitment"
+        )
+        self.assertIn("tu-ta-recruitment-card", html)
+        self.assertIn("Jaringan Komputer", html)
+        self.assertIn("AB (3.50)", html)
+        self.assertIn("31 Agustus 2026", html)
+        self.assertIn("https://lab.telkomuniversity.ac.id/recruitment", html)
+
+    def test_render_lab_safety_guideline_card(self):
+        html = EditorialComponents.render_lab_safety_guideline_card(
+            lab_name="Laboratorium Elektronika & Instrumentasi",
+            pic_technician="Budi Santoso, A.Md.",
+            safety_rules=["Wajib jas laboratorium", "Gunakan alas kaki karet isolator", "Dilarang makan & minum"],
+            emergency_call="Ext. 112 / APAR Ruang 204"
+        )
+        self.assertIn("tu-lab-safety-card", html)
+        self.assertIn("Laboratorium Elektronika &amp; Instrumentasi", html)
+        self.assertIn("Budi Santoso", html)
+        self.assertIn("Wajib jas laboratorium", html)
+        self.assertIn("Ext. 112 / APAR Ruang 204", html)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
