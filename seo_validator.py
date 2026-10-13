@@ -1878,6 +1878,36 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_duplicate_element_ids(html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML content for duplicate element ID attributes which break W3C validation,
+        screen reader accessibility landmarks, and internal hash navigation.
+        """
+        if not html_content:
+            return {"total_ids": 0, "has_duplicates": False, "duplicate_ids": [], "issues": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        elements_with_id = soup.find_all(attrs={"id": True})
+
+        id_counts: Dict[str, int] = {}
+        for el in elements_with_id:
+            val = el["id"].strip()
+            if val:
+                id_counts[val] = id_counts.get(val, 0) + 1
+
+        duplicates = [id_val for id_val, count in id_counts.items() if count > 1]
+        issues = [f"ID '{dup}' digunakan {id_counts[dup]} kali di dalam dokumen." for dup in duplicates]
+
+        return {
+            "total_ids": len(id_counts),
+            "has_duplicates": len(duplicates) > 0,
+            "duplicate_ids": duplicates,
+            "issues": issues
+        }
+
+
+
 
 
 
