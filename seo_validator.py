@@ -1985,6 +1985,56 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @staticmethod
+    def audit_social_meta_readiness(meta: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Audits completeness and quality of Open Graph (Facebook/LinkedIn) and
+        Twitter Card social share metadata.
+        """
+        issues: List[str] = []
+        score = 100
+
+        title = meta.get("og_title", meta.get("seo_title", "")).strip()
+        if not title:
+            score -= 25
+            issues.append("Judul sosial (og:title / seo_title) tidak ditemukan.")
+        elif len(title) < 20 or len(title) > 90:
+            score -= 10
+            issues.append(f"Panjang judul sosial ({len(title)} karakter) di luar rentang optimal (20-90 karakter).")
+
+        desc = meta.get("og_description", meta.get("meta_description", "")).strip()
+        if not desc:
+            score -= 25
+            issues.append("Deskripsi sosial (og:description / meta_description) tidak ditemukan.")
+        elif len(desc) < 50 or len(desc) > 200:
+            score -= 10
+            issues.append(f"Panjang deskripsi sosial ({len(desc)} karakter) di luar rentang optimal (50-200 karakter).")
+
+        img = meta.get("og_image", meta.get("image_url", "")).strip()
+        if not img:
+            score -= 25
+            issues.append("Gambar thumbnail sosial (og:image / image_url) tidak ditemukan.")
+        elif not re.search(r'\.(?:jpe?g|png|webp)(?:\?.*)?$', img, re.IGNORECASE):
+            score -= 10
+            issues.append("Format gambar sosial disarankan menggunakan format standar web (.jpg, .png, .webp).")
+
+        card_type = meta.get("twitter_card", "summary_large_image").strip().lower()
+        if card_type not in {"summary", "summary_large_image", "player", "app"}:
+            score -= 10
+            issues.append("Tipe twitter:card tidak standar.")
+
+        final_score = max(0, score)
+        return {
+            "readiness_score": final_score,
+            "is_ready": bool(final_score >= 75),
+            "has_title": bool(title),
+            "has_description": bool(desc),
+            "has_image": bool(img),
+            "twitter_card": card_type,
+            "issues": issues
+        }
+
+
 
 
 
