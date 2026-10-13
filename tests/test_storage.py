@@ -960,8 +960,94 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(pmb_snippets), 1)
         self.assertEqual(pmb_snippets[0]["snippet_key"], "callout_admission")
 
+    def test_competition_achievements_storage(self):
+        aid1 = self.storage.record_competition_achievement(
+            competition_name="Gemastik XVII",
+            award_rank="Juara 1 Emas",
+            team_name="Telematics-Purwokerto",
+            team_members=["Fatir Gibran", "Budi Santoso"],
+            supervisor="Dr. Ir. Wahyu, M.T.",
+            year=2026,
+            organizer="Puspresnas Kemendikbud"
+        )
+        aid2 = self.storage.record_competition_achievement(
+            competition_name="Imagine Cup 2025",
+            award_rank="Finalist",
+            team_name="CloudPurwokerto",
+            team_members=["Rina"],
+            supervisor="Ahmad, M.Kom.",
+            year=2025,
+            organizer="Microsoft"
+        )
+        self.assertGreater(aid1, 0)
+        self.assertGreater(aid2, 0)
+
+        all_ach = self.storage.list_competition_achievements()
+        self.assertEqual(len(all_ach), 2)
+
+        ach_2026 = self.storage.list_competition_achievements(year=2026)
+        self.assertEqual(len(ach_2026), 1)
+        self.assertEqual(ach_2026[0]["team_name"], "Telematics-Purwokerto")
+        self.assertIn("Fatir Gibran", ach_2026[0]["team_members"])
+
+    def test_journal_indexings_storage(self):
+        jid1 = self.storage.record_journal_indexing(
+            journal_name="Jurnal Telematika Purwokerto",
+            sinta_rank=2,
+            issn="2798-1111",
+            publisher="Telkom University Press",
+            focus_scope="Telekomunikasi & Jaringan",
+            archive_url="https://journal.telkomuniversity.ac.id/jtp"
+        )
+        jid2 = self.storage.record_journal_indexing(
+            journal_name="Jurnal Sistem Cerdas",
+            sinta_rank=4,
+            issn="2655-2222",
+            publisher="Fakultas Informatika",
+            focus_scope="AI & Data Science"
+        )
+        self.assertGreater(jid1, 0)
+        self.assertGreater(jid2, 0)
+
+        all_journals = self.storage.list_journal_indexings()
+        self.assertEqual(len(all_journals), 2)
+
+        top_journals = self.storage.list_journal_indexings(min_sinta=2)
+        self.assertEqual(len(top_journals), 1)
+        self.assertEqual(top_journals[0]["journal_name"], "Jurnal Telematika Purwokerto")
+        self.assertEqual(top_journals[0]["sinta_rank"], 2)
+
+    def test_lab_safety_inspections_storage(self):
+        sid1 = self.storage.record_safety_inspection(
+            lab_name="Lab Jaringan Komputer",
+            inspector="Agus Supriyanto, S.T.",
+            inspection_date="2026-10-12",
+            compliance_score=95.0,
+            is_passed=True,
+            notes="APAR dan P3K lengkap"
+        )
+        sid2 = self.storage.record_safety_inspection(
+            lab_name="Lab Rekayasa Perangkat Lunak",
+            inspector="Bambang K3",
+            inspection_date="2026-10-13",
+            compliance_score=60.0,
+            is_passed=False,
+            notes="APAR expired"
+        )
+        self.assertGreater(sid1, 0)
+        self.assertGreater(sid2, 0)
+
+        all_inspections = self.storage.list_safety_inspections()
+        self.assertEqual(len(all_inspections), 2)
+
+        lab_net = self.storage.list_safety_inspections(lab_name="Lab Jaringan Komputer")
+        self.assertEqual(len(lab_net), 1)
+        self.assertTrue(bool(lab_net[0]["is_passed"]))
+        self.assertEqual(lab_net[0]["compliance_score"], 95.0)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
