@@ -534,6 +534,30 @@ class TelegramFormatter:
             f"🕊 *Mari doakan kelancaran dan kesuksesan sidang mahasiswa bersangkutan.*"
         )
 
+    @staticmethod
+    def format_community_service_broadcast(
+        activity_title: str,
+        partner_name: str,
+        location: str,
+        leader_name: str,
+        sdgs_theme: str,
+        beneficiaries: int = 0
+    ) -> str:
+        """
+        Renders a community service (Pengabdian kepada Masyarakat / PKM) broadcast card for Telegram.
+        """
+        ben_text = f"\n👥 **Penerima Manfaat:** `{beneficiaries} Orang`" if beneficiaries > 0 else ""
+        return (
+            f"🤝 **Laporan Kegiatan Pengabdian kepada Masyarakat (PKM)**\n\n"
+            f"🎯 **Kegiatan:** \"{activity_title.strip()}\"\n"
+            f"🏢 **Mitra Sasaran:** {partner_name.strip()}\n"
+            f"📍 **Lokasi:** {location.strip()}\n"
+            f"👤 **Ketua Pengabdi:** {leader_name.strip()}\n"
+            f"🌱 **Fokus SDGs:** `{sdgs_theme.strip()}`{ben_text}\n\n"
+            f"🌟 *Wujud nyata Tri Dharma Perguruan Tinggi untuk kemaslahatan masyarakat.*"
+        )
+
+
 
 
 
