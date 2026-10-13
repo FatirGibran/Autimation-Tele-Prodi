@@ -2285,6 +2285,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_community_service_card(
+        cls,
+        title: str,
+        partner: str,
+        location: str,
+        grant_source: str,
+        beneficiaries: int,
+        sdgs_label: str
+    ) -> str:
+        """
+        Renders a community service (Pengabdian kepada Masyarakat / PKM) showcase card for social impact reporting.
+        """
+        from xml.sax.saxutils import escape
+
+        t_esc = escape(title.strip())
+        p_esc = escape(partner.strip())
+        loc_esc = escape(location.strip())
+        grant_esc = escape(grant_source.strip())
+        sdg_esc = escape(sdgs_label.strip())
+
+        return f"""    <div class="tu-pkm-card">
+      <div class="tu-pkm-badge">{sdg_esc}</div>
+      <h4 class="tu-pkm-title">{t_esc}</h4>
+      <div class="tu-pkm-meta">
+        <span>Mitra Komunitas: <strong>{p_esc}</strong></span>
+        <span>Lokasi: <strong>{loc_esc}</strong></span>
+        <span>Penerima Manfaat: <strong>{beneficiaries} Orang</strong></span>
+        <span>Sumber Dana: <strong>{grant_esc}</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
