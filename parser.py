@@ -1983,6 +1983,62 @@ def parse_springer_citation(text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def parse_proposal_defense_eligibility(
+    checklist_text: str,
+    earned_sks: int,
+    ipk: float,
+    toefl_score: int
+) -> Dict[str, Any]:
+    """
+    Validates academic proposal defense (Seminar Proposal Tugas Akhir) eligibility against
+    department graduation criteria (minimum 100 SKS, minimum IPK 2.75, minimum TOEFL/EPR 450,
+    and administrative clearances).
+    """
+    clean_text = checklist_text.strip()
+    sks_ok = earned_sks >= 100
+    ipk_ok = ipk >= 2.75
+    toefl_ok = toefl_score >= 450
+
+    missing: List[str] = []
+    if not sks_ok:
+        missing.append(f"SKS belum mencukupi (diperoleh: {earned_sks}, minimal: 100)")
+    if not ipk_ok:
+        missing.append(f"IPK belum mencukupi (diperoleh: {ipk:.2f}, minimal: 2.75)")
+    if not toefl_ok:
+        missing.append(f"Skor TOEFL/EPR belum mencukupi (diperoleh: {toefl_score}, minimal: 450)")
+
+    checks = {
+        "krs_approved": bool(re.search(r'\b(?:krs\s*(?:disetujui|acc|valid|disahkan)|krs\s*ok)\b', clean_text, re.IGNORECASE)),
+        "lab_clearance": bool(re.search(r'\b(?:bebas\s*lab|lab\s*(?:clearance|selesai|bebas))\b', clean_text, re.IGNORECASE)),
+        "library_clearance": bool(re.search(r'\b(?:bebas\s*perpustakaan|bebas\s*perpus|library\s*clearance)\b', clean_text, re.IGNORECASE)),
+        "advisory_sessions": bool(re.search(r'\b(?:bimbingan\s*(?:min(?:imal)?\s*8|selesai|acc|cukup)|kartu\s*bimbingan)\b', clean_text, re.IGNORECASE))
+    }
+
+    if not checks["krs_approved"]:
+        missing.append("KRS Tugas Akhir belum disetujui dosen wali")
+    if not checks["lab_clearance"]:
+        missing.append("Surat bebas tanggungan laboratorium belum lengkap")
+    if not checks["library_clearance"]:
+        missing.append("Surat bebas perpustakaan belum lengkap")
+    if not checks["advisory_sessions"]:
+        missing.append("Log bimbingan minimal 8 kali belum terpenuhi")
+
+    is_eligible = bool(sks_ok and ipk_ok and toefl_ok and all(checks.values()))
+
+    return {
+        "is_eligible": is_eligible,
+        "earned_sks": int(earned_sks),
+        "ipk": float(ipk),
+        "toefl_score": int(toefl_score),
+        "sks_passed": sks_ok,
+        "ipk_passed": ipk_ok,
+        "toefl_passed": toefl_ok,
+        "administrative_checks": checks,
+        "missing_requirements": missing
+    }
+
+
+
 
 
 
