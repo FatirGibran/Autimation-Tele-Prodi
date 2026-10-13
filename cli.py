@@ -720,7 +720,88 @@ def cmd_comment(args):
             print(f"{res_mark} #{c['id']} oleh {c['author']}{p_idx}: {c['comment_text']}")
 
 
+def cmd_achievement(args):
+    if args.action == "add":
+        if not args.name or not args.rank or not args.team or not args.year:
+            print("Error: --name, --rank, --team, dan --year wajib disertakan untuk mencatat prestasi.")
+            sys.exit(1)
+        members = [m.strip() for m in args.members.split(",") if m.strip()] if args.members else []
+        aid = storage.record_competition_achievement(
+            competition_name=args.name,
+            award_rank=args.rank,
+            team_name=args.team,
+            team_members=members,
+            supervisor=args.supervisor or "",
+            year=args.year,
+            organizer=args.organizer or ""
+        )
+        print(f"Prestasi kompetisi berhasil dicatat (ID: {aid}) untuk tim '{args.team}'.")
+    else:
+        achievements = storage.list_competition_achievements(year=args.year)
+        if not achievements:
+            print("Belum ada catatan prestasi kompetisi mahasiswa.")
+            return
+        print("=== Rekam Jejak Prestasi Kompetisi Mahasiswa ===")
+        for a in achievements:
+            members_str = ", ".join(a["team_members"]) if a["team_members"] else "-"
+            print(f"#{a['id']} [{a['year']}] {a['award_rank']} - {a['competition_name']} | Tim: {a['team_name']} ({members_str})")
+
+
+def cmd_mkdocs(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    tags = article.get("tags") or []
+    if isinstance(tags, str):
+        try:
+            tags = json.loads(tags)
+        except Exception:
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "topic": article.get("topic", ""),
+        "meta_description": article.get("meta_description", ""),
+        "slug": article.get("slug", ""),
+        "tags": tags
+    }
+    mk_md = ArticleExporter.to_mkdocs_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(mk_md, encoding="utf-8")
+    print(f"Export MkDocs markdown berhasil -> {out_path}")
+
+
+def cmd_safety_log(args):
+    if args.action == "add":
+        if not args.lab or not args.inspector or args.score is None:
+            print("Error: --lab, --inspector, dan --score wajib disertakan untuk inspeksi K3 lab.")
+            sys.exit(1)
+        import datetime
+        date_str = args.date or datetime.date.today().isoformat()
+        sid = storage.record_safety_inspection(
+            lab_name=args.lab,
+            inspector=args.inspector,
+            inspection_date=date_str,
+            compliance_score=float(args.score),
+            is_passed=args.passed,
+            notes=args.notes or ""
+        )
+        print(f"Log inspeksi K3 lab berhasil dicatat (ID: {sid}) untuk '{args.lab}'.")
+    else:
+        inspections = storage.list_safety_inspections(lab_name=args.lab)
+        if not inspections:
+            print("Belum ada catatan inspeksi K3 laboratorium.")
+            return
+        print("=== Log Inspeksi Keselamatan Kerja & K3 Lab ===")
+        for s in inspections:
+            status_str = "LULUS" if s["is_passed"] else "PERBAIKAN"
+            print(f"#{s['id']} [{s['inspection_date']}] {s['lab_name']} - Skor: {s['compliance_score']}% [{status_str}] - Insp: {s['inspector']}")
+
+
 def main():
+
 
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -992,7 +1073,37 @@ def main():
     comment_parser.add_argument("--unresolved-only", action="store_true", help="Tampilkan hanya komentar yang belum diselesaikan")
     comment_parser.set_defaults(func=cmd_comment)
 
+    # Achievement command
+    ach_parser = subparsers.add_parser("achievement", help="Kelola catatan prestasi kompetisi mahasiswa (list, add)")
+    ach_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan prestasi kompetisi")
+    ach_parser.add_argument("--name", help="Nama kompetisi")
+    ach_parser.add_argument("--rank", help="Peringkat atau penghargaan yang diraih")
+    ach_parser.add_argument("--team", help="Nama tim kompetisi")
+    ach_parser.add_argument("--members", help="Daftar nama anggota tim dipisahkan koma")
+    ach_parser.add_argument("--supervisor", help="Dosen pembimbing tim")
+    ach_parser.add_argument("--year", type=int, help="Tahun penyelenggaraan")
+    ach_parser.add_argument("--organizer", help="Lembaga penyelenggara kompetisi")
+    ach_parser.set_defaults(func=cmd_achievement)
+
+    # Mkdocs command
+    mkdocs_parser = subparsers.add_parser("mkdocs", help="Export artikel ke format Markdown kompatibel MkDocs")
+    mkdocs_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    mkdocs_parser.add_argument("--out", help="Path berkas output Markdown MkDocs")
+    mkdocs_parser.set_defaults(func=cmd_mkdocs)
+
+    # Safety-log command
+    safety_parser = subparsers.add_parser("safety-log", help="Kelola catatan inspeksi keselamatan kerja K3 lab (list, add)")
+    safety_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan log inspeksi K3")
+    safety_parser.add_argument("--lab", help="Nama laboratorium")
+    safety_parser.add_argument("--inspector", help="Nama personil inspektur K3")
+    safety_parser.add_argument("--score", type=float, help="Skor pemenuhan keselamatan K3 (0-100)")
+    safety_parser.add_argument("--passed", action="store_true", help="Tandai lulus inspeksi K3")
+    safety_parser.add_argument("--date", help="Tanggal inspeksi (YYYY-MM-DD)")
+    safety_parser.add_argument("--notes", help="Catatan temuan inspeksi keselamatan")
+    safety_parser.set_defaults(func=cmd_safety_log)
+
     args = parser.parse_args()
+
 
 
     args.func(args)
