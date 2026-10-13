@@ -1906,6 +1906,51 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def detect_sinta_accreditation(text: str) -> Dict[str, Any]:
+        """
+        Detects Indonesian national scientific journal accreditation (ARJUNA / SINTA) rank
+        and accreditation decree (Surat Keputusan / SK) mentions in editorial text.
+        """
+        if not text:
+            return {
+                "has_sinta": False,
+                "sinta_rank": None,
+                "sk_number": "",
+                "accreditation_level": "",
+                "confidence": "none"
+            }
+
+        clean = text.strip()
+
+        sinta_match = re.search(r'\b(?:sinta|peringkat)\s*([1-6])\b', clean, re.IGNORECASE)
+        rank = int(sinta_match.group(1)) if sinta_match else None
+
+        sk_match = re.search(r'\b(?:sk|nomor\s*sk|surat\s*keputusan)\s*(?:no\.?|nomor)?\s*([0-9A-Za-z\/\.\-]+)', clean, re.IGNORECASE)
+        sk_number = sk_match.group(1).strip() if sk_match else ""
+
+        descriptions = {
+            1: "SINTA 1 (Akreditasi Nasional Peringkat 1 / Terindeks Scopus)",
+            2: "SINTA 2 (Akreditasi Nasional Peringkat 2 / Sangat Baik)",
+            3: "SINTA 3 (Akreditasi Nasional Peringkat 3 / Baik Sekali)",
+            4: "SINTA 4 (Akreditasi Nasional Peringkat 4 / Baik)",
+            5: "SINTA 5 (Akreditasi Nasional Peringkat 5)",
+            6: "SINTA 6 (Akreditasi Nasional Peringkat 6)"
+        }
+
+        has_sinta = rank is not None
+        level_desc = descriptions.get(rank, "")
+        confidence = "high" if (rank and sk_number) else ("medium" if rank else "none")
+
+        return {
+            "has_sinta": has_sinta,
+            "sinta_rank": rank,
+            "sk_number": sk_number,
+            "accreditation_level": level_desc,
+            "confidence": confidence
+        }
+
+
 
 
 
