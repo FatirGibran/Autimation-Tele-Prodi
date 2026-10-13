@@ -1918,6 +1918,72 @@ def parse_lab_equipment_maintenance_log(log_text: str) -> Dict[str, Any]:
     }
 
 
+def parse_springer_citation(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses Springer LNCS / CCIS / IFIP academic conference and book chapter citations.
+    Standard pattern: Authors: Title. In: Editors (eds.) BookTitle. LNCS, vol. N, pp. X-Y. Springer (Year). DOI
+    """
+    clean = text.strip()
+    if not clean:
+        return None
+
+    doi_m = re.search(r'(?:https?://doi\.org/|doi:\s*)(10\.\d{4,9}/[^\s;,]+)', clean, re.IGNORECASE)
+    doi = doi_m.group(1).rstrip('.') if doi_m else ""
+
+    year_m = re.search(r'\((19\d{2}|20\d{2})\)', clean)
+    year = int(year_m.group(1)) if year_m else None
+
+    pages_m = re.search(r'(?:pp\.?|pages)\s*([0-9]+[\s–\-]+[0-9]+)', clean, re.IGNORECASE)
+    pages = pages_m.group(1).replace("–", "-").replace(" ", "") if pages_m else ""
+
+    vol_m = re.search(r'(?:vol\.?|volume)\s*([0-9]+)', clean, re.IGNORECASE)
+    volume = int(vol_m.group(1)) if vol_m else None
+
+    series_m = re.search(r'\b(LNCS|LNAI|LNBI|CCIS|IFIP AICT|AISC|Lecture Notes in [A-Za-z\s]+)\b', clean, re.IGNORECASE)
+    series = series_m.group(1).strip() if series_m else ""
+
+    in_idx = clean.lower().find(". in:")
+    if in_idx != -1:
+        before_in = clean[:in_idx].strip()
+        after_in = clean[in_idx + 5:].strip()
+    else:
+        before_in = clean
+        after_in = ""
+
+    if ":" in before_in:
+        parts = before_in.split(":", 1)
+        authors = parts[0].strip()
+        title = parts[1].strip().strip('.')
+    elif "." in before_in:
+        parts = before_in.split(".", 1)
+        authors = parts[0].strip()
+        title = parts[1].strip().strip('.')
+    else:
+        authors = before_in
+        title = ""
+
+    book_title = ""
+    if after_in:
+        book_match = re.search(r'^(?:[^.]+\(eds?\.\)\s*)?([^.]+)\.', after_in)
+        if book_match:
+            book_title = book_match.group(1).strip()
+        else:
+            book_title = after_in.split(".")[0].strip()
+
+    return {
+        "authors": authors,
+        "title": title,
+        "book_title": book_title,
+        "series": series,
+        "volume": volume,
+        "pages": pages,
+        "year": year,
+        "doi": doi,
+        "publisher": "Springer"
+    }
+
+
+
 
 
 
