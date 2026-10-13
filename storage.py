@@ -325,6 +325,20 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_snippet_cat ON content_snippets(category);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS competition_achievements (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    competition_name TEXT NOT NULL,
+                    award_rank TEXT NOT NULL,
+                    team_name TEXT NOT NULL,
+                    team_members TEXT NOT NULL,
+                    supervisor TEXT NOT NULL,
+                    year INTEGER NOT NULL,
+                    organizer TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_comp_year ON competition_achievements(year);")
 
 
 
@@ -1726,6 +1740,57 @@ class StorageManager:
                     ORDER BY category ASC, snippet_key ASC
                 """)
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_competition_achievement(
+        self,
+        competition_name: str,
+        award_rank: str,
+        team_name: str,
+        team_members: List[str],
+        supervisor: str,
+        year: int,
+        organizer: str
+    ) -> int:
+        """
+        Records a student innovation/competition award achievement.
+        """
+        members_str = ", ".join(m.strip() for m in team_members if m.strip())
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO competition_achievements (
+                    competition_name, award_rank, team_name, team_members, supervisor, year, organizer
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                competition_name.strip(),
+                award_rank.strip(),
+                team_name.strip(),
+                members_str,
+                supervisor.strip(),
+                int(year),
+                organizer.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_competition_achievements(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
+        """
+        Lists competition achievements, optionally filtered by year.
+        """
+        with self._get_connection() as conn:
+            if year:
+                cursor = conn.execute("""
+                    SELECT id, competition_name, award_rank, team_name, team_members, supervisor, year, organizer, created_at
+                    FROM competition_achievements
+                    WHERE year = ?
+                    ORDER BY id DESC
+                """, (int(year),))
+            else:
+                cursor = conn.execute("""
+                    SELECT id, competition_name, award_rank, team_name, team_members, supervisor, year, organizer, created_at
+                    FROM competition_achievements
+                    ORDER BY year DESC, id DESC
+                """)
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
