@@ -352,6 +352,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_journal_sinta ON journal_indexings(sinta_rank);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS lab_safety_inspections (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lab_name TEXT NOT NULL,
+                    inspector TEXT NOT NULL,
+                    inspection_date TEXT NOT NULL,
+                    compliance_score REAL NOT NULL,
+                    is_passed INTEGER NOT NULL,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_safety_lab ON lab_safety_inspections(lab_name);")
 
 
 
@@ -1850,6 +1863,54 @@ class StorageManager:
                     ORDER BY sinta_rank ASC, journal_name ASC
                 """)
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_safety_inspection(
+        self,
+        lab_name: str,
+        inspector: str,
+        inspection_date: str,
+        compliance_score: float,
+        is_passed: bool,
+        notes: str = ""
+    ) -> int:
+        """
+        Records a laboratory safety and K3 compliance inspection report.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO lab_safety_inspections (
+                    lab_name, inspector, inspection_date, compliance_score, is_passed, notes
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                lab_name.strip(),
+                inspector.strip(),
+                inspection_date.strip(),
+                float(compliance_score),
+                1 if is_passed else 0,
+                notes.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_safety_inspections(self, lab_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists laboratory safety inspection records, optionally filtered by lab name.
+        """
+        with self._get_connection() as conn:
+            if lab_name:
+                cursor = conn.execute("""
+                    SELECT id, lab_name, inspector, inspection_date, compliance_score, is_passed, notes, created_at
+                    FROM lab_safety_inspections
+                    WHERE lab_name = ?
+                    ORDER BY id DESC
+                """, (lab_name.strip(),))
+            else:
+                cursor = conn.execute("""
+                    SELECT id, lab_name, inspector, inspection_date, compliance_score, is_passed, notes, created_at
+                    FROM lab_safety_inspections
+                    ORDER BY id DESC
+                """)
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
