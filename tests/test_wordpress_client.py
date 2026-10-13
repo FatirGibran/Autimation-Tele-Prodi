@@ -353,8 +353,44 @@ class TestWordPressClient(unittest.TestCase):
         not_found = self.client.get_tag_by_slug("tag-tidak-ada")
         self.assertIsNone(not_found)
 
+    @patch("urllib.request.urlopen")
+    def test_get_categories_by_parent(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 12, "name": "Praktikum Jaringan", "parent": 5}, {"id": 13, "name": "Praktikum Sinyal", "parent": 5}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        cats = self.client.get_categories_by_parent(5)
+        self.assertEqual(len(cats), 2)
+        self.assertEqual(cats[0]["name"], "Praktikum Jaringan")
+        req = mock_urlopen.call_args[0][0]
+        self.assertIn("/categories?parent=5&per_page=100", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_ping_api_success(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 1, "name": "Admin Telematika", "slug": "admin"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.ping_api()
+        self.assertEqual(res["status"], "ok")
+        self.assertTrue(res["authenticated"])
+        self.assertEqual(res["user_id"], 1)
+        self.assertEqual(res["username"], "Admin Telematika")
+        self.assertIn("latency_ms", res)
+
+    @patch("urllib.request.urlopen")
+    def test_ping_api_failure(self, mock_urlopen):
+        mock_urlopen.side_effect = Exception("Connection refused to WordPress host")
+
+        res = self.client.ping_api()
+        self.assertEqual(res["status"], "error")
+        self.assertFalse(res["authenticated"])
+        self.assertIn("Connection refused", res["error"])
+        self.assertIn("latency_ms", res)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
