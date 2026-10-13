@@ -318,8 +318,40 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Prof. Dr. Ir. Adiwijaya, M.Kom.", card)
         self.assertIn("Ruang Sidang Utama", card)
 
+    def test_format_community_service_broadcast(self):
+        card = TelegramFormatter.format_community_service_broadcast(
+            activity_title="Pelatihan AI dan Literasi Digital Sekolah",
+            partner_name="SMK Telkom Purwokerto",
+            location="Banyumas, Jawa Tengah",
+            leader_name="Dr. Ir. Wahyu, M.T.",
+            sdgs_theme="SDG 4 - Pendidikan Berkualitas",
+            beneficiaries=65
+        )
+        self.assertIn("Laporan Kegiatan Pengabdian kepada Masyarakat (PKM)", card)
+        self.assertIn("Pelatihan AI dan Literasi Digital Sekolah", card)
+        self.assertIn("SMK Telkom Purwokerto", card)
+        self.assertIn("Dr. Ir. Wahyu, M.T.", card)
+        self.assertIn("SDG 4 - Pendidikan Berkualitas", card)
+        self.assertIn("65 Orang", card)
+
+    def test_format_competition_award_broadcast(self):
+        card = TelegramFormatter.format_competition_award_broadcast(
+            competition_name="Imagine Cup Asia 2026",
+            award_title="Juara 1 Regional Winner",
+            team_name="Tim Garuda Telematics",
+            member_names=["Fatir Gibran", "Bayu Pratama"],
+            organizer="Microsoft Asia Pacific"
+        )
+        self.assertIn("Selamat & Sukses atas Prestasi Mahasiswa!", card)
+        self.assertIn("Juara 1 Regional Winner", card)
+        self.assertIn("Imagine Cup Asia 2026", card)
+        self.assertIn("Microsoft Asia Pacific", card)
+        self.assertIn("Tim Garuda Telematics", card)
+        self.assertIn("Fatir Gibran, Bayu Pratama", card)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
+
     def test_rate_limiter_allows_and_blocks(self):
         from formatters import CommandRateLimiter
         import time
