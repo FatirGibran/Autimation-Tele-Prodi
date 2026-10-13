@@ -580,6 +580,66 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertGreaterEqual(res_bad["missing_alt_count"], 1)
         self.assertGreaterEqual(res_bad["missing_dimensions_count"], 2)
 
+    def test_audit_duplicate_element_ids(self):
+        good_html = '<div id="header"><h1 id="title">Judul</h1><p id="lead">Lead</p></div>'
+        res_good = YoastSEOValidator.audit_duplicate_element_ids(good_html)
+        self.assertFalse(res_good["has_duplicates"])
+        self.assertEqual(res_good["total_ids"], 3)
+
+        bad_html = '<div id="section-1"><p id="content">P1</p><div id="section-1"><p id="content">P2</p></div></div>'
+        res_bad = YoastSEOValidator.audit_duplicate_element_ids(bad_html)
+        self.assertTrue(res_bad["has_duplicates"])
+        self.assertIn("section-1", res_bad["duplicate_ids"])
+        self.assertIn("content", res_bad["duplicate_ids"])
+        self.assertGreaterEqual(len(res_bad["issues"]), 2)
+
+    def test_detect_sinta_accreditation(self):
+        text_s2 = "Jurnal Rekayasa Sistem dan Teknologi Informasi telah terakreditasi SINTA 2 berdasarkan SK No. 105/E/KPT/2022."
+        res = YoastSEOValidator.detect_sinta_accreditation(text_s2)
+        self.assertTrue(res["has_sinta"])
+        self.assertEqual(res["sinta_rank"], 2)
+        self.assertIn("105/E/KPT/2022", res["sk_number"])
+        self.assertEqual(res["confidence"], "high")
+
+        text_none = "Artikel opini tanpa publikasi jurnal ilmiah."
+        res_none = YoastSEOValidator.detect_sinta_accreditation(text_none)
+        self.assertFalse(res_none["has_sinta"])
+        self.assertIsNone(res_none["sinta_rank"])
+        self.assertEqual(res_none["confidence"], "none")
+
+    def test_audit_meta_robots_directives(self):
+        meta_good = {"meta_robots": "index, follow, max-snippet:-1, max-image-preview:large"}
+        res_good = YoastSEOValidator.audit_meta_robots_directives(meta_good)
+        self.assertTrue(res_good["is_indexable"])
+        self.assertTrue(res_good["is_followable"])
+        self.assertTrue(res_good["has_snippet_controls"])
+        self.assertTrue(res_good["is_optimal"])
+
+        meta_bad = {"meta_robots": "noindex, nofollow"}
+        res_bad = YoastSEOValidator.audit_meta_robots_directives(meta_bad)
+        self.assertFalse(res_bad["is_indexable"])
+        self.assertFalse(res_bad["is_followable"])
+        self.assertFalse(res_bad["is_optimal"])
+        self.assertGreaterEqual(len(res_bad["warnings"]), 2)
+
+    def test_audit_social_meta_readiness(self):
+        meta_ready = {
+            "seo_title": "Panduan Riset Antena Mikrostrip 5G",
+            "meta_description": "Pelajari rancang bangun antena mikrostrip patch untuk frekuensi 28 GHz di Telkom University Purwokerto.",
+            "image_url": "https://telkomuniversity.ac.id/images/antena-5g.webp",
+            "twitter_card": "summary_large_image"
+        }
+        res_ready = YoastSEOValidator.audit_social_meta_readiness(meta_ready)
+        self.assertTrue(res_ready["is_ready"])
+        self.assertGreaterEqual(res_ready["readiness_score"], 80)
+        self.assertEqual(len(res_ready["issues"]), 0)
+
+        meta_incomplete = {"seo_title": ""}
+        res_inc = YoastSEOValidator.audit_social_meta_readiness(meta_incomplete)
+        self.assertFalse(res_inc["is_ready"])
+        self.assertGreaterEqual(len(res_inc["issues"]), 3)
+
 if __name__ == "__main__":
     unittest.main()
+
 
