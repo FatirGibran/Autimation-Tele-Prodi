@@ -2415,6 +2415,38 @@ class EditorialComponents:
       <a href="{url_esc}" class="tu-ta-cta-btn" target="_blank" rel="noopener noreferrer">Daftar Asisten Sekarang</a>
     </div>"""
 
+    @classmethod
+    def render_lab_safety_guideline_card(
+        cls,
+        lab_name: str,
+        pic_technician: str,
+        safety_rules: List[str],
+        emergency_call: str
+    ) -> str:
+        """
+        Renders a laboratory safety standard operating procedure and emergency hotline contact card.
+        """
+        from xml.sax.saxutils import escape
+
+        lab_esc = escape(lab_name.strip())
+        pic_esc = escape(pic_technician.strip())
+        call_esc = escape(emergency_call.strip())
+        rules_html = "".join(f"<li>{escape(r.strip())}</li>" for r in safety_rules if r.strip())
+
+        return f"""    <div class="tu-lab-safety-card">
+      <div class="tu-lab-safety-badge">Standar Keselamatan Kerja Lab (K3)</div>
+      <h4 class="tu-lab-safety-title">{lab_esc}</h4>
+      <div class="tu-lab-safety-pic">Penanggung Jawab Teknis: <strong>{pic_esc}</strong></div>
+      <div class="tu-lab-safety-body">
+        <strong>Aturan Keselamatan Wajib:</strong>
+        <ul class="tu-lab-safety-rules">{rules_html}</ul>
+      </div>
+      <div class="tu-lab-emergency-hotline">
+        <span>Kontak Darurat / APAR Center: <strong>{call_esc}</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
