@@ -464,6 +464,17 @@ class WordPressClient:
             return results[0]
         return None
 
+    def get_categories_by_parent(self, parent_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves all child categories belonging to a parent category ID.
+        """
+        endpoint = f"{self.api_url}/categories?parent={int(parent_id)}&per_page=100"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
 
 
 
