@@ -9,8 +9,10 @@ ALLOWED_TAGS = {
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
     "video", "audio", "source", "picture", "track", "canvas",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
-    "ruby", "rt", "rp", "rb", "rtc"
+    "ruby", "rt", "rp", "rb", "rtc",
+    "meter", "progress"
 }
+
 
 
 DISALLOWED_ATTR_PREFIXES = ("on", "javascript:")
@@ -439,7 +441,27 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<[a-z0-9_-]+\b[^>]*\bslot=["\'][^"\']*["\'][^>]*>', sanitize_slot_attr, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized element slot attribute against prototype pollution keys.")
 
+        # 8l. Sanitize meter and progress elements against malicious attributes or invalid values
+        if "<meter" in cleaned.lower() or "<progress" in cleaned.lower():
+            def sanitize_meter_progress(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+(?:on[a-z]+|form)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                for attr in ("value", "min", "max", "low", "high", "optimum"):
+                    val_match = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, flags=re.IGNORECASE)
+                    if val_match:
+                        raw_val = val_match.group(1).strip()
+                        try:
+                            num = float(raw_val)
+                            if not (-1e9 <= num <= 1e9) or num != num:
+                                tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', f' {attr}="0"', tag, flags=re.IGNORECASE)
+                        except ValueError:
+                            tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', f' {attr}="0"', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<(?:meter|progress)\b[^>]*>', sanitize_meter_progress, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized meter and progress elements and normalized numeric attributes.")
+
         return cleaned, warnings
+
 
 
 
