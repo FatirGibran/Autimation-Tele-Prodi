@@ -557,6 +557,29 @@ class TelegramFormatter:
             f"🌟 *Wujud nyata Tri Dharma Perguruan Tinggi untuk kemaslahatan masyarakat.*"
         )
 
+    @staticmethod
+    def format_competition_award_broadcast(
+        competition_name: str,
+        award_title: str,
+        team_name: str,
+        member_names: List[str],
+        organizer: str
+    ) -> str:
+        """
+        Renders a celebratory student competition award victory card for Telegram broadcast.
+        """
+        members_text = ", ".join(m.strip() for m in member_names if m.strip()) or "Mahasiswa Prodi"
+        return (
+            f"🏆 **Selamat & Sukses atas Prestasi Mahasiswa!**\n\n"
+            f"🎖 **Capaian Prestasi:** {award_title.strip()}\n"
+            f"🎪 **Ajang Kompetisi:** \"{competition_name.strip()}\"\n"
+            f"🏢 **Penyelenggara:** {organizer.strip()}\n"
+            f"👥 **Nama Tim:** {team_name.strip()}\n"
+            f"👤 **Anggota Tim:** {members_text}\n\n"
+            f"🎉 *Semoga menjadi inspirasi dan pemacu semangat berprestasi civitas akademika!*"
+        )
+
+
 
 
 
