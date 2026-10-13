@@ -2317,6 +2317,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_competition_achievement_card(
+        cls,
+        competition_name: str,
+        award_rank: str,
+        team_name: str,
+        team_members: List[str],
+        supervisor: str,
+        year: int
+    ) -> str:
+        """
+        Renders a student innovation and technology competition achievement showcase card.
+        """
+        from xml.sax.saxutils import escape
+
+        comp_esc = escape(competition_name.strip())
+        award_esc = escape(award_rank.strip())
+        team_esc = escape(team_name.strip())
+        spv_esc = escape(supervisor.strip())
+        members_html = "".join(f"<li>{escape(m.strip())}</li>" for m in team_members if m.strip())
+
+        return f"""    <div class="tu-competition-card">
+      <div class="tu-competition-badge">Prestasi Kompetisi {year}</div>
+      <h4 class="tu-competition-award">{award_esc}</h4>
+      <div class="tu-competition-name">{comp_esc}</div>
+      <div class="tu-competition-team">
+        <span>Tim: <strong>{team_esc}</strong></span>
+        <span>Pembimbing: <strong>{spv_esc}</strong></span>
+      </div>
+      <ul class="tu-competition-members">{members_html}</ul>
+    </div>"""
+
+
 
 
 
