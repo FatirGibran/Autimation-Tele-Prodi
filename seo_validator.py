@@ -1950,6 +1950,42 @@ class YoastSEOValidator:
             "confidence": confidence
         }
 
+    @staticmethod
+    def audit_meta_robots_directives(meta: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Audits meta robots indexing and follow directives for search engine crawlers.
+        Validates presence of canonical indexing instructions (index, follow, max-snippet).
+        """
+        robots_str = meta.get("meta_robots", meta.get("robots", "index, follow")).strip().lower()
+        directives = [d.strip() for d in re.split(r'[,;\s]+', robots_str) if d.strip()]
+
+        is_noindex = "noindex" in directives
+        is_nofollow = "nofollow" in directives
+        is_index = "index" in directives or (not is_noindex)
+        is_follow = "follow" in directives or (not is_nofollow)
+
+        warnings: List[str] = []
+        if is_noindex:
+            warnings.append("Halaman disetel 'noindex', mesin pencari (Google/Bing) tidak akan mengindeks artikel ini.")
+        if is_nofollow:
+            warnings.append("Halaman disetel 'nofollow', crawler tidak akan menelusuri hyperlink internal/eksternal.")
+
+        has_max_snippet = any("max-snippet" in d for d in directives)
+        has_max_image = any("max-image-preview" in d for d in directives)
+
+        is_optimal = bool(not is_noindex and not is_nofollow)
+
+        return {
+            "raw_directives": robots_str,
+            "directives_list": directives,
+            "is_indexable": bool(is_index and not is_noindex),
+            "is_followable": bool(is_follow and not is_nofollow),
+            "has_snippet_controls": bool(has_max_snippet or has_max_image),
+            "is_optimal": is_optimal,
+            "warnings": warnings
+        }
+
+
 
 
 
