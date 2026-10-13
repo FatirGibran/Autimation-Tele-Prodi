@@ -965,6 +965,31 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_mkdocs_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to MkDocs static site Markdown with Material frontmatter, title, description, and tags.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        lines = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f"tags: [{tags_yaml}]",
+            "---",
+            "",
+            f"# {title}",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(lines)
+
 
 
 
