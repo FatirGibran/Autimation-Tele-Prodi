@@ -939,6 +939,33 @@ navigation: true
         ]
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_special_announcement_json_ld(
+        title: str,
+        text: str,
+        date_posted: str,
+        expires_date: str,
+        category: str,
+        publisher: str = "Telkom University Purwokerto"
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org SpecialAnnouncement JSON-LD for academic advisories and urgent campus alerts.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "SpecialAnnouncement",
+            "name": title.strip(),
+            "text": text.strip(),
+            "datePosted": date_posted.strip(),
+            "expires": expires_date.strip(),
+            "category": category.strip(),
+            "publisher": {
+                "@type": "EducationalOrganization",
+                "name": publisher.strip()
+            }
+        }
+
+
 
 
 
