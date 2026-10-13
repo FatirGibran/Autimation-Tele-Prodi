@@ -1061,8 +1061,96 @@ class TestCLI(unittest.TestCase):
             cli.cmd_comment(ArgsResolve())
             self.assertIn("Komentar #1 berhasil diselesaikan", fake_out.getvalue())
 
+    def test_cmd_achievement(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Gemastik XVII"
+            rank = "Juara 1 Emas"
+            team = "Telematics-PWT"
+            members = "Fatir Gibran, Budi Santoso"
+            supervisor = "Dr. Wahyu"
+            year = 2026
+            organizer = "Puspresnas"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_achievement(ArgsAdd())
+            self.assertIn("Prestasi kompetisi berhasil dicatat", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            year = 2026
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_achievement(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Prestasi Kompetisi Mahasiswa", out)
+            self.assertIn("Gemastik XVII", out)
+            self.assertIn("Juara 1 Emas", out)
+
+    def test_cmd_mkdocs(self):
+        slug = "mkdocs-cli-test-article"
+        cli.storage.save_article({
+            "topic": "MkDocs Panduan",
+            "category": "Dokumentasi",
+            "publish_date": "2026-10-12",
+            "focus_keyphrase": "mkdocs panduan",
+            "seo_title": "MkDocs CLI Target",
+            "slug": slug,
+            "meta_description": "Meta mkdocs",
+            "html_content": "<p>Konten MkDocs CLI</p>",
+            "tags": ["mkdocs", "cli"],
+            "status": "ready"
+        })
+
+        out_file = Path(self.temp_dir.name) / f"{slug}.md"
+        try:
+            class ArgsMkdocs:
+                pass
+            args = ArgsMkdocs()
+            args.slug = slug
+            args.out = str(out_file)
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_mkdocs(args)
+                self.assertIn("Export MkDocs markdown berhasil", fake_out.getvalue())
+
+            content = out_file.read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---"))
+            self.assertIn('title: "MkDocs CLI Target"', content)
+            self.assertIn('# MkDocs CLI Target', content)
+            self.assertIn("<p>Konten MkDocs CLI</p>", content)
+        finally:
+            if out_file.exists():
+                out_file.unlink()
+
+    def test_cmd_safety_log(self):
+        class ArgsAdd:
+            action = "add"
+            lab = "Lab Jaringan Komputer"
+            inspector = "Agus K3"
+            score = 92.5
+            passed = True
+            date = "2026-10-12"
+            notes = "Kondisi APAR dan P3K lengkap"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_safety_log(ArgsAdd())
+            self.assertIn("Log inspeksi K3 lab berhasil dicatat", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            lab = "Lab Jaringan Komputer"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_safety_log(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Log Inspeksi Keselamatan Kerja & K3 Lab", out)
+            self.assertIn("Lab Jaringan Komputer", out)
+            self.assertIn("LULUS", out)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
