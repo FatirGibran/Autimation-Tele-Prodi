@@ -580,7 +580,77 @@ Status: Operasional Siap Pakai
         self.assertIn("Drift frekuensi", res["issue"])
         self.assertTrue(res["is_operational"])
 
+    def test_parse_springer_citation(self):
+        from parser import parse_springer_citation
+        cit = (
+            "Gibran, F., Pratama, A.: Autonomous Agent Pipelines in Telecommunications. "
+            "In: Kurniawan, D. (ed.) Proceedings of ICCS 2026. LNCS, vol. 14500, pp. 45–58. "
+            "Springer, Cham (2026). https://doi.org/10.1007/978-3-030-99999-9_4"
+        )
+        res = parse_springer_citation(cit)
+        self.assertIsNotNone(res)
+        self.assertIn("Gibran", res["authors"])
+        self.assertIn("Autonomous Agent Pipelines", res["title"])
+        self.assertEqual(res["series"], "LNCS")
+        self.assertEqual(res["volume"], 14500)
+        self.assertEqual(res["pages"], "45-58")
+        self.assertEqual(res["year"], 2026)
+        self.assertEqual(res["publisher"], "Springer")
+        self.assertIn("10.1007/978-3-030-99999-9_4", res["doi"])
+
+    def test_parse_proposal_defense_eligibility(self):
+        from parser import parse_proposal_defense_eligibility
+        chk = "KRS disetujui dosen wali, bebas lab selesai, bebas perpustakaan valid, bimbingan minimal 8 kali acc"
+        res_ok = parse_proposal_defense_eligibility(chk, earned_sks=110, ipk=3.55, toefl_score=480)
+        self.assertTrue(res_ok["is_eligible"])
+        self.assertEqual(len(res_ok["missing_requirements"]), 0)
+
+        chk_fail = "KRS disetujui tapi belum bebas lab"
+        res_fail = parse_proposal_defense_eligibility(chk_fail, earned_sks=95, ipk=2.60, toefl_score=420)
+        self.assertFalse(res_fail["is_eligible"])
+        self.assertFalse(res_fail["sks_passed"])
+        self.assertFalse(res_fail["ipk_passed"])
+        self.assertFalse(res_fail["toefl_passed"])
+        self.assertGreaterEqual(len(res_fail["missing_requirements"]), 3)
+
+    def test_parse_community_service_log(self):
+        from parser import parse_community_service_log
+        log_text = """
+Judul: Pelatihan Digital Marketing & Keamanan Siber untuk UMKM Desa Sumbang
+Mitra: Paguyuban UMKM Mandiri Sumbang
+Lokasi: Banyumas, Jawa Tengah
+Sumber Dana: Hibah Internal Pengabdian LPPM Telkom University
+Jumlah Penerima: 45
+SDGs: SDG 9 - Industri, Inovasi, dan Infrastruktur
+"""
+        res = parse_community_service_log(log_text)
+        self.assertIsNotNone(res)
+        self.assertIn("Pelatihan Digital Marketing", res["title"])
+        self.assertEqual(res["partner"], "Paguyuban UMKM Mandiri Sumbang")
+        self.assertEqual(res["location"], "Banyumas, Jawa Tengah")
+        self.assertEqual(res["beneficiaries_count"], 45)
+        self.assertEqual(res["sdgs_theme"], "SDG 9 - Industri, Inovasi, dan Infrastruktur")
+
+    def test_parse_lab_safety_inspection(self):
+        from parser import parse_lab_safety_inspection
+        audit_text = """
+Lab: Laboratorium Sistem Transmisi & Optik
+Inspektur: Tri Widyastuti, S.T., M.Eng.
+Tanggal: 12 Oktober 2026
+APAR: Siap Pakai dan tidak kedaluwarsa
+P3K: Lengkap dengan perban dan antiseptik
+Jalur Evakuasi: Bebas hambatan menuju tangga darurat
+Instalasi Listrik: Rapi dan memenuhi standar K3
+"""
+        res = parse_lab_safety_inspection(audit_text)
+        self.assertEqual(res["lab_name"], "Laboratorium Sistem Transmisi & Optik")
+        self.assertEqual(res["inspector"], "Tri Widyastuti, S.T., M.Eng.")
+        self.assertEqual(res["compliance_score"], 100.0)
+        self.assertTrue(res["is_passed"])
+        self.assertTrue(res["checks"]["apar_ready"])
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
