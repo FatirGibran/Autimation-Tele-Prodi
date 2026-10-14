@@ -639,7 +639,79 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_inc["is_ready"])
         self.assertGreaterEqual(len(res_inc["issues"]), 3)
 
+    def test_audit_media_transcripts(self):
+        html_good = (
+            '<div>'
+            '<video src="https://example.com/demo.mp4">'
+            '<track kind="subtitles" src="/captions/demo_id.vtt" srclang="id">'
+            '</video>'
+            '</div>'
+        )
+        res_good = YoastSEOValidator.audit_media_transcripts(html_good)
+        self.assertTrue(res_good["is_compliant"])
+        self.assertEqual(res_good["accessible_media"], 1)
+
+        html_bad = '<div><audio src="https://example.com/podcast.mp3"></audio></div>'
+        res_bad = YoastSEOValidator.audit_media_transcripts(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["accessible_media"], 0)
+        self.assertEqual(len(res_bad["issues"]), 1)
+
+    def test_detect_scimago_sjr_ranking(self):
+        text = "Publikasi terindeks Scopus Q1 dengan metrik SJR 1.82 dan h-index 54 pada jurnal IEEE Transactions on Communications."
+        res = YoastSEOValidator.detect_scimago_sjr_ranking(text)
+        self.assertTrue(res["has_scopus_indexing"])
+        self.assertEqual(res["best_quartile"], "Q1")
+        self.assertEqual(res["sjr_score"], 1.82)
+        self.assertEqual(res["h_index"], 54)
+
+        text_none = "Catatan seminar internal kampus."
+        res_none = YoastSEOValidator.detect_scimago_sjr_ranking(text_none)
+        self.assertFalse(res_none["has_scopus_indexing"])
+        self.assertIsNone(res_none["best_quartile"])
+
+    def test_audit_hreflang_multilingual_tags(self):
+        html_good = (
+            '<head>'
+            '<link rel="alternate" hreflang="id" href="https://bif-pwt.telkomuniversity.ac.id/riset/">'
+            '<link rel="alternate" hreflang="en" href="https://bif-pwt.telkomuniversity.ac.id/en/research/">'
+            '<link rel="alternate" hreflang="x-default" href="https://bif-pwt.telkomuniversity.ac.id/riset/">'
+            '</head>'
+        )
+        res_good = YoastSEOValidator.audit_hreflang_multilingual_tags(html_good)
+        self.assertTrue(res_good["is_valid"])
+        self.assertTrue(res_good["has_x_default"])
+        self.assertIn("id", res_good["languages_found"])
+        self.assertIn("en", res_good["languages_found"])
+
+        html_bad = '<head><link rel="alternate" hreflang="bahasa-indo-123" href=""></head>'
+        res_bad = YoastSEOValidator.audit_hreflang_multilingual_tags(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertGreaterEqual(len(res_bad["issues"]), 2)
+
+    def test_audit_breadcrumb_hierarchy(self):
+        html_good = (
+            '<nav aria-label="breadcrumb">'
+            '<ol class="breadcrumb">'
+            '<li><a href="/">Beranda</a></li>'
+            '<li><a href="/akademik/">Akademik</a></li>'
+            '<li><span>Kurikulum 2026</span></li>'
+            '</ol>'
+            '</nav>'
+        )
+        res_good = YoastSEOValidator.audit_breadcrumb_hierarchy(html_good)
+        self.assertTrue(res_good["is_valid"])
+        self.assertEqual(res_good["depth"], 3)
+        self.assertTrue(res_good["has_home_root"])
+        self.assertEqual(res_good["trail"], ["Beranda", "Akademik", "Kurikulum 2026"])
+
+        html_bad = '<nav aria-label="breadcrumb"><li><span>Kurikulum 2026</span></li></nav>'
+        res_bad = YoastSEOValidator.audit_breadcrumb_hierarchy(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertEqual(res_bad["depth"], 1)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
