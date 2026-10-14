@@ -1014,6 +1014,30 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_starlight_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Astro Starlight static site documentation Markdown with sidebar order and badge.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        sidebar_label = metadata.get("sidebar_label", title).strip()
+        order = metadata.get("sidebar_order", metadata.get("sidebar_position", 1))
+
+        lines = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            "sidebar:",
+            f'  label: "{sidebar_label}"',
+            f'  order: {order}',
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(lines)
+
+
 
 
 
