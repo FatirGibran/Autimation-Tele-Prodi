@@ -399,6 +399,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_yudisium_nim ON yudisium_clearances(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_yudisium_pred ON yudisium_clearances(graduation_predicate);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS lab_equipment_calibrations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    asset_id TEXT NOT NULL,
+                    equipment_name TEXT NOT NULL,
+                    lab_name TEXT NOT NULL,
+                    calibration_date TEXT NOT NULL,
+                    due_date TEXT NOT NULL,
+                    calibration_status TEXT NOT NULL,
+                    operating_condition TEXT NOT NULL,
+                    technician_name TEXT NOT NULL,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_equip_asset ON lab_equipment_calibrations(asset_id);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_equip_lab ON lab_equipment_calibrations(lab_name);")
+
 
 
 
@@ -2082,6 +2100,71 @@ class StorageManager:
             """, (nim.strip(),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_equipment_calibration(
+        self,
+        asset_id: str,
+        equipment_name: str,
+        lab_name: str,
+        calibration_date: str,
+        due_date: str,
+        calibration_status: str,
+        operating_condition: str,
+        technician_name: str,
+        notes: str = ""
+    ) -> int:
+        """
+        Records a laboratory equipment calibration audit and operating condition log.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO lab_equipment_calibrations (
+                    asset_id, equipment_name, lab_name, calibration_date, due_date,
+                    calibration_status, operating_condition, technician_name, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                asset_id.strip(),
+                equipment_name.strip(),
+                lab_name.strip(),
+                calibration_date.strip(),
+                due_date.strip(),
+                calibration_status.strip(),
+                operating_condition.strip(),
+                technician_name.strip(),
+                notes.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_equipment_calibrations(
+        self,
+        lab_name: Optional[str] = None,
+        status: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Lists laboratory equipment calibration records with optional filtering by lab name or calibration status.
+        """
+        with self._get_connection() as conn:
+            query = """
+                SELECT id, asset_id, equipment_name, lab_name, calibration_date, due_date,
+                       calibration_status, operating_condition, technician_name, notes, created_at
+                FROM lab_equipment_calibrations
+            """
+            params = []
+            conditions = []
+            if lab_name:
+                conditions.append("lab_name = ?")
+                params.append(lab_name.strip())
+            if status:
+                conditions.append("calibration_status = ?")
+                params.append(status.strip())
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
