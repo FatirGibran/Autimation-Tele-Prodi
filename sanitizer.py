@@ -528,7 +528,28 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<(?:kbd|samp)\b[^>]*>', sanitize_kbd_samp, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized kbd and samp computational typography elements.")
 
+        # 8q. Sanitize tooltip and placement positioning attributes
+        if re.search(r'\bdata-(?:placement|tooltip|title)=', cleaned, re.IGNORECASE):
+            def sanitize_tooltip_placement(m):
+                tag = m.group(0)
+                placement_m = re.search(r'\bdata-placement=["\']([^"\']*)["\']', tag, flags=re.IGNORECASE)
+                if placement_m:
+                    pval = placement_m.group(1).strip().lower()
+                    if pval not in ("top", "bottom", "left", "right"):
+                        tag = re.sub(r'\s+data-placement=["\'][^"\']*["\']', ' data-placement="top"', tag, flags=re.IGNORECASE)
+                for tattr in ("data-tooltip", "data-title"):
+                    t_match = re.search(rf'\b{tattr}=["\']([^"\']*)["\']', tag, flags=re.IGNORECASE)
+                    if t_match:
+                        raw_text = t_match.group(1)
+                        clean_text = re.sub(r'<[^>]+>', '', raw_text)
+                        clean_text = clean_text.replace('"', '&quot;').strip()[:200]
+                        tag = re.sub(rf'\b{tattr}=["\'][^"\']*["\']', f'{tattr}="{clean_text}"', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<[a-z0-9_-]+\b[^>]*\bdata-(?:placement|tooltip|title)=[^>]*>', sanitize_tooltip_placement, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized contextual tooltip and placement positioning attributes.")
+
         return cleaned, warnings
+
 
 
 
