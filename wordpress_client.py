@@ -501,6 +501,18 @@ class WordPressClient:
                 "error": str(e)
             }
 
+    def get_media_by_id(self, media_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single WordPress media attachment by its numeric ID, or None if not found.
+        """
+        endpoint = f"{self.api_url}/media/{int(media_id)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            return self._send_request(req)
+        except Exception:
+            return None
+
+
 
 
 
