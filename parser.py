@@ -2195,6 +2195,77 @@ def parse_harvard_citation(citation: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def validate_mbkm_credit_transfer(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Validates MBKM (Merdeka Belajar Kampus Merdeka) external course credit transfers,
+    calculating total converted SKS, weighted grade point average, and verifying curriculum cap (max 20 SKS).
+    """
+    program_name = str(data.get("program_name", "")).strip()
+    partner = str(data.get("partner_institution", "")).strip()
+    student_name = str(data.get("student_name", "")).strip()
+    nim = str(data.get("nim", "")).strip()
+    semester = int(data.get("semester", 6))
+    courses = data.get("courses_mapped", [])
+
+    issues = []
+    if not program_name:
+        issues.append("Nama program MBKM tidak boleh kosong")
+    if not student_name or not nim:
+        issues.append("Identitas mahasiswa (nama dan NIM) wajib diisi")
+
+    grade_point_map = {
+        "A": 4.0, "AB": 3.5, "B": 3.0, "BC": 2.5, "C": 2.0, "D": 1.0, "E": 0.0
+    }
+
+    total_sks = 0
+    weighted_points = 0.0
+    normalized_courses = []
+
+    for c in courses:
+        code = str(c.get("course_code", "")).strip()
+        name = str(c.get("course_name", "")).strip()
+        sks = int(c.get("sks", 0))
+        letter = str(c.get("score_letter", "A")).strip().upper()
+
+        if sks <= 0:
+            issues.append(f"Mata kuliah {code or name} memiliki bobot SKS tidak valid ({sks})")
+            continue
+
+        num_val = grade_point_map.get(letter, float(c.get("score_num", 4.0)))
+        total_sks += sks
+        weighted_points += (sks * num_val)
+
+        normalized_courses.append({
+            "course_code": code,
+            "course_name": name,
+            "sks": sks,
+            "score_letter": letter,
+            "score_num": num_val
+        })
+
+    if total_sks > 20:
+        issues.append(f"Total SKS transfer ({total_sks} SKS) melebihi batas regulasi MBKM (maksimal 20 SKS)")
+    elif total_sks == 0:
+        issues.append("Belum ada mata kuliah yang diekivalensikan")
+
+    converted_gpa = round(weighted_points / total_sks, 2) if total_sks > 0 else 0.0
+    is_approved = bool(len(issues) == 0 and total_sks > 0 and total_sks <= 20)
+
+    return {
+        "is_approved": is_approved,
+        "program_name": program_name,
+        "partner_institution": partner,
+        "student_name": student_name,
+        "nim": nim,
+        "semester": semester,
+        "total_sks": total_sks,
+        "converted_gpa": converted_gpa,
+        "courses": normalized_courses,
+        "issues": issues
+    }
+
+
+
 
 
 
