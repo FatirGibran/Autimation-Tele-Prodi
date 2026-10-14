@@ -484,7 +484,42 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<[a-z0-9_-]+\b[^>]*\bdata-(?:theme|mode|color-scheme)=[^>]*>', sanitize_theme_attr, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized data-theme/mode attributes against unpermitted tokens.")
 
+        # 8o. Sanitize audio and track media elements against dangerous source injection
+        if "<audio" in cleaned.lower() or "<track" in cleaned.lower():
+            def sanitize_audio(m):
+                tag = m.group(0)
+                # Strip event handlers and unprompted autoplay
+                tag = re.sub(r'\s+(?:on[a-z]+|autoplay)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+autoplay\b', '', tag, flags=re.IGNORECASE)
+                # Block dangerous URI schemes
+                tag = re.sub(r'src=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                # Enforce controls so audio does not play unmonitored
+                if "controls" not in tag.lower():
+                    tag = tag.rstrip(">") + ' controls>'
+                if "class=" not in tag.lower():
+                    tag = tag.rstrip(">") + ' class="tu-audio">'
+                elif "tu-audio" not in tag:
+                    tag = re.sub(r'class=["\']([^"\']*)["\']', r'class="\1 tu-audio"', tag, flags=re.IGNORECASE)
+                return tag
+
+            def sanitize_track(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'src=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                # Validate kind attribute
+                kind_m = re.search(r'\bkind=["\']([^"\']*)["\']', tag, flags=re.IGNORECASE)
+                if kind_m:
+                    kind_val = kind_m.group(1).strip().lower()
+                    if kind_val not in ("subtitles", "captions", "descriptions", "chapters", "metadata"):
+                        tag = re.sub(r'\bkind=["\'][^"\']*["\']', 'kind="subtitles"', tag, flags=re.IGNORECASE)
+                return tag
+
+            cleaned = re.sub(r'<audio\b[^>]*>', sanitize_audio, cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r'<track\b[^>]*>', sanitize_track, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized audio and track media elements against dangerous media source injection.")
+
         return cleaned, warnings
+
 
 
 
