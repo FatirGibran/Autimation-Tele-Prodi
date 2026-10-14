@@ -894,8 +894,104 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Wajib jas laboratorium", html)
         self.assertIn("Ext. 112 / APAR Ruang 204", html)
 
+    def test_render_mbkm_credit_transfer_card(self):
+        courses = [
+            {"course_code": "IF3101", "course_name": "Cloud Computing", "sks": 4, "score_letter": "A"},
+            {"course_code": "IF3102", "course_name": "Microservices", "sks": 4, "score_letter": "A"}
+        ]
+        html = EditorialComponents.render_mbkm_credit_transfer_card(
+            program_name="Bangkit Academy 2026",
+            partner="Google Indonesia",
+            student_name="Fatir Gibran",
+            nim="120122001",
+            courses=courses,
+            total_sks=8,
+            converted_gpa=4.00,
+            sk_number="SK-DEK/FTTE/09/2026"
+        )
+        self.assertIn("tu-mbkm-transfer-card", html)
+        self.assertIn("Bangkit Academy 2026", html)
+        self.assertIn("Google Indonesia", html)
+        self.assertIn("Fatir Gibran", html)
+        self.assertIn("120122001", html)
+        self.assertIn("Cloud Computing", html)
+        self.assertIn("8 SKS", html)
+        self.assertIn("4.00", html)
+        self.assertIn("SK-DEK/FTTE/09/2026", html)
+
+    def test_render_yudisium_clearance_card(self):
+        html = EditorialComponents.render_yudisium_clearance_card(
+            student_name="Fatir Gibran",
+            nim="120122001",
+            thesis_title="Sistem Otomasi Portal Editorial Akademik Berbasis Microservices",
+            ipk=3.85,
+            predicate="Dengan Pujian (Cum Laude)",
+            yudisium_date="20 Oktober 2026",
+            verification_code="YUD-2026-FTTE-044"
+        )
+        self.assertIn("tu-yudisium-card", html)
+        self.assertIn("Fatir Gibran", html)
+        self.assertIn("120122001", html)
+        self.assertIn("Sistem Otomasi Portal Editorial", html)
+        self.assertIn("3.85", html)
+        self.assertIn("Dengan Pujian (Cum Laude)", html)
+        self.assertIn("YUD-2026-FTTE-044", html)
+
+    def test_render_scopus_paper_showcase_card(self):
+        html = EditorialComponents.render_scopus_paper_showcase_card(
+            title="Optimizing Edge AI Routing in 6G Heterogeneous Networks",
+            authors=["Fatir Gibran", "Dr. Bambang", "Prof. Tanaka"],
+            journal_name="IEEE Transactions on Network and Service Management",
+            quartile="Q1",
+            sjr_score=1.92,
+            doi="10.1109/TNSM.2026.334455",
+            citation_count=14
+        )
+        self.assertIn("tu-scopus-paper-card", html)
+        self.assertIn("Scopus Q1", html)
+        self.assertIn("1.92", html)
+        self.assertIn("Optimizing Edge AI Routing", html)
+        self.assertIn("Fatir Gibran", html)
+        self.assertIn("IEEE Transactions on Network", html)
+        self.assertIn("10.1109/TNSM.2026.334455", html)
+
+    def test_render_lab_equipment_status_card(self):
+        html = EditorialComponents.render_lab_equipment_status_card(
+            asset_id="LAB-RF-2026-088",
+            equipment_name="Digital Spectrum Analyzer 13.6 GHz",
+            lab_name="Laboratorium RF & Microwave",
+            condition="Baik",
+            cal_status="Valid",
+            next_due_date="2027-04-15",
+            pic="Laboran Ahmad, S.T."
+        )
+        self.assertIn("tu-lab-equipment-card", html)
+        self.assertIn("LAB-RF-2026-088", html)
+        self.assertIn("Digital Spectrum Analyzer", html)
+        self.assertIn("tu-cal-valid", html)
+        self.assertIn("Valid", html)
+        self.assertIn("2027-04-15", html)
+
+    def test_render_visiting_professor_card(self):
+        html = EditorialComponents.render_visiting_professor_card(
+            name="Prof. Dr. Hiroshi Tanaka",
+            title_role="Chair of Optical Communications",
+            home_university="The University of Tokyo",
+            country="Jepang",
+            lecture_topic="Next-Generation Terabit Optical Transceivers for Datacenters",
+            date_time="5 November 2026, 09:00 WIB",
+            registration_url="https://event.telkomuniversity.ac.id/visiting-prof"
+        )
+        self.assertIn("tu-visiting-prof-card", html)
+        self.assertIn("Prof. Dr. Hiroshi Tanaka", html)
+        self.assertIn("The University of Tokyo", html)
+        self.assertIn("Jepang", html)
+        self.assertIn("Next-Generation Terabit Optical Transceivers", html)
+        self.assertIn("https://event.telkomuniversity.ac.id/visiting-prof", html)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
