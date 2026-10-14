@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 390+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 420+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 404 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 433 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -474,6 +474,40 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 376. **Subcommand CLI `mkdocs` (`cli.py`)**: Perintah konsol ekspor artikel ke format markdown MkDocs.
 377. **Subcommand CLI `safety-log` (`cli.py`)**: Perintah konsol pencatatan dan peninjauan log inspeksi K3 laboratorium (list, add).
 378. **Ekspansi Suite Pengujian Unit Terpadu (404 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 404 unit test terverifikasi (100% pass rate).
+
+---
+
+## 20. Ekspansi Arsitektural v3.2.0 Milestone Release
+
+379. **Sanitasi Elemen Audio & Track HTML5 (`sanitizer.py`)**: Sanitasi elemen `<audio>` dan `<track>` serta penegakan skema URI aman pada atribut `src`.
+380. **Sanitasi Tipografi Komputasi Kbd & Samp (`sanitizer.py`)**: Sanitasi elemen tipografi komputasi `<kbd>` dan `<samp>` dari injeksi markup dan script tersembunyi.
+381. **Sanitasi Tooltip Kontekstual Data-Tooltip (`sanitizer.py`)**: Pembersihan nilai atribut `data-tooltip`, `data-title`, dan `data-placement` dari injeksi event handler.
+382. **Parser Sitasi Akademik Format Harvard (`parser.py`)**: Penguraian format sitasi rujukan akademik standar Harvard (*author-date*) ke dalam entitas terstruktur.
+383. **Validator Konversi Kredit Program MBKM (`parser.py`)**: Validasi rekognisi dan ekuivalensi mata kuliah mahasiswa program Magang Merdeka dan Studi Independen.
+384. **Parser Log Inventaris & Kalibrasi Alat Lab (`parser.py`)**: Parsing audit masa berlaku kalibrasi peralatan riset laboratorium dan sertifikat kalibrator.
+385. **Validator Clearance Yudisium Kelulusan (`parser.py`)**: Validasi kelayakan checklist administrasi kelulusan sarjana sebelum pelaksanaan yudisium.
+386. **Auditor Aksesibilitas Transkrip Media Audio/Video (`seo_validator.py`)**: Pemeriksaan ketersediaan alternatif teks dan transkrip konten multimedia (WCAG 2.1 AA).
+387. **Detektor Kuartil SCImago Journal Rank SJR (`seo_validator.py`)**: Pengenalan otomatis kuartil reputasi publikasi ilmiah internasional Scopus/SJR (Q1, Q2, Q3, Q4).
+388. **Auditor Tag Multibahasa Hreflang (`seo_validator.py`)**: Validasi keabsahan format tag `hreflang` dan kode bahasa internasional ISO 639-1.
+389. **Auditor Kedalaman Hierarki Breadcrumb (`seo_validator.py`)**: Evaluasi kedalaman rantai navigasi semantik breadcrumb dan pencegahan self-loop.
+390. **Komponen Pemetaan Ekuivalensi Kredit MBKM (`components.py`)**: Kartu visualisasi konversi mata kuliah program MBKM ke kurikulum sarjana teknik.
+391. **Komponen Sertifikat Clearance Yudisium (`components.py`)**: Kartu status kelulusan sarjana lengkap dengan predikat dan kode verifikasi ijazah.
+392. **Komponen Showcase Makalah Jurnal Scopus (`components.py`)**: Kartu pameran publikasi riset civitas akademika pada jurnal bereputasi Scopus dengan indikator kuartil SJR.
+393. **Komponen Kalibrasi Alat Laboratorium (`components.py`)**: Kartu monitoring status kelayakan ukur instrumen laboratorium prodi.
+394. **Komponen Dosen Tamu & Visiting Professor (`components.py`)**: Kartu profil narasumber akademik internasional dan dokumentasi kuliah pakar.
+395. **Formatter Siaran Yudisium Kelulusan Telegram (`formatters.py`)**: Format siaran kartu ucapan selamat yudisium mahasiswa sarjana teknik di kanal Telegram.
+396. **Formatter Siaran Kuliah Tamu Internasional Telegram (`formatters.py`)**: Format pesan undangan kuliah pakar dosen tamu internasional di kanal Telegram.
+397. **Manajer Rekam Konversi MBKM (`storage.py`)**: Tabel basis data `mbkm_credit_transfers` untuk pengelolaan rekam jejak rekognisi SKS mahasiswa.
+398. **Manajer Rekam Clearance Yudisium (`storage.py`)**: Tabel basis data `yudisium_clearances` untuk penyimpanan status kelulusan sarjana.
+399. **Manajer Riwayat Kalibrasi Lab (`storage.py`)**: Tabel basis data `lab_equipment_calibrations` untuk monitoring masa aktif kalibrasi alat.
+400. **Helper WordPress Get Media By ID (`wordpress_client.py`)**: Pengambilan metadata file media lampiran berdasarkan ID melalui REST API WordPress.
+401. **Helper WordPress Get Site Settings (`wordpress_client.py`)**: Pengambilan informasi pengaturan situs dan konfigurasi direktori via REST API WordPress.
+402. **Generator Schema.org EducationalOccupationalCredential (`exporter.py`)**: Pembuatan metadata terstruktur JSON-LD untuk ijazah sarjana dan sertifikat keahlian.
+403. **Generator Markdown Kompatibel Astro Starlight (`exporter.py`)**: Ekspor artikel ke format Astro Starlight static documentation generator dengan hierarki sidebar.
+404. **Subcommand CLI `mbkm` (`cli.py`)**: Perintah konsol pencatatan dan peninjauan rekognisi konversi kredit MBKM mahasiswa (list, add).
+405. **Subcommand CLI `yudisium` (`cli.py`)**: Perintah konsol manajemen rekam kelulusan yudisium mahasiswa (list, add, check).
+406. **Subcommand CLI `starlight` (`cli.py`)**: Perintah konsol ekspor artikel ke format markdown Astro Starlight.
+407. **Ekspansi Suite Pengujian Unit Terpadu (433 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 433 unit test terverifikasi (100% pass rate).
 
 
 
