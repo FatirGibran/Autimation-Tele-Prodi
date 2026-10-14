@@ -601,6 +601,30 @@ class TelegramFormatter:
             f"💐 *Selamat menyandang gelar Sarjana dan berkontribusi nyata bagi bangsa dan almamater!*"
         )
 
+    @staticmethod
+    def format_visiting_lecture_broadcast(
+        speaker_name: str,
+        speaker_origin: str,
+        lecture_topic: str,
+        date_time: str,
+        venue: str,
+        registration_url: str = ""
+    ) -> str:
+        """
+        Renders an international visiting professor / public guest lecture invitation card for Telegram.
+        """
+        reg_text = f"\n🔗 **Tautan Registrasi:** {registration_url.strip()}" if registration_url else ""
+        return (
+            f"🌐 **Undangan Kuliah Umum Dosen Tamu Internasional (Visiting Professor)**\n\n"
+            f"🎙 **Narasumber:** {speaker_name.strip()}\n"
+            f"🏛 **Asal Institusi:** {speaker_origin.strip()}\n"
+            f"📚 **Topik Kuliah:** \"{lecture_topic.strip()}\"\n"
+            f"📅 **Waktu Pelaksanaan:** `{date_time.strip()}`\n"
+            f"📍 **Tempat / Media:** {venue.strip()}{reg_text}\n\n"
+            f"✨ *Terbuka untuk seluruh civitas akademika dan mahasiswa program studi.*"
+        )
+
+
 
 
 
