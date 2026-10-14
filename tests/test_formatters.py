@@ -349,8 +349,42 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Tim Garuda Telematics", card)
         self.assertIn("Fatir Gibran, Bayu Pratama", card)
 
+    def test_format_yudisium_congratulations_broadcast(self):
+        msg = TelegramFormatter.format_yudisium_congratulations_broadcast(
+            student_name="Fatir Gibran",
+            nim="120122001",
+            thesis_title="Sistem Otomasi Portal Editorial Akademik",
+            ipk=3.85,
+            predicate="Dengan Pujian (Cum Laude)",
+            yudisium_date="20 Oktober 2026"
+        )
+        self.assertIn("Selamat & Sukses atas Kelulusan Yudisium Sarjana!", msg)
+        self.assertIn("Fatir Gibran", msg)
+        self.assertIn("120122001", msg)
+        self.assertIn("Sistem Otomasi Portal Editorial Akademik", msg)
+        self.assertIn("3.85", msg)
+        self.assertIn("Dengan Pujian (Cum Laude)", msg)
+        self.assertIn("20 Oktober 2026", msg)
+
+    def test_format_visiting_lecture_broadcast(self):
+        msg = TelegramFormatter.format_visiting_lecture_broadcast(
+            speaker_name="Prof. Dr. Hiroshi Tanaka",
+            speaker_origin="The University of Tokyo, Jepang",
+            lecture_topic="Next-Gen Terabit Optical Transceivers",
+            date_time="5 November 2026, 09:00 WIB",
+            venue="Auditorium Gedung Rektorat Lt. 3 & Zoom Meeting",
+            registration_url="https://event.telkomuniversity.ac.id/visiting-prof"
+        )
+        self.assertIn("Undangan Kuliah Umum Dosen Tamu Internasional (Visiting Professor)", msg)
+        self.assertIn("Prof. Dr. Hiroshi Tanaka", msg)
+        self.assertIn("The University of Tokyo, Jepang", msg)
+        self.assertIn("Next-Gen Terabit Optical Transceivers", msg)
+        self.assertIn("5 November 2026, 09:00 WIB", msg)
+        self.assertIn("https://event.telkomuniversity.ac.id/visiting-prof", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
+
 
     def test_rate_limiter_allows_and_blocks(self):
         from formatters import CommandRateLimiter
