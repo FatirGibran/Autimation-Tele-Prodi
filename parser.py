@@ -2137,6 +2137,65 @@ def parse_lab_safety_inspection(text: str) -> Dict[str, Any]:
     }
 
 
+def parse_harvard_citation(citation: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses academic citations formatted in Harvard referencing style:
+    Author, A.A. (Year) 'Title of article', Publication/Journal Title, Volume(Issue), pp. pages. doi/url.
+    """
+    clean = citation.strip()
+    if not clean:
+        return None
+
+    # Match Author (Year) pattern
+    author_year_m = re.match(r'^([^()]+?)\s*\((19\d{2}|20\d{2})\)\s*[\'"]?([^\'",\.\n]+)[\'"]?\s*[\.,]?(.*)$', clean, re.DOTALL)
+    if not author_year_m:
+        return None
+
+    raw_authors = author_year_m.group(1).strip()
+    year = int(author_year_m.group(2))
+    title = author_year_m.group(3).strip()
+    remainder = author_year_m.group(4).strip()
+
+    # Extract DOI or URL if present
+    doi_or_url = ""
+    doi_m = re.search(r'(?:https?://[^\s]+|doi:\s*10\.[^\s]+|10\.\d{4,9}/[^\s]+)', remainder, re.IGNORECASE)
+    if doi_m:
+        doi_or_url = doi_m.group(0).rstrip('.,')
+        remainder = remainder.replace(doi_m.group(0), "").strip()
+
+    # Extract pages (pp. 120-135 or p. 45)
+    pages = ""
+    pages_m = re.search(r'\bpp?\.\s*([0-9]+(?:\s*[-–]\s*[0-9]+)?)', remainder, re.IGNORECASE)
+    if pages_m:
+        pages = pages_m.group(1).replace(" ", "")
+        remainder = re.sub(r'\bpp?\.\s*[0-9]+(?:\s*[-–]\s*[0-9]+)?', '', remainder, flags=re.IGNORECASE).strip()
+
+    # Extract volume/issue e.g., 15(2) or 15
+    volume_issue = ""
+    vol_m = re.search(r'\b(\d+(?:\(\d+\))?)\b', remainder)
+    if vol_m:
+        volume_issue = vol_m.group(1)
+        remainder = remainder.replace(vol_m.group(0), "").strip()
+
+    # Publication / venue
+    publication = remainder.strip(' ,.')
+
+    # Parse authors into list
+    authors = [a.strip() for a in re.split(r'\s+and\s+|,\s*(?=[A-Z][a-z]+|\s*[A-Z]\.)|;\s*', raw_authors) if a.strip()]
+
+    return {
+        "authors": authors,
+        "year": year,
+        "title": title,
+        "publication": publication,
+        "volume_issue": volume_issue,
+        "pages": pages,
+        "doi_or_url": doi_or_url,
+        "raw_citation": clean
+    }
+
+
+
 
 
 
