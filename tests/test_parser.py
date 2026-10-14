@@ -649,8 +649,103 @@ Instalasi Listrik: Rapi dan memenuhi standar K3
         self.assertTrue(res["is_passed"])
         self.assertTrue(res["checks"]["apar_ready"])
 
+    def test_parse_harvard_citation(self):
+        from parser import parse_harvard_citation
+        cit_journal = "Gibran, F. and Santoso, B. (2025) 'Zero-trust edge security in telecommunication microservices', Journal of Systems Architecture, 18(3), pp. 112-126. doi: 10.1016/j.sysarc.2025.102."
+        res = parse_harvard_citation(cit_journal)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["year"], 2025)
+        self.assertIn("Gibran, F.", res["authors"])
+        self.assertEqual(res["title"], "Zero-trust edge security in telecommunication microservices")
+        self.assertIn("Journal of Systems Architecture", res["publication"])
+        self.assertEqual(res["volume_issue"], "18(3)")
+        self.assertEqual(res["pages"], "112-126")
+        self.assertIn("10.1016/j.sysarc.2025.102", res["doi_or_url"])
+
+    def test_validate_mbkm_credit_transfer(self):
+        from parser import validate_mbkm_credit_transfer
+        valid_data = {
+            "program_name": "Bangkit Academy 2026 Cloud Computing",
+            "partner_institution": "Google & GoTo",
+            "student_name": "Fatir Gibran",
+            "nim": "120122001",
+            "semester": 6,
+            "courses_mapped": [
+                {"course_code": "IF3101", "course_name": "Cloud Computing Architecture", "sks": 4, "score_letter": "A"},
+                {"course_code": "IF3102", "course_name": "Microservices Development", "sks": 4, "score_letter": "A"},
+                {"course_code": "IF3103", "course_name": "DevOps Engineering", "sks": 4, "score_letter": "AB"},
+                {"course_code": "IF3104", "course_name": "Capstone Project", "sks": 6, "score_letter": "A"}
+            ]
+        }
+        res_ok = validate_mbkm_credit_transfer(valid_data)
+        self.assertTrue(res_ok["is_approved"])
+        self.assertEqual(res_ok["total_sks"], 18)
+        self.assertGreater(res_ok["converted_gpa"], 3.7)
+
+        # Over-limit test (>20 SKS)
+        overflow_data = dict(valid_data)
+        overflow_data["courses_mapped"] = valid_data["courses_mapped"] + [
+            {"course_code": "IF3105", "course_name": "Extra Elective", "sks": 4, "score_letter": "B"}
+        ]
+        res_overflow = validate_mbkm_credit_transfer(overflow_data)
+        self.assertFalse(res_overflow["is_approved"])
+        self.assertEqual(res_overflow["total_sks"], 22)
+        self.assertTrue(any("melebihi batas" in i for i in res_overflow["issues"]))
+
+    def test_parse_lab_equipment_log(self):
+        from parser import parse_lab_equipment_log
+        log_text = """
+ID Aset: LAB-RF-2026-088
+Nama Alat: Digital Spectrum Analyzer 13.6 GHz
+Lab: Laboratorium Sistem Transmisi & RF
+Model: Rohde & Schwarz FPH
+Tgl Kalibrasi: 2026-01-15
+Due Date: 2027-01-15
+Kondisi: Baik
+PIC: Laboran Ahmad Firdaus, S.T.
+"""
+        res = parse_lab_equipment_log(log_text)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["asset_id"], "LAB-RF-2026-088")
+        self.assertEqual(res["equipment_name"], "Digital Spectrum Analyzer 13.6 GHz")
+        self.assertEqual(res["lab_name"], "Laboratorium Sistem Transmisi & RF")
+        self.assertEqual(res["operating_condition"], "Baik")
+        self.assertEqual(res["calibration_status"], "Valid")
+        self.assertEqual(res["pic"], "Laboran Ahmad Firdaus, S.T.")
+
+    def test_validate_yudisium_clearance(self):
+        from parser import validate_yudisium_clearance
+        candidate_ok = {
+            "student_name": "Fatir Gibran",
+            "nim": "120122001",
+            "earned_sks": 146,
+            "ipk": 3.82,
+            "sks_d": 0,
+            "sks_e": 0,
+            "toefl_score": 525,
+            "skk_points": 55,
+            "library_clearance": True,
+            "lab_clearance": True,
+            "tuition_clearance": True,
+            "thesis_repository_uploaded": True
+        }
+        res_ok = validate_yudisium_clearance(candidate_ok)
+        self.assertTrue(res_ok["is_eligible"])
+        self.assertEqual(res_ok["graduation_predicate"], "Dengan Pujian (Cum Laude)")
+        self.assertEqual(len(res_ok["issues"]), 0)
+
+        candidate_fail = dict(candidate_ok)
+        candidate_fail["earned_sks"] = 138
+        candidate_fail["toefl_score"] = 410
+        candidate_fail["lab_clearance"] = False
+        res_fail = validate_yudisium_clearance(candidate_fail)
+        self.assertFalse(res_fail["is_eligible"])
+        self.assertEqual(res_fail["graduation_predicate"], "Belum Memenuhi Syarat")
+        self.assertGreaterEqual(len(res_fail["issues"]), 3)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

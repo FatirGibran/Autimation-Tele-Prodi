@@ -2172,7 +2172,7 @@ def parse_harvard_citation(citation: str) -> Optional[Dict[str, Any]]:
 
     # Extract volume/issue e.g., 15(2) or 15
     volume_issue = ""
-    vol_m = re.search(r'\b(\d+(?:\(\d+\))?)\b', remainder)
+    vol_m = re.search(r'\b(\d+(?:\(\d+\))?)', remainder)
     if vol_m:
         volume_issue = vol_m.group(1)
         remainder = remainder.replace(vol_m.group(0), "").strip()
@@ -2181,7 +2181,7 @@ def parse_harvard_citation(citation: str) -> Optional[Dict[str, Any]]:
     publication = remainder.strip(' ,.')
 
     # Parse authors into list
-    authors = [a.strip() for a in re.split(r'\s+and\s+|,\s*(?=[A-Z][a-z]+|\s*[A-Z]\.)|;\s*', raw_authors) if a.strip()]
+    authors = [a.strip() for a in re.split(r'\s+and\s+|;\s*|(?<=[A-Z]\.),\s*', raw_authors) if a.strip()]
 
     return {
         "authors": authors,
