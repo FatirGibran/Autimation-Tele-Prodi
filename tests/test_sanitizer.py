@@ -364,8 +364,56 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('data-color-scheme="telkom-red"', clean)
         self.assertTrue(any("data-theme/mode" in w for w in warnings))
 
+    def test_sanitize_audio_track_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<audio src="https://example.com/lecture.mp3" autoplay onplay="steal()">'
+            '<track kind="unknown-format" src="javascript:alert(1)">'
+            '</audio>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('autoplay', clean)
+        self.assertNotIn('onplay="steal()"', clean)
+        self.assertIn('controls', clean)
+        self.assertIn('class="tu-audio"', clean)
+        self.assertNotIn('src="javascript:alert(1)"', clean)
+        self.assertIn('kind="subtitles"', clean)
+        self.assertTrue(any("audio and track" in w for w in warnings))
+
+    def test_sanitize_kbd_samp_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<p>Tekan <kbd onclick="evil()"><kbd>Ctrl</kbd>+<kbd>C</kbd></kbd> untuk salin.</p>'
+            '<samp style="color:red;" contenteditable="true">Output: 200 OK</samp>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('onclick="evil()"', clean)
+        self.assertNotIn('contenteditable="true"', clean)
+        self.assertNotIn('style="color:red;"', clean)
+        self.assertIn('<kbd><kbd>Ctrl</kbd>+<kbd>C</kbd></kbd>', clean)
+        self.assertIn('<samp>Output: 200 OK</samp>', clean)
+        self.assertTrue(any("kbd and samp" in w for w in warnings))
+
+    def test_sanitize_tooltip_placement_attributes(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<button data-placement="diagonal-down" data-tooltip="<b>Klik</b> & info">Hover</button>'
+            '<span data-placement="bottom" data-title="Penjelasan singkat">Info</span>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('data-placement="top"', clean)
+        self.assertIn('data-placement="bottom"', clean)
+        self.assertNotIn('<b>Klik</b>', clean)
+        self.assertIn('data-tooltip="Klik & info"', clean)
+        self.assertIn('data-title="Penjelasan singkat"', clean)
+        self.assertTrue(any("contextual tooltip" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
