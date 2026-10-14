@@ -5,7 +5,7 @@ ALLOWED_TAGS = {
     "div", "style", "article", "header", "section", "figure", "figcaption",
     "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary", "dialog",
-    "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "sub", "sup",
+    "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "samp", "sub", "sup",
     "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
     "video", "audio", "source", "picture", "track", "canvas",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
@@ -518,7 +518,18 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<track\b[^>]*>', sanitize_track, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized audio and track media elements against dangerous media source injection.")
 
+        # 8p. Sanitize kbd and samp computational terminal typography elements
+        if "<kbd" in cleaned.lower() or "<samp" in cleaned.lower():
+            def sanitize_kbd_samp(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<(?:kbd|samp)\b[^>]*>', sanitize_kbd_samp, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized kbd and samp computational typography elements.")
+
         return cleaned, warnings
+
 
 
 
