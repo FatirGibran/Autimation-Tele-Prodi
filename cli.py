@@ -800,6 +800,95 @@ def cmd_safety_log(args):
             print(f"#{s['id']} [{s['inspection_date']}] {s['lab_name']} - Skor: {s['compliance_score']}% [{status_str}] - Insp: {s['inspector']}")
 
 
+def cmd_mbkm(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.program or not args.partner:
+            print("Error: --name, --nim, --program, dan --partner wajib disertakan untuk mencatat konversi MBKM.")
+            sys.exit(1)
+        sem = int(args.semester) if args.semester else 6
+        sks = int(args.sks) if args.sks else 20
+        gpa = float(args.gpa) if args.gpa else 3.75
+        mid = storage.record_mbkm_credit_transfer(
+            program_name=args.program,
+            partner_institution=args.partner,
+            student_name=args.name,
+            nim=args.nim,
+            semester=sem,
+            total_sks=sks,
+            converted_gpa=gpa,
+            courses=[],
+            sk_number=args.sk or ""
+        )
+        print(f"Konversi kredit MBKM berhasil dicatat (ID: {mid}) untuk {args.name} ({args.nim}).")
+    else:
+        transfers = storage.list_mbkm_credit_transfers(nim=args.nim)
+        if not transfers:
+            print("Belum ada catatan konversi kredit MBKM.")
+            return
+        print("=== Rekam Jejak Konversi Kredit MBKM ===")
+        for t in transfers:
+            print(f"#{t['id']} [{t['program_name']} - {t['partner_institution']}] {t['student_name']} ({t['nim']}) - {t['total_sks']} SKS | IPK: {t['converted_gpa']:.2f}")
+
+
+def cmd_yudisium(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.thesis or args.ipk is None or args.sks is None or not args.predicate:
+            print("Error: --name, --nim, --thesis, --ipk, --sks, dan --predicate wajib disertakan untuk mencatat yudisium.")
+            sys.exit(1)
+        import datetime
+        date_str = args.date or datetime.date.today().isoformat()
+        code_str = args.code or f"YUD-{args.nim}"
+        yid = storage.record_yudisium_clearance(
+            student_name=args.name,
+            nim=args.nim,
+            thesis_title=args.thesis,
+            ipk=float(args.ipk),
+            earned_sks=int(args.sks),
+            graduation_predicate=args.predicate,
+            yudisium_date=date_str,
+            verification_code=code_str,
+            is_cleared=True
+        )
+        print(f"Kelulusan yudisium berhasil dicatat (ID: {yid}) untuk {args.name} ({args.nim}).")
+    elif args.action == "check":
+        if not args.nim:
+            print("Error: --nim wajib disertakan untuk memeriksa status yudisium.")
+            sys.exit(1)
+        rec = storage.get_yudisium_clearance_by_nim(args.nim)
+        if not rec:
+            print(f"Data kelulusan yudisium untuk NIM '{args.nim}' tidak ditemukan.")
+            return
+        status_label = "LULUS / CLEARED" if rec.get("is_cleared") else "PENDING"
+        print(f"Status Yudisium {rec['student_name']} ({rec['nim']}): {status_label} | IPK: {rec['ipk']} | Predikat: {rec['graduation_predicate']} | Kode: {rec['verification_code']}")
+    else:
+        clearances = storage.list_yudisium_clearances(predicate=args.predicate)
+        if not clearances:
+            print("Belum ada catatan kelulusan yudisium mahasiswa.")
+            return
+        print("=== Rekam Jejak Kelulusan Yudisium Mahasiswa ===")
+        for y in clearances:
+            print(f"#{y['id']} [{y['yudisium_date']}] {y['student_name']} ({y['nim']}) - IPK: {y['ipk']} ({y['graduation_predicate']}) - Verifikasi: {y['verification_code']}")
+
+
+def cmd_starlight(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "topic": article.get("topic", ""),
+        "meta_description": article.get("meta_description", ""),
+        "sidebar_label": args.label or article.get("topic") or article.get("seo_title", ""),
+        "sidebar_order": args.order
+    }
+    sl_md = ArticleExporter.to_starlight_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(sl_md, encoding="utf-8")
+    print(f"Export Astro Starlight markdown berhasil -> {out_path}")
+
+
 def main():
 
 
@@ -1101,6 +1190,40 @@ def main():
     safety_parser.add_argument("--date", help="Tanggal inspeksi (YYYY-MM-DD)")
     safety_parser.add_argument("--notes", help="Catatan temuan inspeksi keselamatan")
     safety_parser.set_defaults(func=cmd_safety_log)
+
+    # MBKM command
+    mbkm_parser = subparsers.add_parser("mbkm", help="Kelola rekognisi konversi kredit MBKM mahasiswa (list, add)")
+    mbkm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan konversi MBKM")
+    mbkm_parser.add_argument("--program", help="Nama program MBKM (misal: MSIB Magang Merdeka)")
+    mbkm_parser.add_argument("--partner", help="Nama mitra institusi atau industri")
+    mbkm_parser.add_argument("--name", help="Nama mahasiswa")
+    mbkm_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    mbkm_parser.add_argument("--semester", type=int, default=6, help="Semester pelaksanaan MBKM")
+    mbkm_parser.add_argument("--sks", type=int, default=20, help="Total SKS rekognisi")
+    mbkm_parser.add_argument("--gpa", type=float, default=3.75, help="Indeks prestasi rata-rata konversi")
+    mbkm_parser.add_argument("--sk", help="Nomor SK Rekognisi MBKM")
+    mbkm_parser.set_defaults(func=cmd_mbkm)
+
+    # Yudisium command
+    yudisium_parser = subparsers.add_parser("yudisium", help="Kelola rekam kelulusan yudisium mahasiswa (list, add, check)")
+    yudisium_parser.add_argument("--action", choices=["list", "add", "check"], default="list", help="Tindakan yudisium")
+    yudisium_parser.add_argument("--name", help="Nama mahasiswa")
+    yudisium_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    yudisium_parser.add_argument("--thesis", help="Judul tugas akhir / skripsi mahasiswa")
+    yudisium_parser.add_argument("--ipk", type=float, help="Indeks Prestasi Kumulatif kelulusan")
+    yudisium_parser.add_argument("--sks", type=int, help="Total SKS kelulusan")
+    yudisium_parser.add_argument("--predicate", help="Predikat kelulusan (Pujian/Sangat Memuaskan/Memuaskan)")
+    yudisium_parser.add_argument("--date", help="Tanggal yudisium (YYYY-MM-DD)")
+    yudisium_parser.add_argument("--code", help="Kode verifikasi ijazah/yudisium")
+    yudisium_parser.set_defaults(func=cmd_yudisium)
+
+    # Starlight command
+    starlight_parser = subparsers.add_parser("starlight", help="Export artikel ke format Markdown kompatibel Astro Starlight")
+    starlight_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    starlight_parser.add_argument("--out", help="Path berkas output Markdown Starlight")
+    starlight_parser.add_argument("--label", help="Label sidebar Starlight")
+    starlight_parser.add_argument("--order", type=int, default=1, help="Urutan prioritas pada sidebar")
+    starlight_parser.set_defaults(func=cmd_starlight)
 
     args = parser.parse_args()
 
