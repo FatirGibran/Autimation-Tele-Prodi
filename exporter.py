@@ -990,6 +990,31 @@ navigation: true
         ]
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_credential_json_ld(
+        credential_name: str,
+        description: str,
+        credential_category: str,
+        recognized_by: str,
+        educational_level: str
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org EducationalOccupationalCredential JSON-LD for degrees and professional certifications.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "EducationalOccupationalCredential",
+            "name": credential_name.strip(),
+            "description": description.strip(),
+            "credentialCategory": credential_category.strip(),
+            "educationalLevel": educational_level.strip(),
+            "recognizedBy": {
+                "@type": "EducationalOrganization",
+                "name": recognized_by.strip()
+            }
+        }
+
+
 
 
 
