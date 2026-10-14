@@ -388,8 +388,41 @@ class TestWordPressClient(unittest.TestCase):
         self.assertIn("Connection refused", res["error"])
         self.assertIn("latency_ms", res)
 
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_id_found(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 88, "title": {"rendered": "Bagan Kurikulum"}, "source_url": "https://example.com/bagan.png"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        media = self.client.get_media_by_id(88)
+        self.assertIsNotNone(media)
+        self.assertEqual(media["id"], 88)
+        self.assertEqual(media["source_url"], "https://example.com/bagan.png")
+        req = mock_urlopen.call_args[0][0]
+        self.assertIn("/media/88", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_id_not_found(self, mock_urlopen):
+        mock_urlopen.side_effect = Exception("HTTP Error 404: Not Found")
+
+        media = self.client.get_media_by_id(9999)
+        self.assertIsNone(media)
+
+    @patch("urllib.request.urlopen")
+    def test_get_site_settings(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"title": "Prodi Teknik Telekomunikasi", "description": "Website Resmi", "timezone_string": "Asia/Jakarta"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        settings = self.client.get_site_settings()
+        self.assertEqual(settings["title"], "Prodi Teknik Telekomunikasi")
+        self.assertEqual(settings["timezone_string"], "Asia/Jakarta")
+        req = mock_urlopen.call_args[0][0]
+        self.assertIn("/settings", req.full_url)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
