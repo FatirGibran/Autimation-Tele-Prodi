@@ -2326,6 +2326,72 @@ def parse_lab_equipment_log(text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def validate_yudisium_clearance(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Validates student undergraduate graduation (Yudisium) clearance checklist:
+    minimum 144 SKS, GPA >= 2.00, no E grades, D grades <= 6 SKS, TOEFL >= 450,
+    extracurricular SKK points >= 40, and administrative clearances.
+    """
+    student_name = str(data.get("student_name", "")).strip()
+    nim = str(data.get("nim", "")).strip()
+    sks = int(data.get("earned_sks", 0))
+    ipk = float(data.get("ipk", 0.0))
+    sks_d = int(data.get("sks_d", 0))
+    sks_e = int(data.get("sks_e", 0))
+    toefl = int(data.get("toefl_score", 0))
+    skk_points = int(data.get("skk_points", 0))
+
+    admin_clearances = {
+        "library_clearance": bool(data.get("library_clearance", False)),
+        "lab_clearance": bool(data.get("lab_clearance", False)),
+        "tuition_clearance": bool(data.get("tuition_clearance", False)),
+        "thesis_repository_uploaded": bool(data.get("thesis_repository_uploaded", False))
+    }
+
+    issues = []
+    if sks < 144:
+        issues.append(f"Jumlah SKS kelulusan belum terpenuhi ({sks}/144 SKS)")
+    if ipk < 2.00:
+        issues.append(f"IPK kumulatif di bawah ambang batas minimal ({ipk:.2f}/2.00)")
+    if sks_e > 0:
+        issues.append(f"Terdapat nilai E sebanyak {sks_e} SKS yang belum diulang")
+    if sks_d > 6:
+        issues.append(f"Total nilai D ({sks_d} SKS) melebihi batas maksimal regulasi (6 SKS)")
+    if toefl < 450:
+        issues.append(f"Skor EPR/TOEFL belum memenuhi standar minimum prodi ({toefl}/450)")
+    if skk_points < 40:
+        issues.append(f"Poin SKK kegiatan kemahasiswaan belum mencukupi ({skk_points}/40 poin)")
+
+    for check_key, passed in admin_clearances.items():
+        if not passed:
+            human_label = check_key.replace("_", " ").title()
+            issues.append(f"Verifikasi berkas {human_label} belum disetujui")
+
+    predicate = "Tidak Lulus"
+    if ipk >= 3.51:
+        predicate = "Dengan Pujian (Cum Laude)"
+    elif ipk >= 3.01:
+        predicate = "Sangat Memuaskan"
+    elif ipk >= 2.76:
+        predicate = "Memuaskan"
+    elif ipk >= 2.00:
+        predicate = "Cukup"
+
+    is_eligible = bool(len(issues) == 0 and sks >= 144 and ipk >= 2.00)
+
+    return {
+        "is_eligible": is_eligible,
+        "student_name": student_name,
+        "nim": nim,
+        "earned_sks": sks,
+        "ipk": ipk,
+        "graduation_predicate": predicate if is_eligible else "Belum Memenuhi Syarat",
+        "administrative_clearances": admin_clearances,
+        "issues": issues
+    }
+
+
+
 
 
 
