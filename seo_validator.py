@@ -2034,6 +2034,48 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_media_transcripts(html_content: str) -> Dict[str, Any]:
+        """
+        Audits audio and video media elements for WCAG 2.1 accessibility compliance.
+        Verifies presence of closed captions (<track kind="captions|subtitles">)
+        or accompanying textual transcript containers (.tu-transcript / .tu-media-transcript).
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        media_elements = soup.find_all(["audio", "video"])
+        if not media_elements:
+            return {
+                "total_media": 0,
+                "accessible_media": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues = []
+        compliant_count = 0
+        has_page_transcript = bool(soup.find(class_=re.compile(r'\btu-(?:media-)?transcript\b', re.IGNORECASE)))
+
+        for idx, media in enumerate(media_elements, 1):
+            tag_name = media.name
+            tracks = media.find_all("track")
+            has_caption_track = any(
+                t.get("kind", "").strip().lower() in ("captions", "subtitles") and t.get("src")
+                for t in tracks
+            )
+
+            if has_caption_track or has_page_transcript:
+                compliant_count += 1
+            else:
+                issues.append(f"Elemen <{tag_name}> #{idx} tidak memiliki track teks takarir (<track kind='subtitles'>) atau blok transkrip.")
+
+        return {
+            "total_media": len(media_elements),
+            "accessible_media": compliant_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
