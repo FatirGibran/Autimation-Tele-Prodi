@@ -2446,6 +2446,62 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_mbkm_credit_transfer_card(
+        cls,
+        program_name: str,
+        partner: str,
+        student_name: str,
+        nim: str,
+        courses: List[Dict[str, Any]],
+        total_sks: int,
+        converted_gpa: float,
+        sk_number: str = ""
+    ) -> str:
+        """
+        Renders an MBKM course credit transfer equivalence card showing student identity,
+        partner program, mapped curriculum courses, and accredited GPA conversion.
+        """
+        from xml.sax.saxutils import escape
+
+        prog_esc = escape(program_name.strip())
+        partner_esc = escape(partner.strip())
+        name_esc = escape(student_name.strip())
+        nim_esc = escape(nim.strip())
+        sk_esc = escape(sk_number.strip())
+
+        rows_html = "".join(
+            f"<tr><td>{escape(str(c.get('course_code', '')))}</td>"
+            f"<td>{escape(str(c.get('course_name', '')))}</td>"
+            f"<td style='text-align:center;'>{escape(str(c.get('sks', '')))}</td>"
+            f"<td style='text-align:center;'><strong>{escape(str(c.get('score_letter', 'A')))}</strong></td></tr>"
+            for c in courses
+        )
+
+        sk_badge = f"<div class='tu-mbkm-sk'>SK Dekan: <strong>{sk_esc}</strong></div>" if sk_esc else ""
+
+        return f"""    <div class="tu-mbkm-transfer-card">
+      <div class="tu-mbkm-header">
+        <span class="tu-mbkm-badge">Ekivalensi Nilai MBKM</span>
+        <h4 class="tu-mbkm-program">{prog_esc} - {partner_esc}</h4>
+        <div class="tu-mbkm-student">{name_esc} (NIM: {nim_esc})</div>
+        {sk_badge}
+      </div>
+      <div class="tu-table-responsive">
+        <table class="tu-table tu-mbkm-table">
+          <thead>
+            <tr><th>Kode</th><th>Mata Kuliah Prodi</th><th>SKS</th><th>Nilai</th></tr>
+          </thead>
+          <tbody>{rows_html}</tbody>
+        </table>
+      </div>
+      <div class="tu-mbkm-summary">
+        <span>Total Konversi: <strong>{total_sks} SKS</strong></span>
+        <span>IPK Ekivalensi: <strong>{converted_gpa:.2f}</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
