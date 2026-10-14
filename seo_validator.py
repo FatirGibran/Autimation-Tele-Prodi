@@ -2075,6 +2075,38 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def detect_scimago_sjr_ranking(text: str) -> Dict[str, Any]:
+        """
+        Detects SCImago Journal Rank (SJR) and Scopus quartile indicators (Q1, Q2, Q3, Q4)
+        along with H-Index and SJR metric score in scientific references and metadata.
+        """
+        clean = text.strip()
+        quartile_matches = re.findall(r'\b(?:Scopus|SCImago|SJR)\s*(?:Quartile\s*)?(Q[1-4])\b|\b(Q[1-4])\s*(?:Scopus|SJR)\b', clean, re.IGNORECASE)
+        quartiles = []
+        for m in quartile_matches:
+            q = m[0] or m[1]
+            if q and q.upper() not in quartiles:
+                quartiles.append(q.upper())
+
+        sjr_score_m = re.search(r'\bSJR\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)\b', clean, re.IGNORECASE)
+        sjr_score = float(sjr_score_m.group(1)) if sjr_score_m else None
+
+        h_index_m = re.search(r'\bh-?index\s*[:=]?\s*(\d+)\b', clean, re.IGNORECASE)
+        h_index = int(h_index_m.group(1)) if h_index_m else None
+
+        has_scopus = bool(re.search(r'\b(?:scopus|scimago)\b', clean, re.IGNORECASE))
+        best_quartile = quartiles[0] if quartiles else None
+
+        return {
+            "has_scopus_indexing": has_scopus or bool(quartiles),
+            "best_quartile": best_quartile,
+            "quartiles_found": quartiles,
+            "sjr_score": sjr_score,
+            "h_index": h_index
+        }
+
+
 
 
 
