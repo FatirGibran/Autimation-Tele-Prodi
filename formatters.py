@@ -579,6 +579,29 @@ class TelegramFormatter:
             f"🎉 *Semoga menjadi inspirasi dan pemacu semangat berprestasi civitas akademika!*"
         )
 
+    @staticmethod
+    def format_yudisium_congratulations_broadcast(
+        student_name: str,
+        nim: str,
+        thesis_title: str,
+        ipk: float,
+        predicate: str,
+        yudisium_date: str
+    ) -> str:
+        """
+        Renders a celebratory graduation (Yudisium) degree conferral broadcast card for Telegram.
+        """
+        return (
+            f"🎓 **Selamat & Sukses atas Kelulusan Yudisium Sarjana!**\n\n"
+            f"👤 **Nama Lulusan:** {student_name.strip()} (`{nim.strip()}`)\n"
+            f"📖 **Judul Skripsi:** \"{thesis_title.strip()}\"\n"
+            f"📊 **Indeks Prestasi Kumulatif (IPK):** `{ipk:.2f}`\n"
+            f"🎖 **Predikat Kelulusan:** *{predicate.strip()}*\n"
+            f"📅 **Tanggal Yudisium:** `{yudisium_date.strip()}`\n\n"
+            f"💐 *Selamat menyandang gelar Sarjana dan berkontribusi nyata bagi bangsa dan almamater!*"
+        )
+
+
 
 
 
