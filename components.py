@@ -2501,6 +2501,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_yudisium_clearance_card(
+        cls,
+        student_name: str,
+        nim: str,
+        thesis_title: str,
+        ipk: float,
+        predicate: str,
+        yudisium_date: str,
+        verification_code: str = ""
+    ) -> str:
+        """
+        Renders an official graduation (Yudisium) clearance and degree conferral credential card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_esc = escape(student_name.strip())
+        nim_esc = escape(nim.strip())
+        thesis_esc = escape(thesis_title.strip())
+        pred_esc = escape(predicate.strip())
+        date_esc = escape(yudisium_date.strip())
+        code_esc = escape(verification_code.strip())
+
+        code_badge = f"<span class='tu-yudisium-code'>No. Verifikasi: <strong>{code_esc}</strong></span>" if code_esc else ""
+
+        return f"""    <div class="tu-yudisium-card">
+      <div class="tu-yudisium-header">
+        <span class="tu-yudisium-badge">Surat Keputusan Yudisium Sarjana</span>
+        <h4 class="tu-yudisium-name">{name_esc}</h4>
+        <div class="tu-yudisium-nim">NIM: <strong>{nim_esc}</strong></div>
+      </div>
+      <div class="tu-yudisium-body">
+        <div class="tu-yudisium-thesis">
+          <span>Judul Tugas Akhir / Skripsi:</span>
+          <p>"{thesis_esc}"</p>
+        </div>
+        <div class="tu-yudisium-meta">
+          <span>Indeks Prestasi Kumulatif (IPK): <strong>{ipk:.2f}</strong></span>
+          <span>Predikat Kelulusan: <strong class="tu-yudisium-predicate">{pred_esc}</strong></span>
+          <span>Tanggal Yudisium: <strong>{date_esc}</strong></span>
+        </div>
+      </div>
+      <div class="tu-yudisium-footer">
+        {code_badge}
+        <span class="tu-yudisium-status">Status: Lulus Sidang Yudisium S1</span>
+      </div>
+    </div>"""
+
+
 
 
 
