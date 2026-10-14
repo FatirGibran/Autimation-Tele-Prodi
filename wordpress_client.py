@@ -512,6 +512,15 @@ class WordPressClient:
         except Exception:
             return None
 
+    def get_site_settings(self) -> Dict[str, Any]:
+        """
+        Retrieves global WordPress site settings including title, description, timezone, and language.
+        """
+        endpoint = f"{self.api_url}/settings"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        return self._send_request(req)
+
+
 
 
 
