@@ -2162,6 +2162,75 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_breadcrumb_hierarchy(
+        html_content: str,
+        breadcrumb_items: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
+        """
+        Audits semantic breadcrumb trail hierarchy and schema depth for academic navigation clarity.
+        Verifies minimum 2-level depth (Home > Category > Article), continuous positional indexing,
+        and non-empty entity labels.
+        """
+        items: List[Dict[str, Any]] = []
+
+        if breadcrumb_items:
+            items = breadcrumb_items
+        else:
+            soup = BeautifulSoup(html_content, "html.parser")
+            nav = soup.find("nav", attrs={"aria-label": re.compile(r'breadcrumb', re.IGNORECASE)}) or soup.find(class_=re.compile(r'\bbreadcrumb\b', re.IGNORECASE))
+            if nav:
+                for idx, li in enumerate(nav.find_all("li"), 1):
+                    a_tag = li.find("a")
+                    name = li.get_text().strip()
+                    url = a_tag.get("href", "").strip() if a_tag else ""
+                    items.append({
+                        "position": idx,
+                        "name": name,
+                        "item": url
+                    })
+
+        issues = []
+        if not items:
+            return {
+                "has_breadcrumbs": False,
+                "depth": 0,
+                "trail": [],
+                "has_home_root": False,
+                "is_valid": False,
+                "issues": ["Navigasi breadcrumb tidak ditemukan dalam struktur dokumen."]
+            }
+
+        depth = len(items)
+        if depth < 2:
+            issues.append(f"Kedalaman breadcrumb terlalu dangkal ({depth} level). Disarankan minimal 2 level (misal: Beranda > Kategori > Judul).")
+
+        # Check root level
+        root_name = items[0].get("name", "").lower()
+        has_home_root = bool(re.search(r'\b(?:beranda|home|utama|index)\b', root_name))
+        if not has_home_root:
+            issues.append(f"Level awal breadcrumb ('{items[0].get('name', '')}') sebaiknya merujuk ke Beranda / Home.")
+
+        # Check position sequence
+        for expected_pos, item in enumerate(items, 1):
+            pos = item.get("position", expected_pos)
+            if pos != expected_pos:
+                issues.append(f"Urutan posisi breadcrumb tidak berurutan pada item '{item.get('name')}' (posisi: {pos}, diharapkan: {expected_pos}).")
+            if not item.get("name", "").strip():
+                issues.append(f"Label nama breadcrumb pada posisi #{expected_pos} kosong.")
+
+        trail = [item.get("name", "").strip() for item in items if item.get("name")]
+
+        return {
+            "has_breadcrumbs": True,
+            "depth": depth,
+            "trail": trail,
+            "has_home_root": has_home_root,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
