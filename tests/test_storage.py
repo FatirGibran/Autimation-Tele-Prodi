@@ -1045,8 +1045,119 @@ class TestStorageManager(unittest.TestCase):
         self.assertTrue(bool(lab_net[0]["is_passed"]))
         self.assertEqual(lab_net[0]["compliance_score"], 95.0)
 
+    def test_mbkm_credit_transfers_storage(self):
+        courses1 = [
+            {"course_code": "IF3101", "course_name": "Cloud Computing", "sks": 4, "score_letter": "A"}
+        ]
+        mid1 = self.storage.record_mbkm_credit_transfer(
+            program_name="Bangkit 2026",
+            partner_institution="Google",
+            student_name="Fatir Gibran",
+            nim="120122001",
+            semester=6,
+            total_sks=4,
+            converted_gpa=4.00,
+            courses=courses1,
+            sk_number="SK-001"
+        )
+        mid2 = self.storage.record_mbkm_credit_transfer(
+            program_name="MSIB Magang Mandiri",
+            partner_institution="Telkom",
+            student_name="Budi Santoso",
+            nim="120122002",
+            semester=6,
+            total_sks=20,
+            converted_gpa=3.75,
+            courses=[]
+        )
+        self.assertGreater(mid1, 0)
+        self.assertGreater(mid2, 0)
+
+        all_transfers = self.storage.list_mbkm_credit_transfers()
+        self.assertEqual(len(all_transfers), 2)
+
+        fatir_transfers = self.storage.list_mbkm_credit_transfers(nim="120122001")
+        self.assertEqual(len(fatir_transfers), 1)
+        self.assertEqual(fatir_transfers[0]["student_name"], "Fatir Gibran")
+        self.assertEqual(fatir_transfers[0]["total_sks"], 4)
+        self.assertEqual(len(fatir_transfers[0]["courses"]), 1)
+        self.assertEqual(fatir_transfers[0]["courses"][0]["course_code"], "IF3101")
+
+    def test_yudisium_clearances_storage(self):
+        yid1 = self.storage.record_yudisium_clearance(
+            student_name="Fatir Gibran",
+            nim="120122001",
+            thesis_title="Sistem Otomasi Portal Editorial",
+            ipk=3.85,
+            earned_sks=146,
+            graduation_predicate="Dengan Pujian (Cum Laude)",
+            yudisium_date="2026-10-20",
+            verification_code="YUD-001"
+        )
+        yid2 = self.storage.record_yudisium_clearance(
+            student_name="Rina Wulandari",
+            nim="120122003",
+            thesis_title="Optimasi Jaringan 5G",
+            ipk=3.45,
+            earned_sks=144,
+            graduation_predicate="Sangat Memuaskan",
+            yudisium_date="2026-10-20",
+            verification_code="YUD-002"
+        )
+        self.assertGreater(yid1, 0)
+        self.assertGreater(yid2, 0)
+
+        all_yud = self.storage.list_yudisium_clearances()
+        self.assertEqual(len(all_yud), 2)
+
+        cum_laude = self.storage.list_yudisium_clearances(predicate="Dengan Pujian (Cum Laude)")
+        self.assertEqual(len(cum_laude), 1)
+        self.assertEqual(cum_laude[0]["student_name"], "Fatir Gibran")
+
+        single = self.storage.get_yudisium_clearance_by_nim("120122001")
+        self.assertIsNotNone(single)
+        self.assertEqual(single["verification_code"], "YUD-001")
+        self.assertEqual(single["ipk"], 3.85)
+
+    def test_lab_equipment_calibrations_storage(self):
+        cid1 = self.storage.record_equipment_calibration(
+            asset_id="LAB-RF-001",
+            equipment_name="Spectrum Analyzer",
+            lab_name="Lab RF & Antena",
+            calibration_date="2026-01-10",
+            due_date="2027-01-10",
+            calibration_status="Valid",
+            operating_condition="Baik",
+            technician_name="Ahmad Laboran",
+            notes="Kalibrasi certified"
+        )
+        cid2 = self.storage.record_equipment_calibration(
+            asset_id="LAB-NET-002",
+            equipment_name="Cisco Switch",
+            lab_name="Lab Jaringan Komputer",
+            calibration_date="2024-01-10",
+            due_date="2025-01-10",
+            calibration_status="Expired",
+            operating_condition="Baik",
+            technician_name="Budi Teknisi"
+        )
+        self.assertGreater(cid1, 0)
+        self.assertGreater(cid2, 0)
+
+        all_cals = self.storage.list_equipment_calibrations()
+        self.assertEqual(len(all_cals), 2)
+
+        rf_cals = self.storage.list_equipment_calibrations(lab_name="Lab RF & Antena")
+        self.assertEqual(len(rf_cals), 1)
+        self.assertEqual(rf_cals[0]["asset_id"], "LAB-RF-001")
+
+        valid_cals = self.storage.list_equipment_calibrations(status="Valid")
+        self.assertEqual(len(valid_cals), 1)
+        self.assertEqual(valid_cals[0]["calibration_status"], "Valid")
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
