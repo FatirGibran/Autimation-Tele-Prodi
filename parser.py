@@ -2265,6 +2265,68 @@ def validate_mbkm_credit_transfer(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def parse_lab_equipment_log(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses laboratory equipment asset inventory and calibration audit records,
+    extracting equipment model, barcode ID, lab room, operating condition, and calibration validity.
+    """
+    clean = text.strip()
+    if not clean:
+        return None
+
+    id_m = re.search(r'(?:ID(?:\s*Aset)?|Barcode|Kode(?:\s*Alat)?):\s*([A-Za-z0-9_-]+)', clean, re.IGNORECASE)
+    asset_id = id_m.group(1).strip() if id_m else "EQ-GEN-001"
+
+    name_m = re.search(r'(?:Nama(?:\s*Alat)?|Equipment|Perangkat):\s*([^\n]+)', clean, re.IGNORECASE)
+    equipment_name = name_m.group(1).strip() if name_m else clean.split('\n')[0].strip()
+
+    lab_m = re.search(r'(?:Lab(?:oratorium)?|Ruangan|Room):\s*([^\n]+)', clean, re.IGNORECASE)
+    lab_name = lab_m.group(1).strip() if lab_m else "Laboratorium Telekomunikasi"
+
+    brand_m = re.search(r'(?:Merk|Brand|Model|Tipe):\s*([^\n]+)', clean, re.IGNORECASE)
+    brand_model = brand_m.group(1).strip() if brand_m else ""
+
+    cal_m = re.search(r'(?:Tgl\s*Kalibrasi|Tanggal\s*Kalibrasi|Last\s*Calibrated):\s*([0-9]{4}-[0-9]{2}-[0-9]{2})', clean, re.IGNORECASE)
+    calibration_date = cal_m.group(1).strip() if cal_m else ""
+
+    due_m = re.search(r'(?:Jatuh\s*Tempo|Due\s*Date|Exp(?:ired)?(?:\s*Date)?):\s*([0-9]{4}-[0-9]{2}-[0-9]{2})', clean, re.IGNORECASE)
+    due_date = due_m.group(1).strip() if due_m else ""
+
+    cond_m = re.search(r'(?:Kondisi|Condition|Status(?:\s*Fisik)?):\s*([^\n]+)', clean, re.IGNORECASE)
+    raw_cond = cond_m.group(1).strip().lower() if cond_m else "baik"
+    if "rusak berat" in raw_cond or "broken" in raw_cond:
+        operating_condition = "Rusak Berat"
+    elif "rusak ringan" in raw_cond or "minor" in raw_cond:
+        operating_condition = "Rusak Ringan"
+    else:
+        operating_condition = "Baik"
+
+    pic_m = re.search(r'(?:PIC|Penanggung\s*Jawab|Laboran|Teknisi):\s*([^\n]+)', clean, re.IGNORECASE)
+    pic = pic_m.group(1).strip() if pic_m else "Laboran"
+
+    # Calibration status evaluation
+    cal_status = "Not Calibrated"
+    if calibration_date and due_date:
+        import datetime
+        today_str = datetime.date.today().isoformat()
+        cal_status = "Valid" if due_date >= today_str else "Expired"
+    elif calibration_date:
+        cal_status = "Valid"
+
+    return {
+        "asset_id": asset_id,
+        "equipment_name": equipment_name,
+        "lab_name": lab_name,
+        "brand_model": brand_model,
+        "calibration_date": calibration_date,
+        "calibration_due_date": due_date,
+        "operating_condition": operating_condition,
+        "calibration_status": cal_status,
+        "pic": pic
+    }
+
+
+
 
 
 
