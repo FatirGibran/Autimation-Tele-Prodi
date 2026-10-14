@@ -2587,6 +2587,49 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lab_equipment_status_card(
+        cls,
+        asset_id: str,
+        equipment_name: str,
+        lab_name: str,
+        condition: str,
+        cal_status: str,
+        next_due_date: str,
+        pic: str
+    ) -> str:
+        """
+        Renders a laboratory equipment calibration schedule, physical operating condition,
+        and asset inventory badge card.
+        """
+        from xml.sax.saxutils import escape
+
+        id_esc = escape(asset_id.strip())
+        name_esc = escape(equipment_name.strip())
+        lab_esc = escape(lab_name.strip())
+        cond_esc = escape(condition.strip())
+        status_esc = escape(cal_status.strip())
+        due_esc = escape(next_due_date.strip())
+        pic_esc = escape(pic.strip())
+
+        status_class = "tu-cal-valid" if status_esc.lower() == "valid" else "tu-cal-expired"
+
+        return f"""    <div class="tu-lab-equipment-card">
+      <div class="tu-lab-equipment-header">
+        <span class="tu-equipment-badge">Inventaris Alat Lab</span>
+        <span class="tu-cal-status {status_class}">Kalibrasi: {status_esc}</span>
+      </div>
+      <h4 class="tu-equipment-name">{name_esc}</h4>
+      <div class="tu-equipment-meta">
+        <span>Kode Aset: <strong>{id_esc}</strong></span>
+        <span>Ruang Lab: <strong>{lab_esc}</strong></span>
+        <span>Kondisi Fisik: <strong>{cond_esc}</strong></span>
+        <span>Jatuh Tempo Kalibrasi: <strong>{due_esc}</strong></span>
+        <span>Penanggung Jawab: <strong>{pic_esc}</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
