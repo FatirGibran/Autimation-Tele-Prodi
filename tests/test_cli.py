@@ -1148,6 +1148,111 @@ class TestCLI(unittest.TestCase):
             self.assertIn("Lab Jaringan Komputer", out)
             self.assertIn("LULUS", out)
 
+    def test_cmd_mbkm(self):
+        class ArgsAdd:
+            action = "add"
+            program = "Magang Bersertifikat Kampus Merdeka"
+            partner = "PT Telkom Indonesia Tbk"
+            name = "Rizky Ramadhan"
+            nim = "1201234050"
+            semester = 6
+            sks = 20
+            gpa = 3.90
+            sk = "SK/MBKM/2026/042"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mbkm(ArgsAdd())
+            self.assertIn("Konversi kredit MBKM berhasil dicatat", fake_out.getvalue())
+            self.assertIn("Rizky Ramadhan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            nim = "1201234050"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mbkm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Konversi Kredit MBKM", out)
+            self.assertIn("PT Telkom Indonesia Tbk", out)
+            self.assertIn("20 SKS", out)
+
+    def test_cmd_yudisium(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Ayu Lestari"
+            nim = "1201234099"
+            thesis = "Optimasi Jaringan 5G Millimeter-Wave Purwokerto"
+            ipk = 3.88
+            sks = 144
+            predicate = "Dengan Pujian (Cumlaude)"
+            date = "2026-10-14"
+            code = "YUD-2026-099"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_yudisium(ArgsAdd())
+            self.assertIn("Kelulusan yudisium berhasil dicatat", fake_out.getvalue())
+            self.assertIn("Ayu Lestari", fake_out.getvalue())
+
+        class ArgsCheck:
+            action = "check"
+            nim = "1201234099"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_yudisium(ArgsCheck())
+            out = fake_out.getvalue()
+            self.assertIn("Status Yudisium Ayu Lestari (1201234099): LULUS / CLEARED", out)
+            self.assertIn("3.88", out)
+            self.assertIn("YUD-2026-099", out)
+
+        class ArgsList:
+            action = "list"
+            predicate = "Dengan Pujian (Cumlaude)"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_yudisium(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Kelulusan Yudisium Mahasiswa", out)
+            self.assertIn("Ayu Lestari", out)
+
+    def test_cmd_starlight(self):
+        slug = "starlight-cli-test-article"
+        cli.storage.save_article({
+            "topic": "Starlight Modul Panduan",
+            "category": "Dokumentasi",
+            "publish_date": "2026-10-14",
+            "focus_keyphrase": "starlight panduan",
+            "seo_title": "Starlight CLI Target",
+            "slug": slug,
+            "meta_description": "Meta starlight doc",
+            "html_content": "<p>Konten Starlight CLI</p>",
+            "status": "ready"
+        })
+
+        out_file = Path(self.temp_dir.name) / f"{slug}.md"
+        try:
+            class ArgsStarlight:
+                pass
+            args = ArgsStarlight()
+            args.slug = slug
+            args.out = str(out_file)
+            args.label = "Modul Starlight"
+            args.order = 3
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_starlight(args)
+                self.assertIn("Export Astro Starlight markdown berhasil", fake_out.getvalue())
+
+            content = out_file.read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---"))
+            self.assertIn('title: "Starlight CLI Target"', content)
+            self.assertIn("sidebar:", content)
+            self.assertIn('  label: "Modul Starlight"', content)
+            self.assertIn("  order: 3", content)
+            self.assertIn("<p>Konten Starlight CLI</p>", content)
+        finally:
+            if out_file.exists():
+                out_file.unlink()
+
 if __name__ == "__main__":
     unittest.main()
 
