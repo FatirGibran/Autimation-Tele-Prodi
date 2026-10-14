@@ -2549,6 +2549,45 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_scopus_paper_showcase_card(
+        cls,
+        title: str,
+        authors: List[str],
+        journal_name: str,
+        quartile: str,
+        sjr_score: float,
+        doi: str,
+        citation_count: int = 0
+    ) -> str:
+        """
+        Renders a scientific research paper showcase card for Scopus Q1-Q4 indexed publications.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(title.strip())
+        journal_esc = escape(journal_name.strip())
+        q_esc = escape(quartile.strip().upper())
+        doi_esc = escape(doi.strip())
+        authors_html = ", ".join(escape(a.strip()) for a in authors if a.strip())
+
+        doi_link = f"<a href='https://doi.org/{doi_esc}' class='tu-scopus-doi' target='_blank' rel='noopener noreferrer'>DOI: {doi_esc}</a>" if doi_esc else ""
+
+        return f"""    <div class="tu-scopus-paper-card">
+      <div class="tu-scopus-header">
+        <span class="tu-scopus-quartile-badge tu-quartile-{q_esc.lower()}">Scopus {q_esc}</span>
+        <span class="tu-scopus-sjr">SJR: <strong>{sjr_score:.2f}</strong></span>
+      </div>
+      <h4 class="tu-scopus-title">{title_esc}</h4>
+      <div class="tu-scopus-authors">Penulis: <strong>{authors_html}</strong></div>
+      <div class="tu-scopus-journal">Jurnal: <em>{journal_esc}</em></div>
+      <div class="tu-scopus-footer">
+        <span class="tu-scopus-citations">Sitasi: <strong>{citation_count}</strong></span>
+        {doi_link}
+      </div>
+    </div>"""
+
+
 
 
 
