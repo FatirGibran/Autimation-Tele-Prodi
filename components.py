@@ -2629,6 +2629,52 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_visiting_professor_card(
+        cls,
+        name: str,
+        title_role: str,
+        home_university: str,
+        country: str,
+        lecture_topic: str,
+        date_time: str,
+        registration_url: str = ""
+    ) -> str:
+        """
+        Renders an international visiting professor or guest lecturer public lecture profile card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_esc = escape(name.strip())
+        role_esc = escape(title_role.strip())
+        univ_esc = escape(home_university.strip())
+        country_esc = escape(country.strip())
+        topic_esc = escape(lecture_topic.strip())
+        dt_esc = escape(date_time.strip())
+        url_esc = escape(registration_url.strip())
+
+        reg_btn = f"<a href='{url_esc}' class='tu-guest-reg-btn' target='_blank' rel='noopener noreferrer'>Registrasi Kuliah Umum</a>" if url_esc else ""
+
+        return f"""    <div class="tu-visiting-prof-card">
+      <div class="tu-visiting-prof-header">
+        <span class="tu-prof-badge">International Visiting Professor</span>
+        <h4 class="tu-prof-name">{name_esc}</h4>
+        <div class="tu-prof-role">{role_esc}</div>
+        <div class="tu-prof-origin">{univ_esc}, {country_esc}</div>
+      </div>
+      <div class="tu-visiting-prof-body">
+        <div class="tu-prof-topic">
+          <span>Topik Kuliah Umum:</span>
+          <strong>"{topic_esc}"</strong>
+        </div>
+        <div class="tu-prof-schedule">Jadwal: <strong>{dt_esc}</strong></div>
+      </div>
+      <div class="tu-visiting-prof-footer">
+        {reg_btn}
+      </div>
+    </div>"""
+
+
 
 
 
