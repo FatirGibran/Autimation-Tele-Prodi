@@ -365,6 +365,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_safety_lab ON lab_safety_inspections(lab_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS mbkm_credit_transfers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    program_name TEXT NOT NULL,
+                    partner_institution TEXT NOT NULL,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    semester INTEGER NOT NULL,
+                    total_sks INTEGER NOT NULL,
+                    converted_gpa REAL NOT NULL,
+                    courses_json TEXT NOT NULL,
+                    sk_number TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_mbkm_nim ON mbkm_credit_transfers(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_mbkm_prog ON mbkm_credit_transfers(program_name);")
+
 
 
 
@@ -1910,6 +1928,73 @@ class StorageManager:
                     ORDER BY id DESC
                 """)
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_mbkm_credit_transfer(
+        self,
+        program_name: str,
+        partner_institution: str,
+        student_name: str,
+        nim: str,
+        semester: int,
+        total_sks: int,
+        converted_gpa: float,
+        courses: List[Dict[str, Any]],
+        sk_number: str = ""
+    ) -> int:
+        """
+        Records an MBKM course credit transfer equivalence entry for a student.
+        """
+        import json
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO mbkm_credit_transfers (
+                    program_name, partner_institution, student_name, nim, semester,
+                    total_sks, converted_gpa, courses_json, sk_number
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                program_name.strip(),
+                partner_institution.strip(),
+                student_name.strip(),
+                nim.strip(),
+                int(semester),
+                int(total_sks),
+                float(converted_gpa),
+                json.dumps(courses),
+                sk_number.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_mbkm_credit_transfers(self, nim: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists MBKM credit transfer equivalence entries, optionally filtered by student NIM.
+        """
+        import json
+        with self._get_connection() as conn:
+            if nim:
+                cursor = conn.execute("""
+                    SELECT id, program_name, partner_institution, student_name, nim,
+                           semester, total_sks, converted_gpa, courses_json, sk_number, created_at
+                    FROM mbkm_credit_transfers
+                    WHERE nim = ?
+                    ORDER BY id DESC
+                """, (nim.strip(),))
+            else:
+                cursor = conn.execute("""
+                    SELECT id, program_name, partner_institution, student_name, nim,
+                           semester, total_sks, converted_gpa, courses_json, sk_number, created_at
+                    FROM mbkm_credit_transfers
+                    ORDER BY id DESC
+                """)
+            results = []
+            for row in cursor.fetchall():
+                d = dict(row)
+                try:
+                    d["courses"] = json.loads(d["courses_json"])
+                except Exception:
+                    d["courses"] = []
+                results.append(d)
+            return results
+
 
 
 
