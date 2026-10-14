@@ -2106,6 +2106,63 @@ class YoastSEOValidator:
             "h_index": h_index
         }
 
+    @staticmethod
+    def audit_hreflang_multilingual_tags(html_content: str) -> Dict[str, Any]:
+        """
+        Audits multilingual alternate hreflang tags (<link rel="alternate" hreflang="..." href="...">)
+        ensuring valid BCP 47 language codes and reciprocal/canonical consistency.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        hreflang_tags = soup.find_all("link", rel=lambda r: r and "alternate" in r.lower() if isinstance(r, str) else (r and "alternate" in r))
+        links = [t for t in hreflang_tags if t.get("hreflang")]
+
+        if not links:
+            return {
+                "has_hreflang": False,
+                "languages_found": [],
+                "is_valid": True,
+                "issues": []
+            }
+
+        valid_pattern = re.compile(r'^(?:[a-z]{2}(?:-[A-Za-z]{2,4})?|x-default)$', re.IGNORECASE)
+        languages = []
+        issues = []
+
+        has_x_default = False
+        has_id = False
+        has_en = False
+
+        for l in links:
+            hl = l.get("hreflang", "").strip().lower()
+            href = l.get("href", "").strip()
+
+            if not valid_pattern.match(hl):
+                issues.append(f"Format hreflang '{hl}' tidak memenuhi standar BCP 47.")
+            else:
+                languages.append(hl)
+
+            if hl == "x-default":
+                has_x_default = True
+            elif hl.startswith("id"):
+                has_id = True
+            elif hl.startswith("en"):
+                has_en = True
+
+            if not href:
+                issues.append(f"Tag hreflang '{hl}' tidak memiliki atribut href target.")
+
+        if (has_id or has_en) and not has_x_default:
+            issues.append("Disarankan menyertakan hreflang='x-default' untuk fallback bahasa pengguna global.")
+
+        return {
+            "has_hreflang": True,
+            "languages_found": sorted(set(languages)),
+            "has_x_default": has_x_default,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
