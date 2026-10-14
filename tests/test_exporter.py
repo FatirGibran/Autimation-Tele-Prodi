@@ -494,6 +494,38 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("# Konfigurasi Protokol Routing OSPF di Cisco Packet Tracer", res)
         self.assertIn("<p>Buka CLI router dan masukkan perintah router ospf 1.</p>", res)
 
+    def test_generate_credential_json_ld(self):
+        schema = ArticleExporter.generate_credential_json_ld(
+            credential_name="Sarjana Teknik Telekomunikasi (S.T.)",
+            description="Program sarjana teknik telekomunikasi terakreditasi Unggul LAM INFOKOM.",
+            credential_category="degree",
+            recognized_by="Telkom University Purwokerto",
+            educational_level="Bachelor's Degree / Level 6 KKNI"
+        )
+        self.assertEqual(schema["@type"], "EducationalOccupationalCredential")
+        self.assertEqual(schema["name"], "Sarjana Teknik Telekomunikasi (S.T.)")
+        self.assertEqual(schema["description"], "Program sarjana teknik telekomunikasi terakreditasi Unggul LAM INFOKOM.")
+        self.assertEqual(schema["credentialCategory"], "degree")
+        self.assertEqual(schema["educationalLevel"], "Bachelor's Degree / Level 6 KKNI")
+        self.assertEqual(schema["recognizedBy"]["name"], "Telkom University Purwokerto")
+
+    def test_to_starlight_markdown(self):
+        meta = {
+            "seo_title": "Panduan Praktikum Fiber Optik",
+            "topic": "Praktikum Fiber Optik",
+            "meta_description": "Dokumentasi prosedur splicing kabel fiber optik core tunggal.",
+            "sidebar_label": "Modul Fiber Optik",
+            "sidebar_order": 2
+        }
+        res = ArticleExporter.to_starlight_markdown(meta, "<p>Persiapkan alat fusion splicer dan cleaver.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Praktikum Fiber Optik"', res)
+        self.assertIn('description: "Dokumentasi prosedur splicing kabel fiber optik core tunggal."', res)
+        self.assertIn("sidebar:", res)
+        self.assertIn('  label: "Modul Fiber Optik"', res)
+        self.assertIn("  order: 2", res)
+        self.assertIn("<p>Persiapkan alat fusion splicer dan cleaver.</p>", res)
+
 if __name__ == "__main__":
     unittest.main()
 
