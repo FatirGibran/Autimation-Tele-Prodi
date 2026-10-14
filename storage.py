@@ -382,6 +382,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_mbkm_nim ON mbkm_credit_transfers(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_mbkm_prog ON mbkm_credit_transfers(program_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS yudisium_clearances (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL UNIQUE,
+                    thesis_title TEXT NOT NULL,
+                    ipk REAL NOT NULL,
+                    earned_sks INTEGER NOT NULL,
+                    graduation_predicate TEXT NOT NULL,
+                    yudisium_date TEXT NOT NULL,
+                    verification_code TEXT NOT NULL,
+                    is_cleared INTEGER DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_yudisium_nim ON yudisium_clearances(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_yudisium_pred ON yudisium_clearances(graduation_predicate);")
+
 
 
 
@@ -1994,6 +2012,77 @@ class StorageManager:
                     d["courses"] = []
                 results.append(d)
             return results
+
+    def record_yudisium_clearance(
+        self,
+        student_name: str,
+        nim: str,
+        thesis_title: str,
+        ipk: float,
+        earned_sks: int,
+        graduation_predicate: str,
+        yudisium_date: str,
+        verification_code: str,
+        is_cleared: bool = True
+    ) -> int:
+        """
+        Records a graduation (Yudisium) clearance and degree conferral credential.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT OR REPLACE INTO yudisium_clearances (
+                    student_name, nim, thesis_title, ipk, earned_sks,
+                    graduation_predicate, yudisium_date, verification_code, is_cleared
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(),
+                nim.strip(),
+                thesis_title.strip(),
+                float(ipk),
+                int(earned_sks),
+                graduation_predicate.strip(),
+                yudisium_date.strip(),
+                verification_code.strip(),
+                1 if is_cleared else 0
+            ))
+            return cursor.lastrowid
+
+    def list_yudisium_clearances(self, predicate: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists graduation yudisium clearances, optionally filtered by graduation predicate.
+        """
+        with self._get_connection() as conn:
+            if predicate:
+                cursor = conn.execute("""
+                    SELECT id, student_name, nim, thesis_title, ipk, earned_sks,
+                           graduation_predicate, yudisium_date, verification_code, is_cleared, created_at
+                    FROM yudisium_clearances
+                    WHERE graduation_predicate = ?
+                    ORDER BY id DESC
+                """, (predicate.strip(),))
+            else:
+                cursor = conn.execute("""
+                    SELECT id, student_name, nim, thesis_title, ipk, earned_sks,
+                           graduation_predicate, yudisium_date, verification_code, is_cleared, created_at
+                    FROM yudisium_clearances
+                    ORDER BY id DESC
+                """)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_yudisium_clearance_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a student's graduation yudisium clearance by NIM.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT id, student_name, nim, thesis_title, ipk, earned_sks,
+                       graduation_predicate, yudisium_date, verification_code, is_cleared, created_at
+                FROM yudisium_clearances
+                WHERE nim = ?
+            """, (nim.strip(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
