@@ -564,6 +564,23 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<source\b[^>]*>', sanitize_source_media, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized source media query breakpoint attributes.")
 
+        # 8s. Sanitize dialog modal elements and backdrop form method attributes
+        if "<dialog" in cleaned.lower():
+            def sanitize_dialog(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<dialog\b[^>]*>', sanitize_dialog, cleaned, flags=re.IGNORECASE)
+
+            def sanitize_dialog_form(m):
+                form_tag = m.group(0)
+                form_tag = re.sub(r'action=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', 'action="#"', form_tag, flags=re.IGNORECASE)
+                form_tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', form_tag, flags=re.IGNORECASE)
+                return form_tag
+            cleaned = re.sub(r'<form\b[^>]*\bmethod=["\']dialog["\'][^>]*>', sanitize_dialog_form, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 dialog modal elements and form method attributes.")
+
         return cleaned, warnings
 
 
