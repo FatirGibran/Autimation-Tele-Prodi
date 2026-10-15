@@ -2444,6 +2444,74 @@ def parse_vancouver_citations(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def audit_academic_probation_status(student_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Audits student semester standing and evaluates academic probation / warning status (Surat Peringatan SP).
+    Evaluates against minimum credit benchmarks per semester (Semester 2: 24 SKS, Sem 4: 48 SKS, Sem 6: 72 SKS, Sem 8: 96 SKS)
+    and GPA threshold (IPK >= 2.00, IPS >= 2.00).
+    """
+    name = student_data.get("student_name", "").strip()
+    nim = student_data.get("nim", "").strip()
+    sem = int(student_data.get("semester", 1))
+    ipk = float(student_data.get("gpa_cumulative", 0.0))
+    ips = float(student_data.get("gpa_semester", 0.0))
+    sks = int(student_data.get("earned_credits", 0))
+    prev_sp = int(student_data.get("sp_history", 0))
+
+    reasons = []
+    min_sks_threshold = 0
+
+    if sem >= 8:
+        min_sks_threshold = 96
+    elif sem >= 6:
+        min_sks_threshold = 72
+    elif sem >= 4:
+        min_sks_threshold = 48
+    elif sem >= 2:
+        min_sks_threshold = 24
+
+    remedial_sks_needed = max(0, min_sks_threshold - sks)
+
+    if remedial_sks_needed > 0:
+        reasons.append(f"Perolehan SKS ({sks} SKS) belum mencapai batas minimum semester {sem} ({min_sks_threshold} SKS).")
+
+    if ipk < 2.00:
+        reasons.append(f"IPK kumulatif ({ipk:.2f}) di bawah batas kelulusan akademik 2.00.")
+
+    if ips < 2.00:
+        reasons.append(f"IPS semester berjalan ({ips:.2f}) di bawah standar performa 2.00.")
+
+    if not reasons:
+        status = "CLEAR"
+        counseling_required = False
+    elif prev_sp >= 2:
+        status = "CRITICAL_DO"
+        counseling_required = True
+    elif prev_sp == 1:
+        status = "WARNING_2"
+        counseling_required = True
+    elif ipk < 2.00 or remedial_sks_needed >= 12:
+        status = "PROBATION"
+        counseling_required = True
+    else:
+        status = "WARNING_1"
+        counseling_required = True
+
+    return {
+        "student_name": name,
+        "nim": nim,
+        "semester": sem,
+        "gpa_cumulative": ipk,
+        "gpa_semester": ips,
+        "earned_credits": sks,
+        "min_credits_required": min_sks_threshold,
+        "remedial_sks_needed": remedial_sks_needed,
+        "status": status,
+        "counseling_required": counseling_required,
+        "reasons": reasons
+    }
+
+
 
 
 
