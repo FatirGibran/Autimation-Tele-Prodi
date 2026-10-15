@@ -651,6 +651,33 @@ class TelegramFormatter:
             f"👏 *Apresiasi setinggi-tingginya kepada seluruh mahasiswa dan masyarakat desa mitra.*"
         )
 
+    @staticmethod
+    def format_core_conference_presentation_broadcast(
+        paper_title: str,
+        presenter_name: str,
+        conference_name: str,
+        acronym: str,
+        core_tier: str,
+        city: str,
+        date_str: str,
+        paper_url: str = ""
+    ) -> str:
+        """
+        Renders a CORE-ranked international conference presentation announcement card for Telegram.
+        """
+        paper_link = f"\n🔗 **Tautan Publikasi / Makalah:** {paper_url.strip()}" if paper_url else ""
+        tier = core_tier.strip().upper()
+        return (
+            f"🎖 **Diseminasi Riset Konferensi Internasional (CORE Ranked)**\n\n"
+            f"📄 **Judul Makalah:** \"{paper_title.strip()}\"\n"
+            f"👤 **Pemakalah:** {presenter_name.strip()}\n"
+            f"🌐 **Forum Konferensi:** {conference_name.strip()} ({acronym.strip()})\n"
+            f"🏅 **Peringkat CORE:** Peringkat {tier}\n"
+            f"📍 **Lokasi:** {city.strip()}\n"
+            f"📅 **Waktu Pelaksanaan:** `{date_str.strip()}`{paper_link}\n\n"
+            f"👏 *Selamat dan sukses atas kontribusi riset bereputasi di kancah internasional!*"
+        )
+
 
 
 
