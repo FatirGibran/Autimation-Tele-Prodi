@@ -411,6 +411,56 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('data-title="Penjelasan singkat"', clean)
         self.assertTrue(any("contextual tooltip" in w for w in warnings))
 
+    def test_sanitize_source_media_breakpoint_attributes(self):
+        html = (
+            '<div class="tu-editorial-container"><picture>'
+            '<source srcset="/img/large.webp" media="(min-width: 1024px)">'
+            '<source srcset="/img/bad.webp" media="javascript:alert(1)">'
+            '<source srcset="/img/evil.webp" media="expression(body.scrollLeft)">'
+            '<img src="/img/fallback.jpg" alt="Responsive">'
+            '</picture></div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('media="(min-width: 1024px)"', clean)
+        self.assertNotIn('javascript:alert', clean)
+        self.assertNotIn('expression(', clean)
+        self.assertTrue(any("source media query" in w for w in warnings))
+
+    def test_sanitize_dialog_and_dialog_form(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<dialog open onclose="steal()" style="position:fixed;">'
+            '<button formmethod="dialog" formaction="javascript:leak()" onclick="leak()">Tutup</button>'
+            '</dialog>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('onclose="steal()"', clean)
+        self.assertNotIn('style="position:fixed;"', clean)
+        self.assertNotIn('formaction="javascript:leak()"', clean)
+        self.assertNotIn('onclick="leak()"', clean)
+        self.assertIn('formaction="#"', clean)
+        self.assertIn('formmethod="dialog"', clean)
+        self.assertTrue(any("dialog modal" in w for w in warnings))
+
+    def test_sanitize_data_filter_sort_attributes(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<table data-sort="asc" data-filter="semester-5, kurikulum-2024">'
+            '<tr data-category="<script>alert(1)</script>pilihan">'
+            '<td data-filter="javascript:exploit()">Mata Kuliah</td>'
+            '</tr>'
+            '</table>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('data-sort="asc"', clean)
+        self.assertIn('data-filter="semester-5, kurikulum-2024"', clean)
+        self.assertNotIn('<script>', clean)
+        self.assertIn('data-category="pilihan"', clean)
+        self.assertNotIn('javascript:exploit()', clean)
+        self.assertTrue(any("tabular data-filter" in w for w in warnings))
+
 if __name__ == "__main__":
     unittest.main()
 

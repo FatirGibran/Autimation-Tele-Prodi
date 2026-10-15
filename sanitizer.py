@@ -573,13 +573,13 @@ class HTMLSanitizer:
                 return tag
             cleaned = re.sub(r'<dialog\b[^>]*>', sanitize_dialog, cleaned, flags=re.IGNORECASE)
 
-            def sanitize_dialog_form(m):
-                form_tag = m.group(0)
-                form_tag = re.sub(r'action=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', 'action="#"', form_tag, flags=re.IGNORECASE)
-                form_tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', form_tag, flags=re.IGNORECASE)
-                return form_tag
-            cleaned = re.sub(r'<form\b[^>]*\bmethod=["\']dialog["\'][^>]*>', sanitize_dialog_form, cleaned, flags=re.IGNORECASE)
-            warnings.append("Sanitized HTML5 dialog modal elements and form method attributes.")
+            def sanitize_dialog_button(m):
+                btn_tag = m.group(0)
+                btn_tag = re.sub(r'formaction=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', 'formaction="#"', btn_tag, flags=re.IGNORECASE)
+                btn_tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', btn_tag, flags=re.IGNORECASE)
+                return btn_tag
+            cleaned = re.sub(r'<button\b[^>]*\bformmethod=["\']dialog["\'][^>]*>', sanitize_dialog_button, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 dialog modal elements and button action attributes.")
 
         # 8t. Sanitize data-filter, data-sort, and data-category interactive tabular attributes
         if re.search(r'\bdata-(?:filter|sort|category)=', cleaned, re.IGNORECASE):
