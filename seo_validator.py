@@ -2453,6 +2453,59 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_math_latex_notation_accessibility(html_content: str) -> Dict[str, Any]:
+        """
+        Audits LaTeX mathematical notation delimiters ($...$, $$...$$, \(...\), \[...\])
+        and accessibility labeling (aria-label, role='math', katex/mathjax wrappers).
+        Ensures delimiter balance and flags raw unescaped currency dollars.
+        """
+        if not html_content:
+            return {
+                "total_equations": 0,
+                "inline_count": 0,
+                "display_count": 0,
+                "is_balanced": True,
+                "has_accessible_markup": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        clean_text = soup.get_text()
+
+        issues = []
+
+        display_dollars = re.findall(r'\$\$([\s\S]+?)\$\$', clean_text)
+        display_brackets = re.findall(r'\\\[([\s\S]+?)\\\]', clean_text)
+        display_count = len(display_dollars) + len(display_brackets)
+
+        text_no_display = re.sub(r'\$\$[\s\S]+?\$\$', ' ', clean_text)
+        text_no_display = re.sub(r'\\\[[\s\S]+?\\\]', ' ', text_no_display)
+
+        inline_parens = re.findall(r'\\\(([\s\S]+?)\\\)', text_no_display)
+        inline_dollars = re.findall(r'(?<!\\)\$([^\$\n]+?)(?<!\\)\$', text_no_display)
+        inline_count = len(inline_parens) + len(inline_dollars)
+        total_equations = display_count + inline_count
+
+        dollar_count = clean_text.count("$") - (len(display_dollars) * 4)
+        if dollar_count % 2 != 0:
+            issues.append(f"Tanda pembatas math inline LaTeX '$' tidak berpasangan (ditemukan {dollar_count} tanda dollar ganjil).")
+
+        math_elements = soup.find_all(attrs={"role": "math"}) or soup.find_all(class_=re.compile(r'\b(?:katex|mathjax|tu-math)\b', re.IGNORECASE))
+        has_accessible_markup = True
+        if total_equations > 0 and len(math_elements) == 0:
+            has_accessible_markup = False
+            issues.append(f"Ditemukan {total_equations} notasi matematika tanpa pembungkus semantik ramah aksesibilitas (class 'katex', 'tu-math', atau role='math').")
+
+        return {
+            "total_equations": total_equations,
+            "inline_count": inline_count,
+            "display_count": display_count,
+            "is_balanced": len(issues) == 0,
+            "has_accessible_markup": has_accessible_markup,
+            "issues": issues
+        }
+
 
 
 
