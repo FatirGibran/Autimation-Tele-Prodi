@@ -450,6 +450,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_bkd_nidn ON faculty_bkd_records(nidn);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_bkd_semester ON faculty_bkd_records(semester);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS conference_presentations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paper_title TEXT NOT NULL,
+                    authors TEXT NOT NULL,
+                    conference_name TEXT NOT NULL,
+                    acronym TEXT NOT NULL,
+                    core_tier TEXT NOT NULL,
+                    publisher TEXT NOT NULL,
+                    year INTEGER NOT NULL,
+                    city TEXT NOT NULL,
+                    paper_url TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_conf_tier ON conference_presentations(core_tier);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_conf_year ON conference_presentations(year);")
 
 
 
@@ -2297,6 +2314,61 @@ class StorageManager:
                 (nidn.strip(),)
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_conference_presentation(
+        self,
+        paper_title: str,
+        authors: str,
+        conference_name: str,
+        acronym: str,
+        core_tier: str,
+        publisher: str,
+        year: int,
+        city: str,
+        paper_url: str = ""
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO conference_presentations (
+                    paper_title, authors, conference_name, acronym,
+                    core_tier, publisher, year, city, paper_url
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                paper_title.strip(),
+                authors.strip(),
+                conference_name.strip(),
+                acronym.strip(),
+                core_tier.strip().upper(),
+                publisher.strip(),
+                int(year),
+                city.strip(),
+                paper_url.strip() if paper_url else None
+            ))
+            return cursor.lastrowid
+
+    def list_conference_presentations(
+        self,
+        core_tier: Optional[str] = None,
+        year: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM conference_presentations"
+            params = []
+            conditions = []
+            if core_tier:
+                conditions.append("core_tier = ?")
+                params.append(core_tier.strip().upper())
+            if year:
+                conditions.append("year = ?")
+                params.append(int(year))
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY year DESC, id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
