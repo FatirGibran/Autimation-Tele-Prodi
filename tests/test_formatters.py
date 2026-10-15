@@ -382,6 +382,47 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("5 November 2026, 09:00 WIB", msg)
         self.assertIn("https://event.telkomuniversity.ac.id/visiting-prof", msg)
 
+    def test_format_kkn_village_completion_broadcast(self):
+        msg = TelegramFormatter.format_kkn_village_completion_broadcast(
+            group_code="KKN-TM-04",
+            village_name="Cibodas",
+            district="Pasirjambu",
+            regency="Bandung",
+            supervisor_dpl="Dr. Eng. Ahmad Fauzi",
+            student_count=12,
+            theme="Digitalisasi Desa Wisata & Smart Agriculture",
+            flagship_outcome="Implementasi IoT Sensor Kelembapan Tanah Kebun Stroberi",
+            documentation_url="https://kkn.telkomuniversity.ac.id/cibodas-04"
+        )
+        self.assertIn("Diseminasi & Penutupan KKN Tematik Mahasiswa", msg)
+        self.assertIn("KKN-TM-04", msg)
+        self.assertIn("Desa Cibodas, Kec. Pasirjambu, Kab. Bandung", msg)
+        self.assertIn("Dr. Eng. Ahmad Fauzi", msg)
+        self.assertIn("12 Mahasiswa", msg)
+        self.assertIn("Digitalisasi Desa Wisata", msg)
+        self.assertIn("Implementasi IoT Sensor", msg)
+        self.assertIn("https://kkn.telkomuniversity.ac.id/cibodas-04", msg)
+
+    def test_format_core_conference_presentation_broadcast(self):
+        msg = TelegramFormatter.format_core_conference_presentation_broadcast(
+            paper_title="Deep Reinforcement Learning for 6G Satellite Telemetry",
+            presenter_name="Fatir Gibran",
+            conference_name="IEEE International Conference on Communications",
+            acronym="ICC 2026",
+            core_tier="A",
+            city="Montreal, Canada",
+            date_str="14-18 Juni 2026",
+            paper_url="https://doi.org/10.1109/ICC.2026.9876543"
+        )
+        self.assertIn("Diseminasi Riset Konferensi Internasional (CORE Ranked)", msg)
+        self.assertIn("Deep Reinforcement Learning for 6G Satellite Telemetry", msg)
+        self.assertIn("Fatir Gibran", msg)
+        self.assertIn("IEEE International Conference on Communications (ICC 2026)", msg)
+        self.assertIn("Peringkat A", msg)
+        self.assertIn("Montreal, Canada", msg)
+        self.assertIn("14-18 Juni 2026", msg)
+        self.assertIn("https://doi.org/10.1109/ICC.2026.9876543", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
