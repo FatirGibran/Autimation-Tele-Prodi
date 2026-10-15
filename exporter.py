@@ -1078,6 +1078,34 @@ navigation: true
             data["url"] = url.strip()
         return data
 
+    @staticmethod
+    def to_hexo_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Hexo static blog generator markdown with frontmatter tags and categories.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        date = metadata.get("publish_date", "").strip()
+        tags = metadata.get("tags", [])
+        category = metadata.get("category", "").strip()
+
+        lines = [
+            "---",
+            f'title: "{title}"',
+            f'date: {date}',
+        ]
+        if category:
+            lines.append("categories:")
+            lines.append(f'  - "{category}"')
+        if tags and isinstance(tags, list):
+            lines.append("tags:")
+            for t in tags:
+                lines.append(f'  - "{str(t).strip()}"')
+        lines.append("---")
+        lines.append("")
+        lines.append(html_content.strip())
+        return "\n".join(lines)
+
+
 
 
 
