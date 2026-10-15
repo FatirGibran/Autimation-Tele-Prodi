@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 420+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 450+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 433 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 460 unit tests terverifikasi (100% pass rate)
 
 ---
 
@@ -508,6 +508,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 405. **Subcommand CLI `yudisium` (`cli.py`)**: Perintah konsol manajemen rekam kelulusan yudisium mahasiswa (list, add, check).
 406. **Subcommand CLI `starlight` (`cli.py`)**: Perintah konsol ekspor artikel ke format markdown Astro Starlight.
 407. **Ekspansi Suite Pengujian Unit Terpadu (433 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 433 unit test terverifikasi (100% pass rate).
+
+---
+
+## 21. Ekspansi Arsitektural v3.3.0 Milestone Release
+
+408. **Sanitasi Media Responsif Picture & Source (`sanitizer.py`)**: Sanitasi elemen responsif `<picture>` dan `<source>` dengan penegakan validasi atribut `srcset` dan media breakpoint.
+409. **Sanitasi Elemen Dialog & Tombol Form Dialog Method (`sanitizer.py`)**: Validasi elemen modal `<dialog>` dan tombol interaksi form dialog (`formmethod="dialog"`).
+410. **Sanitasi Atribut Interaktif Data-Filter & Data-Sort Tabular (`sanitizer.py`)**: Pembersihan nilai atribut kontrol tabel interaktif (`data-filter`, `data-sort`) dari injeksi markup.
+411. **Parser Sitasi Akademik Format Vancouver (`parser.py`)**: Penguraian format sitasi biomedis/telemetri numerik standar Vancouver menjadi entitas terstruktur.
+412. **Auditor Masa Percobaan Akademik Mahasiswa (`parser.py`)**: Evaluasi status masa percobaan akademik, klasifikasi surat peringatan (SP1, SP2, SP3), dan verifikasi kelayakan kliring.
+413. **Evaluator Kepatuhan Beban Kerja Dosen BKD (`parser.py`)**: Perhitungan beban kerja SKS tridharma dosen per semester dan evaluasi kepatuhan batas 12 - 16 SKS.
+414. **Parser Penempatan Mahasiswa KKN Tematik (`parser.py`)**: Penguraian data penempatan kelompok KKN tematik pedesaan (kelompok, wilayah, DPL, jumlah peserta, tema).
+415. **Kalkulator Peluruhan Kesegaran Konten Publikasi (`seo_validator.py`)**: Analisis peluruhan kesegaran artikel (*freshness decay*) berdasarkan usia terbit dan interval modifikasi.
+416. **Detektor Peringkat Konferensi Internasional CORE (`seo_validator.py`)**: Pengenalan otomatis kluster peringkat konferensi internasional bereputasi CORE (A*, A, B, C).
+417. **Auditor Integritas Tautan Jangkar Daftar Isi (`seo_validator.py`)**: Verifikasi tautan internal daftar isi (TOC) ke target heading dokumen tanpa broken anchor.
+418. **Auditor Aksesibilitas Notasi Matematika LaTeX (`seo_validator.py`)**: Pemeriksaan konsistensi delimiter matematika LaTeX dan ketersediaan atribut aksesibilitas pembaca layar.
+419. **Komponen Profil Desa KKN Tematik (`components.py`)**: Kartu responsif pameran pengabdian desa mitra mahasiswa lengkap dengan program unggulan dan dosen pembimbing.
+420. **Komponen Kepatuhan Beban Kerja Dosen BKD (`components.py`)**: Kartu visualisasi status kepatuhan SKS tridharma dosen per semester lengkap dengan indikator batas.
+421. **Komponen Konferensi Internasional CORE (`components.py`)**: Kartu pameran presentasi publikasi hasil riset di konferensi internasional bereputasi CORE.
+422. **Komponen Konseling Kliring SP Mahasiswa (`components.py`)**: Kartu rencana bimbingan konseling akademik bagi mahasiswa dalam masa perbaikan indeks prestasi.
+423. **Komponen Riset Telemetri Biomedis (`components.py`)**: Kartu pameran hasil pengujian perangkat telemetri kesehatan dan biosensor laboratorium.
+424. **Formatter Siaran Penutupan KKN Tematik Telegram (`formatters.py`)**: Format siaran bulletin diseminasi luaran KKN tematik pedesaan di kanal Telegram.
+425. **Formatter Siaran Presentasi Konferensi CORE Telegram (`formatters.py`)**: Format kartu ucapan selamat presentasi makalah konferensi internasional berperingkat CORE di Telegram.
+426. **Manajer Rekam Proyek KKN Tematik Desa (`storage.py`)**: Tabel basis data `kkn_village_projects` untuk menyimpan dan meninjau program KKN pedesaan mahasiswa.
+427. **Manajer Rekam Kepatuhan BKD Dosen (`storage.py`)**: Tabel basis data `faculty_bkd_records` untuk monitoring beban kerja dan kepatuhan SKS pengajar prodi.
+428. **Manajer Rekam Konferensi Internasional (`storage.py`)**: Tabel basis data `conference_presentations` untuk rekam jejak diseminasi riset di forum internasional.
+429. **Helper WordPress Get Comments By Post ID (`wordpress_client.py`)**: Pengambilan data komentar pengguna pada artikel postingan WordPress via REST API.
+430. **Helper WordPress Create Post Tag (`wordpress_client.py`)**: Pembuatan taksonomi tag baru pada WordPress via REST API secara terprogram.
+431. **Generator Schema.org AcademicEvent Konferensi (`exporter.py`)**: Pembuatan metadata terstruktur JSON-LD untuk forum seminar/konferensi ilmiah dengan anotasi tier CORE.
+432. **Eksportir Markdown Kompatibel Hexo Static Blog (`exporter.py`)**: Ekspor artikel ke format blog statis Hexo dengan konfigurasi frontmatter tanggal, kategori, dan tag.
+433. **Subcommand CLI `kkn` (`cli.py`)**: Perintah konsol manajemen rekam penempatan KKN tematik mahasiswa (list, add).
+434. **Subcommand CLI `bkd` (`cli.py`)**: Perintah konsol pencatatan dan evaluasi kepatuhan beban kerja dosen (list, add).
+435. **Subcommand CLI `hexo` (`cli.py`)**: Perintah konsol ekspor artikel ke format markdown blog statis Hexo.
+436. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji komprehensif pada modul sanitizer, parser, seo validator, komponen, formatters, storage, wp client, exporter, dan cli.
+437. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.3.0.
+438. **Ekspansi Suite Pengujian Unit Terpadu (460 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 460 unit test terverifikasi (100% pass rate).
+
 
 
 
