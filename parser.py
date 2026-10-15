@@ -2391,6 +2391,59 @@ def validate_yudisium_clearance(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def parse_vancouver_citations(text: str) -> List[Dict[str, Any]]:
+    """
+    Parses Vancouver biomedical/clinical academic reference citations into structured elements.
+    Format: [1] Author AA, Author BB. Article title. Abbr Journal Name. Year;Volume(Issue):Pages. doi:10.xxx
+    """
+    if not text:
+        return []
+
+    pattern = re.compile(
+        r'^(?:\[?(\d+)\]?\.?\s*)?'
+        r'([A-Za-z\s,\.\'-]+?)\.\s*'
+        r'([^.]+?\??)\.\s*'
+        r'([A-Za-z0-9\s,\.&-]+?)\.\s*'
+        r'(19\d{2}|20\d{2});'
+        r'(\d+)(?:\((\d+)\))?:'
+        r'(\d+[-–]\d+)\.?'
+        r'(?:\s*(?:doi:\s*|https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}/[-._;()/:A-Za-z0-9]+))?',
+        re.MULTILINE
+    )
+
+    results = []
+    for line in text.splitlines():
+        line_clean = line.strip()
+        if not line_clean:
+            continue
+        m = pattern.search(line_clean)
+        if m:
+            idx = int(m.group(1)) if m.group(1) else len(results) + 1
+            raw_authors = m.group(2).strip()
+            authors = [a.strip() for a in re.split(r',\s*', raw_authors) if a.strip()]
+            title = m.group(3).strip()
+            journal = m.group(4).strip()
+            year = int(m.group(5))
+            vol = m.group(6).strip()
+            issue = m.group(7).strip() if m.group(7) else None
+            pages = m.group(8).strip()
+            doi = m.group(9).strip() if m.group(9) else None
+
+            results.append({
+                "citation_index": idx,
+                "authors": authors,
+                "title": title,
+                "journal": journal,
+                "year": year,
+                "volume": vol,
+                "issue": issue,
+                "pages": pages,
+                "doi": doi
+            })
+
+    return results
+
+
 
 
 
