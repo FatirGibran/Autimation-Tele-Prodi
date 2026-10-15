@@ -532,6 +532,24 @@ class WordPressClient:
             return results
         return []
 
+    def create_tag(self, name: str, slug: Optional[str] = None, description: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Creates a new WordPress tag with optional slug and description.
+        """
+        endpoint = f"{self.api_url}/tags"
+        payload: Dict[str, Any] = {"name": name.strip()}
+        if slug:
+            payload["slug"] = slug.strip().lower()
+        if description:
+            payload["description"] = description.strip()
+
+        data_bytes = json.dumps(payload).encode("utf-8")
+        headers = self._get_headers()
+        headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(endpoint, data=data_bytes, headers=headers, method="POST")
+        return self._send_request(req)
+
+
 
 
 
