@@ -581,6 +581,19 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<form\b[^>]*\bmethod=["\']dialog["\'][^>]*>', sanitize_dialog_form, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 dialog modal elements and form method attributes.")
 
+        # 8t. Sanitize data-filter, data-sort, and data-category interactive tabular attributes
+        if re.search(r'\bdata-(?:filter|sort|category)=', cleaned, re.IGNORECASE):
+            def clean_tabular_data(m):
+                attr = m.group(1).lower()
+                val = m.group(2).strip()
+                val = re.sub(r'<[^>]+>', '', val)
+                if re.search(r'(?:javascript:|data:|expression|vbscript)', val, re.IGNORECASE):
+                    return ''
+                val = re.sub(r'[^a-zA-Z0-9_\-\,\.\s]', '', val).strip()[:100]
+                return f'data-{attr}="{val}"'
+            cleaned = re.sub(r'\bdata-(filter|sort|category)=["\']([^"\']*)["\']', clean_tabular_data, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized interactive tabular data-filter and data-sort attributes.")
+
         return cleaned, warnings
 
 
