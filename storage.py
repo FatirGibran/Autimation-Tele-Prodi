@@ -416,6 +416,22 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_equip_asset ON lab_equipment_calibrations(asset_id);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_equip_lab ON lab_equipment_calibrations(lab_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS kkn_village_projects (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    group_code TEXT NOT NULL UNIQUE,
+                    village_name TEXT NOT NULL,
+                    district_name TEXT NOT NULL,
+                    regency_name TEXT NOT NULL,
+                    supervisor_dpl TEXT NOT NULL,
+                    student_count INTEGER NOT NULL,
+                    thematic_focus TEXT NOT NULL,
+                    flagship_program TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_kkn_group ON kkn_village_projects(group_code);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_kkn_regency ON kkn_village_projects(regency_name);")
 
 
 
@@ -2164,6 +2180,52 @@ class StorageManager:
             query += " ORDER BY id DESC"
             cursor = conn.execute(query, tuple(params))
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_kkn_project(
+        self,
+        group_code: str,
+        village_name: str,
+        district_name: str,
+        regency_name: str,
+        supervisor_dpl: str,
+        student_count: int,
+        thematic_focus: str,
+        flagship_program: str
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO kkn_village_projects (
+                    group_code, village_name, district_name, regency_name,
+                    supervisor_dpl, student_count, thematic_focus, flagship_program
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                group_code.strip(),
+                village_name.strip(),
+                district_name.strip(),
+                regency_name.strip(),
+                supervisor_dpl.strip(),
+                int(student_count),
+                thematic_focus.strip(),
+                flagship_program.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_kkn_projects(self, regency_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM kkn_village_projects"
+            params = []
+            if regency_name:
+                query += " WHERE regency_name = ?"
+                params.append(regency_name.strip())
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_kkn_project_by_id(self, project_id: int) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM kkn_village_projects WHERE id = ?", (int(project_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
 
 
 
