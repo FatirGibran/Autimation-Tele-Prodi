@@ -1037,6 +1037,48 @@ navigation: true
         ]
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_academic_event_json_ld(
+        event_name: str,
+        description: str,
+        start_date: str,
+        end_date: str,
+        location_name: str,
+        core_rank: str,
+        organizer: str,
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org/Event structured JSON-LD for academic conferences with CORE rank metadata.
+        """
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Event",
+            "name": event_name.strip(),
+            "description": description.strip(),
+            "startDate": start_date.strip(),
+            "endDate": end_date.strip(),
+            "location": {
+                "@type": "Place",
+                "name": location_name.strip()
+            },
+            "organizer": {
+                "@type": "Organization",
+                "name": organizer.strip()
+            },
+            "additionalProperty": [
+                {
+                    "@type": "PropertyValue",
+                    "name": "CORE Rank",
+                    "value": core_rank.strip().upper()
+                }
+            ]
+        }
+        if url:
+            data["url"] = url.strip()
+        return data
+
+
 
 
 
