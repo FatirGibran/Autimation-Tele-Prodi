@@ -2577,6 +2577,79 @@ def evaluate_faculty_bkd_workload(faculty_data: Dict[str, Any]) -> Dict[str, Any
     }
 
 
+def parse_kkn_village_assignment(text: str) -> List[Dict[str, Any]]:
+    """
+    Parses student community engagement (KKN - Kuliah Kerja Nyata) assignment records from table or list format.
+    Extracts group number/code, village, district, regency, faculty supervisor (DPL), student count, and theme.
+    """
+    if not text:
+        return []
+
+    results = []
+    lines = [l.strip() for l in text.strip().splitlines() if l.strip()]
+    table_lines = [l for l in lines if l.startswith("|") and l.endswith("|")]
+
+    if len(table_lines) >= 3:
+        for row in table_lines[2:]:
+            cells = [c.strip() for c in row.split("|")[1:-1]]
+            if len(cells) < 4:
+                continue
+            grp = cells[0]
+            village = cells[1]
+            district = cells[2]
+            regency = cells[3]
+            dpl = cells[4] if len(cells) > 4 else ""
+            student_count_m = re.search(r'\d+', cells[5]) if len(cells) > 5 else None
+            student_count = int(student_count_m.group(0)) if student_count_m else 10
+            theme = cells[6] if len(cells) > 6 else "Pemberdayaan Masyarakat"
+
+            results.append({
+                "group_code": grp,
+                "village_name": village,
+                "district_name": district,
+                "regency_name": regency,
+                "supervisor_dpl": dpl,
+                "student_count": student_count,
+                "thematic_focus": theme
+            })
+        if results:
+            return results
+
+    bullet_re = re.compile(
+        r'[-*]\s*(?:Kelompok\s+)?([A-Za-z0-9_-]+)\s*:\s*'
+        r'Desa\s+([^,]+),\s*'
+        r'Kec\.\s+([^,]+),\s*'
+        r'Kab\.\s+([^|]+)'
+        r'(?:\s*\|\s*DPL:\s*([^|]+))?'
+        r'(?:\s*\|\s*(\d+)\s*(?:Mhs|Mahasiswa)?)?'
+        r'(?:\s*\|\s*Tema:\s*(.*))?',
+        re.IGNORECASE
+    )
+
+    for line in lines:
+        m = bullet_re.search(line)
+        if m:
+            grp = m.group(1).strip()
+            village = m.group(2).strip()
+            district = m.group(3).strip()
+            regency = m.group(4).strip()
+            dpl = m.group(5).strip() if m.group(5) else ""
+            student_count = int(m.group(6)) if m.group(6) else 10
+            theme = m.group(7).strip() if m.group(7) else "Pemberdayaan Masyarakat"
+
+            results.append({
+                "group_code": grp,
+                "village_name": village,
+                "district_name": district,
+                "regency_name": regency,
+                "supervisor_dpl": dpl,
+                "student_count": student_count,
+                "thematic_focus": theme
+            })
+
+    return results
+
+
 
 
 
