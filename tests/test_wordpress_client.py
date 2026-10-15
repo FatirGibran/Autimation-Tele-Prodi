@@ -420,6 +420,33 @@ class TestWordPressClient(unittest.TestCase):
         req = mock_urlopen.call_args[0][0]
         self.assertIn("/settings", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_comments_by_post_id(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 10, "post": 101, "content": {"rendered": "Bagus sekali"}, "status": "approved"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        comments = self.client.get_comments_by_post_id(101)
+        self.assertEqual(len(comments), 1)
+        self.assertEqual(comments[0]["id"], 10)
+        self.assertEqual(comments[0]["post"], 101)
+        req = mock_urlopen.call_args[0][0]
+        self.assertIn("/comments?post=101&status=approved&per_page=100", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_create_tag(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 42, "name": "5G NR", "slug": "5g-nr", "description": "Standar seluler 5G"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        tag = self.client.create_tag("5G NR", slug="5g-nr", description="Standar seluler 5G")
+        self.assertEqual(tag["id"], 42)
+        self.assertEqual(tag["name"], "5G NR")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/tags", req.full_url)
+
+
 if __name__ == "__main__":
     unittest.main()
 
