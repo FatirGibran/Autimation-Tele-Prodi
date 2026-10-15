@@ -1253,6 +1253,105 @@ class TestCLI(unittest.TestCase):
             if out_file.exists():
                 out_file.unlink()
 
+    def test_cmd_kkn(self):
+        class ArgsAdd:
+            action = "add"
+            group = "KKN-TM-CLI-01"
+            village = "Pageraji"
+            district = "Cilongok"
+            regency = "Banyumas"
+            supervisor = "Dr. Eng. Irfan"
+            students = 11
+            theme = "Smart Village IoT"
+            flagship = "Telemetri Irigasi Sawah"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_kkn(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Penempatan KKN tematik berhasil dicatat", out)
+            self.assertIn("KKN-TM-CLI-01", out)
+            self.assertIn("Desa Pageraji", out)
+
+        class ArgsList:
+            action = "list"
+            regency = "Banyumas"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_kkn(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Program KKN Tematik Mahasiswa", out)
+            self.assertIn("KKN-TM-CLI-01", out)
+            self.assertIn("Pageraji", out)
+
+    def test_cmd_bkd(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Dr. Budi Santoso"
+            nidn = "0401018501"
+            rank = "Lektor"
+            semester = "2025/2026 Genap"
+            teaching = 6.0
+            research = 4.0
+            service = 2.0
+            supporting = 1.0
+            total = 13.0
+            compliant = True
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bkd(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Beban kerja dosen (BKD) berhasil dicatat", out)
+            self.assertIn("Dr. Budi Santoso", out)
+            self.assertIn("[MEMENUHI]", out)
+
+        class ArgsList:
+            action = "list"
+            semester = "2025/2026 Genap"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bkd(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Kepatuhan Beban Kerja Dosen (BKD)", out)
+            self.assertIn("Dr. Budi Santoso", out)
+            self.assertIn("13.0 SKS", out)
+
+    def test_cmd_hexo(self):
+        slug = "hexo-cli-test-article"
+        cli.storage.save_article({
+            "topic": "Hexo Blog Target",
+            "category": "Jaringan Komputer",
+            "publish_date": "2026-10-15 11:00:00",
+            "focus_keyphrase": "hexo blog",
+            "seo_title": "Hexo CLI Target",
+            "slug": slug,
+            "meta_description": "Meta hexo blog",
+            "html_content": "<p>Konten Hexo Blog CLI</p>",
+            "status": "ready"
+        })
+
+        out_file = Path(self.temp_dir.name) / f"{slug}.md"
+        try:
+            class ArgsHexo:
+                pass
+            args = ArgsHexo()
+            args.slug = slug
+            args.out = str(out_file)
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_hexo(args)
+                self.assertIn("Export Hexo markdown berhasil", fake_out.getvalue())
+
+            content = out_file.read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---"))
+            self.assertIn('title: "Hexo CLI Target"', content)
+            self.assertIn("categories:", content)
+            self.assertIn('  - "Jaringan Komputer"', content)
+            self.assertIn("<p>Konten Hexo Blog CLI</p>", content)
+        finally:
+            if out_file.exists():
+                out_file.unlink()
+
+
 if __name__ == "__main__":
     unittest.main()
 
