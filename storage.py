@@ -432,6 +432,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_kkn_group ON kkn_village_projects(group_code);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_kkn_regency ON kkn_village_projects(regency_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS faculty_bkd_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lecturer_name TEXT NOT NULL,
+                    nidn TEXT NOT NULL,
+                    academic_rank TEXT NOT NULL,
+                    semester TEXT NOT NULL,
+                    teaching_credits REAL NOT NULL,
+                    research_credits REAL NOT NULL,
+                    service_credits REAL NOT NULL,
+                    supporting_credits REAL NOT NULL,
+                    total_sks REAL NOT NULL,
+                    is_compliant INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_bkd_nidn ON faculty_bkd_records(nidn);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_bkd_semester ON faculty_bkd_records(semester);")
 
 
 
@@ -2226,6 +2244,60 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM kkn_village_projects WHERE id = ?", (int(project_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_faculty_bkd(
+        self,
+        lecturer_name: str,
+        nidn: str,
+        academic_rank: str,
+        semester: str,
+        teaching_credits: float,
+        research_credits: float,
+        service_credits: float,
+        supporting_credits: float,
+        total_sks: float,
+        is_compliant: bool
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO faculty_bkd_records (
+                    lecturer_name, nidn, academic_rank, semester,
+                    teaching_credits, research_credits, service_credits,
+                    supporting_credits, total_sks, is_compliant
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                lecturer_name.strip(),
+                nidn.strip(),
+                academic_rank.strip(),
+                semester.strip(),
+                float(teaching_credits),
+                float(research_credits),
+                float(service_credits),
+                float(supporting_credits),
+                float(total_sks),
+                1 if is_compliant else 0
+            ))
+            return cursor.lastrowid
+
+    def list_faculty_bkd_records(self, semester: Optional[str] = None) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM faculty_bkd_records"
+            params = []
+            if semester:
+                query += " WHERE semester = ?"
+                params.append(semester.strip())
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_faculty_bkd_by_nidn(self, nidn: str) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM faculty_bkd_records WHERE nidn = ? ORDER BY semester DESC, id DESC",
+                (nidn.strip(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
