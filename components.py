@@ -2848,6 +2848,43 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_biomedical_telemetry_showcase_card(
+        cls,
+        innovation_title: str,
+        clinical_partner: str,
+        telemetry_protocol: str,
+        sensor_nodes: List[str],
+        impact_summary: str,
+        demo_video_url: str = ""
+    ) -> str:
+        """
+        Renders a biomedical telemetry and digital healthcare research innovation showcase card.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(innovation_title.strip())
+        partner_esc = escape(clinical_partner.strip())
+        proto_esc = escape(telemetry_protocol.strip())
+        impact_esc = escape(impact_summary.strip())
+        sensors_html = ", ".join(escape(s.strip()) for s in sensor_nodes if s.strip())
+
+        video_btn = f"<a href='{escape(demo_video_url.strip())}' class='tu-biomed-video-link' target='_blank' rel='noopener noreferrer'>Video Demo Uji Klinis</a>" if demo_video_url else ""
+
+        return f"""    <div class="tu-biomedical-telemetry-card">
+      <div class="tu-biomed-header">
+        <span class="tu-biomed-badge">Telemetri Biomedis &amp; e-Health</span>
+        <span class="tu-biomed-protocol">{proto_esc}</span>
+      </div>
+      <h4 class="tu-biomed-title">{title_esc}</h4>
+      <div class="tu-biomed-partner">Mitra Klinis: <strong>{partner_esc}</strong></div>
+      <div class="tu-biomed-sensors">Sensor Terintegrasi: <em>{sensors_html}</em></div>
+      <p class="tu-biomed-impact">{impact_esc}</p>
+      <div class="tu-biomed-footer">
+        {video_btn}
+      </div>
+    </div>"""
+
 
 
 
