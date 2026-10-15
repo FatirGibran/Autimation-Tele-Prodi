@@ -547,6 +547,23 @@ class HTMLSanitizer:
             cleaned = re.sub(r'\b(data-tooltip|data-title)=["\']([^"\']*)["\']', fix_tooltip, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized contextual tooltip and placement positioning attributes.")
 
+        # 8r. Sanitize source media query breakpoint attributes
+        if "<source" in cleaned.lower() and "media=" in cleaned.lower():
+            def sanitize_source_media(m):
+                tag = m.group(0)
+                def clean_media_attr(attr_m):
+                    media_val = attr_m.group(1).strip()
+                    if re.search(r'(?:javascript|expression|@import|data:|vbscript|<|>|;)', media_val, re.IGNORECASE):
+                        return ''
+                    if not re.match(r'^[a-zA-Z0-9\s\(\)\:\-\,\.]+$', media_val):
+                        return ''
+                    return f'media="{media_val}"'
+                tag = re.sub(r'\bmedia=["\']([^"\']*)["\']', clean_media_attr, tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s{2,}', ' ', tag)
+                return tag
+            cleaned = re.sub(r'<source\b[^>]*>', sanitize_source_media, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized source media query breakpoint attributes.")
+
         return cleaned, warnings
 
 
