@@ -2674,6 +2674,48 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_kkn_village_profile_card(
+        cls,
+        group_code: str,
+        village_name: str,
+        district: str,
+        regency: str,
+        supervisor_dpl: str,
+        student_count: int,
+        thematic_focus: str,
+        flagship_program: str
+    ) -> str:
+        """
+        Renders a student community service (KKN Thematic) partner village profile card.
+        """
+        from xml.sax.saxutils import escape
+
+        grp_esc = escape(group_code.strip())
+        vil_esc = escape(village_name.strip())
+        dist_esc = escape(district.strip())
+        reg_esc = escape(regency.strip())
+        dpl_esc = escape(supervisor_dpl.strip())
+        theme_esc = escape(thematic_focus.strip())
+        prog_esc = escape(flagship_program.strip())
+
+        return f"""    <div class="tu-kkn-village-card">
+      <div class="tu-kkn-header">
+        <span class="tu-kkn-badge">KKN Tematik Mahasiswa</span>
+        <span class="tu-kkn-group">{grp_esc}</span>
+      </div>
+      <h4 class="tu-kkn-village">Desa {vil_esc}</h4>
+      <div class="tu-kkn-location">Kec. {dist_esc}, Kab. {reg_esc}</div>
+      <div class="tu-kkn-body">
+        <div class="tu-kkn-theme">Tema: <strong>{theme_esc}</strong></div>
+        <div class="tu-kkn-program">Program Unggulan: <em>{prog_esc}</em></div>
+      </div>
+      <div class="tu-kkn-footer">
+        <span>DPL: <strong>{dpl_esc}</strong></span>
+        <span>Peserta: <strong>{student_count} Mahasiswa</strong></span>
+      </div>
+    </div>"""
+
 
 
 
