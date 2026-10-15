@@ -2716,6 +2716,57 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_faculty_bkd_compliance_card(
+        cls,
+        lecturer_name: str,
+        nidn: str,
+        academic_rank: str,
+        semester: str,
+        total_sks: float,
+        is_compliant: bool,
+        breakdown: Dict[str, float]
+    ) -> str:
+        """
+        Renders a faculty semester BKD workload compliance status card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_esc = escape(lecturer_name.strip())
+        nidn_esc = escape(nidn.strip())
+        rank_esc = escape(academic_rank.strip())
+        sem_esc = escape(semester.strip())
+
+        status_label = "MEMENUHI KETENTUAN" if is_compliant else "BELUM MEMENUHI"
+        badge_cls = "tu-bkd-compliant" if is_compliant else "tu-bkd-warning"
+
+        pendidikan = breakdown.get("pendidikan", 0.0)
+        penelitian = breakdown.get("penelitian", 0.0)
+        pengabdian = breakdown.get("pengabdian", 0.0)
+        penunjang = breakdown.get("penunjang", 0.0)
+
+        return f"""    <div class="tu-faculty-bkd-card">
+      <div class="tu-bkd-header">
+        <span class="tu-bkd-badge">Laporan Beban Kerja Dosen (BKD)</span>
+        <span class="tu-bkd-status {badge_cls}">{status_label}</span>
+      </div>
+      <h4 class="tu-bkd-lecturer">{name_esc}</h4>
+      <div class="tu-bkd-meta">
+        <span>NIDN: <strong>{nidn_esc}</strong></span>
+        <span>Jabatan: <strong>{rank_esc}</strong></span>
+        <span>Semester: <strong>{sem_esc}</strong></span>
+      </div>
+      <div class="tu-bkd-breakdown">
+        <div class="tu-bkd-item">Pendidikan: <strong>{pendidikan:.2f} SKS</strong></div>
+        <div class="tu-bkd-item">Penelitian: <strong>{penelitian:.2f} SKS</strong></div>
+        <div class="tu-bkd-item">Pengabdian: <strong>{pengabdian:.2f} SKS</strong></div>
+        <div class="tu-bkd-item">Penunjang: <strong>{penunjang:.2f} SKS</strong></div>
+      </div>
+      <div class="tu-bkd-footer">
+        <span>Total Beban Tridharma: <strong>{total_sks:.2f} SKS</strong> (Rentang Wajib: 12.00 - 16.00 SKS)</span>
+      </div>
+    </div>"""
+
 
 
 
