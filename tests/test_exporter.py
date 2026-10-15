@@ -526,6 +526,50 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("  order: 2", res)
         self.assertIn("<p>Persiapkan alat fusion splicer dan cleaver.</p>", res)
 
+    def test_generate_academic_event_json_ld(self):
+        res = ArticleExporter.generate_academic_event_json_ld(
+            event_name="IEEE International Conference on Communications 2026",
+            description="Konferensi internasional unggulan IEEE bidang teknik komunikasi nirkabel dan telekomunikasi.",
+            start_date="2026-06-14",
+            end_date="2026-06-18",
+            location_name="Palais des congrès de Montréal, Canada",
+            core_rank="A",
+            organizer="IEEE Communications Society",
+            url="https://icc2026.ieee-icc.org"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "Event")
+        self.assertEqual(res["name"], "IEEE International Conference on Communications 2026")
+        self.assertEqual(res["startDate"], "2026-06-14")
+        self.assertEqual(res["endDate"], "2026-06-18")
+        self.assertEqual(res["location"]["name"], "Palais des congrès de Montréal, Canada")
+        self.assertEqual(res["organizer"]["name"], "IEEE Communications Society")
+        self.assertEqual(res["url"], "https://icc2026.ieee-icc.org")
+        props = res.get("additionalProperty", [])
+        self.assertEqual(len(props), 1)
+        self.assertEqual(props[0]["name"], "CORE Rank")
+        self.assertEqual(props[0]["value"], "A")
+
+    def test_to_hexo_markdown(self):
+        meta = {
+            "seo_title": "Panduan Instalasi Antena Parabola",
+            "publish_date": "2026-10-15 10:00:00",
+            "category": "Tutorial Telekomunikasi",
+            "tags": ["Antena", "RF", "Parabola"]
+        }
+        res = ArticleExporter.to_hexo_markdown(meta, "<p>Langkah kalibrasi azimut dan elevasi antena.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Instalasi Antena Parabola"', res)
+        self.assertIn("date: 2026-10-15 10:00:00", res)
+        self.assertIn("categories:", res)
+        self.assertIn('  - "Tutorial Telekomunikasi"', res)
+        self.assertIn("tags:", res)
+        self.assertIn('  - "Antena"', res)
+        self.assertIn('  - "RF"', res)
+        self.assertIn('  - "Parabola"', res)
+        self.assertIn("<p>Langkah kalibrasi azimut dan elevasi antena.</p>", res)
+
+
 if __name__ == "__main__":
     unittest.main()
 
