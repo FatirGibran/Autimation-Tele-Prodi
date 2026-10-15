@@ -520,6 +520,19 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
         return self._send_request(req)
 
+    def get_comments_by_post_id(self, post_id: int, status: str = "approved") -> List[Dict[str, Any]]:
+        """
+        Retrieves comments associated with a WordPress post ID, optionally filtered by status.
+        """
+        clean_status = urllib.parse.quote(status.strip().lower())
+        endpoint = f"{self.api_url}/comments?post={int(post_id)}&status={clean_status}&per_page=100"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
+
 
 
 
