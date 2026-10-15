@@ -2512,6 +2512,71 @@ def audit_academic_probation_status(student_data: Dict[str, Any]) -> Dict[str, A
     }
 
 
+def evaluate_faculty_bkd_workload(faculty_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates faculty semester teaching and tridharma workload compliance under statutory BKD guidelines (Kemendikbudristek/LLDIKTI).
+    Statutory criteria:
+      - Total credits: 12.0 to 16.0 SKS
+      - Pendidikan & Pengajaran: min 4.0 SKS
+      - Penelitian: min 2.0 SKS
+      - Pengabdian Masyarakat: min 0.5 SKS
+      - Core Subtotal (Pendidikan + Penelitian): min 9.0 SKS
+    """
+    lecturer = faculty_data.get("lecturer_name", "").strip()
+    nidn = faculty_data.get("nidn", "").strip()
+    rank = faculty_data.get("academic_rank", "Asisten Ahli").strip()
+    teaching = float(faculty_data.get("teaching_credits", 0.0))
+    research = float(faculty_data.get("research_credits", 0.0))
+    service = float(faculty_data.get("service_credits", 0.0))
+    supporting = float(faculty_data.get("supporting_credits", 0.0))
+
+    total = teaching + research + service + supporting
+    core_subtotal = teaching + research
+
+    issues = []
+    if total < 12.0:
+        issues.append(f"Total beban kerja ({total:.2f} SKS) kurang dari batas minimum perundangan (12.00 SKS).")
+    elif total > 16.0:
+        issues.append(f"Total beban kerja ({total:.2f} SKS) melebihi batas regulasi 16.00 SKS (kategori kelebihan beban).")
+
+    if teaching < 4.0:
+        issues.append(f"Beban Pengajaran ({teaching:.2f} SKS) di bawah batas minimal 4.00 SKS.")
+
+    if research < 2.0:
+        issues.append(f"Beban Penelitian ({research:.2f} SKS) di bawah batas minimal 2.00 SKS.")
+
+    if service < 0.5:
+        issues.append(f"Beban Pengabdian Masyarakat ({service:.2f} SKS) di bawah batas minimal 0.50 SKS.")
+
+    if core_subtotal < 9.0:
+        issues.append(f"Subtotal Tridharma Inti Pengajaran + Penelitian ({core_subtotal:.2f} SKS) di bawah minimal 9.00 SKS.")
+
+    if total > 16.0:
+        status = "LEBIH BEBAN"
+        is_compliant = True
+    elif len(issues) == 0:
+        status = "MEMENUHI"
+        is_compliant = True
+    else:
+        status = "TIDAK MEMENUHI"
+        is_compliant = False
+
+    return {
+        "lecturer_name": lecturer,
+        "nidn": nidn,
+        "academic_rank": rank,
+        "teaching_credits": teaching,
+        "research_credits": research,
+        "service_credits": service,
+        "supporting_credits": supporting,
+        "core_subtotal": core_subtotal,
+        "total_sks": total,
+        "is_compliant": is_compliant,
+        "status": status,
+        "issues": issues
+    }
+
+
 
 
 
