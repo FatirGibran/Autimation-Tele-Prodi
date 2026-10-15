@@ -989,6 +989,107 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Next-Generation Terabit Optical Transceivers", html)
         self.assertIn("https://event.telkomuniversity.ac.id/visiting-prof", html)
 
+    def test_render_kkn_village_profile_card(self):
+        html = EditorialComponents.render_kkn_village_profile_card(
+            group_code="KKN-01",
+            village_name="Beji",
+            district="Kedungbanteng",
+            regency="Banyumas",
+            supervisor_dpl="Dr. Ir. Budi",
+            student_count=12,
+            thematic_focus="Smart Village & Pertanian Presisi",
+            flagship_program="Instalasi Sensor Tanah LoRa & Website Desa"
+        )
+        self.assertIn("tu-kkn-village-card", html)
+        self.assertIn("KKN-01", html)
+        self.assertIn("Desa Beji", html)
+        self.assertIn("Kedungbanteng", html)
+        self.assertIn("Banyumas", html)
+        self.assertIn("Dr. Ir. Budi", html)
+        self.assertIn("12 Mahasiswa", html)
+        self.assertIn("Smart Village &amp; Pertanian Presisi", html)
+
+    def test_render_faculty_bkd_compliance_card(self):
+        breakdown = {
+            "pendidikan": 8.0,
+            "penelitian": 3.0,
+            "pengabdian": 1.5,
+            "penunjang": 1.0
+        }
+        html = EditorialComponents.render_faculty_bkd_compliance_card(
+            lecturer_name="Dr. Eng. Ir. Suryo",
+            nidn="0612345601",
+            academic_rank="Lektor Kepala",
+            semester="Ganjil 2026/2027",
+            total_sks=13.5,
+            is_compliant=True,
+            breakdown=breakdown
+        )
+        self.assertIn("tu-faculty-bkd-card", html)
+        self.assertIn("Dr. Eng. Ir. Suryo", html)
+        self.assertIn("0612345601", html)
+        self.assertIn("Lektor Kepala", html)
+        self.assertIn("MEMENUHI KETENTUAN", html)
+        self.assertIn("tu-bkd-compliant", html)
+        self.assertIn("13.50 SKS", html)
+
+    def test_render_core_conference_showcase_card(self):
+        html = EditorialComponents.render_core_conference_showcase_card(
+            paper_title="Distributed Consensus in 6G UAV Swarms",
+            authors=["Fatir Gibran", "Dr. Bambang"],
+            conference_name="IEEE International Conference on Computer Communications",
+            acronym="INFOCOM",
+            core_tier="A*",
+            publisher="IEEE Xplore",
+            year=2026,
+            presentation_city="San Francisco, USA"
+        )
+        self.assertIn("tu-core-conf-card", html)
+        self.assertIn("CORE Rank A*", html)
+        self.assertIn("tu-core-astar", html)
+        self.assertIn("Distributed Consensus in 6G UAV Swarms", html)
+        self.assertIn("INFOCOM 2026", html)
+        self.assertIn("San Francisco, USA", html)
+        self.assertIn("IEEE Xplore", html)
+
+    def test_render_academic_warning_counseling_card(self):
+        html = EditorialComponents.render_academic_warning_counseling_card(
+            student_name="Budi Santoso",
+            nim="120122011",
+            warning_level="SP-1",
+            cumulative_gpa=1.92,
+            earned_credits=38,
+            remedial_target_sks=10,
+            advisor_name="Ir. Hendra, M.T.",
+            counseling_deadline="30 Oktober 2026"
+        )
+        self.assertIn("tu-academic-warning-card", html)
+        self.assertIn("Peringatan Akademik (SP-1)", html)
+        self.assertIn("Budi Santoso", html)
+        self.assertIn("120122011", html)
+        self.assertIn("1.92", html)
+        self.assertIn("38 SKS", html)
+        self.assertIn("10 SKS", html)
+        self.assertIn("Ir. Hendra, M.T.", html)
+        self.assertIn("30 Oktober 2026", html)
+
+    def test_render_biomedical_telemetry_showcase_card(self):
+        html = EditorialComponents.render_biomedical_telemetry_showcase_card(
+            innovation_title="Wearable ECG Telemetry Node for Rural Clinics",
+            clinical_partner="RS Margono Soekarjo Purwokerto",
+            telemetry_protocol="LoRaWAN 920 MHz & MQTT",
+            sensor_nodes=["AD8232 ECG Sensor", "MAX30102 Pulse Oximeter"],
+            impact_summary="Pemantauan aritmia jantung jarak jauh real-time untuk puskesmas daerah pelosok.",
+            demo_video_url="https://youtube.com/watch?v=biomed-demo"
+        )
+        self.assertIn("tu-biomedical-telemetry-card", html)
+        self.assertIn("Telemetri Biomedis &amp; e-Health", html)
+        self.assertIn("Wearable ECG Telemetry Node", html)
+        self.assertIn("RS Margono Soekarjo Purwokerto", html)
+        self.assertIn("LoRaWAN 920 MHz &amp; MQTT", html)
+        self.assertIn("AD8232 ECG Sensor", html)
+        self.assertIn("https://youtube.com/watch?v=biomed-demo", html)
+
 if __name__ == "__main__":
     unittest.main()
 
