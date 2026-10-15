@@ -2230,6 +2230,78 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def calculate_content_freshness_decay(
+        publish_date: str,
+        modified_date: Optional[str] = None,
+        field_velocity: str = "fast",
+        current_date_str: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Calculates content freshness decay score and flags editorial staleness.
+        Field velocity half-life:
+          - 'fast' (AI, 5G, Cybersecurity): 365 days
+          - 'medium' (General Computing, Web Dev): 730 days
+          - 'slow' (Theoretical Foundations, Mathematics): 1460 days
+        """
+        from datetime import datetime, date
+        half_life_map = {"fast": 365, "medium": 730, "slow": 1460}
+        half_life = half_life_map.get(field_velocity.lower(), 365)
+
+        ref_str = (modified_date or publish_date or "").strip()[:10]
+        if not ref_str:
+            return {
+                "freshness_score": 0.0,
+                "days_elapsed": 0,
+                "status": "UNKNOWN",
+                "is_stale": True,
+                "warning": "Tanggal publikasi tidak valid atau kosong."
+            }
+
+        try:
+            ref_dt = datetime.strptime(ref_str, "%Y-%m-%d").date()
+        except ValueError:
+            return {
+                "freshness_score": 0.0,
+                "days_elapsed": 0,
+                "status": "UNKNOWN",
+                "is_stale": True,
+                "warning": f"Format tanggal '{ref_str}' tidak sesuai ISO YYYY-MM-DD."
+            }
+
+        now_dt = datetime.strptime(current_date_str[:10], "%Y-%m-%d").date() if current_date_str else date.today()
+        days_elapsed = max(0, (now_dt - ref_dt).days)
+
+        import math
+        decay_factor = math.pow(0.5, days_elapsed / half_life)
+        score = round(decay_factor * 100.0, 1)
+
+        if score >= 75.0:
+            status = "FRESH"
+            is_stale = False
+            warning = ""
+        elif score >= 50.0:
+            status = "MODERATE"
+            is_stale = False
+            warning = "Konten mendekati siklus review tahunan."
+        elif score >= 25.0:
+            status = "NEEDS_UPDATE"
+            is_stale = True
+            warning = f"Konten sudah berumur {days_elapsed} hari. Disarankan pembaruan referensi atau kurikulum."
+        else:
+            status = "ARCHIVE_STALE"
+            is_stale = True
+            warning = f"Konten kadaluarsa ({days_elapsed} hari tanpa revisi). Perlu peninjauan editorial mendalam."
+
+        return {
+            "freshness_score": score,
+            "days_elapsed": days_elapsed,
+            "field_velocity": field_velocity,
+            "status": status,
+            "is_stale": is_stale,
+            "warning": warning
+        }
+
 
 
 
