@@ -710,6 +710,99 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_valid"])
         self.assertEqual(res_bad["depth"], 1)
 
+    def test_calculate_content_freshness_decay(self):
+        # Fresh content (30 days old with fast velocity 365 days half-life)
+        res_fresh = YoastSEOValidator.calculate_content_freshness_decay(
+            publish_date="2026-09-15",
+            field_velocity="fast",
+            current_date_str="2026-10-15"
+        )
+        self.assertEqual(res_fresh["status"], "FRESH")
+        self.assertFalse(res_fresh["is_stale"])
+        self.assertGreaterEqual(res_fresh["freshness_score"], 90.0)
+
+        # Stale content (800 days old)
+        res_stale = YoastSEOValidator.calculate_content_freshness_decay(
+            publish_date="2024-08-01",
+            field_velocity="fast",
+            current_date_str="2026-10-15"
+        )
+        self.assertTrue(res_stale["is_stale"])
+        self.assertIn(res_stale["status"], ("NEEDS_UPDATE", "ARCHIVE_STALE"))
+        self.assertLess(res_stale["freshness_score"], 30.0)
+
+    def test_detect_academic_conference_tier(self):
+        text_a_star = "Makalah dipresentasikan pada IEEE INFOCOM 2026 di San Francisco."
+        res1 = YoastSEOValidator.detect_academic_conference_tier(text_a_star)
+        self.assertTrue(res1["has_conference"])
+        self.assertEqual(res1["core_tier"], "A*")
+        self.assertTrue(res1["is_prestigious"])
+        self.assertEqual(res1["publisher_sponsor"], "IEEE Xplore")
+
+        text_b = "Paper diterima pada konferensi internasional IEEE Tencon 2026 di Bali."
+        res2 = YoastSEOValidator.detect_academic_conference_tier(text_b)
+        self.assertTrue(res2["has_conference"])
+        self.assertEqual(res2["core_tier"], "B")
+        self.assertTrue(res2["is_prestigious"])
+
+        text_none = "Pertemuan rapat kerja internal program studi."
+        res3 = YoastSEOValidator.detect_academic_conference_tier(text_none)
+        self.assertFalse(res3["has_conference"])
+        self.assertEqual(res3["core_tier"], "Unranked")
+
+    def test_audit_table_of_contents_anchor_integrity(self):
+        html_good = (
+            '<div class="tu-editorial-container">'
+            '<nav class="tu-toc">'
+            '<a href="#latar-belakang">Latar Belakang</a>'
+            '<a href="#metode">Metodologi</a>'
+            '</nav>'
+            '<h2 id="latar-belakang">Latar Belakang</h2>'
+            '<h2 id="metode">Metodologi</h2>'
+            '</div>'
+        )
+        res_good = YoastSEOValidator.audit_table_of_contents_anchor_integrity(html_good)
+        self.assertTrue(res_good["is_valid"])
+        self.assertEqual(res_good["valid_targets"], 2)
+        self.assertEqual(len(res_good["broken_targets"]), 0)
+
+        html_broken = (
+            '<div class="tu-editorial-container">'
+            '<nav class="tu-toc">'
+            '<a href="#bab-1">Bab 1</a>'
+            '<a href="#bab-2">Bab 2 (Hilang)</a>'
+            '</nav>'
+            '<h2 id="bab-1">Bab 1</h2>'
+            '</div>'
+        )
+        res_bad = YoastSEOValidator.audit_table_of_contents_anchor_integrity(html_broken)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertIn("bab-2", res_bad["broken_targets"])
+
+    def test_audit_math_latex_notation_accessibility(self):
+        html_good = (
+            '<div class="tu-editorial-container">'
+            '<p class="tu-math" role="math" aria-label="Persamaan Einstein">'
+            '$$E = mc^2$$'
+            '</p>'
+            '<p>Persamaan inline <span class="katex" role="math">$P = V \\times I$</span> berlaku.</p>'
+            '</div>'
+        )
+        res_good = YoastSEOValidator.audit_math_latex_notation_accessibility(html_good)
+        self.assertTrue(res_good["is_balanced"])
+        self.assertTrue(res_good["has_accessible_markup"])
+        self.assertEqual(res_good["display_count"], 1)
+        self.assertEqual(res_good["inline_count"], 1)
+
+        html_unbalanced = (
+            '<div class="tu-editorial-container">'
+            '<p>Nilai resistansi $R = 100 ohm tanpa penutup.</p>'
+            '</div>'
+        )
+        res_unbalanced = YoastSEOValidator.audit_math_latex_notation_accessibility(html_unbalanced)
+        self.assertFalse(res_unbalanced["is_balanced"])
+        self.assertTrue(any("tidak berpasangan" in i for i in res_unbalanced["issues"]))
+
 if __name__ == "__main__":
     unittest.main()
 
