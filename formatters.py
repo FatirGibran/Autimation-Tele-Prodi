@@ -624,6 +624,33 @@ class TelegramFormatter:
             f"✨ *Terbuka untuk seluruh civitas akademika dan mahasiswa program studi.*"
         )
 
+    @staticmethod
+    def format_kkn_village_completion_broadcast(
+        group_code: str,
+        village_name: str,
+        district: str,
+        regency: str,
+        supervisor_dpl: str,
+        student_count: int,
+        theme: str,
+        flagship_outcome: str,
+        documentation_url: str = ""
+    ) -> str:
+        """
+        Renders a thematic student community engagement (KKN) village project completion bulletin for Telegram.
+        """
+        doc_link = f"\n🔗 **Dokumentasi & Laporan:** {documentation_url.strip()}" if documentation_url else ""
+        return (
+            f"🏡 **Diseminasi & Penutupan KKN Tematik Mahasiswa**\n\n"
+            f"🏷 **Kelompok:** `{group_code.strip()}`\n"
+            f"📍 **Lokasi Pengabdian:** Desa {village_name.strip()}, Kec. {district.strip()}, Kab. {regency.strip()}\n"
+            f"👨‍🏫 **Dosen Pembimbing Lapangan (DPL):** {supervisor_dpl.strip()}\n"
+            f"👥 **Jumlah Mahasiswa:** {student_count} Mahasiswa\n"
+            f"🎯 **Tema Program:** {theme.strip()}\n"
+            f"🏆 **Program Unggulan:** {flagship_outcome.strip()}{doc_link}\n\n"
+            f"👏 *Apresiasi setinggi-tingginya kepada seluruh mahasiswa dan masyarakat desa mitra.*"
+        )
+
 
 
 
