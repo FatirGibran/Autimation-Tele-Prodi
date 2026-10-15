@@ -2302,6 +2302,88 @@ class YoastSEOValidator:
             "warning": warning
         }
 
+    @staticmethod
+    def detect_academic_conference_tier(text: str) -> Dict[str, Any]:
+        """
+        Detects international computing and telecommunications conference ranking (CORE Portal: A*, A, B, C)
+        and major indexing sponsorship (IEEE, ACM, Springer, Elsevier).
+        """
+        if not text:
+            return {
+                "has_conference": False,
+                "conference_name": "",
+                "acronym": "",
+                "core_tier": "Unranked",
+                "publisher_sponsor": "",
+                "is_prestigious": False
+            }
+
+        clean = text.strip()
+
+        core_m = re.search(r'\b(?:CORE\s*(?:Rank|Peringkat)?\s*([A-C]\*?))\b', clean, re.IGNORECASE)
+        detected_tier = core_m.group(1).upper() if core_m else None
+
+        core_a_star = {"SIGCOMM", "INFOCOM", "ICSE", "FSE", "CVPR", "ICCV", "NeurIPS", "ICLR", "MobiCom", "OSDI", "SOSP"}
+        core_a = {"ICC", "GLOBECOM", "WCNC", "PerCom", "SECON", "ICNP", "CoNEXT", "IMC", "ASE", "ISSTA"}
+        core_b = {"APCC", "ICACT", "Tencon", "COMPSAC", "ICCE", "HealthCom", "CSCloud"}
+        core_c = {"ICAIT", "ICITACEE", "ICITISEE", "ICRAMET", "ISESD"}
+
+        matched_conf = None
+        matched_tier = detected_tier
+
+        for acr in core_a_star:
+            if re.search(r'\b' + re.escape(acr) + r'\b', clean):
+                matched_conf = acr
+                if not matched_tier:
+                    matched_tier = "A*"
+                break
+
+        if not matched_conf:
+            for acr in core_a:
+                if re.search(r'\b' + re.escape(acr) + r'\b', clean):
+                    matched_conf = acr
+                    if not matched_tier:
+                        matched_tier = "A"
+                    break
+
+        if not matched_conf:
+            for acr in core_b:
+                if re.search(r'\b' + re.escape(acr) + r'\b', clean):
+                    matched_conf = acr
+                    if not matched_tier:
+                        matched_tier = "B"
+                    break
+
+        if not matched_conf:
+            for acr in core_c:
+                if re.search(r'\b' + re.escape(acr) + r'\b', clean):
+                    matched_conf = acr
+                    if not matched_tier:
+                        matched_tier = "C"
+                    break
+
+        sponsor = ""
+        if re.search(r'\bIEEE\b', clean):
+            sponsor = "IEEE Xplore"
+        elif re.search(r'\bACM\b', clean):
+            sponsor = "ACM Digital Library"
+        elif re.search(r'\bSpringer\b', clean):
+            sponsor = "Springer LNCS"
+        elif re.search(r'\bElsevier\b', clean):
+            sponsor = "Elsevier Procedia"
+
+        final_tier = matched_tier or "Unranked"
+        is_prestigious = final_tier in ("A*", "A", "B")
+
+        return {
+            "has_conference": bool(matched_conf or detected_tier or sponsor),
+            "conference_name": matched_conf or "",
+            "acronym": matched_conf or "",
+            "core_tier": final_tier,
+            "publisher_sponsor": sponsor,
+            "is_prestigious": is_prestigious
+        }
+
 
 
 
