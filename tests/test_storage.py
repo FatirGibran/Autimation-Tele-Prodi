@@ -1155,6 +1155,114 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(valid_cals), 1)
         self.assertEqual(valid_cals[0]["calibration_status"], "Valid")
 
+    def test_kkn_village_projects_crud(self):
+        pid1 = self.storage.record_kkn_project(
+            group_code="KKN-TM-01",
+            village_name="Cibodas",
+            district_name="Pasirjambu",
+            regency_name="Bandung",
+            supervisor_dpl="Dr. Ir. Ahmad",
+            student_count=12,
+            thematic_focus="Desa Cerdas",
+            flagship_program="IoT Pertanian"
+        )
+        pid2 = self.storage.record_kkn_project(
+            group_code="KKN-TM-02",
+            village_name="Lembang",
+            district_name="Lembang",
+            regency_name="Bandung Barat",
+            supervisor_dpl="Dr. Siti",
+            student_count=10,
+            thematic_focus="Pemberdayaan UMKM",
+            flagship_program="Marketplace Desa"
+        )
+        self.assertGreater(pid1, 0)
+        self.assertGreater(pid2, 0)
+
+        all_projects = self.storage.list_kkn_projects()
+        self.assertEqual(len(all_projects), 2)
+
+        bandung_projects = self.storage.list_kkn_projects(regency_name="Bandung")
+        self.assertEqual(len(bandung_projects), 1)
+        self.assertEqual(bandung_projects[0]["group_code"], "KKN-TM-01")
+
+        project = self.storage.get_kkn_project_by_id(pid1)
+        self.assertIsNotNone(project)
+        self.assertEqual(project["village_name"], "Cibodas")
+        self.assertEqual(project["student_count"], 12)
+
+    def test_faculty_bkd_records_crud(self):
+        bid1 = self.storage.record_faculty_bkd(
+            lecturer_name="Dr. Ir. Hendra",
+            nidn="0412345601",
+            academic_rank="Lektor Kepala",
+            semester="2025/2026 Ganjil",
+            teaching_credits=6.0,
+            research_credits=4.0,
+            service_credits=2.0,
+            supporting_credits=1.0,
+            total_sks=13.0,
+            is_compliant=True
+        )
+        bid2 = self.storage.record_faculty_bkd(
+            lecturer_name="Dr. Ir. Hendra",
+            nidn="0412345601",
+            academic_rank="Lektor Kepala",
+            semester="2025/2026 Genap",
+            teaching_credits=4.0,
+            research_credits=3.0,
+            service_credits=1.0,
+            supporting_credits=0.5,
+            total_sks=8.5,
+            is_compliant=False
+        )
+        self.assertGreater(bid1, 0)
+        self.assertGreater(bid2, 0)
+
+        ganjil_records = self.storage.list_faculty_bkd_records(semester="2025/2026 Ganjil")
+        self.assertEqual(len(ganjil_records), 1)
+        self.assertTrue(ganjil_records[0]["is_compliant"])
+
+        hendra_records = self.storage.get_faculty_bkd_by_nidn("0412345601")
+        self.assertEqual(len(hendra_records), 2)
+
+    def test_conference_presentations_crud(self):
+        cid1 = self.storage.record_conference_presentation(
+            paper_title="Deep Learning for 6G Telemetry",
+            authors="Fatir Gibran, Bayu Pratama",
+            conference_name="IEEE International Conference on Communications",
+            acronym="ICC 2026",
+            core_tier="A",
+            publisher="IEEE Xplore",
+            year=2026,
+            city="Montreal, Canada",
+            paper_url="https://doi.org/10.1109/ICC.2026.1"
+        )
+        cid2 = self.storage.record_conference_presentation(
+            paper_title="IoT Protocol Optimization in Campus Network",
+            authors="Siti Rahma, Dr. Ahmad",
+            conference_name="International Conference on Networking and Services",
+            acronym="ICNS 2025",
+            core_tier="B",
+            publisher="Springer",
+            year=2025,
+            city="Berlin, Germany"
+        )
+        self.assertGreater(cid1, 0)
+        self.assertGreater(cid2, 0)
+
+        all_confs = self.storage.list_conference_presentations()
+        self.assertEqual(len(all_confs), 2)
+
+        tier_a = self.storage.list_conference_presentations(core_tier="A")
+        self.assertEqual(len(tier_a), 1)
+        self.assertEqual(tier_a[0]["acronym"], "ICC 2026")
+
+        conf_2025 = self.storage.list_conference_presentations(year=2025)
+        self.assertEqual(len(conf_2025), 1)
+        self.assertEqual(conf_2025[0]["city"], "Berlin, Germany")
+
+
 if __name__ == "__main__":
     unittest.main()
 
