@@ -2808,6 +2808,46 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_academic_warning_counseling_card(
+        cls,
+        student_name: str,
+        nim: str,
+        warning_level: str,
+        cumulative_gpa: float,
+        earned_credits: int,
+        remedial_target_sks: int,
+        advisor_name: str,
+        counseling_deadline: str
+    ) -> str:
+        """
+        Renders an academic warning counseling and remedial action plan card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_esc = escape(student_name.strip())
+        nim_esc = escape(nim.strip())
+        warn_esc = escape(warning_level.strip().upper())
+        advisor_esc = escape(advisor_name.strip())
+        deadline_esc = escape(counseling_deadline.strip())
+
+        return f"""    <div class="tu-academic-warning-card">
+      <div class="tu-warning-header">
+        <span class="tu-warning-badge">Peringatan Akademik ({warn_esc})</span>
+        <span class="tu-warning-nim">{nim_esc}</span>
+      </div>
+      <h4 class="tu-warning-student">{name_esc}</h4>
+      <div class="tu-warning-stats">
+        <span>IPK Kumulatif: <strong>{cumulative_gpa:.2f}</strong></span>
+        <span>SKS Diperoleh: <strong>{earned_credits} SKS</strong></span>
+        <span>Target Remedial: <strong>{remedial_target_sks} SKS</strong></span>
+      </div>
+      <div class="tu-warning-footer">
+        <span>Dosen Wali: <strong>{advisor_esc}</strong></span>
+        <span>Batas Konseling: <strong>{deadline_esc}</strong></span>
+      </div>
+    </div>"""
+
 
 
 
