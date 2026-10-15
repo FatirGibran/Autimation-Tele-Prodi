@@ -2767,6 +2767,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_core_conference_showcase_card(
+        cls,
+        paper_title: str,
+        authors: List[str],
+        conference_name: str,
+        acronym: str,
+        core_tier: str,
+        publisher: str,
+        year: int,
+        presentation_city: str
+    ) -> str:
+        """
+        Renders an international research paper conference presentation card with CORE ranking tier.
+        """
+        from xml.sax.saxutils import escape
+
+        title_esc = escape(paper_title.strip())
+        conf_esc = escape(conference_name.strip())
+        acr_esc = escape(acronym.strip().upper())
+        tier_esc = escape(core_tier.strip().upper())
+        pub_esc = escape(publisher.strip())
+        city_esc = escape(presentation_city.strip())
+        authors_html = ", ".join(escape(a.strip()) for a in authors if a.strip())
+
+        tier_class = f"tu-core-{tier_esc.lower().replace('*', 'star')}"
+
+        return f"""    <div class="tu-core-conf-card">
+      <div class="tu-core-conf-header">
+        <span class="tu-core-tier-badge {tier_class}">CORE Rank {tier_esc}</span>
+        <span class="tu-core-conf-acronym">{acr_esc} {year}</span>
+      </div>
+      <h4 class="tu-core-conf-title">{title_esc}</h4>
+      <div class="tu-core-conf-authors">Penulis: <strong>{authors_html}</strong></div>
+      <div class="tu-core-conf-name">Konferensi: <em>{conf_esc}</em></div>
+      <div class="tu-core-conf-footer">
+        <span>Kota: <strong>{city_esc}</strong></span>
+        <span>Prosiding: <strong>{pub_esc}</strong></span>
+      </div>
+    </div>"""
+
 
 
 
