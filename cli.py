@@ -889,7 +889,90 @@ def cmd_starlight(args):
     print(f"Export Astro Starlight markdown berhasil -> {out_path}")
 
 
+def cmd_kkn(args):
+    if args.action == "add":
+        if not args.group or not args.village or not args.district or not args.regency or not args.supervisor or args.students is None or not args.theme or not args.flagship:
+            print("Error: --group, --village, --district, --regency, --supervisor, --students, --theme, dan --flagship wajib disertakan untuk mencatat penempatan KKN.")
+            sys.exit(1)
+        kid = storage.record_kkn_project(
+            group_code=args.group,
+            village_name=args.village,
+            district_name=args.district,
+            regency_name=args.regency,
+            supervisor_dpl=args.supervisor,
+            student_count=int(args.students),
+            thematic_focus=args.theme,
+            flagship_program=args.flagship
+        )
+        print(f"Penempatan KKN tematik berhasil dicatat (ID: {kid}) untuk kelompok {args.group} di Desa {args.village}.")
+    else:
+        projects = storage.list_kkn_projects(regency_name=args.regency)
+        if not projects:
+            print("Belum ada catatan penempatan KKN tematik mahasiswa.")
+            return
+        print("=== Rekam Jejak Program KKN Tematik Mahasiswa ===")
+        for p in projects:
+            print(f"#{p['id']} [{p['group_code']}] Desa {p['village_name']}, {p['regency_name']} - DPL: {p['supervisor_dpl']} ({p['student_count']} Mhs) | Fokus: {p['thematic_focus']}")
+
+
+def cmd_bkd(args):
+    if args.action == "add":
+        if not args.name or not args.nidn or not args.rank or not args.semester or args.teaching is None or args.research is None or args.service is None or args.supporting is None or args.total is None:
+            print("Error: Parameter beban BKD dosen tidak lengkap.")
+            sys.exit(1)
+        bid = storage.record_faculty_bkd(
+            lecturer_name=args.name,
+            nidn=args.nidn,
+            academic_rank=args.rank,
+            semester=args.semester,
+            teaching_credits=float(args.teaching),
+            research_credits=float(args.research),
+            service_credits=float(args.service),
+            supporting_credits=float(args.supporting),
+            total_sks=float(args.total),
+            is_compliant=bool(args.compliant)
+        )
+        status_label = "MEMENUHI" if args.compliant else "BELUM MEMENUHI"
+        print(f"Beban kerja dosen (BKD) berhasil dicatat (ID: {bid}) untuk {args.name} ({args.nidn}) [{status_label}].")
+    else:
+        records = storage.list_faculty_bkd_records(semester=args.semester)
+        if not records:
+            print("Belum ada catatan kepatuhan BKD dosen.")
+            return
+        print("=== Rekam Jejak Kepatuhan Beban Kerja Dosen (BKD) ===")
+        for r in records:
+            status_mark = "MEMENUHI" if r["is_compliant"] else "TIDAK MEMENUHI"
+            print(f"#{r['id']} [{r['semester']}] {r['lecturer_name']} ({r['nidn']}) - {r['total_sks']} SKS [{status_mark}]")
+
+
+def cmd_hexo(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    tags = article.get("tags") or []
+    if isinstance(tags, str):
+        try:
+            tags = json.loads(tags)
+        except Exception:
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "topic": article.get("topic", ""),
+        "publish_date": article.get("publish_date", ""),
+        "category": article.get("category", ""),
+        "tags": tags
+    }
+    hexo_md = ArticleExporter.to_hexo_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(hexo_md, encoding="utf-8")
+    print(f"Export Hexo markdown berhasil -> {out_path}")
+
+
 def main():
+
 
 
     parser = argparse.ArgumentParser(description="CLI Otomasi Editorial Prodi")
@@ -1225,7 +1308,42 @@ def main():
     starlight_parser.add_argument("--order", type=int, default=1, help="Urutan prioritas pada sidebar")
     starlight_parser.set_defaults(func=cmd_starlight)
 
+    # KKN command
+    kkn_parser = subparsers.add_parser("kkn", help="Kelola rekam penempatan KKN tematik mahasiswa (list, add)")
+    kkn_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan KKN")
+    kkn_parser.add_argument("--group", help="Kode kelompok KKN")
+    kkn_parser.add_argument("--village", help="Nama desa mitra")
+    kkn_parser.add_argument("--district", help="Nama kecamatan")
+    kkn_parser.add_argument("--regency", help="Nama kabupaten")
+    kkn_parser.add_argument("--supervisor", help="Nama dosen pembimbing lapangan (DPL)")
+    kkn_parser.add_argument("--students", type=int, help="Jumlah mahasiswa peserta")
+    kkn_parser.add_argument("--theme", help="Tema program KKN tematik")
+    kkn_parser.add_argument("--flagship", help="Program unggulan luaran KKN")
+    kkn_parser.set_defaults(func=cmd_kkn)
+
+    # BKD command
+    bkd_parser = subparsers.add_parser("bkd", help="Kelola rekam kepatuhan Beban Kerja Dosen (list, add)")
+    bkd_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan BKD")
+    bkd_parser.add_argument("--name", help="Nama dosen")
+    bkd_parser.add_argument("--nidn", help="NIDN dosen")
+    bkd_parser.add_argument("--rank", help="Jabatan fungsional akademik")
+    bkd_parser.add_argument("--semester", help="Semester evaluasi BKD")
+    bkd_parser.add_argument("--teaching", type=float, help="SKS bidang pendidikan/pengajaran")
+    bkd_parser.add_argument("--research", type=float, help="SKS bidang penelitian")
+    bkd_parser.add_argument("--service", type=float, help="SKS bidang pengabdian masyarakat")
+    bkd_parser.add_argument("--supporting", type=float, help="SKS bidang penunjang")
+    bkd_parser.add_argument("--total", type=float, help="Total SKS beban kerja")
+    bkd_parser.add_argument("--compliant", action="store_true", help="Status kepatuhan BKD memenuhi ambang batas")
+    bkd_parser.set_defaults(func=cmd_bkd)
+
+    # Hexo command
+    hexo_parser = subparsers.add_parser("hexo", help="Export artikel ke format Markdown kompatibel Hexo static blog")
+    hexo_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    hexo_parser.add_argument("--out", help="Path berkas output Markdown Hexo")
+    hexo_parser.set_defaults(func=cmd_hexo)
+
     args = parser.parse_args()
+
 
 
 
