@@ -2384,6 +2384,75 @@ class YoastSEOValidator:
             "is_prestigious": is_prestigious
         }
 
+    @staticmethod
+    def audit_table_of_contents_anchor_integrity(html_content: str) -> Dict[str, Any]:
+        """
+        Audits Table of Contents (TOC) links against section heading anchors (H2, H3)
+        to ensure bidirectional navigation integrity and prevent dead jumps.
+        """
+        if not html_content:
+            return {
+                "has_toc": False,
+                "toc_links_count": 0,
+                "valid_targets": 0,
+                "broken_targets": [],
+                "unlinked_headings": [],
+                "is_valid": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        toc = soup.find(class_=re.compile(r'\b(?:tu-toc|toc|table-of-contents)\b', re.IGNORECASE)) or soup.find("nav", attrs={"aria-label": re.compile(r'daftar\s+isi|table\s+of\s+contents', re.IGNORECASE)})
+
+        if not toc:
+            return {
+                "has_toc": False,
+                "toc_links_count": 0,
+                "valid_targets": 0,
+                "broken_targets": [],
+                "unlinked_headings": [],
+                "is_valid": True,
+                "issues": []
+            }
+
+        existing_heading_ids = set()
+        for h in soup.find_all(re.compile(r'^h[2-6]$', re.IGNORECASE)):
+            hid = h.get("id")
+            if hid:
+                existing_heading_ids.add(hid.strip())
+
+        toc_anchors = []
+        broken_targets = []
+        valid_targets = []
+
+        for a in toc.find_all("a", href=True):
+            href = a["href"].strip()
+            if href.startswith("#"):
+                anchor_id = href[1:]
+                toc_anchors.append(anchor_id)
+                if anchor_id in existing_heading_ids:
+                    valid_targets.append(anchor_id)
+                else:
+                    broken_targets.append(anchor_id)
+
+        unlinked = [hid for hid in existing_heading_ids if hid not in toc_anchors]
+
+        issues = []
+        if broken_targets:
+            issues.append(f"Ditemukan {len(broken_targets)} tautan Daftar Isi tanpa heading tujuan: {', '.join(broken_targets)}.")
+        if len(toc_anchors) == 0:
+            issues.append("Elemen Daftar Isi (TOC) tidak memuat tautan jangkar internal.")
+
+        return {
+            "has_toc": True,
+            "toc_links_count": len(toc_anchors),
+            "valid_targets": len(valid_targets),
+            "broken_targets": broken_targets,
+            "unlinked_headings": unlinked,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
