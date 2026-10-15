@@ -743,6 +743,113 @@ PIC: Laboran Ahmad Firdaus, S.T.
         self.assertEqual(res_fail["graduation_predicate"], "Belum Memenuhi Syarat")
         self.assertGreaterEqual(len(res_fail["issues"]), 3)
 
+    def test_parse_vancouver_citations(self):
+        from parser import parse_vancouver_citations
+        cit_text = """
+[1] Gibran F, Santoso B. IoT Telemetry based on LoRaWAN for Smart Healthcare. IEEE Trans Biomed Eng. 2026;73(2):112-120. doi:10.1109/TBME.2026.12345
+[2] Halpern SD, Ubel PA, Caplan AL. Solid-organ transplantation in HIV-infected patients. N Engl J Med. 2002;347(4):284-7.
+"""
+        res = parse_vancouver_citations(cit_text)
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0]["citation_index"], 1)
+        self.assertIn("Gibran F", res[0]["authors"])
+        self.assertEqual(res[0]["title"], "IoT Telemetry based on LoRaWAN for Smart Healthcare")
+        self.assertEqual(res[0]["journal"], "IEEE Trans Biomed Eng")
+        self.assertEqual(res[0]["year"], 2026)
+        self.assertEqual(res[0]["volume"], "73")
+        self.assertEqual(res[0]["issue"], "2")
+        self.assertEqual(res[0]["pages"], "112-120")
+        self.assertIn("10.1109/TBME.2026.12345", res[0]["doi"])
+
+        self.assertEqual(res[1]["citation_index"], 2)
+        self.assertEqual(res[1]["year"], 2002)
+
+    def test_audit_academic_probation_status(self):
+        from parser import audit_academic_probation_status
+        ok_student = {
+            "student_name": "Rian Pratama",
+            "nim": "120122010",
+            "semester": 4,
+            "gpa_cumulative": 3.45,
+            "gpa_semester": 3.50,
+            "earned_credits": 76,
+            "sp_history": 0
+        }
+        res_ok = audit_academic_probation_status(ok_student)
+        self.assertEqual(res_ok["status"], "CLEAR")
+        self.assertFalse(res_ok["counseling_required"])
+        self.assertEqual(res_ok["remedial_sks_needed"], 0)
+
+        warn_student = {
+            "student_name": "Budi Santoso",
+            "nim": "120122011",
+            "semester": 4,
+            "gpa_cumulative": 2.10,
+            "gpa_semester": 1.75,
+            "earned_credits": 40,
+            "sp_history": 1
+        }
+        res_warn = audit_academic_probation_status(warn_student)
+        self.assertEqual(res_warn["status"], "WARNING_2")
+        self.assertTrue(res_warn["counseling_required"])
+        self.assertEqual(res_warn["remedial_sks_needed"], 8)
+        self.assertTrue(any("Perolehan SKS" in r for r in res_warn["reasons"]))
+
+    def test_evaluate_faculty_bkd_workload(self):
+        from parser import evaluate_faculty_bkd_workload
+        faculty_ok = {
+            "lecturer_name": "Dr. Eng. Ir. Suryo",
+            "nidn": "0612345601",
+            "academic_rank": "Lektor Kepala",
+            "teaching_credits": 8.0,
+            "research_credits": 3.0,
+            "service_credits": 1.5,
+            "supporting_credits": 1.0
+        }
+        res_ok = evaluate_faculty_bkd_workload(faculty_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["status"], "MEMENUHI")
+        self.assertEqual(res_ok["total_sks"], 13.5)
+        self.assertEqual(res_ok["core_subtotal"], 11.0)
+        self.assertEqual(len(res_ok["issues"]), 0)
+
+        faculty_under = {
+            "lecturer_name": "Dosen Baru, M.T.",
+            "nidn": "0612345602",
+            "teaching_credits": 4.0,
+            "research_credits": 1.0,
+            "service_credits": 0.0,
+            "supporting_credits": 0.0
+        }
+        res_under = evaluate_faculty_bkd_workload(faculty_under)
+        self.assertFalse(res_under["is_compliant"])
+        self.assertEqual(res_under["status"], "TIDAK MEMENUHI")
+        self.assertEqual(res_under["total_sks"], 5.0)
+        self.assertTrue(any("kurang dari batas minimum" in i for i in res_under["issues"]))
+
+    def test_parse_kkn_village_assignment(self):
+        from parser import parse_kkn_village_assignment
+        table_md = """
+| Kelompok | Desa | Kecamatan | Kabupaten | DPL | Mahasiswa | Tema |
+|---|---|---|---|---|---|---|
+| KKN-01 | Beji | Kedungbanteng | Banyumas | Dr. Ir. Budi | 12 Mhs | Smart Village & IoT Pertanian |
+| KKN-02 | Karangcegak | Sumbang | Banyumas | Dra. Siti, M.T. | 10 Mhs | Digitalisasi UMKM Desa |
+"""
+        res_table = parse_kkn_village_assignment(table_md)
+        self.assertEqual(len(res_table), 2)
+        self.assertEqual(res_table[0]["group_code"], "KKN-01")
+        self.assertEqual(res_table[0]["village_name"], "Beji")
+        self.assertEqual(res_table[0]["district_name"], "Kedungbanteng")
+        self.assertEqual(res_table[0]["regency_name"], "Banyumas")
+        self.assertEqual(res_table[0]["student_count"], 12)
+        self.assertIn("Smart Village", res_table[0]["thematic_focus"])
+
+        list_md = "- Kelompok KKN-03: Desa Melung, Kec. Kedungbanteng, Kab. Banyumas | DPL: Ir. Hadi | 11 Mhs | Tema: Wisata Digital"
+        res_list = parse_kkn_village_assignment(list_md)
+        self.assertEqual(len(res_list), 1)
+        self.assertEqual(res_list[0]["village_name"], "Melung")
+        self.assertEqual(res_list[0]["student_count"], 11)
+
 if __name__ == "__main__":
     unittest.main()
 
