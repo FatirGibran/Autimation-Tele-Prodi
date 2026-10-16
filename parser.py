@@ -2743,6 +2743,57 @@ def evaluate_bima_grant_proposal(
     }
 
 
+def evaluate_kerja_praktik_placement(
+    company_name: str,
+    duration_weeks: int,
+    project_title: str,
+    domain_keywords: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Evaluates student Kerja Praktik (KP) internship company placement and project alignment.
+    """
+    company = company_name.strip()
+    title = project_title.strip()
+    title_lower = title.lower()
+
+    standard_domains = [
+        "jaringan", "network", "telekomunikasi", "telecom", "antenna", "antena",
+        "fiber", "optik", "iot", "sensor", "wireless", "nirkabel", "5g", "4g",
+        "rf", "cloud", "api", "software", "perangkat lunak", "ai", "machine learning",
+        "keamanan", "security", "database", "data engineering", "devops", "server"
+    ]
+    check_keywords = domain_keywords if domain_keywords else standard_domains
+
+    matched = [kw for kw in check_keywords if kw.lower() in title_lower]
+    relevance_score = min(1.0, len(matched) * 0.35 + (0.3 if len(matched) > 0 else 0.0))
+
+    duration_compliant = int(duration_weeks) >= 8
+    domain_compliant = len(matched) > 0
+
+    is_approved = duration_compliant and domain_compliant
+
+    feedback = []
+    if not duration_compliant:
+        feedback.append(f"Durasi pelaksanaan KP ({duration_weeks} minggu) kurang dari standar minimal 8 minggu.")
+    if not domain_compliant:
+        feedback.append("Topik proyek belum mencerminkan kompetensi inti bidang teknik telekomunikasi / informatika.")
+    if is_approved:
+        feedback.append("Usulan tempat dan proyek Kerja Praktik memenuhi syarat kurikulum prodi.")
+
+    return {
+        "company_name": company,
+        "project_title": title,
+        "duration_weeks": int(duration_weeks),
+        "duration_compliant": duration_compliant,
+        "domain_compliant": domain_compliant,
+        "relevance_score": round(relevance_score, 2),
+        "matched_keywords": matched,
+        "is_approved": is_approved,
+        "feedback": " ".join(feedback)
+    }
+
+
+
 
 
 
