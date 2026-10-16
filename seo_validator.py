@@ -2506,6 +2506,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_sinta_author_metadata(
+        cls,
+        author_name: str,
+        sinta_id: str,
+        sinta_score_overall: float,
+        sinta_score_3yr: float,
+        profile_url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Audits faculty SINTA author metadata, identifier formatting, and profile URL accuracy.
+        """
+        issues = []
+        name = author_name.strip()
+        clean_id = str(sinta_id).strip()
+
+        if not re.match(r'^\d{5,9}$', clean_id):
+            issues.append(f"Format SINTA ID '{clean_id}' tidak valid (harus berupa 5-9 digit angka).")
+
+        overall = float(sinta_score_overall)
+        score_3yr = float(sinta_score_3yr)
+
+        if overall < 0 or score_3yr < 0:
+            issues.append("Skor SINTA tidak boleh bernilai negatif.")
+        elif score_3yr > overall:
+            issues.append(f"Skor SINTA 3 tahun ({score_3yr}) tidak boleh lebih besar dari skor SINTA keseluruhan ({overall}).")
+
+        expected_url = f"https://sinta.kemdikbud.go.id/authors/profile/{clean_id}"
+        canonical_url = profile_url.strip() if profile_url.strip() else expected_url
+
+        if profile_url.strip():
+            if not profile_url.startswith("https://sinta.kemdikbud.go.id/"):
+                issues.append("Tautan profil SINTA harus menggunakan protokol HTTPS resmi sinta.kemdikbud.go.id.")
+            elif clean_id not in profile_url:
+                issues.append(f"Tautan profil SINTA tidak memuat SINTA ID yang cocok ({clean_id}).")
+
+        return {
+            "author_name": name,
+            "sinta_id": clean_id,
+            "sinta_score_overall": overall,
+            "sinta_score_3yr": score_3yr,
+            "canonical_profile_url": canonical_url,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
