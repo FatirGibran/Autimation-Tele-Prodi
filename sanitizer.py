@@ -318,7 +318,20 @@ class HTMLSanitizer:
                         warnings.append("Stripped unsafe external or script payload in SVG feImage.")
                         return ""
                     return tag
-                cleaned = re.sub(r'<feImage\b[^>]*>', clean_feimage, cleaned, flags=re.IGNORECASE)
+            if re.search(r"<use\b", cleaned, re.IGNORECASE):
+                def clean_use(m):
+                    tag = m.group(0)
+                    href_m = re.search(r'(?:xlink:href|href)=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                    if href_m:
+                        target = href_m.group(1).strip()
+                        if target.lower().startswith(("javascript:", "data:")):
+                            warnings.append("Stripped dangerous script URI from SVG use element.")
+                            tag = re.sub(r'(?:xlink:href|href)=["\'][^"\']*["\']', 'href="#"', tag, flags=re.IGNORECASE)
+                        elif re.match(r'^(?:https?:)?//', target, re.IGNORECASE):
+                            warnings.append("Blocked external cross-origin symbol reference in SVG use element.")
+                            tag = re.sub(r'(?:xlink:href|href)=["\'][^"\']*["\']', 'href="#"', tag, flags=re.IGNORECASE)
+                    return tag
+                cleaned = re.sub(r'<use\b[^>]*>', clean_use, cleaned, flags=re.IGNORECASE)
             cleaned = re.sub(r'xlink:href=["\']javascript:[^"\']*["\']', 'xlink:href="#"', cleaned, flags=re.IGNORECASE)
 
         # 6b. Sanitize MathML equation tags and strip executable XML attributes
