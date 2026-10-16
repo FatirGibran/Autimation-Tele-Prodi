@@ -1090,8 +1090,111 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("AD8232 ECG Sensor", html)
         self.assertIn("https://youtube.com/watch?v=biomed-demo", html)
 
+    def test_render_bima_grant_award_card(self):
+        html = EditorialComponents.render_bima_grant_award_card(
+            project_title="Optimasi MIMO 5G Beamforming Menggunakan Deep Learning",
+            lead_researcher="Dr. Ir. Suryo",
+            scheme_name="Penelitian Terapan (PT)",
+            funding_amount=145000000.0,
+            fiscal_year=2026,
+            key_deliverables=["Artikel Jurnal Bereputasi Q1", "Prototipe Antena Cerdas"],
+            grant_contract_no="045/E1/KS/2026"
+        )
+        self.assertIn("tu-bima-grant-card", html)
+        self.assertIn("Optimasi MIMO 5G Beamforming", html)
+        self.assertIn("Dr. Ir. Suryo", html)
+        self.assertIn("Penelitian Terapan (PT)", html)
+        self.assertIn("Rp 145,000,000", html)
+        self.assertIn("Tahun Anggaran 2026", html)
+        self.assertIn("Artikel Jurnal Bereputasi Q1", html)
+        self.assertIn("045/E1/KS/2026", html)
+
+    def test_render_kerja_praktik_report_card(self):
+        html = EditorialComponents.render_kerja_praktik_report_card(
+            student_name="Fatir Gibran",
+            nim="120122001",
+            company_name="PT Telkom Indonesia",
+            industry_sector="Telekomunikasi",
+            duration_weeks=10,
+            project_title="Automated Quality Monitoring for 5G Core Network",
+            technical_stack=["Python", "Docker", "Prometheus", "Grafana"],
+            company_mentor="Bambang Wijaya, S.T."
+        )
+        self.assertIn("tu-kerja-praktik-card", html)
+        self.assertIn("Automated Quality Monitoring for 5G Core Network", html)
+        self.assertIn("PT Telkom Indonesia", html)
+        self.assertIn("10 Minggu", html)
+        self.assertIn("Fatir Gibran", html)
+        self.assertIn("120122001", html)
+        self.assertIn("Prometheus", html)
+        self.assertIn("Bambang Wijaya, S.T.", html)
+
+    def test_render_lab_spectrum_isr_card(self):
+        html = EditorialComponents.render_lab_spectrum_isr_card(
+            lab_name="Lab RF & Antena",
+            center_frequency="3.5 GHz",
+            bandwidth="100 MHz",
+            transmit_power="23 dBm",
+            band_name="n78 5G NR",
+            license_number="ISR-TELKOM-2026-088",
+            valid_until="31 Desember 2027",
+            is_active=True
+        )
+        self.assertIn("tu-lab-spectrum-card", html)
+        self.assertIn("Lab RF &amp; Antena", html)
+        self.assertIn("3.5 GHz", html)
+        self.assertIn("100 MHz", html)
+        self.assertIn("23 dBm", html)
+        self.assertIn("n78 5G NR", html)
+        self.assertIn("ISR-TELKOM-2026-088", html)
+        self.assertIn("Izin Aktif (SDPPI)", html)
+
+    def test_render_faculty_sinta_profile_card(self):
+        html = EditorialComponents.render_faculty_sinta_profile_card(
+            lecturer_name="Prof. Dr. Ir. Ahmad Fauzi",
+            nidn="0412087501",
+            academic_rank="Guru Besar",
+            sinta_id="6009876",
+            sinta_score_overall=680.0,
+            sinta_score_3yr=290.0,
+            scopus_h_index=12,
+            top_expertise_areas=["Wireless Communications", "Optical Networking", "Signal Processing"],
+            profile_url="https://sinta.kemdikbud.go.id/authors/profile/6009876"
+        )
+        self.assertIn("tu-faculty-sinta-card", html)
+        self.assertIn("Prof. Dr. Ir. Ahmad Fauzi", html)
+        self.assertIn("Guru Besar", html)
+        self.assertIn("0412087501", html)
+        self.assertIn("6009876", html)
+        self.assertIn("680", html)
+        self.assertIn("290", html)
+        self.assertIn("12", html)
+        self.assertIn("Wireless Communications", html)
+        self.assertIn("https://sinta.kemdikbud.go.id/authors/profile/6009876", html)
+
+    def test_render_campus_fiber_backbone_card(self):
+        html = EditorialComponents.render_campus_fiber_backbone_card(
+            segment_name="Backbone Rektorat - Gedung Kuliah Bersama",
+            origin_building="Gedung Rektorat Lt. 1 Server Room",
+            destination_building="Gedung Kuliah Bersama Lt. 4 Switch Room",
+            core_count=48,
+            fiber_type="Single-Mode OS2 (ITU-T G.652.D)",
+            total_attenuation_db=1.45,
+            bandwidth_capacity_gbps=100,
+            operating_status="Aktif"
+        )
+        self.assertIn("tu-fiber-backbone-card", html)
+        self.assertIn("Backbone Rektorat - Gedung Kuliah Bersama", html)
+        self.assertIn("Gedung Rektorat Lt. 1 Server Room", html)
+        self.assertIn("48 Core", html)
+        self.assertIn("Single-Mode OS2", html)
+        self.assertIn("1.45 dB", html)
+        self.assertIn("100 Gbps", html)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
