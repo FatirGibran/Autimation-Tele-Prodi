@@ -549,6 +549,19 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, data=data_bytes, headers=headers, method="POST")
         return self._send_request(req)
 
+    def get_posts_by_author(self, author_id: int, per_page: int = 10, status: str = "publish") -> List[Dict[str, Any]]:
+        """
+        Retrieves posts authored by a specific WordPress user ID, filtered by status.
+        """
+        clean_status = urllib.parse.quote(status.strip().lower())
+        endpoint = f"{self.api_url}/posts?author={int(author_id)}&per_page={int(per_page)}&status={clean_status}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
+
 
 
 
