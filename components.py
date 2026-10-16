@@ -2977,6 +2977,53 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lab_spectrum_isr_card(
+        cls,
+        lab_name: str,
+        center_frequency: str,
+        bandwidth: str,
+        transmit_power: str,
+        band_name: str,
+        license_number: str,
+        valid_until: str,
+        is_active: bool = True
+    ) -> str:
+        """
+        Renders an Elementor card showing telecommunications laboratory radio frequency spectrum allocation and SDPPI ISR permit.
+        """
+        from xml.sax.saxutils import escape
+
+        s_lab = escape(lab_name.strip())
+        s_freq = escape(center_frequency.strip())
+        s_bw = escape(bandwidth.strip())
+        s_pwr = escape(transmit_power.strip())
+        s_band = escape(band_name.strip())
+        s_lic = escape(license_number.strip())
+        s_valid = escape(valid_until.strip())
+
+        status_class = "tu-status-active" if is_active else "tu-status-inactive"
+        status_label = "Izin Aktif (SDPPI)" if is_active else "Masa Berlaku Habis"
+
+        return f"""    <div class="tu-lab-spectrum-card">
+      <div class="tu-spectrum-header">
+        <span class="tu-spectrum-badge">Alokasi Frekuensi Lab &amp; ISR</span>
+        <span class="tu-spectrum-status {status_class}">{status_label}</span>
+      </div>
+      <h4 class="tu-spectrum-lab">{s_lab}</h4>
+      <div class="tu-spectrum-specs">
+        <div class="tu-spec-item"><strong>Frekuensi Tengah:</strong> {s_freq}</div>
+        <div class="tu-spec-item"><strong>Bandwidth Kanal:</strong> {s_bw}</div>
+        <div class="tu-spec-item"><strong>Daya Pancar Maks:</strong> {s_pwr}</div>
+        <div class="tu-spec-item"><strong>Pita / Band:</strong> <code>{s_band}</code></div>
+      </div>
+      <div class="tu-spectrum-footer">
+        <span class="tu-spectrum-lic">No. ISR: {s_lic}</span>
+        <span class="tu-spectrum-validity">Berlaku s.d: {s_valid}</span>
+      </div>
+    </div>"""
+
+
 
 
 
