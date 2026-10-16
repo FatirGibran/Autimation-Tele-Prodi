@@ -423,8 +423,43 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("14-18 Juni 2026", msg)
         self.assertIn("https://doi.org/10.1109/ICC.2026.9876543", msg)
 
+    def test_format_bima_grant_award_broadcast(self):
+        msg = TelegramFormatter.format_bima_grant_award_broadcast(
+            project_title="Optimasi MIMO 5G Beamforming Menggunakan Deep Learning",
+            lead_researcher="Dr. Ir. Suryo",
+            scheme_name="Penelitian Terapan (PT)",
+            funding_amount=145000000.0,
+            fiscal_year=2026,
+            contract_no="045/E1/KS/2026"
+        )
+        self.assertIn("Pengumuman Pemenang Hibah Riset Kemdikbud BIMA", msg)
+        self.assertIn("Optimasi MIMO 5G Beamforming", msg)
+        self.assertIn("Dr. Ir. Suryo", msg)
+        self.assertIn("Penelitian Terapan (PT)", msg)
+        self.assertIn("Rp 145,000,000", msg)
+        self.assertIn("2026", msg)
+        self.assertIn("045/E1/KS/2026", msg)
+
+    def test_format_kerja_praktik_showcase_broadcast(self):
+        msg = TelegramFormatter.format_kerja_praktik_showcase_broadcast(
+            student_name="Fatir Gibran",
+            nim="120122001",
+            company_name="PT Telkom Indonesia",
+            project_title="Automated Quality Monitoring for 5G Core Network",
+            duration_weeks=10,
+            report_url="https://repository.telkomuniversity.ac.id/kp/120122001"
+        )
+        self.assertIn("Diseminasi & Kelulusan Kerja Praktik (KP) Mahasiswa", msg)
+        self.assertIn("Fatir Gibran", msg)
+        self.assertIn("120122001", msg)
+        self.assertIn("PT Telkom Indonesia", msg)
+        self.assertIn("Automated Quality Monitoring for 5G Core Network", msg)
+        self.assertIn("10 Minggu", msg)
+        self.assertIn("https://repository.telkomuniversity.ac.id/kp/120122001", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
+
 
 
     def test_rate_limiter_allows_and_blocks(self):
