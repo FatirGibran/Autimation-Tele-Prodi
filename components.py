@@ -3079,6 +3079,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_campus_fiber_backbone_card(
+        cls,
+        segment_name: str,
+        origin_building: str,
+        destination_building: str,
+        core_count: int,
+        fiber_type: str,
+        total_attenuation_db: float,
+        bandwidth_capacity_gbps: int,
+        operating_status: str = "Aktif"
+    ) -> str:
+        """
+        Renders an Elementor card showcasing campus optical fiber transmission network backbone topology and metrics.
+        """
+        from xml.sax.saxutils import escape
+
+        s_seg = escape(segment_name.strip())
+        s_orig = escape(origin_building.strip())
+        s_dest = escape(destination_building.strip())
+        s_type = escape(fiber_type.strip())
+        s_stat = escape(operating_status.strip())
+
+        return f"""    <div class="tu-fiber-backbone-card">
+      <div class="tu-fiber-header">
+        <span class="tu-fiber-badge">Transmisi Fiber Optik Kampus</span>
+        <span class="tu-fiber-status">{s_stat}</span>
+      </div>
+      <h4 class="tu-fiber-segment">{s_seg}</h4>
+      <div class="tu-fiber-route">
+        <span class="tu-route-node">{s_orig}</span>
+        <span class="tu-route-arrow">&rarr;</span>
+        <span class="tu-route-node">{s_dest}</span>
+      </div>
+      <div class="tu-fiber-metrics-grid">
+        <div class="tu-fiber-metric">
+          <span class="tu-val">{core_count} Core</span>
+          <span class="tu-lbl">Kapasitas Core</span>
+        </div>
+        <div class="tu-fiber-metric">
+          <span class="tu-val">{s_type}</span>
+          <span class="tu-lbl">Tipe Serat</span>
+        </div>
+        <div class="tu-fiber-metric">
+          <span class="tu-val">{total_attenuation_db:.2f} dB</span>
+          <span class="tu-lbl">Redaman Total</span>
+        </div>
+        <div class="tu-fiber-metric">
+          <span class="tu-val">{bandwidth_capacity_gbps} Gbps</span>
+          <span class="tu-lbl">Throughput</span>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
