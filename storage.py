@@ -500,6 +500,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_kp_nim ON kerja_praktik_placements(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_kp_company ON kerja_praktik_placements(company_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS lab_spectrum_allocations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lab_name TEXT NOT NULL,
+                    center_frequency_mhz REAL NOT NULL,
+                    bandwidth_mhz REAL NOT NULL,
+                    transmit_power_dbm REAL NOT NULL,
+                    band_designation TEXT NOT NULL,
+                    license_number TEXT,
+                    valid_until TEXT,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_spectrum_lab ON lab_spectrum_allocations(lab_name);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_spectrum_band ON lab_spectrum_allocations(band_designation);")
+
 
 
 
@@ -2526,6 +2543,68 @@ class StorageManager:
                 (nim.strip(),)
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_spectrum_allocation(
+        self,
+        lab_name: str,
+        center_frequency_mhz: float,
+        bandwidth_mhz: float,
+        transmit_power_dbm: float,
+        band_designation: str,
+        license_number: Optional[str] = None,
+        valid_until: Optional[str] = None,
+        is_active: bool = True
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO lab_spectrum_allocations (
+                    lab_name, center_frequency_mhz, bandwidth_mhz,
+                    transmit_power_dbm, band_designation, license_number, valid_until, is_active
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                lab_name.strip(),
+                float(center_frequency_mhz),
+                float(bandwidth_mhz),
+                float(transmit_power_dbm),
+                band_designation.strip(),
+                license_number.strip() if license_number else None,
+                valid_until.strip() if valid_until else None,
+                1 if is_active else 0
+            ))
+            return cursor.lastrowid
+
+    def list_spectrum_allocations(
+        self,
+        is_active: Optional[bool] = None,
+        lab_name: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM lab_spectrum_allocations"
+            params = []
+            conditions = []
+            if is_active is not None:
+                conditions.append("is_active = ?")
+                params.append(1 if is_active else 0)
+            if lab_name:
+                conditions.append("lab_name = ?")
+                params.append(lab_name.strip())
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_spectrum_allocation_by_id(self, allocation_id: int) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM lab_spectrum_allocations WHERE id = ?",
+                (int(allocation_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
