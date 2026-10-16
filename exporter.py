@@ -1152,6 +1152,31 @@ navigation: true
             data["url"] = url.strip()
         return data
 
+    @staticmethod
+    def to_vitepress_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to VitePress static documentation markdown with structured frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        description = metadata.get("meta_description", "").strip()
+        date = metadata.get("publish_date", "").strip()
+        outline = metadata.get("outline", [2, 3])
+
+        lines = [
+            "---",
+            f'title: "{title}"',
+        ]
+        if description:
+            lines.append(f'description: "{description}"')
+        if date:
+            lines.append(f'date: "{date}"')
+        lines.append(f'outline: {json.dumps(outline)}')
+        lines.append("---")
+        lines.append("")
+        lines.append(html_content.strip())
+        return "\n".join(lines)
+
+
 
 
 
