@@ -2635,6 +2635,50 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_table_summary_and_caption_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML table elements for accessibility compliance including caption, aria descriptions, and headers.
+        """
+        if not html_content:
+            return {"is_accessible": True, "total_tables": 0, "accessible_tables": 0, "issues": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+        if not tables:
+            return {"is_accessible": True, "total_tables": 0, "accessible_tables": 0, "issues": []}
+
+        issues = []
+        accessible_count = 0
+
+        for idx, tbl in enumerate(tables, 1):
+            has_caption = tbl.find("caption") is not None and bool(tbl.find("caption").get_text().strip())
+            has_aria = bool(tbl.get("aria-label")) or bool(tbl.get("aria-labelledby"))
+            has_summary = bool(tbl.get("summary", "").strip())
+            has_accessible_name = has_caption or has_aria or has_summary
+
+            th_tags = tbl.find_all("th")
+            has_headers = len(th_tags) > 0
+
+            tbl_issues = []
+            if not has_accessible_name:
+                tbl_issues.append(f"Tabel #{idx} tidak memiliki elemen <caption> atau atribut aria-label/summary untuk pembaca layar.")
+            if not has_headers:
+                tbl_issues.append(f"Tabel #{idx} tidak memiliki sel judul kolom/baris (<th>).")
+
+            if has_accessible_name and has_headers:
+                accessible_count += 1
+            else:
+                issues.extend(tbl_issues)
+
+        return {
+            "total_tables": len(tables),
+            "accessible_tables": accessible_count,
+            "is_accessible": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
