@@ -607,6 +607,22 @@ class HTMLSanitizer:
             cleaned = re.sub(r'\bdata-(filter|sort|category)=["\']([^"\']*)["\']', clean_tabular_data, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized interactive tabular data-filter and data-sort attributes.")
 
+        # 8u. Sanitize HTML5 <time> datetime attribute and block scriptable microdata
+        if "<time" in cleaned.lower():
+            def sanitize_time(m):
+                tag = m.group(0)
+                dt_match = re.search(r'datetime=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if dt_match:
+                    dt_val = dt_match.group(1).strip()
+                    if dt_val.lower().startswith(("javascript:", "data:")) or re.search(r'[<>"\'`]', dt_val):
+                        tag = re.sub(r'\s+datetime=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                        warnings.append("Stripped dangerous payload from time datetime attribute.")
+                if re.search(r'\b(?:itemtype|itemprop)=["\']\s*(?:javascript:|data:)', tag, re.IGNORECASE):
+                    tag = re.sub(r'\s+(?:itemtype|itemprop)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                    warnings.append("Stripped scriptable microdata from time element.")
+                return tag
+            cleaned = re.sub(r'<time\b[^>]*>', sanitize_time, cleaned, flags=re.IGNORECASE)
+
         return cleaned, warnings
 
 
