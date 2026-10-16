@@ -461,6 +461,53 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn('javascript:exploit()', clean)
         self.assertTrue(any("tabular data-filter" in w for w in warnings))
 
+    def test_sanitize_svg_use_xlink_href(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<svg viewBox="0 0 100 100">'
+            '<use xlink:href="https://attacker.com/sprite.svg#icon" />'
+            '<use href="javascript:alert(1)" />'
+            '<use href="#safe-local-symbol" />'
+            '</svg>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('https://attacker.com/sprite.svg#icon', clean)
+        self.assertNotIn('javascript:alert(1)', clean)
+        self.assertIn('href="#safe-local-symbol"', clean)
+        self.assertTrue(any("SVG use" in w for w in warnings))
+
+    def test_sanitize_html5_time_datetime_microdata(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<time datetime="2026-10-16T09:00:00" itemprop="startDate">16 Oktober 2026</time>'
+            '<time datetime="javascript:steal()">Invalid Date</time>'
+            '<time datetime="2026-10-16" itemprop="javascript:exploit()">Safe Date</time>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('datetime="2026-10-16T09:00:00"', clean)
+        self.assertNotIn('datetime="javascript:steal()"', clean)
+        self.assertNotIn('itemprop="javascript:exploit()"', clean)
+        self.assertTrue(any("time datetime" in w or "microdata" in w for w in warnings))
+
+    def test_sanitize_html5_output_calculation_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<output name="snr_result" for="noise_val signal_val">24.5 dB</output>'
+            '<output name="bad name()" for="a b payload:evil()" onclick="steal()">Result</output>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('name="snr_result"', clean)
+        self.assertIn('for="noise_val signal_val"', clean)
+        self.assertNotIn('bad name()', clean)
+        self.assertNotIn('payload:evil()', clean)
+        self.assertNotIn('onclick="steal()"', clean)
+        self.assertTrue(any("output calculation" in w for w in warnings))
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
