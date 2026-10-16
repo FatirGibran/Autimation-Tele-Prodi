@@ -2793,6 +2793,99 @@ def evaluate_kerja_praktik_placement(
     }
 
 
+def parse_telecom_isr_frequency_allocation(text_or_markdown: str) -> List[Dict[str, Any]]:
+    """
+    Parses laboratory radio station license (ISR) and RF spectrum assignments.
+    """
+    if not text_or_markdown or not isinstance(text_or_markdown, str):
+        return []
+
+    results = []
+    lines = [line.strip() for line in text_or_markdown.strip().splitlines() if line.strip()]
+
+    def parse_freq_to_mhz(val_str: str) -> float:
+        m = re.search(r'([\d.]+)\s*(ghz|mhz|khz)?', val_str, re.IGNORECASE)
+        if not m:
+            return 0.0
+        val = float(m.group(1))
+        unit = (m.group(2) or "mhz").lower()
+        if unit == "ghz":
+            return round(val * 1000.0, 2)
+        elif unit == "khz":
+            return round(val / 1000.0, 3)
+        return round(val, 2)
+
+    def parse_power_to_dbm(val_str: str) -> float:
+        m = re.search(r'([\d.]+)\s*(dbm|w|mw)?', val_str, re.IGNORECASE)
+        if not m:
+            return 0.0
+        val = float(m.group(1))
+        unit = (m.group(2) or "dbm").lower()
+        if unit == "w":
+            import math
+            return round(10 * math.log10(val * 1000.0), 1)
+        elif unit == "mw":
+            import math
+            return round(10 * math.log10(val), 1)
+        return round(val, 1)
+
+    table_lines = [l for l in lines if l.startswith("|") and l.endswith("|")]
+    if len(table_lines) >= 3:
+        for l in table_lines[2:]:
+            cells = [c.strip() for c in l.split("|")[1:-1]]
+            if len(cells) < 3:
+                continue
+            lab = cells[0]
+            freq_mhz = parse_freq_to_mhz(cells[1])
+            bw_mhz = parse_freq_to_mhz(cells[2]) if len(cells) > 2 else 20.0
+            power_dbm = parse_power_to_dbm(cells[3]) if len(cells) > 3 else 20.0
+            band = cells[4] if len(cells) > 4 else "Unspecified"
+            status = cells[5] if len(cells) > 5 else "Aktif"
+
+            results.append({
+                "lab_name": lab,
+                "center_freq_mhz": freq_mhz,
+                "bandwidth_mhz": bw_mhz,
+                "max_power_dbm": power_dbm,
+                "band_designation": band,
+                "status": status
+            })
+        if results:
+            return results
+
+    bullet_re = re.compile(
+        r'[-*]\s*(?:\[([^\]]+)\]\s*)?([^:]+):\s*'
+        r'([\d.]+\s*(?:GHz|MHz|kHz)?)\s*\|'
+        r'(?:\s*(?:BW|Bandwidth):\s*([\d.]+\s*(?:MHz|kHz|GHz)?)\s*\|)?'
+        r'(?:\s*(?:Power|Daya):\s*([\d.]+\s*(?:dBm|W|mW)?)\s*\|)?'
+        r'(?:\s*(?:Band|Pita):\s*([^|]+)\s*\|)?'
+        r'(?:\s*Status:\s*(.*))?',
+        re.IGNORECASE
+    )
+
+    for line in lines:
+        m = bullet_re.search(line)
+        if m:
+            lab = m.group(2).strip()
+            freq_mhz = parse_freq_to_mhz(m.group(3))
+            bw_mhz = parse_freq_to_mhz(m.group(4)) if m.group(4) else 20.0
+            power_dbm = parse_power_to_dbm(m.group(5)) if m.group(5) else 20.0
+            band = m.group(6).strip() if m.group(6) else "Unspecified"
+            status = m.group(7).strip() if m.group(7) else "Aktif"
+
+            results.append({
+                "lab_name": lab,
+                "center_freq_mhz": freq_mhz,
+                "bandwidth_mhz": bw_mhz,
+                "max_power_dbm": power_dbm,
+                "band_designation": band,
+                "status": status
+            })
+
+    return results
+
+
+
 
 
 
