@@ -561,6 +561,16 @@ class WordPressClient:
             return results
         return []
 
+    def delete_tag(self, tag_id: int, force: bool = True) -> Dict[str, Any]:
+        """
+        Deletes a WordPress tag by its numeric ID.
+        """
+        force_str = "true" if force else "false"
+        endpoint = f"{self.api_url}/tags/{int(tag_id)}?force={force_str}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="DELETE")
+        return self._send_request(req)
+
+
 
 
 
