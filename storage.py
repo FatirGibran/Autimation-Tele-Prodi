@@ -484,6 +484,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_bima_nidn ON bima_grant_proposals(lead_nidn);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_bima_year ON bima_grant_proposals(fiscal_year);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS kerja_praktik_placements (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    company_name TEXT NOT NULL,
+                    industry_sector TEXT NOT NULL,
+                    duration_weeks INTEGER NOT NULL,
+                    project_title TEXT NOT NULL,
+                    company_mentor TEXT,
+                    placement_status TEXT NOT NULL DEFAULT 'approved',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_kp_nim ON kerja_praktik_placements(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_kp_company ON kerja_praktik_placements(company_name);")
+
 
 
 
@@ -2449,6 +2466,67 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_kp_placement(
+        self,
+        student_name: str,
+        nim: str,
+        company_name: str,
+        industry_sector: str,
+        duration_weeks: int,
+        project_title: str,
+        company_mentor: Optional[str] = None,
+        placement_status: str = "approved"
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO kerja_praktik_placements (
+                    student_name, nim, company_name, industry_sector,
+                    duration_weeks, project_title, company_mentor, placement_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(),
+                nim.strip(),
+                company_name.strip(),
+                industry_sector.strip(),
+                int(duration_weeks),
+                project_title.strip(),
+                company_mentor.strip() if company_mentor else None,
+                placement_status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_kp_placements(
+        self,
+        placement_status: Optional[str] = None,
+        company_name: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM kerja_praktik_placements"
+            params = []
+            conditions = []
+            if placement_status:
+                conditions.append("placement_status = ?")
+                params.append(placement_status.strip())
+            if company_name:
+                conditions.append("company_name = ?")
+                params.append(company_name.strip())
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_kp_placement_by_nim(self, nim: str) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM kerja_praktik_placements WHERE nim = ? ORDER BY id DESC",
+                (nim.strip(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
