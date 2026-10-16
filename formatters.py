@@ -701,6 +701,29 @@ class TelegramFormatter:
             f"💐 *Selamat atas pendanaan hibah nasional, semoga memberikan dampak signifikan bagi sains dan institusi!*"
         )
 
+    @staticmethod
+    def format_kerja_praktik_showcase_broadcast(
+        student_name: str,
+        nim: str,
+        company_name: str,
+        project_title: str,
+        duration_weeks: int,
+        report_url: str = ""
+    ) -> str:
+        """
+        Renders a student Kerja Praktik (KP) internship completion bulletin for Telegram.
+        """
+        doc_link = f"\n🔗 **Laporan & Dokumentasi:** {report_url.strip()}" if report_url else ""
+        return (
+            f"💼 **Diseminasi & Kelulusan Kerja Praktik (KP) Mahasiswa**\n\n"
+            f"👤 **Nama Praktikan:** {student_name.strip()} (`{nim.strip()}`)\n"
+            f"🏢 **Mitra Industri:** {company_name.strip()}\n"
+            f"⚙️ **Judul Proyek:** \"{project_title.strip()}\"\n"
+            f"⏱ **Durasi Magang:** {duration_weeks} Minggu{doc_link}\n\n"
+            f"👏 *Selamat atas penyelesaian masa praktik industri dan kontribusi nyata di dunia kerja!*"
+        )
+
+
 
 
 
