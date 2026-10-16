@@ -569,9 +569,47 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('  - "Parabola"', res)
         self.assertIn("<p>Langkah kalibrasi azimut dan elevasi antena.</p>", res)
 
+    def test_generate_government_grant_json_ld(self):
+        res = ArticleExporter.generate_government_grant_json_ld(
+            grant_name="BIMA Kemdikbud Riset Terapan 2026",
+            description="Hibah penelitian dosen berbasis prototipe komunikasi maritim.",
+            agency_name="Direktorat Riset, Teknologi, dan Pengabdian kepada Masyarakat",
+            recipient_name="Dr. Ir. Budi Santoso, M.T.",
+            amount=150000000.0,
+            year=2026,
+            url="https://bima.kemdikbud.go.id/award/2026-001"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "GovernmentService")
+        self.assertEqual(res["name"], "BIMA Kemdikbud Riset Terapan 2026")
+        self.assertEqual(res["provider"]["name"], "Direktorat Riset, Teknologi, dan Pengabdian kepada Masyarakat")
+        self.assertEqual(res["serviceAudience"]["audienceType"], "Academic Researchers")
+        self.assertEqual(res["offers"]["price"], 150000000.0)
+        self.assertEqual(res["offers"]["priceCurrency"], "IDR")
+        self.assertEqual(res["offers"]["recipient"]["name"], "Dr. Ir. Budi Santoso, M.T.")
+        self.assertEqual(res["url"], "https://bima.kemdikbud.go.id/award/2026-001")
+        self.assertEqual(res["additionalProperty"][0]["name"], "Fiscal Year")
+        self.assertEqual(res["additionalProperty"][0]["value"], "2026")
+
+    def test_to_vitepress_markdown(self):
+        meta = {
+            "seo_title": "Panduan Konfigurasi BGP Router",
+            "meta_description": "Dokumentasi teknis peering BGP dan manipulasi AS-Path.",
+            "publish_date": "2026-10-15",
+            "outline": [2, 4]
+        }
+        res = ArticleExporter.to_vitepress_markdown(meta, "## Langkah 1: Konfigurasi ASN")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Konfigurasi BGP Router"', res)
+        self.assertIn('description: "Dokumentasi teknis peering BGP dan manipulasi AS-Path."', res)
+        self.assertIn('date: "2026-10-15"', res)
+        self.assertIn('outline: [2, 4]', res)
+        self.assertIn("## Langkah 1: Konfigurasi ASN", res)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
