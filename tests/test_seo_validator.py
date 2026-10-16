@@ -803,8 +803,117 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_unbalanced["is_balanced"])
         self.assertTrue(any("tidak berpasangan" in i for i in res_unbalanced["issues"]))
 
+    def test_audit_sinta_author_metadata(self):
+        res_ok = YoastSEOValidator.audit_sinta_author_metadata(
+            author_name="Dr. Ir. Suryo",
+            sinta_id="6001234",
+            sinta_score_overall=450.0,
+            sinta_score_3yr=180.0,
+            profile_url="https://sinta.kemdikbud.go.id/authors/profile/6001234"
+        )
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["sinta_id"], "6001234")
+        self.assertEqual(res_ok["sinta_score_overall"], 450.0)
+        self.assertEqual(res_ok["sinta_score_3yr"], 180.0)
+        self.assertEqual(len(res_ok["issues"]), 0)
+
+        res_bad = YoastSEOValidator.audit_sinta_author_metadata(
+            author_name="Penulis Baru",
+            sinta_id="abc12",
+            sinta_score_overall=50.0,
+            sinta_score_3yr=90.0,
+            profile_url="http://insecure.site.com/profile/999"
+        )
+        self.assertFalse(res_bad["is_valid"])
+        self.assertTrue(any("Format SINTA ID" in i for i in res_bad["issues"]))
+        self.assertTrue(any("lebih besar dari skor SINTA keseluruhan" in i for i in res_bad["issues"]))
+        self.assertTrue(any("protokol HTTPS" in i for i in res_bad["issues"]))
+
+    def test_audit_heading_hierarchy_skipping(self):
+        good_html = (
+            '<div class="tu-editorial-container">'
+            '<h1>Pengantar 5G NR</h1>'
+            '<h2>Arsitektur RAN</h2>'
+            '<h3>Beamforming</h3>'
+            '<h2>Core Network</h2>'
+            '<h3>Network Slicing</h3>'
+            '<h4>User Plane Function</h4>'
+            '</div>'
+        )
+        res_good = YoastSEOValidator.audit_heading_hierarchy_skipping(good_html)
+        self.assertTrue(res_good["is_valid"])
+        self.assertEqual(len(res_good["skipped_transitions"]), 0)
+        self.assertEqual(res_good["total_headings"], 6)
+
+        bad_html = (
+            '<div class="tu-editorial-container">'
+            '<h1>Pengantar 5G NR</h1>'
+            '<h2>Arsitektur RAN</h2>'
+            '<h4>Direct Jump to H4</h4>'
+            '</div>'
+        )
+        res_bad = YoastSEOValidator.audit_heading_hierarchy_skipping(bad_html)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertEqual(len(res_bad["skipped_transitions"]), 1)
+        self.assertEqual(res_bad["skipped_transitions"][0]["from_level"], 2)
+        self.assertEqual(res_bad["skipped_transitions"][0]["to_level"], 4)
+
+    def test_audit_open_graph_multimedia_tags(self):
+        good_tags = {
+            "og:video": "https://video.telkomuniversity.ac.id/demo.mp4",
+            "og:video:type": "video/mp4",
+            "og:audio": "https://podcast.telkomuniversity.ac.id/episode1.mp3",
+            "og:audio:type": "audio/mpeg"
+        }
+        res_good = YoastSEOValidator.audit_open_graph_multimedia_tags(good_tags)
+        self.assertTrue(res_good["is_valid"])
+        self.assertTrue(res_good["has_video"])
+        self.assertTrue(res_good["has_audio"])
+        self.assertEqual(len(res_good["issues"]), 0)
+
+        bad_tags = {
+            "og:video": "http://insecure.com/video.flv",
+            "og:video:type": "video/unknown-codec",
+            "og:audio": "http://insecure.com/audio.raw"
+        }
+        res_bad = YoastSEOValidator.audit_open_graph_multimedia_tags(bad_tags)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertTrue(any("tidak menggunakan HTTPS" in i for i in res_bad["issues"]))
+        self.assertTrue(any("tidak didukung Open Graph" in i for i in res_bad["issues"]))
+        self.assertTrue(any("tanpa og:audio:type" in i for i in res_bad["issues"]))
+
+    def test_audit_table_summary_and_caption_accessibility(self):
+        accessible_html = (
+            '<div class="tu-editorial-container">'
+            '<table>'
+            '<caption>Alokasi Spektrum 5G Kampus</caption>'
+            '<tr><th scope="col">Band</th><th scope="col">Frekuensi</th></tr>'
+            '<tr><td>n78</td><td>3.5 GHz</td></tr>'
+            '</table>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_table_summary_and_caption_accessibility(accessible_html)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["total_tables"], 1)
+        self.assertEqual(res_ok["accessible_tables"], 1)
+
+        inaccessible_html = (
+            '<div class="tu-editorial-container">'
+            '<table>'
+            '<tr><td>Hanya sel data</td><td>Tanpa TH atau Caption</td></tr>'
+            '</table>'
+            '</div>'
+        )
+        res_fail = YoastSEOValidator.audit_table_summary_and_caption_accessibility(inaccessible_html)
+        self.assertFalse(res_fail["is_accessible"])
+        self.assertEqual(res_fail["accessible_tables"], 0)
+        self.assertTrue(any("caption" in i or "aria-label" in i for i in res_fail["issues"]))
+        self.assertTrue(any("<th>" in i for i in res_fail["issues"]))
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
