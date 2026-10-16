@@ -678,6 +678,30 @@ class TelegramFormatter:
             f"👏 *Selamat dan sukses atas kontribusi riset bereputasi di kancah internasional!*"
         )
 
+    @staticmethod
+    def format_bima_grant_award_broadcast(
+        project_title: str,
+        lead_researcher: str,
+        scheme_name: str,
+        funding_amount: float,
+        fiscal_year: int,
+        contract_no: str = ""
+    ) -> str:
+        """
+        Renders a Kemdikbud BIMA research grant award announcement card for Telegram.
+        """
+        contract_text = f"\n📜 **Nomor Kontrak:** `{contract_no.strip()}`" if contract_no else ""
+        return (
+            f"🎉 **Pengumuman Pemenang Hibah Riset Kemdikbud BIMA**\n\n"
+            f"📑 **Judul Penelitian:** \"{project_title.strip()}\"\n"
+            f"👨‍🏫 **Ketua Peneliti:** {lead_researcher.strip()}\n"
+            f"🏷 **Skema Riset:** {scheme_name.strip()}\n"
+            f"💰 **Pagu Anggaran Disetujui:** `Rp {funding_amount:,.0f}`\n"
+            f"📅 **Tahun Anggaran:** `{fiscal_year}`{contract_text}\n\n"
+            f"💐 *Selamat atas pendanaan hibah nasional, semoga memberikan dampak signifikan bagi sains dan institusi!*"
+        )
+
+
 
 
 
