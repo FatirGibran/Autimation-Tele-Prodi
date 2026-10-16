@@ -3023,6 +3023,63 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_faculty_sinta_profile_card(
+        cls,
+        lecturer_name: str,
+        nidn: str,
+        academic_rank: str,
+        sinta_id: str,
+        sinta_score_overall: float,
+        sinta_score_3yr: float,
+        scopus_h_index: int,
+        top_expertise_areas: List[str],
+        profile_url: str = ""
+    ) -> str:
+        """
+        Renders an Elementor card highlighting faculty SINTA profile, bibliometric scores, and research expertise.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(lecturer_name.strip())
+        s_nidn = escape(nidn.strip())
+        s_rank = escape(academic_rank.strip())
+        s_id = escape(str(sinta_id).strip())
+        url_dest = profile_url.strip() if profile_url.strip() else f"https://sinta.kemdikbud.go.id/authors/profile/{s_id}"
+
+        expertise_html = " ".join(f'<span class="tu-sinta-tag">{escape(e.strip())}</span>' for e in top_expertise_areas if e.strip())
+
+        return f"""    <div class="tu-faculty-sinta-card">
+      <div class="tu-sinta-card-header">
+        <span class="tu-sinta-badge">Profil Riset Dosen SINTA</span>
+        <span class="tu-sinta-rank">{s_rank}</span>
+      </div>
+      <h4 class="tu-sinta-name">{s_name}</h4>
+      <p class="tu-sinta-nidn">NIDN: <code>{s_nidn}</code> | SINTA ID: <code>{s_id}</code></p>
+      <div class="tu-sinta-metrics">
+        <div class="tu-sinta-metric-box">
+          <span class="tu-metric-val">{sinta_score_overall:,.0f}</span>
+          <span class="tu-metric-lbl">SINTA Overall</span>
+        </div>
+        <div class="tu-sinta-metric-box">
+          <span class="tu-metric-val">{sinta_score_3yr:,.0f}</span>
+          <span class="tu-metric-lbl">SINTA 3Yr</span>
+        </div>
+        <div class="tu-sinta-metric-box">
+          <span class="tu-metric-val">{scopus_h_index}</span>
+          <span class="tu-metric-lbl">Scopus h-index</span>
+        </div>
+      </div>
+      <div class="tu-sinta-expertise">
+        <strong>Bidang Keahlian:</strong>
+        <div class="tu-sinta-tags-container">{expertise_html}</div>
+      </div>
+      <div class="tu-sinta-footer">
+        <a href="{escape(url_dest)}" class="tu-sinta-link" target="_blank" rel="noopener noreferrer">Buka Profil SINTA Kemdikbud</a>
+      </div>
+    </div>"""
+
+
 
 
 
