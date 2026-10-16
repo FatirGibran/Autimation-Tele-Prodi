@@ -2552,6 +2552,46 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_heading_hierarchy_skipping(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic heading structure according to WCAG 2.1 H42 ensuring no skipped heading levels.
+        """
+        if not html_content:
+            return {"is_valid": True, "heading_sequence": [], "skipped_transitions": [], "total_headings": 0}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        headings = soup.find_all(re.compile(r'^h[1-6]$', re.IGNORECASE))
+        if not headings:
+            return {"is_valid": True, "heading_sequence": [], "skipped_transitions": [], "total_headings": 0}
+
+        sequence = []
+        skipped = []
+        prev_level = None
+
+        for h in headings:
+            level = int(h.name[1])
+            text_snippet = h.get_text().strip()[:50]
+            sequence.append({"level": level, "tag": h.name.lower(), "text": text_snippet})
+
+            if prev_level is not None:
+                if level > prev_level + 1:
+                    skipped.append({
+                        "from_level": prev_level,
+                        "to_level": level,
+                        "text": text_snippet,
+                        "issue": f"Lonjakan tingkat heading dari h{prev_level} langsung ke h{level} melewati h{prev_level + 1}."
+                    })
+            prev_level = level
+
+        return {
+            "is_valid": len(skipped) == 0,
+            "total_headings": len(headings),
+            "heading_sequence": [h["tag"] for h in sequence],
+            "skipped_transitions": skipped
+        }
+
+
 
 
 
