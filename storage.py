@@ -467,6 +467,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_conf_tier ON conference_presentations(core_tier);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_conf_year ON conference_presentations(year);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS bima_grant_proposals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_title TEXT NOT NULL,
+                    lead_researcher TEXT NOT NULL,
+                    lead_nidn TEXT NOT NULL,
+                    scheme_name TEXT NOT NULL,
+                    requested_budget REAL NOT NULL,
+                    approved_budget REAL NOT NULL,
+                    fiscal_year INTEGER NOT NULL,
+                    proposal_status TEXT NOT NULL DEFAULT 'submitted',
+                    contract_number TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_bima_nidn ON bima_grant_proposals(lead_nidn);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_bima_year ON bima_grant_proposals(fiscal_year);")
+
 
 
 
@@ -2368,6 +2386,70 @@ class StorageManager:
             query += " ORDER BY year DESC, id DESC"
             cursor = conn.execute(query, tuple(params))
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_bima_grant(
+        self,
+        project_title: str,
+        lead_researcher: str,
+        lead_nidn: str,
+        scheme_name: str,
+        requested_budget: float,
+        approved_budget: float,
+        fiscal_year: int,
+        proposal_status: str = "submitted",
+        contract_number: Optional[str] = None
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO bima_grant_proposals (
+                    project_title, lead_researcher, lead_nidn, scheme_name,
+                    requested_budget, approved_budget, fiscal_year, proposal_status, contract_number
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                project_title.strip(),
+                lead_researcher.strip(),
+                lead_nidn.strip(),
+                scheme_name.strip(),
+                float(requested_budget),
+                float(approved_budget),
+                int(fiscal_year),
+                proposal_status.strip(),
+                contract_number.strip() if contract_number else None
+            ))
+            return cursor.lastrowid
+
+    def list_bima_grants(
+        self,
+        fiscal_year: Optional[int] = None,
+        status: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM bima_grant_proposals"
+            params = []
+            conditions = []
+            if fiscal_year is not None:
+                conditions.append("fiscal_year = ?")
+                params.append(int(fiscal_year))
+            if status:
+                conditions.append("proposal_status = ?")
+                params.append(status.strip())
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY fiscal_year DESC, id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_bima_grant_by_id(self, grant_id: int) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM bima_grant_proposals WHERE id = ?",
+                (int(grant_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
