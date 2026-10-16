@@ -1262,9 +1262,134 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(conf_2025), 1)
         self.assertEqual(conf_2025[0]["city"], "Berlin, Germany")
 
+    def test_bima_grant_proposals_storage(self):
+        gid1 = self.storage.record_bima_grant(
+            project_title="Optimasi Jaringan 5G untuk IoT Maritim",
+            lead_researcher="Dr. Ir. Budi Santoso, M.T.",
+            lead_nidn="0012057801",
+            scheme_name="Penelitian Terapan Unggulan Perguruan Tinggi",
+            requested_budget=150000000.0,
+            approved_budget=125000000.0,
+            fiscal_year=2026,
+            proposal_status="approved",
+            contract_number="124/E5/PG.02.00.PT/2026"
+        )
+        gid2 = self.storage.record_bima_grant(
+            project_title="Machine Learning untuk Deteksi Anomali Jaringan Kampus",
+            lead_researcher="Siti Rahma, S.T., M.Kom.",
+            lead_nidn="0023088502",
+            scheme_name="Penelitian Dosen Pemula",
+            requested_budget=25000000.0,
+            approved_budget=20000000.0,
+            fiscal_year=2025,
+            proposal_status="completed"
+        )
+        self.assertGreater(gid1, 0)
+        self.assertGreater(gid2, 0)
+
+        all_grants = self.storage.list_bima_grants()
+        self.assertEqual(len(all_grants), 2)
+
+        grants_2026 = self.storage.list_bima_grants(fiscal_year=2026)
+        self.assertEqual(len(grants_2026), 1)
+        self.assertEqual(grants_2026[0]["lead_nidn"], "0012057801")
+
+        approved_grants = self.storage.list_bima_grants(status="approved")
+        self.assertEqual(len(approved_grants), 1)
+        self.assertEqual(approved_grants[0]["id"], gid1)
+
+        single = self.storage.get_bima_grant_by_id(gid1)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["contract_number"], "124/E5/PG.02.00.PT/2026")
+
+        none_grant = self.storage.get_bima_grant_by_id(999999)
+        self.assertIsNone(none_grant)
+
+    def test_kerja_praktik_placements_storage(self):
+        kpid1 = self.storage.record_kp_placement(
+            student_name="Bayu Pratama",
+            nim="120120001",
+            company_name="PT Telkom Indonesia",
+            industry_sector="Telekomunikasi Seluler & Fiber",
+            duration_weeks=8,
+            project_title="Monitoring Core Network OLT GPON",
+            company_mentor="Ir. Hendra Wijaya",
+            placement_status="active"
+        )
+        kpid2 = self.storage.record_kp_placement(
+            student_name="Bayu Pratama",
+            nim="120120001",
+            company_name="Huawei Tech Investment",
+            industry_sector="Vendor Telekomunikasi",
+            duration_weeks=12,
+            project_title="Deployment RAN 5G Sub-6",
+            placement_status="completed"
+        )
+        self.assertGreater(kpid1, 0)
+        self.assertGreater(kpid2, 0)
+
+        all_kp = self.storage.list_kp_placements()
+        self.assertEqual(len(all_kp), 2)
+
+        active_kp = self.storage.list_kp_placements(placement_status="active")
+        self.assertEqual(len(active_kp), 1)
+        self.assertEqual(active_kp[0]["company_name"], "PT Telkom Indonesia")
+
+        telkom_kp = self.storage.list_kp_placements(company_name="PT Telkom Indonesia")
+        self.assertEqual(len(telkom_kp), 1)
+
+        by_nim = self.storage.get_kp_placement_by_nim("120120001")
+        self.assertEqual(len(by_nim), 2)
+
+        empty_nim = self.storage.get_kp_placement_by_nim("99999999")
+        self.assertEqual(len(empty_nim), 0)
+
+    def test_lab_spectrum_allocations_storage(self):
+        aid1 = self.storage.record_spectrum_allocation(
+            lab_name="Lab Transmisi Frekuensi Radio",
+            center_frequency_mhz=2450.0,
+            bandwidth_mhz=20.0,
+            transmit_power_dbm=20.0,
+            band_designation="S-Band ISM",
+            license_number="ISR-2026-RF-0091",
+            valid_until="2027-12-31",
+            is_active=True
+        )
+        aid2 = self.storage.record_spectrum_allocation(
+            lab_name="Lab Jaringan Nirkabel",
+            center_frequency_mhz=5800.0,
+            bandwidth_mhz=40.0,
+            transmit_power_dbm=23.0,
+            band_designation="C-Band ISM",
+            is_active=False
+        )
+        self.assertGreater(aid1, 0)
+        self.assertGreater(aid2, 0)
+
+        all_allocs = self.storage.list_spectrum_allocations()
+        self.assertEqual(len(all_allocs), 2)
+
+        active_allocs = self.storage.list_spectrum_allocations(is_active=True)
+        self.assertEqual(len(active_allocs), 1)
+        self.assertEqual(active_allocs[0]["center_frequency_mhz"], 2450.0)
+
+        inactive_allocs = self.storage.list_spectrum_allocations(is_active=False)
+        self.assertEqual(len(inactive_allocs), 1)
+
+        rf_allocs = self.storage.list_spectrum_allocations(lab_name="Lab Transmisi Frekuensi Radio")
+        self.assertEqual(len(rf_allocs), 1)
+
+        single = self.storage.get_spectrum_allocation_by_id(aid1)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["license_number"], "ISR-2026-RF-0091")
+
+        none_alloc = self.storage.get_spectrum_allocation_by_id(999999)
+        self.assertIsNone(none_alloc)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
