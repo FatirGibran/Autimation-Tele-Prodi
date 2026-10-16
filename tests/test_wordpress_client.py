@@ -446,9 +446,37 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "POST")
         self.assertIn("/tags", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_posts_by_author(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 101, "author": 5, "title": {"rendered": "Penelitian Telekomunikasi"}}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        posts = self.client.get_posts_by_author(5, per_page=5, status="publish")
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts[0]["id"], 101)
+        self.assertEqual(posts[0]["author"], 5)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/posts?author=5&per_page=5&status=publish", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_delete_tag(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"deleted": true, "previous": {"id": 42, "name": "5G NR"}}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.delete_tag(42, force=True)
+        self.assertTrue(res["deleted"])
+        self.assertEqual(res["previous"]["id"], 42)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "DELETE")
+        self.assertIn("/tags/42?force=true", req.full_url)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
