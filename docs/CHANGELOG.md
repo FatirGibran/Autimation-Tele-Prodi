@@ -5,9 +5,10 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 450+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 480+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 460 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 488 unit tests terverifikasi (100% pass rate)
+
 
 ---
 
@@ -544,6 +545,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 436. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji komprehensif pada modul sanitizer, parser, seo validator, komponen, formatters, storage, wp client, exporter, dan cli.
 437. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.3.0.
 438. **Ekspansi Suite Pengujian Unit Terpadu (460 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 460 unit test terverifikasi (100% pass rate).
+
+---
+
+## 22. Ekspansi Arsitektural v3.4.0 Milestone Release
+
+439. **Sanitasi SVG Use xlink:href & Pencegahan Cross-Origin Reference (`sanitizer.py`)**: Netralisasi elemen `<use>` SVG dengan blokir referensi remote eksternal dan enkapsulasi referensi simbol lokal saja.
+440. **Sanitasi Atribut Waktu HTML5 datetime ISO 8601 (`sanitizer.py`)**: Validasi elemen `<time>` dengan atribut `datetime` yang mengeliminasi payload microdata dan script injeksi.
+441. **Sanitasi Elemen HTML5 Output & Atribut Perhitungan Telemetri (`sanitizer.py`)**: Sanitasi elemen `<output>` dengan validasi token atribut `for` dan `name` serta pelucutan event listener inline.
+442. **Parser DOI Artikel IEEE Transactions & Jurnal Internasional (`parser.py`)**: Resolver dan normalizer DOI publikasi ilmiah (`10.1109/...`) menjadi URL HTTPS kanonikal IEEE Xplore.
+443. **Evaluator Usulan Hibah Penelitian BIMA Kemdikbud (`parser.py`)**: Evaluasi kelayakan proposal hibah penelitian berbasis skema riset Dikti, validasi NIDN ketua, dan kewajaran anggaran.
+444. **Evaluator Penempatan Mahasiswa Kerja Praktik Industri (`parser.py`)**: Validasi kelayakan tempat magang/KP, kesesuaian sektor industri telekomunikasi/TIK, durasi minimal, dan profil mentor lapangan.
+445. **Parser Izin Stasiun Radio (ISR) & Alokasi Spektrum Laboratorium (`parser.py`)**: Penguraian parameter teknis frekuensi, bandwidth, daya pancar (dBm), dan penentuan pita frekuensi ISM / seluler.
+446. **Auditor Skor SINTA & Tautan Profil Author Dosen (`seo_validator.py`)**: Validasi format URL profil SINTA Kemdikbudristek dosen dan integritas metadata metrik sitasi.
+447. **Auditor Kepatuhan Hirarki Heading & Deteksi Level Skipping (`seo_validator.py`)**: Pemeriksaan kelompatan urutan tag heading HTML (misal H2 langsung ke H4 tanpa H3) untuk aksesibilitas WCAG dan SEO.
+448. **Auditor Tag Multimedia Open Graph Audio & Video (`seo_validator.py`)**: Verifikasi kelengkapan meta tag `og:audio` dan `og:video` beserta atribut tipe MIME, durasi, dan secure URL.
+449. **Auditor Aksesibilitas Keterangan Tabel Caption & Summary (`seo_validator.py`)**: Verifikasi elemen `<caption>` dan deskripsi ringkasan pada tabel data demi kepatuhan pembaca layar.
+450. **Komponen Pameran Hibah Penelitian BIMA Kemdikbud (`components.py`)**: Kartu responsif Elementor pameran penghargaan dana hibah riset dosen lengkap dengan skema dan nomor kontrak.
+451. **Komponen Laporan Penempatan Kerja Praktik Mahasiswa (`components.py`)**: Kartu showcase pelaksanaan magang industri mahasiswa di mitra telekomunikasi terkemuka.
+452. **Komponen Status Alokasi Spektrum Frekuensi ISR Lab (`components.py`)**: Kartu visualisasi izin frekuensi radio laboratorium dengan badge legalitas ISR aktif.
+453. **Komponen Profil Skor SINTA Dosen (`components.py`)**: Kartu showcase metrik luaran riset dan capaian skor SINTA dosen pengajar prodi.
+454. **Komponen Jaringan Tulang Punggung Fiber Optik Kampus (`components.py`)**: Kartu diagram topologi transmisi kabel serat optik kampus dengan metrik kapasitas gigabit.
+455. **Formatter Pengumuman Hibah BIMA Kemdikbud Telegram (`formatters.py`)**: Format siaran bulletin penghargaan dana riset BIMA dosen di kanal Telegram prodi.
+456. **Formatter Showcase Penempatan Kerja Praktik Telegram (`formatters.py`)**: Format siaran ucapan selamat penempatan magang industri mahasiswa di Telegram.
+457. **Manajer Rekam Usulan Hibah BIMA Kemdikbud (`storage.py`)**: Tabel basis data `bima_grant_proposals` untuk pencatatan dan evaluasi proposal riset dosen.
+458. **Manajer Rekam Penempatan Kerja Praktik Mahasiswa (`storage.py`)**: Tabel basis data `kerja_praktik_placements` untuk monitoring program KP mahasiswa di industri.
+459. **Manajer Rekam Alokasi Frekuensi Spektrum Lab (`storage.py`)**: Tabel basis data `lab_spectrum_allocations` untuk inventaris izin stasiun radio dan frekuensi riset.
+460. **Helper WordPress Get Posts By Author ID (`wordpress_client.py`)**: Pengambilan daftar artikel yang ditulis oleh pengguna WordPress tertentu via REST API.
+461. **Helper WordPress Delete Post Tag (`wordpress_client.py`)**: Penghapusan taksonomi tag WordPress secara terprogram via REST API dengan flag force.
+462. **Generator Schema.org GovernmentService Hibah Penelitian (`exporter.py`)**: Pembuatan metadata terstruktur JSON-LD untuk program hibah riset kementerian dengan rincian pendanaan.
+463. **Eksportir Markdown Kompatibel VitePress Static Docs (`exporter.py`)**: Ekspor artikel ke format dokumentasi modern VitePress dengan konfigurasi frontmatter terstruktur.
+464. **Subcommand CLI `bima` (`cli.py`)**: Perintah konsol manajemen usulan hibah riset BIMA Kemdikbud (list, add).
+465. **Subcommand CLI `kp` (`cli.py`)**: Perintah konsol manajemen penempatan kerja praktik industri mahasiswa (list, add).
+466. **Subcommand CLI `vitepress` (`cli.py`)**: Perintah konsol ekspor artikel ke format markdown VitePress static docs.
+467. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji komprehensif pada modul sanitizer, parser, seo validator, komponen, formatters, storage, wp client, exporter, dan cli.
+468. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.4.0.
+469. **Ekspansi Suite Pengujian Unit Terpadu (488 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 488 unit test terverifikasi (100% pass rate).
+
 
 
 
