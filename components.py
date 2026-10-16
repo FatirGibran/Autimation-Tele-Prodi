@@ -2930,6 +2930,54 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_kerja_praktik_report_card(
+        cls,
+        student_name: str,
+        nim: str,
+        company_name: str,
+        industry_sector: str,
+        duration_weeks: int,
+        project_title: str,
+        technical_stack: List[str],
+        company_mentor: str = ""
+    ) -> str:
+        """
+        Renders an Elementor report card showcasing student Kerja Praktik (KP) industry placement and technical achievements.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(student_name.strip())
+        s_nim = escape(nim.strip())
+        s_comp = escape(company_name.strip())
+        s_sector = escape(industry_sector.strip())
+        s_title = escape(project_title.strip())
+        s_mentor = escape(company_mentor.strip())
+
+        stack_html = " ".join(f'<span class="tu-kp-tech-pill">{escape(t.strip())}</span>' for t in technical_stack if t.strip())
+        mentor_html = f'<p class="tu-kp-mentor">Pembimbing Lapangan: <strong>{s_mentor}</strong></p>' if s_mentor else ""
+
+        return f"""    <div class="tu-kerja-praktik-card">
+      <div class="tu-kp-header">
+        <span class="tu-kp-badge">Laporan Kerja Praktik (KP)</span>
+        <span class="tu-kp-duration">{duration_weeks} Minggu</span>
+      </div>
+      <h4 class="tu-kp-project-title">{s_title}</h4>
+      <div class="tu-kp-company-info">
+        <span class="tu-kp-company-name">{s_comp}</span>
+        <span class="tu-kp-sector">({s_sector})</span>
+      </div>
+      <div class="tu-kp-student-meta">
+        <p class="tu-kp-student">Praktikan: <strong>{s_name}</strong> (NIM: <code>{s_nim}</code>)</p>
+        {mentor_html}
+      </div>
+      <div class="tu-kp-tech-stack">
+        <strong>Teknologi Terapan:</strong>
+        <div class="tu-kp-tech-container">{stack_html}</div>
+      </div>
+    </div>"""
+
+
 
 
 
