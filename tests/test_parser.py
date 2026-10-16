@@ -850,8 +850,107 @@ PIC: Laboran Ahmad Firdaus, S.T.
         self.assertEqual(res_list[0]["village_name"], "Melung")
         self.assertEqual(res_list[0]["student_count"], 11)
 
+    def test_normalize_ieee_doi(self):
+        from parser import normalize_ieee_doi
+        # Full URL
+        res1 = normalize_ieee_doi("https://doi.org/10.1109/TWC.2026.1234567")
+        self.assertIsNotNone(res1)
+        self.assertEqual(res1["prefix"], "10.1109")
+        self.assertEqual(res1["suffix"], "TWC.2026.1234567")
+        self.assertEqual(res1["canonical_url"], "https://doi.org/10.1109/TWC.2026.1234567")
+        self.assertTrue(res1["is_ieee"])
+
+        # Plain DOI
+        res2 = normalize_ieee_doi("doi: 10.1016/j.comnet.2026.01.002")
+        self.assertIsNotNone(res2)
+        self.assertEqual(res2["prefix"], "10.1016")
+        self.assertFalse(res2["is_ieee"])
+
+        # Invalid
+        self.assertIsNone(normalize_ieee_doi("not_a_valid_doi"))
+
+    def test_evaluate_bima_grant_proposal(self):
+        from parser import evaluate_bima_grant_proposal
+        # Eligible PDP proposal
+        res_ok = evaluate_bima_grant_proposal(
+            scheme_name="Penelitian Dosen Pemula (PDP)",
+            requested_budget=20000000.0,
+            lead_nidn="0412345601",
+            sinta_score_3yr=65.0,
+            team_member_count=1
+        )
+        self.assertTrue(res_ok["is_eligible"])
+        self.assertTrue(res_ok["budget_compliant"])
+        self.assertTrue(res_ok["sinta_compliant"])
+        self.assertTrue(res_ok["team_compliant"])
+
+        # Over budget & low SINTA proposal
+        res_fail = evaluate_bima_grant_proposal(
+            scheme_name="Penelitian Terapan",
+            requested_budget=180000000.0,
+            lead_nidn="0412345602",
+            sinta_score_3yr=80.0,
+            team_member_count=0
+        )
+        self.assertFalse(res_fail["is_eligible"])
+        self.assertFalse(res_fail["budget_compliant"])
+        self.assertFalse(res_fail["sinta_compliant"])
+        self.assertFalse(res_fail["team_compliant"])
+
+    def test_evaluate_kerja_praktik_placement(self):
+        from parser import evaluate_kerja_praktik_placement
+        # Approved KP
+        res_ok = evaluate_kerja_praktik_placement(
+            company_name="PT Telkom Indonesia",
+            duration_weeks=10,
+            project_title="Otomasi Monitoring Kualitas Jaringan 5G Menggunakan Cloud API"
+        )
+        self.assertTrue(res_ok["is_approved"])
+        self.assertTrue(res_ok["duration_compliant"])
+        self.assertTrue(res_ok["domain_compliant"])
+        self.assertGreater(res_ok["relevance_score"], 0.5)
+
+        # Under duration & out of domain
+        res_fail = evaluate_kerja_praktik_placement(
+            company_name="CV Toko Ritel",
+            duration_weeks=4,
+            project_title="Administrasi Keuangan Kasir Toko"
+        )
+        self.assertFalse(res_fail["is_approved"])
+        self.assertFalse(res_fail["duration_compliant"])
+        self.assertFalse(res_fail["domain_compliant"])
+
+    def test_parse_telecom_isr_frequency_allocation(self):
+        from parser import parse_telecom_isr_frequency_allocation
+        table_md = """
+| Laboratorium | Frekuensi Tengah | Bandwidth | Daya Pancar | Pita Frekuensi | Status |
+|---|---|---|---|---|---|
+| Lab RF & Antena | 3.5 GHz | 100 MHz | 23 dBm | n78 5G NR | Aktif |
+| Lab Sistem Transmisi | 2.4 GHz | 40 MHz | 20 dBm | Wi-Fi 6 | Aktif |
+"""
+        allocations = parse_telecom_isr_frequency_allocation(table_md)
+        self.assertEqual(len(allocations), 2)
+        self.assertEqual(allocations[0]["lab_name"], "Lab RF & Antena")
+        self.assertEqual(allocations[0]["center_freq_mhz"], 3500.0)
+        self.assertEqual(allocations[0]["bandwidth_mhz"], 100.0)
+        self.assertEqual(allocations[0]["max_power_dbm"], 23.0)
+        self.assertEqual(allocations[0]["band_designation"], "n78 5G NR")
+        self.assertEqual(allocations[1]["center_freq_mhz"], 2400.0)
+
+        bullet_md = "- [ISR-99] Lab Komunikasi Nirkabel: 868 MHz | BW: 250 kHz | Power: 14 dBm | Band: LoRaWAN | Status: Uji Coba"
+        res_bullet = parse_telecom_isr_frequency_allocation(bullet_md)
+        self.assertEqual(len(res_bullet), 1)
+        self.assertEqual(res_bullet[0]["lab_name"], "Lab Komunikasi Nirkabel")
+        self.assertEqual(res_bullet[0]["center_freq_mhz"], 868.0)
+        self.assertEqual(res_bullet[0]["bandwidth_mhz"], 0.25)
+        self.assertEqual(res_bullet[0]["max_power_dbm"], 14.0)
+        self.assertEqual(res_bullet[0]["band_designation"], "LoRaWAN")
+        self.assertEqual(res_bullet[0]["status"], "Uji Coba")
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
