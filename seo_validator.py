@@ -2591,6 +2591,51 @@ class YoastSEOValidator:
             "skipped_transitions": skipped
         }
 
+    @classmethod
+    def audit_open_graph_multimedia_tags(cls, og_tags: Dict[str, str]) -> Dict[str, Any]:
+        """
+        Audits Open Graph audio and video metadata tags for secure HTTPS endpoints and valid MIME types.
+        """
+        issues = []
+        video_url = og_tags.get("og:video", "").strip()
+        video_secure = og_tags.get("og:video:secure_url", "").strip()
+        video_type = og_tags.get("og:video:type", "").strip()
+
+        audio_url = og_tags.get("og:audio", "").strip()
+        audio_secure = og_tags.get("og:audio:secure_url", "").strip()
+        audio_type = og_tags.get("og:audio:type", "").strip()
+
+        valid_video_types = {"video/mp4", "video/webm", "video/ogg", "application/x-shockwave-flash"}
+        valid_audio_types = {"audio/mpeg", "audio/ogg", "audio/wav", "audio/mp4", "audio/aac"}
+
+        has_video = bool(video_url)
+        has_audio = bool(audio_url)
+
+        if has_video:
+            if not video_url.startswith("https://") and not video_secure:
+                issues.append("Tag og:video tidak menggunakan HTTPS dan tidak menyediakan og:video:secure_url.")
+            if not video_type:
+                issues.append("Tag og:video disertakan tanpa og:video:type yang mendefinisikan tipe MIME.")
+            elif video_type.lower() not in valid_video_types:
+                issues.append(f"MIME type video '{video_type}' tidak umum atau tidak didukung Open Graph.")
+
+        if has_audio:
+            if not audio_url.startswith("https://") and not audio_secure:
+                issues.append("Tag og:audio tidak menggunakan HTTPS dan tidak menyediakan og:audio:secure_url.")
+            if not audio_type:
+                issues.append("Tag og:audio disertakan tanpa og:audio:type yang mendefinisikan tipe MIME.")
+            elif audio_type.lower() not in valid_audio_types:
+                issues.append(f"MIME type audio '{audio_type}' tidak umum atau tidak didukung Open Graph.")
+
+        return {
+            "has_multimedia": has_video or has_audio,
+            "has_video": has_video,
+            "has_audio": has_audio,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
