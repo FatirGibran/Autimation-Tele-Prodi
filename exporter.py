@@ -1105,6 +1105,54 @@ navigation: true
         lines.append(html_content.strip())
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_government_grant_json_ld(
+        grant_name: str,
+        description: str,
+        agency_name: str,
+        recipient_name: str,
+        amount: float,
+        year: int,
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org/GovernmentService structured JSON-LD for research grant funding awards.
+        """
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "GovernmentService",
+            "name": grant_name.strip(),
+            "description": description.strip(),
+            "provider": {
+                "@type": "GovernmentOrganization",
+                "name": agency_name.strip()
+            },
+            "serviceAudience": {
+                "@type": "Audience",
+                "audienceType": "Academic Researchers"
+            },
+            "offers": {
+                "@type": "Offer",
+                "price": float(amount),
+                "priceCurrency": "IDR",
+                "recipient": {
+                    "@type": "Person",
+                    "name": recipient_name.strip()
+                }
+            },
+            "additionalProperty": [
+                {
+                    "@type": "PropertyValue",
+                    "name": "Fiscal Year",
+                    "value": str(year)
+                }
+            ]
+        }
+        if url:
+            data["url"] = url.strip()
+        return data
+
+
 
 
 
