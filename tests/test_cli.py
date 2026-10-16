@@ -1351,9 +1351,105 @@ class TestCLI(unittest.TestCase):
             if out_file.exists():
                 out_file.unlink()
 
+    def test_cmd_bima(self):
+        class ArgsAdd:
+            action = "add"
+            title = "Pengembangan Sistem Radar Maritim C-Band"
+            name = "Dr. Ir. Budi Santoso, M.T."
+            nidn = "0012057801"
+            scheme = "Penelitian Terapan Unggulan"
+            requested = 150000000.0
+            approved = 120000000.0
+            year = 2026
+            status = "approved"
+            contract = "124/BIMA/2026"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bima(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Usulan hibah BIMA berhasil dicatat", out)
+            self.assertIn("Pengembangan Sistem Radar Maritim C-Band", out)
+
+        class ArgsList:
+            action = "list"
+            year = 2026
+            status = "approved"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bima(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Usulan Hibah Penelitian BIMA Kemdikbud", out)
+            self.assertIn("Dr. Ir. Budi Santoso, M.T.", out)
+
+    def test_cmd_kp(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Bayu Pratama"
+            nim = "120120001"
+            company = "PT Telkom Indonesia"
+            sector = "Telekomunikasi Seluler & Fiber"
+            weeks = 8
+            project = "Monitoring Core Network OLT GPON"
+            mentor = "Ir. Hendra Wijaya"
+            status = "active"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_kp(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Penempatan kerja praktik berhasil dicatat", out)
+            self.assertIn("Bayu Pratama", out)
+            self.assertIn("PT Telkom Indonesia", out)
+
+        class ArgsList:
+            action = "list"
+            status = "active"
+            company = None
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_kp(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Penempatan Kerja Praktik (KP) Mahasiswa", out)
+            self.assertIn("120120001", out)
+
+    def test_cmd_vitepress(self):
+        slug = "vitepress-cli-test-article"
+        cli.storage.save_article({
+            "topic": "VitePress Docs",
+            "category": "Dokumentasi",
+            "publish_date": "2026-10-15",
+            "focus_keyphrase": "vitepress docs",
+            "seo_title": "Panduan VitePress CLI",
+            "slug": slug,
+            "meta_description": "Dokumentasi vitepress cli prodi",
+            "html_content": "<p>Isi panduan VitePress</p>",
+            "status": "ready"
+        })
+
+        out_file = Path(self.temp_dir.name) / f"{slug}.md"
+        try:
+            class ArgsVP:
+                pass
+            args = ArgsVP()
+            args.slug = slug
+            args.out = str(out_file)
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_vitepress(args)
+                self.assertIn("Export VitePress markdown berhasil", fake_out.getvalue())
+
+            content = out_file.read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---"))
+            self.assertIn('title: "Panduan VitePress CLI"', content)
+            self.assertIn("outline: [2, 3]", content)
+            self.assertIn("<p>Isi panduan VitePress</p>", content)
+        finally:
+            if out_file.exists():
+                out_file.unlink()
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
