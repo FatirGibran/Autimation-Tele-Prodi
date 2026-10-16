@@ -2885,6 +2885,52 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_bima_grant_award_card(
+        cls,
+        project_title: str,
+        lead_researcher: str,
+        scheme_name: str,
+        funding_amount: float,
+        fiscal_year: int,
+        key_deliverables: List[str],
+        grant_contract_no: str = ""
+    ) -> str:
+        """
+        Renders an Elementor showcase card for Kemdikbud BIMA funded research grant projects.
+        """
+        from xml.sax.saxutils import escape
+
+        t_esc = escape(project_title.strip())
+        lead_esc = escape(lead_researcher.strip())
+        scheme_esc = escape(scheme_name.strip())
+        contract_esc = escape(grant_contract_no.strip())
+        budget_str = f"Rp {funding_amount:,.0f}"
+
+        deliverables_html = "".join(f"<li>{escape(d.strip())}</li>" for d in key_deliverables if d.strip())
+        contract_badge = f"<span class='tu-bima-contract'>Kontrak: {contract_esc}</span>" if contract_esc else ""
+
+        return f"""    <div class="tu-bima-grant-card">
+      <div class="tu-bima-header">
+        <span class="tu-bima-badge">Hibah Riset Kemdikbud BIMA</span>
+        <span class="tu-bima-year">Tahun Anggaran {fiscal_year}</span>
+      </div>
+      <h4 class="tu-bima-title">{t_esc}</h4>
+      <div class="tu-bima-meta">
+        <p class="tu-bima-lead">Ketua Peneliti: <strong>{lead_esc}</strong></p>
+        <p class="tu-bima-scheme">Skema: <em>{scheme_esc}</em></p>
+        <p class="tu-bima-funding">Pagu Dana Disetujui: <strong class="tu-bima-amount">{budget_str}</strong></p>
+      </div>
+      <div class="tu-bima-deliverables">
+        <strong>Target Luaran Wajib:</strong>
+        <ul>{deliverables_html}</ul>
+      </div>
+      <div class="tu-bima-footer">
+        {contract_badge}
+      </div>
+    </div>"""
+
+
 
 
 
