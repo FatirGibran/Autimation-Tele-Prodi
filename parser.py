@@ -2650,6 +2650,38 @@ def parse_kkn_village_assignment(text: str) -> List[Dict[str, Any]]:
     return results
 
 
+def normalize_ieee_doi(doi_or_url: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses and normalizes a Digital Object Identifier (DOI), extracting prefix, suffix, and canonical URL.
+    """
+    if not doi_or_url or not isinstance(doi_or_url, str):
+        return None
+
+    cleaned = doi_or_url.strip()
+    # Strip URL prefixes if present
+    cleaned = re.sub(r'^https?://(?:dx\.)?doi\.org/', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'^doi:\s*', '', cleaned, flags=re.IGNORECASE).strip()
+
+    doi_pattern = re.compile(r'^(10\.\d{4,9})/([-._;()/:A-Za-z0-9]+)$')
+    match = doi_pattern.match(cleaned)
+    if not match:
+        return None
+
+    prefix = match.group(1)
+    suffix = match.group(2)
+    canonical_doi = f"{prefix}/{suffix}"
+    is_ieee = prefix.startswith("10.1109")
+
+    return {
+        "doi": canonical_doi,
+        "prefix": prefix,
+        "suffix": suffix,
+        "canonical_url": f"https://doi.org/{canonical_doi}",
+        "is_ieee": is_ieee
+    }
+
+
+
 
 
 
