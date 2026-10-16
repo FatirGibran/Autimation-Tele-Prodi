@@ -971,7 +971,79 @@ def cmd_hexo(args):
     print(f"Export Hexo markdown berhasil -> {out_path}")
 
 
+def cmd_bima(args):
+    if args.action == "add":
+        if not args.title or not args.name or not args.nidn or not args.scheme or args.requested is None or args.year is None:
+            print("Error: --title, --name, --nidn, --scheme, --requested, dan --year wajib disertakan untuk mencatat usulan hibah BIMA.")
+            sys.exit(1)
+        gid = storage.record_bima_grant(
+            project_title=args.title,
+            lead_researcher=args.name,
+            lead_nidn=args.nidn,
+            scheme_name=args.scheme,
+            requested_budget=float(args.requested),
+            approved_budget=float(args.approved or 0.0),
+            fiscal_year=int(args.year),
+            proposal_status=args.status,
+            contract_number=args.contract
+        )
+        print(f"Usulan hibah BIMA berhasil dicatat (ID: {gid}) untuk '{args.title}' [{args.name}].")
+    else:
+        grants = storage.list_bima_grants(fiscal_year=args.year, status=args.status if args.status != "submitted" else None)
+        if not grants:
+            print("Belum ada catatan usulan hibah BIMA Kemdikbud.")
+            return
+        print("=== Rekam Jejak Usulan Hibah Penelitian BIMA Kemdikbud ===")
+        for g in grants:
+            print(f"#{g['id']} [{g['fiscal_year']}] {g['project_title']} - {g['lead_researcher']} ({g['lead_nidn']}) | Skema: {g['scheme_name']} [{g['proposal_status']}]")
+
+
+def cmd_kp(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.company or not args.sector or args.weeks is None or not args.project:
+            print("Error: --name, --nim, --company, --sector, --weeks, dan --project wajib disertakan untuk mencatat penempatan kerja praktik.")
+            sys.exit(1)
+        kpid = storage.record_kp_placement(
+            student_name=args.name,
+            nim=args.nim,
+            company_name=args.company,
+            industry_sector=args.sector,
+            duration_weeks=int(args.weeks),
+            project_title=args.project,
+            company_mentor=args.mentor,
+            placement_status=args.status
+        )
+        print(f"Penempatan kerja praktik berhasil dicatat (ID: {kpid}) untuk {args.name} ({args.nim}) di {args.company}.")
+    else:
+        placements = storage.list_kp_placements(placement_status=args.status if args.status != "approved" else None, company_name=args.company)
+        if not placements:
+            print("Belum ada catatan penempatan kerja praktik mahasiswa.")
+            return
+        print("=== Rekam Jejak Penempatan Kerja Praktik (KP) Mahasiswa ===")
+        for p in placements:
+            print(f"#{p['id']} [{p['nim']}] {p['student_name']} @ {p['company_name']} ({p['industry_sector']}) - {p['project_title']} [{p['placement_status']}]")
+
+
+def cmd_vitepress(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "topic": article.get("topic", ""),
+        "meta_description": article.get("meta_description", ""),
+        "publish_date": article.get("publish_date", "")
+    }
+    vp_md = ArticleExporter.to_vitepress_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(vp_md, encoding="utf-8")
+    print(f"Export VitePress markdown berhasil -> {out_path}")
+
+
 def main():
+
 
 
 
@@ -1342,7 +1414,41 @@ def main():
     hexo_parser.add_argument("--out", help="Path berkas output Markdown Hexo")
     hexo_parser.set_defaults(func=cmd_hexo)
 
+    # BIMA command
+    bima_parser = subparsers.add_parser("bima", help="Kelola usulan hibah penelitian BIMA Kemdikbud (list, add)")
+    bima_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan usulan hibah BIMA")
+    bima_parser.add_argument("--title", help="Judul proyek penelitian")
+    bima_parser.add_argument("--name", help="Nama ketua peneliti")
+    bima_parser.add_argument("--nidn", help="NIDN ketua peneliti")
+    bima_parser.add_argument("--scheme", help="Skema hibah penelitian")
+    bima_parser.add_argument("--requested", type=float, help="Anggaran usulan (IDR)")
+    bima_parser.add_argument("--approved", type=float, default=0.0, help="Anggaran disetujui (IDR)")
+    bima_parser.add_argument("--year", type=int, help="Tahun anggaran pelaksanaan")
+    bima_parser.add_argument("--status", default="submitted", help="Status usulan proposal")
+    bima_parser.add_argument("--contract", help="Nomor kontrak perjanjian hibah")
+    bima_parser.set_defaults(func=cmd_bima)
+
+    # KP command
+    kp_parser = subparsers.add_parser("kp", help="Kelola penempatan kerja praktik mahasiswa (list, add)")
+    kp_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan penempatan kerja praktik")
+    kp_parser.add_argument("--name", help="Nama mahasiswa")
+    kp_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    kp_parser.add_argument("--company", help="Nama perusahaan / industri mitra")
+    kp_parser.add_argument("--sector", help="Sektor bidang industri")
+    kp_parser.add_argument("--weeks", type=int, default=8, help="Durasi pelaksanaan dalam minggu")
+    kp_parser.add_argument("--project", help="Judul proyek kerja praktik")
+    kp_parser.add_argument("--mentor", help="Nama pembimbing lapangan")
+    kp_parser.add_argument("--status", default="approved", help="Status penempatan KP")
+    kp_parser.set_defaults(func=cmd_kp)
+
+    # VitePress command
+    vitepress_parser = subparsers.add_parser("vitepress", help="Export artikel ke format Markdown kompatibel VitePress")
+    vitepress_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    vitepress_parser.add_argument("--out", help="Path berkas output Markdown VitePress")
+    vitepress_parser.set_defaults(func=cmd_vitepress)
+
     args = parser.parse_args()
+
 
 
 
