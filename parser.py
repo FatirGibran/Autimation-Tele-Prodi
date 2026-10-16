@@ -2681,6 +2681,69 @@ def normalize_ieee_doi(doi_or_url: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def evaluate_bima_grant_proposal(
+    scheme_name: str,
+    requested_budget: float,
+    lead_nidn: str,
+    sinta_score_3yr: float,
+    team_member_count: int
+) -> Dict[str, Any]:
+    """
+    Evaluates research proposal compliance under Kemdikbud BIMA guidelines.
+    """
+    scheme = scheme_name.strip()
+    norm_scheme = scheme.lower()
+
+    scheme_limits = {
+        "pdp": {"name": "Penelitian Dosen Pemula (PDP)", "max_budget": 25000000.0, "min_sinta": 50.0, "min_members": 1},
+        "penelitian dosen pemula": {"name": "Penelitian Dosen Pemula (PDP)", "max_budget": 25000000.0, "min_sinta": 50.0, "min_members": 1},
+        "penelitian terapan": {"name": "Penelitian Terapan (PT)", "max_budget": 150000000.0, "min_sinta": 150.0, "min_members": 1},
+        "penelitian dasar": {"name": "Penelitian Dasar (PD)", "max_budget": 100000000.0, "min_sinta": 100.0, "min_members": 1},
+        "penelitian kerjasama": {"name": "Penelitian Kerjasama Antar Perguruan Tinggi (PKPT)", "max_budget": 200000000.0, "min_sinta": 200.0, "min_members": 2},
+        "penelitian pascasarjana": {"name": "Penelitian Tesis Magister (PTM)", "max_budget": 60000000.0, "min_sinta": 100.0, "min_members": 1}
+    }
+
+    config = None
+    for k, v in scheme_limits.items():
+        if k in norm_scheme:
+            config = v
+            break
+
+    if not config:
+        config = {"name": scheme, "max_budget": 100000000.0, "min_sinta": 100.0, "min_members": 1}
+
+    max_budget = config["max_budget"]
+    min_sinta = config["min_sinta"]
+    min_members = config["min_members"]
+
+    budget_compliant = float(requested_budget) <= max_budget
+    sinta_compliant = float(sinta_score_3yr) >= min_sinta
+    team_compliant = int(team_member_count) >= min_members
+    is_eligible = budget_compliant and sinta_compliant and team_compliant
+
+    remarks = []
+    if not budget_compliant:
+        remarks.append(f"Usulan anggaran Rp {requested_budget:,.0f} melebihi pagu maksimal skema (Rp {max_budget:,.0f}).")
+    if not sinta_compliant:
+        remarks.append(f"Skor SINTA 3 tahun ({sinta_score_3yr}) belum memenuhi ambang minimal skema ({min_sinta}).")
+    if not team_compliant:
+        remarks.append(f"Jumlah anggota tim ({team_member_count}) kurang dari ketentuan minimal ({min_members} anggota).")
+    if is_eligible:
+        remarks.append("Seluruh kriteria administratif dan substantif awal skema BIMA terpenuhi.")
+
+    return {
+        "scheme": config["name"],
+        "is_eligible": is_eligible,
+        "max_allowed_budget": max_budget,
+        "requested_budget": float(requested_budget),
+        "budget_compliant": budget_compliant,
+        "sinta_compliant": sinta_compliant,
+        "team_compliant": team_compliant,
+        "remarks": remarks
+    }
+
+
+
 
 
 
