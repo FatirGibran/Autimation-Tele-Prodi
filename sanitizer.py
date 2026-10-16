@@ -318,6 +318,7 @@ class HTMLSanitizer:
                         warnings.append("Stripped unsafe external or script payload in SVG feImage.")
                         return ""
                     return tag
+                cleaned = re.sub(r'<feImage\b[^>]*>', clean_feimage, cleaned, flags=re.IGNORECASE)
             if re.search(r"<use\b", cleaned, re.IGNORECASE):
                 def clean_use(m):
                     tag = m.group(0)
@@ -622,6 +623,27 @@ class HTMLSanitizer:
                     warnings.append("Stripped scriptable microdata from time element.")
                 return tag
             cleaned = re.sub(r'<time\b[^>]*>', sanitize_time, cleaned, flags=re.IGNORECASE)
+
+        # 8v. Sanitize HTML5 output calculation elements for telemetry formulas
+        if "<output" in cleaned.lower():
+            def sanitize_output(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                for_m = re.search(r'\bfor=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if for_m:
+                    raw_for = for_m.group(1).strip()
+                    if not re.match(r'^[a-zA-Z0-9_\-\s]+$', raw_for):
+                        tag = re.sub(r'\s+for=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                        warnings.append("Stripped invalid ID tokens from output for attribute.")
+                name_m = re.search(r'\bname=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if name_m:
+                    raw_name = name_m.group(1).strip()
+                    if not re.match(r'^[a-zA-Z0-9_\-]+$', raw_name):
+                        tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                        warnings.append("Stripped invalid name attribute from output element.")
+                return tag
+            cleaned = re.sub(r'<output\b[^>]*>', sanitize_output, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 output calculation elements.")
 
         return cleaned, warnings
 
