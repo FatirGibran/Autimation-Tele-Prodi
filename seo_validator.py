@@ -2751,6 +2751,55 @@ class YoastSEOValidator:
             "blocking_reasons": blocking_reasons
         }
 
+    @staticmethod
+    def audit_video_accessibility(html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML5 video elements for accessibility compliance (closed caption tracks, labels, fallback text).
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        video_tags = soup.find_all("video")
+
+        if not video_tags:
+            return {
+                "has_video": False,
+                "total_videos": 0,
+                "accessible_videos": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        accessible_count = 0
+
+        for idx, video in enumerate(video_tags, 1):
+            vid_issues: List[str] = []
+            tracks = video.find_all("track")
+            has_captions = any(t.get("kind", "").lower() in {"captions", "subtitles"} for t in tracks)
+            if not has_captions:
+                vid_issues.append(f"Video #{idx} does not have a captions or subtitles <track>.")
+
+            has_label = bool(video.get("aria-label") or video.get("aria-labelledby") or video.get("title"))
+            if not has_label:
+                vid_issues.append(f"Video #{idx} lacks an accessible label (title or aria-label).")
+
+            fallback_text = "".join(video.find_all(text=True)).strip()
+            if not fallback_text and not video.find("a"):
+                vid_issues.append(f"Video #{idx} lacks fallback text or link for unsupported browsers.")
+
+            if not vid_issues:
+                accessible_count += 1
+            else:
+                issues.extend(vid_issues)
+
+        return {
+            "has_video": True,
+            "total_videos": len(video_tags),
+            "accessible_videos": accessible_count,
+            "is_accessible": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
