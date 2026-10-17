@@ -2932,6 +2932,53 @@ def parse_accreditation_status(text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def parse_scholarship_allocation(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses student scholarship aid award allocation details.
+    Extracts student name, NIM, scholarship scheme/type, sponsor name, amount, semester, and minimum GPA.
+    """
+    if not text:
+        return None
+
+    name_m = re.search(r'(?:Nama Mahasiswa|Penerima|Nama)\s*:\s*([^\n\r,;]+)', text, re.IGNORECASE)
+    nim_m = re.search(r'(?:NIM|Nomor Induk Mahasiswa)\s*:\s*(\d{5,12})', text, re.IGNORECASE)
+    scheme_m = re.search(r'(?:Skema Beasiswa|Jenis Beasiswa|Beasiswa)\s*:\s*([^\n\r,;]+)', text, re.IGNORECASE)
+    sponsor_m = re.search(r'(?:Penyelenggara|Sponsor|Mitra)\s*:\s*([^\n\r,;]+)', text, re.IGNORECASE)
+    amount_m = re.search(r'(?:Nominal|Besaran|Bantuan UKT|Dana)\s*:\s*(?:Rp\.?\s*)?([\d\.,]+)', text, re.IGNORECASE)
+    sem_m = re.search(r'(?:Semester|Periode)\s*:\s*([^\n\r,;]+)', text, re.IGNORECASE)
+    gpa_m = re.search(r'(?:IPK Minimal|IPK|Syarat IPK)\s*:\s*(\d+(?:[\.,]\d+)?)', text, re.IGNORECASE)
+
+    if not nim_m and not scheme_m:
+        return None
+
+    amount = 0.0
+    if amount_m:
+        raw_amt = amount_m.group(1).replace('.', '').replace(',', '.')
+        try:
+            amount = float(raw_amt)
+        except ValueError:
+            amount = 0.0
+
+    gpa = 3.0
+    if gpa_m:
+        raw_gpa = gpa_m.group(1).replace(',', '.')
+        try:
+            gpa = float(raw_gpa)
+        except ValueError:
+            gpa = 3.0
+
+    return {
+        "student_name": name_m.group(1).strip() if name_m else "Mahasiswa",
+        "nim": nim_m.group(1).strip() if nim_m else "00000000",
+        "scholarship_type": scheme_m.group(1).strip() if scheme_m else "Beasiswa Prestasi",
+        "sponsor_name": sponsor_m.group(1).strip() if sponsor_m else "Yayasan Pendidikan Telkom",
+        "amount_idr": amount,
+        "semester": sem_m.group(1).strip() if sem_m else "Semester Ganjil 2026/2027",
+        "minimum_gpa": gpa
+    }
+
+
+
 
 
 
