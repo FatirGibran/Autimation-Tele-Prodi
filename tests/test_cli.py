@@ -1446,6 +1446,96 @@ class TestCLI(unittest.TestCase):
             if out_file.exists():
                 out_file.unlink()
 
+    def test_cmd_accreditation(self):
+        class ArgsAdd:
+            action = "add"
+            program = "S1 Teknik Telekomunikasi"
+            agency = "LAM INFOKOM"
+            rating = "Unggul"
+            sk = "042/SK/LAM-INFOKOM/Ak/S/XII/2025"
+            expiry = "2030-12-01"
+            issued = "2025-12-01"
+            active = True
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_accreditation(ArgsAdd())
+            self.assertIn("Catatan akreditasi prodi berhasil disimpan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            agency = "LAM INFOKOM"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_accreditation(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Akreditasi Program Studi", out)
+            self.assertIn("S1 Teknik Telekomunikasi", out)
+            self.assertIn("Unggul", out)
+
+    def test_cmd_scholarship(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Ahmad Hidayat"
+            nim = "1101220001"
+            type = "pemerintah"
+            sponsor = "KIP Kuliah Merdeka"
+            amount = 6000000.0
+            semester = "Ganjil"
+            year = "2026/2027"
+            status = "active"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_scholarship(ArgsAdd())
+            self.assertIn("Alokasi beasiswa mahasiswa berhasil dicatat", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            type = "pemerintah"
+            status = "active"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_scholarship(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Rekam Jejak Alokasi Beasiswa Mahasiswa", out)
+            self.assertIn("Ahmad Hidayat", out)
+            self.assertIn("KIP Kuliah Merdeka", out)
+
+    def test_cmd_jekyll(self):
+        slug = "jekyll-cli-test-article"
+        cli.storage.save_article({
+            "topic": "Jekyll Tutorial",
+            "category": "Tutorial",
+            "publish_date": "2026-10-16 12:00:00",
+            "focus_keyphrase": "jekyll tutorial",
+            "seo_title": "Panduan Jekyll Static Site",
+            "slug": slug,
+            "meta_description": "Dokumentasi jekyll cli prodi",
+            "html_content": "<p>Isi panduan Jekyll</p>",
+            "status": "ready"
+        })
+
+        out_file = Path(self.temp_dir.name) / f"{slug}.md"
+        try:
+            class ArgsJekyll:
+                pass
+            args = ArgsJekyll()
+            args.slug = slug
+            args.out = str(out_file)
+            args.layout = "post"
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_jekyll(args)
+                self.assertIn("Export Jekyll markdown berhasil", fake_out.getvalue())
+
+            content = out_file.read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---"))
+            self.assertIn("layout: post", content)
+            self.assertIn('title: "Panduan Jekyll Static Site"', content)
+            self.assertIn("<p>Isi panduan Jekyll</p>", content)
+        finally:
+            if out_file.exists():
+                out_file.unlink()
+
 
 if __name__ == "__main__":
     unittest.main()
