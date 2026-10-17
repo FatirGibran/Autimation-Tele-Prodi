@@ -2678,6 +2678,42 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_duplicate_meta(target_title: str, target_desc: str, existing_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Audits candidate SEO title and meta description against database records to prevent duplicate SERP snippets.
+        """
+        norm_title = target_title.strip().lower()
+        norm_desc = target_desc.strip().lower()
+
+        conflicting_titles: List[Dict[str, Any]] = []
+        conflicting_descriptions: List[Dict[str, Any]] = []
+
+        for rec in existing_records:
+            rec_id = rec.get("id")
+            rec_slug = rec.get("slug", "")
+            rec_title = (rec.get("seo_title") or rec.get("topic") or "").strip().lower()
+            rec_desc = (rec.get("meta_description") or "").strip().lower()
+
+            if rec_title and (rec_title == norm_title or (len(norm_title) > 10 and norm_title in rec_title)):
+                conflicting_titles.append({"id": rec_id, "slug": rec_slug, "title": rec.get("seo_title")})
+
+            if rec_desc and (rec_desc == norm_desc or (len(norm_desc) > 30 and norm_desc in rec_desc)):
+                conflicting_descriptions.append({"id": rec_id, "slug": rec_slug, "description": rec.get("meta_description")})
+
+        has_title_conflict = len(conflicting_titles) > 0
+        has_desc_conflict = len(conflicting_descriptions) > 0
+        is_clean = not has_title_conflict and not has_desc_conflict
+
+        return {
+            "is_clean": is_clean,
+            "has_title_conflict": has_title_conflict,
+            "has_desc_conflict": has_desc_conflict,
+            "conflicting_titles": conflicting_titles,
+            "conflicting_descriptions": conflicting_descriptions
+        }
+
+
 
 
 
