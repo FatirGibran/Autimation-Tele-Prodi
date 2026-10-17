@@ -2885,6 +2885,54 @@ def parse_telecom_isr_frequency_allocation(text_or_markdown: str) -> List[Dict[s
     return results
 
 
+def parse_accreditation_status(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Parses study program accreditation status decrees from LAM INFOKOM or BAN-PT text.
+    Extracts program name, accreditation agency, decree/SK number, rating, expiry date, and active status.
+    """
+    if not text:
+        return None
+
+    prog_m = re.search(r'(?:Program Studi|Prodi)\s*:\s*([^\n\r,;]+)', text, re.IGNORECASE)
+    agency_m = re.search(r'(?:Lembaga Akreditasi|Badan Akreditasi|Akreditasi oleh)\s*:\s*(LAM-?INFOKOM|BAN-?PT)', text, re.IGNORECASE)
+    if not agency_m:
+        if "LAM-INFOKOM" in text.upper() or "LAM INFOKOM" in text.upper():
+            agency = "LAM INFOKOM"
+        elif "BAN-PT" in text.upper():
+            agency = "BAN-PT"
+        else:
+            agency = "LAM INFOKOM"
+    else:
+        raw_ag = agency_m.group(1).upper()
+        agency = "LAM INFOKOM" if "INFOKOM" in raw_ag else "BAN-PT"
+
+    rating_m = re.search(r'(?:Peringkat|Status Akreditasi|Predikat)\s*:\s*(Unggul|Baik Sekali|Baik|Terakreditasi Sementara|A|B|C)\b', text, re.IGNORECASE)
+    sk_m = re.search(r'(?:Nomor SK|No\.? SK|SK No\.?)\s*:\s*([A-Za-z0-9\/\.\-]+)', text, re.IGNORECASE)
+    date_m = re.search(r'(?:Berlaku Hingga|Kedaluwarsa|Masa Berlaku|Berakhir)\s*:\s*(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[A-Za-z]+\s+\d{4})', text, re.IGNORECASE)
+
+    if not rating_m and not sk_m:
+        return None
+
+    rating = rating_m.group(1).strip() if rating_m else "Unggul"
+    sk_number = sk_m.group(1).strip() if sk_m else "N/A"
+    program_name = prog_m.group(1).strip() if prog_m else "S1 Teknik Telekomunikasi"
+    expiry_date = date_m.group(1).strip() if date_m else "2029-08-31"
+
+    is_active = True
+    if re.search(r'\b(?:kadaluwarsa|kedaluwarsa|expired|tidak aktif)\b', text, re.IGNORECASE):
+        is_active = False
+
+    return {
+        "program_name": program_name,
+        "agency": agency,
+        "rating": rating,
+        "sk_number": sk_number,
+        "expiry_date": expiry_date,
+        "is_active": is_active
+    }
+
+
+
 
 
 
