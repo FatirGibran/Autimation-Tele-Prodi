@@ -1386,9 +1386,134 @@ class TestStorageManager(unittest.TestCase):
         none_alloc = self.storage.get_spectrum_allocation_by_id(999999)
         self.assertIsNone(none_alloc)
 
+    def test_study_program_accreditations_storage(self):
+        aid1 = self.storage.record_accreditation(
+            program_name="S1 Teknik Telekomunikasi",
+            agency="LAM INFOKOM",
+            rating="Unggul",
+            sk_number="042/SK/LAM-INFOKOM/Ak/S/XII/2025",
+            expiry_date="2030-12-01",
+            issued_date="2025-12-01",
+            is_active=True
+        )
+        aid2 = self.storage.record_accreditation(
+            program_name="D3 Teknik Telekomunikasi",
+            agency="BAN-PT",
+            rating="Baik Sekali",
+            sk_number="101/SK/BAN-PT/Ak/D3/2021",
+            expiry_date="2026-01-01",
+            issued_date="2021-01-01",
+            is_active=False
+        )
+        self.assertGreater(aid1, 0)
+        self.assertGreater(aid2, 0)
+
+        all_acc = self.storage.list_accreditations()
+        self.assertEqual(len(all_acc), 2)
+
+        lam_acc = self.storage.list_accreditations(agency="LAM INFOKOM")
+        self.assertEqual(len(lam_acc), 1)
+        self.assertEqual(lam_acc[0]["rating"], "Unggul")
+
+        active_acc = self.storage.list_accreditations(is_active=True)
+        self.assertEqual(len(active_acc), 1)
+        self.assertEqual(active_acc[0]["id"], aid1)
+
+        single = self.storage.get_accreditation_by_id(aid1)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["sk_number"], "042/SK/LAM-INFOKOM/Ak/S/XII/2025")
+        self.assertIsNone(self.storage.get_accreditation_by_id(999999))
+
+    def test_student_scholarships_storage(self):
+        sid1 = self.storage.record_scholarship(
+            student_name="Ahmad Hidayat",
+            nim="1101220001",
+            scholarship_type="pemerintah",
+            sponsor_name="Beasiswa KIP Kuliah Merdeka",
+            amount=6000000.0,
+            semester="Ganjil",
+            academic_year="2026/2027",
+            status="active"
+        )
+        sid2 = self.storage.record_scholarship(
+            student_name="Ahmad Hidayat",
+            nim="1101220001",
+            scholarship_type="alumni",
+            sponsor_name="Bantuan UKT Ikatan Alumni",
+            amount=2500000.0,
+            semester="Genap",
+            academic_year="2026/2027",
+            status="nominated"
+        )
+        sid3 = self.storage.record_scholarship(
+            student_name="Dewi Sartika",
+            nim="1101220002",
+            scholarship_type="industri",
+            sponsor_name="Beasiswa Industri Telco",
+            amount=10000000.0,
+            semester="Ganjil",
+            academic_year="2026/2027",
+            status="active"
+        )
+        self.assertGreater(sid1, 0)
+        self.assertGreater(sid2, 0)
+        self.assertGreater(sid3, 0)
+
+        all_schol = self.storage.list_scholarships()
+        self.assertEqual(len(all_schol), 3)
+
+        awarded = self.storage.list_scholarships(status="active")
+        self.assertEqual(len(awarded), 2)
+
+        industri = self.storage.list_scholarships(scholarship_type="industri")
+        self.assertEqual(len(industri), 1)
+        self.assertEqual(industri[0]["student_name"], "Dewi Sartika")
+
+        ahmad_schols = self.storage.get_scholarships_by_nim("1101220001")
+        self.assertEqual(len(ahmad_schols), 2)
+
+    def test_bnsp_certifications_storage(self):
+        cid1 = self.storage.record_bnsp_certification(
+            student_name="Budi Pratama",
+            nim="1101220045",
+            scheme_name="Teknisi Madya Fiber Optik",
+            assessor_name="Ir. Joko Susanto, M.T.",
+            cert_number="BNSP-TEL-2026-00451",
+            issue_date="2026-06-15",
+            valid_until="2029-06-15",
+            is_competent=True
+        )
+        cid2 = self.storage.record_bnsp_certification(
+            student_name="Siti Rahma",
+            nim="1101220078",
+            scheme_name="Perancang Jaringan Nirkabel",
+            assessor_name="Dr. Hendra Gunawan, S.T.",
+            cert_number="BNSP-TEL-2026-00452",
+            issue_date="2026-06-15",
+            valid_until="2029-06-15",
+            is_competent=False
+        )
+        self.assertGreater(cid1, 0)
+        self.assertGreater(cid2, 0)
+
+        all_certs = self.storage.list_bnsp_certifications()
+        self.assertEqual(len(all_certs), 2)
+
+        competent = self.storage.list_bnsp_certifications(is_competent=True)
+        self.assertEqual(len(competent), 1)
+        self.assertEqual(competent[0]["student_name"], "Budi Pratama")
+
+        fo_certs = self.storage.list_bnsp_certifications(scheme_name="Teknisi Madya Fiber Optik")
+        self.assertEqual(len(fo_certs), 1)
+
+        budi_certs = self.storage.get_bnsp_certification_by_nim("1101220045")
+        self.assertEqual(len(budi_certs), 1)
+        self.assertEqual(budi_certs[0]["cert_number"], "BNSP-TEL-2026-00451")
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
