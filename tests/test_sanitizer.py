@@ -506,10 +506,53 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn('onclick="steal()"', clean)
         self.assertTrue(any("output calculation" in w for w in warnings))
 
+    def test_sanitize_html5_track_subtitle_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<video controls>'
+            '<track src="captions_id.vtt" kind="captions" srclang="id" label="Bahasa Indonesia">'
+            '<track src="javascript:steal()" kind="invalid_kind" onclick="exploit()">'
+            '</video>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('src="captions_id.vtt"', clean)
+        self.assertIn('kind="captions"', clean)
+        self.assertNotIn('javascript:steal()', clean)
+        self.assertIn('kind="subtitles"', clean)
+        self.assertNotIn('onclick="exploit()"', clean)
+        self.assertTrue(any("track subtitle" in w for w in warnings))
+
+    def test_sanitize_html5_kbd_and_samp_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<p>Tekan <kbd onclick="steal()" style="color:red">Ctrl + C</kbd> lalu amati <samp contenteditable="true">200 OK</samp>.</p>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('<kbd>Ctrl + C</kbd>', clean)
+        self.assertIn('<samp>200 OK</samp>', clean)
+        self.assertNotIn('onclick="steal()"', clean)
+        self.assertNotIn('contenteditable="true"', clean)
+        self.assertTrue(any("kbd and samp" in w for w in warnings))
+
+    def test_sanitize_html5_data_token_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<p>Dosen: <data value="0012057801">Dr. Ir. Budi Santoso</data></p>'
+            '<p>Riset: <data value="javascript:exploit()" onclick="steal()">Paten IoT</data></p>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('value="0012057801"', clean)
+        self.assertNotIn('javascript:exploit()', clean)
+        self.assertNotIn('onclick="steal()"', clean)
+        self.assertTrue(any("data token" in w for w in warnings))
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
