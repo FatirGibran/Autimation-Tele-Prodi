@@ -723,6 +723,30 @@ class TelegramFormatter:
             f"👏 *Selamat atas penyelesaian masa praktik industri dan kontribusi nyata di dunia kerja!*"
         )
 
+    @staticmethod
+    def format_accreditation_announcement_telegram(
+        program_name: str,
+        agency: str,
+        rating: str,
+        sk_number: str,
+        valid_until: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a study program accreditation decree achievement announcement card for Telegram.
+        """
+        portal_link = f"\n🔗 **Verifikasi Status Akreditasi:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🏆 **Pengumuman Resmi Akreditasi Program Studi**\n\n"
+            f"🎓 **Program Studi:** {program_name.strip()}\n"
+            f"🏛 **Badan Akreditasi:** {agency.strip()}\n"
+            f"⭐ **Peringkat Akreditasi:** **{rating.strip()}**\n"
+            f"📜 **Nomor SK:** `{sk_number.strip()}`\n"
+            f"📅 **Masa Berlaku Hingga:** `{valid_until.strip()}`{portal_link}\n\n"
+            f"💐 *Selamat dan sukses kepada seluruh civitas akademika atas pencapaian mutu pendidikan unggul!*"
+        )
+
+
 
 
 
