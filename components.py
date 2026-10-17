@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Optional
 
 class EditorialComponents:
     """
@@ -3263,6 +3263,62 @@ class EditorialComponents:
         </div>
       </div>
     </div>"""
+
+    @staticmethod
+    def render_djki_patent_certificate_card(
+        patent_title: str,
+        patent_number: Optional[str],
+        application_number: str,
+        filing_date: str,
+        grant_date: Optional[str],
+        inventors: List[str],
+        patent_type: str = "Paten Sederhana",
+        status: str = "Granted"
+    ) -> str:
+        """
+        Renders a Directorate General of Intellectual Property (DJKI) patent grant showcase card
+        displaying invention title, patent registration number, inventor team, and legal grant status.
+        """
+        from xml.sax.saxutils import escape
+
+        s_title = escape(patent_title.strip())
+        s_pat_num = escape(patent_number.strip()) if patent_number else "Dalam Proses Registrasi"
+        s_app_num = escape(application_number.strip())
+        s_filing = escape(filing_date.strip())
+        s_grant = escape(grant_date.strip()) if grant_date else "Menunggu SK Menteri"
+        s_type = escape(patent_type.strip())
+        s_status = escape(status.strip())
+
+        inv_items = "".join(f'<span class="tu-patent-inventor">{escape(i.strip())}</span>' for i in inventors)
+
+        return f"""    <div class="tu-patent-grant-card">
+      <div class="tu-patent-header">
+        <span class="tu-patent-type-badge">{s_type}</span>
+        <span class="tu-patent-status-badge">{s_status}</span>
+      </div>
+      <h4 class="tu-patent-title">{s_title}</h4>
+      <div class="tu-patent-numbers">
+        <div class="tu-pat-num-item">
+          <span class="tu-lbl">Nomor Paten:</span>
+          <strong class="tu-val">{s_pat_num}</strong>
+        </div>
+        <div class="tu-pat-num-item">
+          <span class="tu-lbl">Nomor Permohonan:</span>
+          <span class="tu-val">{s_app_num}</span>
+        </div>
+      </div>
+      <div class="tu-patent-inventors-box">
+        <span class="tu-inv-lbl">Tim Inventor:</span>
+        <div class="tu-inv-list">
+          {inv_items}
+        </div>
+      </div>
+      <div class="tu-patent-dates">
+        <span class="tu-date-item">Penerimaan: {s_filing}</span>
+        <span class="tu-date-item">Pemberian: {s_grant}</span>
+      </div>
+    </div>"""
+
 
 
 
