@@ -910,9 +910,94 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertTrue(any("caption" in i or "aria-label" in i for i in res_fail["issues"]))
         self.assertTrue(any("<th>" in i for i in res_fail["issues"]))
 
+    def test_audit_duplicate_meta(self):
+        records = [
+            {"id": 1, "slug": "iot-lora-maritim", "seo_title": "IoT LoRa Maritim untuk Nelayan", "meta_description": "Panduan implementasi jaringan sensor LoRa untuk pemantauan maritim terpadu."},
+            {"id": 2, "slug": "5g-slicing-kampus", "seo_title": "Arsitektur Network Slicing 5G", "meta_description": "Ulasan komprehensif mengenai teknik slicing radio access network pada kampus cerdas."}
+        ]
+        # Duplicate title
+        res_dup_title = YoastSEOValidator.audit_duplicate_meta("IoT LoRa Maritim untuk Nelayan", "Deskripsi baru yang unik dan tidak terduplikasi sama sekali.", records)
+        self.assertFalse(res_dup_title["is_clean"])
+        self.assertTrue(res_dup_title["has_title_conflict"])
+        self.assertFalse(res_dup_title["has_desc_conflict"])
+
+        # Duplicate description
+        res_dup_desc = YoastSEOValidator.audit_duplicate_meta("Judul Unik 2026", "Panduan implementasi jaringan sensor LoRa untuk pemantauan maritim terpadu.", records)
+        self.assertFalse(res_dup_desc["is_clean"])
+        self.assertTrue(res_dup_desc["has_desc_conflict"])
+
+        # Clean meta
+        res_clean = YoastSEOValidator.audit_duplicate_meta("Inovasi Transmisi Satelit LEO", "Deskripsi baru satelit orbit rendah tanpa kemiripan.", records)
+        self.assertTrue(res_clean["is_clean"])
+        self.assertFalse(res_clean["has_title_conflict"])
+        self.assertFalse(res_clean["has_desc_conflict"])
+
+    def test_audit_robots_meta_directives(self):
+        html_good = (
+            '<html><head>'
+            '<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">'
+            '</head><body><p>Konten</p></body></html>'
+        )
+        res_good = YoastSEOValidator.audit_robots_meta_directives(html_good)
+        self.assertTrue(res_good["has_robots_meta"])
+        self.assertTrue(res_good["is_indexable"])
+        self.assertTrue(res_good["is_followable"])
+        self.assertTrue(res_good["has_snippet_control"])
+        self.assertEqual(len(res_good["blocking_reasons"]), 0)
+
+        html_blocked = (
+            '<html><head>'
+            '<meta name="robots" content="noindex, nofollow">'
+            '</head><body><p>Rahasia</p></body></html>'
+        )
+        res_blocked = YoastSEOValidator.audit_robots_meta_directives(html_blocked)
+        self.assertFalse(res_blocked["is_indexable"])
+        self.assertFalse(res_blocked["is_followable"])
+        self.assertGreaterEqual(len(res_blocked["blocking_reasons"]), 2)
+
+    def test_audit_video_accessibility(self):
+        html_accessible = (
+            '<div class="tu-editorial-container">'
+            '<video controls title="Tutorial Praktikum Serat Optik">'
+            '<source src="fiber.mp4" type="video/mp4">'
+            '<track src="captions.vtt" kind="captions" srclang="id" label="Bahasa Indonesia">'
+            '<p>Browser Anda tidak mendukung tag video. Unduh di <a href="fiber.mp4">sini</a>.</p>'
+            '</video>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_video_accessibility(html_accessible)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["accessible_videos"], 1)
+
+        html_inaccessible = (
+            '<div class="tu-editorial-container">'
+            '<video src="insecure.mp4"></video>'
+            '</div>'
+        )
+        res_bad = YoastSEOValidator.audit_video_accessibility(html_inaccessible)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["accessible_videos"], 0)
+        self.assertTrue(any("captions" in i for i in res_bad["issues"]))
+        self.assertTrue(any("accessible label" in i for i in res_bad["issues"]))
+
+    def test_calculate_text_to_code_ratio(self):
+        # Optimal content
+        article_text = "<p>" + ("Teknologi telekomunikasi terus berkembang pesat menuju era 6G. " * 20) + "</p>"
+        res_optimal = YoastSEOValidator.calculate_text_to_code_ratio(article_text)
+        self.assertTrue(res_optimal["is_optimal"])
+        self.assertEqual(res_optimal["status"], "optimal")
+        self.assertGreater(res_optimal["ratio_percent"], 15.0)
+
+        # Bloated markup with very little content
+        bloated_html = "<div class='a'><div class='b'><div class='c'><span style='padding:0'>Hai</span></div></div></div>" * 5
+        res_bloat = YoastSEOValidator.calculate_text_to_code_ratio(bloated_html)
+        self.assertFalse(res_bloat["is_optimal"])
+        self.assertEqual(res_bloat["status"], "low_content")
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

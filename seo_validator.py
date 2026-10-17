@@ -2782,7 +2782,7 @@ class YoastSEOValidator:
             if not has_label:
                 vid_issues.append(f"Video #{idx} lacks an accessible label (title or aria-label).")
 
-            fallback_text = "".join(video.find_all(text=True)).strip()
+            fallback_text = "".join(video.find_all(string=True)).strip()
             if not fallback_text and not video.find("a"):
                 vid_issues.append(f"Video #{idx} lacks fallback text or link for unsupported browsers.")
 
