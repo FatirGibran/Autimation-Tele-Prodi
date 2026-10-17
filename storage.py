@@ -547,6 +547,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_scholarship_nim ON student_scholarships(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_scholarship_type ON student_scholarships(scholarship_type);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS bnsp_certifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    scheme_name TEXT NOT NULL,
+                    assessor_name TEXT NOT NULL,
+                    cert_number TEXT NOT NULL,
+                    issue_date TEXT NOT NULL,
+                    valid_until TEXT NOT NULL,
+                    is_competent INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_bnsp_nim ON bnsp_certifications(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_bnsp_scheme ON bnsp_certifications(scheme_name);")
+
 
 
 
@@ -2756,6 +2773,67 @@ class StorageManager:
                 (nim.strip(),)
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_bnsp_certification(
+        self,
+        student_name: str,
+        nim: str,
+        scheme_name: str,
+        assessor_name: str,
+        cert_number: str,
+        issue_date: str,
+        valid_until: str,
+        is_competent: bool = True
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO bnsp_certifications (
+                    student_name, nim, scheme_name, assessor_name,
+                    cert_number, issue_date, valid_until, is_competent
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(),
+                nim.strip(),
+                scheme_name.strip(),
+                assessor_name.strip(),
+                cert_number.strip(),
+                issue_date.strip(),
+                valid_until.strip(),
+                1 if is_competent else 0
+            ))
+            return cursor.lastrowid
+
+    def list_bnsp_certifications(
+        self,
+        scheme_name: Optional[str] = None,
+        is_competent: Optional[bool] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM bnsp_certifications"
+            params = []
+            conditions = []
+            if scheme_name:
+                conditions.append("scheme_name = ?")
+                params.append(scheme_name.strip())
+            if is_competent is not None:
+                conditions.append("is_competent = ?")
+                params.append(1 if is_competent else 0)
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_bnsp_certification_by_nim(self, nim: str) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM bnsp_certifications WHERE nim = ? ORDER BY id DESC",
+                (nim.strip(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
