@@ -3319,6 +3319,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @staticmethod
+    def render_bnsp_certification_card(
+        student_name: str,
+        nim: str,
+        scheme_name: str,
+        assessor_name: str,
+        cert_number: str,
+        issue_date: str,
+        valid_until: str,
+        is_competent: bool = True
+    ) -> str:
+        """
+        Renders a National Professional Certification Board (BNSP) student competency showcase card
+        with occupational scheme details, assessor verification, and competency badge.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(student_name.strip())
+        s_nim = escape(nim.strip())
+        s_scheme = escape(scheme_name.strip())
+        s_assessor = escape(assessor_name.strip())
+        s_cert = escape(cert_number.strip())
+        s_issue = escape(issue_date.strip())
+        s_valid = escape(valid_until.strip())
+
+        comp_class = "tu-competent-pass" if is_competent else "tu-competent-pending"
+        comp_text = "Kompeten (K)" if is_competent else "Belum Kompeten (BK)"
+
+        return f"""    <div class="tu-bnsp-cert-card">
+      <div class="tu-bnsp-header">
+        <span class="tu-bnsp-badge">LSP Telekomunikasi / BNSP</span>
+        <span class="tu-bnsp-status {comp_class}">{comp_text}</span>
+      </div>
+      <h4 class="tu-bnsp-scheme">{s_scheme}</h4>
+      <div class="tu-bnsp-student">
+        <span class="tu-bnsp-name">{s_name}</span>
+        <span class="tu-bnsp-nim">NIM: {s_nim}</span>
+      </div>
+      <div class="tu-bnsp-meta">
+        <div class="tu-bnsp-meta-item">
+          <span class="tu-lbl">Nomor Sertifikat:</span>
+          <strong class="tu-val">{s_cert}</strong>
+        </div>
+        <div class="tu-bnsp-meta-item">
+          <span class="tu-lbl">Asesor Penguji:</span>
+          <span class="tu-val">{s_assessor}</span>
+        </div>
+        <div class="tu-bnsp-meta-item">
+          <span class="tu-lbl">Masa Berlaku:</span>
+          <span class="tu-val">{s_issue} s.d. {s_valid}</span>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
