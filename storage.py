@@ -516,6 +516,22 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_spectrum_lab ON lab_spectrum_allocations(lab_name);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_spectrum_band ON lab_spectrum_allocations(band_designation);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS study_program_accreditations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    program_name TEXT NOT NULL,
+                    agency TEXT NOT NULL,
+                    rating TEXT NOT NULL,
+                    sk_number TEXT NOT NULL,
+                    issued_date TEXT,
+                    expiry_date TEXT NOT NULL,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_accred_agency ON study_program_accreditations(agency);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_accred_rating ON study_program_accreditations(rating);")
+
 
 
 
@@ -2604,6 +2620,66 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_accreditation(
+        self,
+        program_name: str,
+        agency: str,
+        rating: str,
+        sk_number: str,
+        expiry_date: str,
+        issued_date: Optional[str] = None,
+        is_active: bool = True
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO study_program_accreditations (
+                    program_name, agency, rating, sk_number,
+                    issued_date, expiry_date, is_active
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                program_name.strip(),
+                agency.strip(),
+                rating.strip(),
+                sk_number.strip(),
+                issued_date.strip() if issued_date else None,
+                expiry_date.strip(),
+                1 if is_active else 0
+            ))
+            return cursor.lastrowid
+
+    def list_accreditations(
+        self,
+        agency: Optional[str] = None,
+        is_active: Optional[bool] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM study_program_accreditations"
+            params = []
+            conditions = []
+            if agency:
+                conditions.append("agency = ?")
+                params.append(agency.strip())
+            if is_active is not None:
+                conditions.append("is_active = ?")
+                params.append(1 if is_active else 0)
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_accreditation_by_id(self, accreditation_id: int) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM study_program_accreditations WHERE id = ?",
+                (int(accreditation_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
