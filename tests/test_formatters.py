@@ -457,8 +457,45 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("10 Minggu", msg)
         self.assertIn("https://repository.telkomuniversity.ac.id/kp/120122001", msg)
 
+    def test_format_accreditation_announcement_telegram(self):
+        msg = TelegramFormatter.format_accreditation_announcement_telegram(
+            program_name="S1 Teknik Telekomunikasi",
+            agency="LAM INFOKOM",
+            rating="Unggul",
+            sk_number="042/SK/LAM-INFOKOM/Ak/S/VIII/2024",
+            valid_until="2029-08-31",
+            portal_url="https://akreditasi.telkomuniversity.ac.id/tele"
+        )
+        self.assertIn("Pengumuman Resmi Akreditasi Program Studi", msg)
+        self.assertIn("S1 Teknik Telekomunikasi", msg)
+        self.assertIn("LAM INFOKOM", msg)
+        self.assertIn("Unggul", msg)
+        self.assertIn("042/SK/LAM-INFOKOM/Ak/S/VIII/2024", msg)
+        self.assertIn("2029-08-31", msg)
+        self.assertIn("https://akreditasi.telkomuniversity.ac.id/tele", msg)
+
+    def test_format_scholarship_announcement_telegram(self):
+        msg = TelegramFormatter.format_scholarship_announcement_telegram(
+            student_name="Bayu Pratama",
+            nim="120120001",
+            scholarship_type="Beasiswa Prestasi Unggulan",
+            sponsor_name="Yayasan Pendidikan Telkom",
+            amount_idr=7500000.0,
+            semester="Semester Ganjil 2026/2027",
+            portal_url="https://beasiswa.telkomuniversity.ac.id/pengumuman-001"
+        )
+        self.assertIn("Pengumuman Penerima Beasiswa & Bantuan Pendidikan", msg)
+        self.assertIn("Bayu Pratama", msg)
+        self.assertIn("120120001", msg)
+        self.assertIn("Beasiswa Prestasi Unggulan", msg)
+        self.assertIn("Yayasan Pendidikan Telkom", msg)
+        self.assertIn("Rp 7,500,000", msg)
+        self.assertIn("Semester Ganjil 2026/2027", msg)
+        self.assertIn("https://beasiswa.telkomuniversity.ac.id/pengumuman-001", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
+
 
 
 
