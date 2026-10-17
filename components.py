@@ -3179,6 +3179,52 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @staticmethod
+    def render_scholarship_award_card(
+        student_name: str,
+        nim: str,
+        scholarship_type: str,
+        sponsor_name: str,
+        amount_idr: float,
+        semester: str,
+        minimum_gpa: float = 3.0
+    ) -> str:
+        """
+        Renders a student scholarship aid award showcase card
+        with localized IDR currency formatting and eligibility indicators.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(student_name.strip())
+        s_nim = escape(nim.strip())
+        s_type = escape(scholarship_type.strip())
+        s_sponsor = escape(sponsor_name.strip())
+        s_sem = escape(semester.strip())
+        amount_fmt = f"Rp {amount_idr:,.0f}".replace(",", ".")
+
+        return f"""    <div class="tu-scholarship-card">
+      <div class="tu-scholarship-header">
+        <span class="tu-scholarship-sponsor">{s_sponsor}</span>
+        <span class="tu-scholarship-type">{s_type}</span>
+      </div>
+      <h4 class="tu-scholarship-recipient">{s_name} ({s_nim})</h4>
+      <div class="tu-scholarship-amount-box">
+        <span class="tu-amount-lbl">Bantuan UKT / Biaya Hidup:</span>
+        <strong class="tu-amount-val">{amount_fmt}</strong>
+      </div>
+      <div class="tu-scholarship-meta">
+        <div class="tu-meta-item">
+          <span class="tu-meta-lbl">Periode:</span>
+          <span class="tu-meta-val">{s_sem}</span>
+        </div>
+        <div class="tu-meta-item">
+          <span class="tu-meta-lbl">Standar IPK:</span>
+          <span class="tu-meta-val">&ge; {minimum_gpa:.2f}</span>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
