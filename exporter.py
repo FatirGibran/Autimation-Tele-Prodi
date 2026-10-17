@@ -1176,6 +1176,55 @@ navigation: true
         lines.append(html_content.strip())
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_financial_assistance_json_ld(
+        scholarship_name: str,
+        sponsor_name: str,
+        recipient_name: str,
+        amount: float,
+        semester: str,
+        academic_year: str,
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org/FinancialAssistance structured JSON-LD for educational scholarships and student financial aid.
+        """
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "FinancialAssistance",
+            "name": scholarship_name.strip(),
+            "provider": {
+                "@type": "Organization",
+                "name": sponsor_name.strip()
+            },
+            "recipient": {
+                "@type": "Person",
+                "name": recipient_name.strip()
+            },
+            "amount": {
+                "@type": "MonetaryAmount",
+                "currency": "IDR",
+                "value": float(amount)
+            },
+            "description": f"Alokasi beasiswa pendidikan {scholarship_name.strip()} semester {semester.strip()} tahun akademik {academic_year.strip()}.",
+            "additionalProperty": [
+                {
+                    "@type": "PropertyValue",
+                    "name": "Semester",
+                    "value": semester.strip()
+                },
+                {
+                    "@type": "PropertyValue",
+                    "name": "Academic Year",
+                    "value": academic_year.strip()
+                }
+            ]
+        }
+        if url:
+            data["url"] = url.strip()
+        return data
+
+
 
 
 
