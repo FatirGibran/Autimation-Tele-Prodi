@@ -645,7 +645,29 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<output\b[^>]*>', sanitize_output, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 output calculation elements.")
 
+        # 8w. Sanitize HTML5 track subtitle and timed text elements
+        if "<track" in cleaned.lower():
+            def sanitize_track(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if src_m:
+                    src_val = src_m.group(1).strip()
+                    if src_val.lower().startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', src_val):
+                        tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                        warnings.append("Stripped dangerous URI payload from track src attribute.")
+                kind_m = re.search(r'\bkind=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if kind_m:
+                    kind_val = kind_m.group(1).strip().lower()
+                    if kind_val not in {"subtitles", "captions", "descriptions", "chapters", "metadata"}:
+                        tag = re.sub(r'\bkind=["\'][^"\']*["\']', 'kind="subtitles"', tag, flags=re.IGNORECASE)
+                        warnings.append("Normalized unrecognized track kind attribute to subtitles.")
+                return tag
+            cleaned = re.sub(r'<track\b[^>]*>', sanitize_track, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 track subtitle elements.")
+
         return cleaned, warnings
+
 
 
 
