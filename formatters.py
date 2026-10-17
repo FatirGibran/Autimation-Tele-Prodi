@@ -746,6 +746,31 @@ class TelegramFormatter:
             f"💐 *Selamat dan sukses kepada seluruh civitas akademika atas pencapaian mutu pendidikan unggul!*"
         )
 
+    @staticmethod
+    def format_scholarship_announcement_telegram(
+        student_name: str,
+        nim: str,
+        scholarship_type: str,
+        sponsor_name: str,
+        amount_idr: float,
+        semester: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student scholarship aid allocation announcement bulletin for Telegram.
+        """
+        portal_link = f"\n🔗 **Informasi & Surat Keputusan:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🎓 **Pengumuman Penerima Beasiswa & Bantuan Pendidikan**\n\n"
+            f"👤 **Penerima Beasiswa:** {student_name.strip()} (`{nim.strip()}`)\n"
+            f"🏷 **Skema Beasiswa:** {scholarship_type.strip()}\n"
+            f"🏢 **Mitra / Sponsor:** {sponsor_name.strip()}\n"
+            f"💰 **Besaran Bantuan:** `Rp {amount_idr:,.0f}`\n"
+            f"📅 **Periode Semester:** {semester.strip()}{portal_link}\n\n"
+            f"👏 *Selamat atas pencapaian beasiswa, pertahankan prestasi akademik dan dedikasi belajar!*"
+        )
+
+
 
 
 
