@@ -1042,6 +1042,86 @@ def cmd_vitepress(args):
     print(f"Export VitePress markdown berhasil -> {out_path}")
 
 
+def cmd_accreditation(args):
+    if args.action == "add":
+        if not args.program or not args.agency or not args.rating or not args.sk or not args.expiry:
+            print("Error: --program, --agency, --rating, --sk, dan --expiry wajib disertakan untuk mencatat akreditasi.")
+            sys.exit(1)
+        aid = storage.record_accreditation(
+            program_name=args.program,
+            agency=args.agency,
+            rating=args.rating,
+            sk_number=args.sk,
+            expiry_date=args.expiry,
+            issued_date=args.issued,
+            is_active=bool(args.active)
+        )
+        print(f"Catatan akreditasi prodi berhasil disimpan (ID: {aid}) untuk '{args.program}'.")
+    else:
+        records = storage.list_accreditations(agency=args.agency)
+        if not records:
+            print("Belum ada catatan akreditasi program studi.")
+            return
+        print("=== Rekam Jejak Akreditasi Program Studi ===")
+        for r in records:
+            status_mark = "AKTIF" if r["is_active"] else "KADALUARSA"
+            print(f"#{r['id']} [{r['agency']}] {r['program_name']} - Peringkat: {r['rating']} (SK: {r['sk_number']}) [{status_mark}]")
+
+
+def cmd_scholarship(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.type or not args.sponsor or args.amount is None or not args.semester or not args.year:
+            print("Error: Parameter beasiswa mahasiswa tidak lengkap.")
+            sys.exit(1)
+        sid = storage.record_scholarship(
+            student_name=args.name,
+            nim=args.nim,
+            scholarship_type=args.type,
+            sponsor_name=args.sponsor,
+            amount=float(args.amount),
+            semester=args.semester,
+            academic_year=args.year,
+            status=args.status or "active"
+        )
+        print(f"Alokasi beasiswa mahasiswa berhasil dicatat (ID: {sid}) untuk {args.name} ({args.nim}).")
+    else:
+        records = storage.list_scholarships(scholarship_type=args.type, status=args.status if args.status != "all" else None)
+        if not records:
+            print("Belum ada catatan alokasi beasiswa mahasiswa.")
+            return
+        print("=== Rekam Jejak Alokasi Beasiswa Mahasiswa ===")
+        for s in records:
+            print(f"#{s['id']} [{s['academic_year']} - {s['semester']}] {s['student_name']} ({s['nim']}) - {s['sponsor_name']} ({s['scholarship_type']}) | Rp {s['amount']:,.0f} [{s['status']}]")
+
+
+def cmd_jekyll(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    tags = article.get("tags") or []
+    if isinstance(tags, str):
+        try:
+            tags = json.loads(tags)
+        except Exception:
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "topic": article.get("topic", ""),
+        "publish_date": article.get("publish_date", ""),
+        "category": article.get("category", ""),
+        "tags": tags,
+        "layout": args.layout or "post"
+    }
+    jekyll_md = ArticleExporter.to_jekyll_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(jekyll_md, encoding="utf-8")
+    print(f"Export Jekyll markdown berhasil -> {out_path}")
+
+
+
 def main():
 
 
@@ -1447,7 +1527,40 @@ def main():
     vitepress_parser.add_argument("--out", help="Path berkas output Markdown VitePress")
     vitepress_parser.set_defaults(func=cmd_vitepress)
 
+    # Accreditation command
+    acc_parser = subparsers.add_parser("accreditation", help="Kelola catatan akreditasi program studi (list, add)")
+    acc_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan akreditasi")
+    acc_parser.add_argument("--program", help="Nama program studi")
+    acc_parser.add_argument("--agency", help="Lembaga akreditasi (LAM INFOKOM / BAN-PT)")
+    acc_parser.add_argument("--rating", help="Peringkat akreditasi (Unggul/Baik Sekali/Baik)")
+    acc_parser.add_argument("--sk", help="Nomor SK Akreditasi")
+    acc_parser.add_argument("--expiry", help="Tanggal kadaluarsa akreditasi (YYYY-MM-DD)")
+    acc_parser.add_argument("--issued", help="Tanggal penerbitan SK akreditasi")
+    acc_parser.add_argument("--active", action="store_true", default=True, help="Status keaktifan masa berlaku akreditasi")
+    acc_parser.set_defaults(func=cmd_accreditation)
+
+    # Scholarship command
+    sch_parser = subparsers.add_parser("scholarship", help="Kelola catatan alokasi beasiswa mahasiswa (list, add)")
+    sch_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan beasiswa")
+    sch_parser.add_argument("--name", help="Nama mahasiswa penerima")
+    sch_parser.add_argument("--nim", help="Nomor Induk Mahasiswa penerima")
+    sch_parser.add_argument("--type", help="Jenis beasiswa (pemerintah/industri/alumni/internal)")
+    sch_parser.add_argument("--sponsor", help="Nama lembaga atau perusahaan sponsor")
+    sch_parser.add_argument("--amount", type=float, help="Nominal bantuan beasiswa (IDR)")
+    sch_parser.add_argument("--semester", help="Semester penerimaan beasiswa")
+    sch_parser.add_argument("--year", help="Tahun akademik beasiswa")
+    sch_parser.add_argument("--status", default="active", help="Status alokasi beasiswa")
+    sch_parser.set_defaults(func=cmd_scholarship)
+
+    # Jekyll command
+    jekyll_parser = subparsers.add_parser("jekyll", help="Export artikel ke format Markdown kompatibel Jekyll static blog")
+    jekyll_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    jekyll_parser.add_argument("--out", help="Path berkas output Markdown Jekyll")
+    jekyll_parser.add_argument("--layout", default="post", help="Layout Jekyll (default: post)")
+    jekyll_parser.set_defaults(func=cmd_jekyll)
+
     args = parser.parse_args()
+
 
 
 
