@@ -531,6 +531,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_accred_agency ON study_program_accreditations(agency);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_accred_rating ON study_program_accreditations(rating);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS student_scholarships (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    scholarship_type TEXT NOT NULL,
+                    sponsor_name TEXT NOT NULL,
+                    amount REAL NOT NULL,
+                    semester TEXT NOT NULL,
+                    academic_year TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'active',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_scholarship_nim ON student_scholarships(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_scholarship_type ON student_scholarships(scholarship_type);")
+
 
 
 
@@ -2679,6 +2696,67 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_scholarship(
+        self,
+        student_name: str,
+        nim: str,
+        scholarship_type: str,
+        sponsor_name: str,
+        amount: float,
+        semester: str,
+        academic_year: str,
+        status: str = "active"
+    ) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO student_scholarships (
+                    student_name, nim, scholarship_type, sponsor_name,
+                    amount, semester, academic_year, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(),
+                nim.strip(),
+                scholarship_type.strip(),
+                sponsor_name.strip(),
+                float(amount),
+                semester.strip(),
+                academic_year.strip(),
+                status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_scholarships(
+        self,
+        scholarship_type: Optional[str] = None,
+        status: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM student_scholarships"
+            params = []
+            conditions = []
+            if scholarship_type:
+                conditions.append("scholarship_type = ?")
+                params.append(scholarship_type.strip())
+            if status:
+                conditions.append("status = ?")
+                params.append(status.strip())
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_scholarships_by_nim(self, nim: str) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_scholarships WHERE nim = ? ORDER BY id DESC",
+                (nim.strip(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
 
 
 
