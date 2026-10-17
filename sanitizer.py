@@ -666,7 +666,18 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<track\b[^>]*>', sanitize_track, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 track subtitle elements.")
 
+        # 8x. Sanitize HTML5 kbd and samp elements for technical telemetry documentation
+        if "<kbd" in cleaned.lower() or "<samp" in cleaned.lower():
+            def sanitize_kbdsamp(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                return tag
+            cleaned = re.sub(r'<(?:kbd|samp)\b[^>]*>', sanitize_kbdsamp, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 kbd and samp technical documentation elements.")
+
         return cleaned, warnings
+
 
 
 
