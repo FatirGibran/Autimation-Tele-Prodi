@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 480+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 510+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 488 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 516 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -581,6 +581,41 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 467. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji komprehensif pada modul sanitizer, parser, seo validator, komponen, formatters, storage, wp client, exporter, dan cli.
 468. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.4.0.
 469. **Ekspansi Suite Pengujian Unit Terpadu (488 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 488 unit test terverifikasi (100% pass rate).
+
+## 23. Ekspansi Arsitektural v3.5.0 Milestone Release
+
+470. **Sanitasi Elemen HTML5 Track Subtitle Video (`sanitizer.py`)**: Sanitasi elemen `<track>` pada pemutar video HTML5, penegakan ekstensi WebVTT `.vtt`, serta pembersihan atribut berbahaya.
+471. **Sanitasi Elemen Dokumentasi KBD & SAMP (`sanitizer.py`)**: Pembersihan elemen masukan keyboard `<kbd>` dan sampel keluaran terminal `<samp>` dari atribut event handler inline.
+472. **Sanitasi Elemen Data Mesin & Token Numerik (`sanitizer.py`)**: Validasi elemen `<data>` dengan verifikasi atribut `value` standar untuk pertukaran data telemetri.
+473. **Parser Status Akreditasi Program Studi LAM INFOKOM & BAN-PT (`parser.py`)**: Penguraian peringkat akreditasi (Unggul, Baik Sekali, Baik), nomor SK penetapan, skor asesmen, dan masa berlaku.
+474. **Parser Alokasi Bantuan Beasiswa Mahasiswa (`parser.py`)**: Ekstraksi data penerima beasiswa pendidikan (pemerintah KIP-Kuliah, industri telco, ikatan alumni, yayasan).
+475. **Kalkulator Link Budget Atenuasi Saluran Serat Optik (`parser.py`)**: Perhitungan total redaman saluran optik (rugi kabel dB/km, sambungan splice, konektor, dan safety margin sistem).
+476. **Parser Sertifikat Paten Terdaftar & Granted DJKI (`parser.py`)**: Penguraian sertifikat paten teknologi DJKI Kemenkumham RI, nomor permohonan, nomor paten IDS resmi, dan susunan inventor.
+477. **Auditor Tabrakan Duplikasi Tag Title & Meta Description (`seo_validator.py`)**: Deteksi deklarasi ganda tag `<title>` dan meta deskripsi dalam satu dokumen HTML.
+478. **Auditor Direktif Meta Tag Robots & Pengindeksan Web (`seo_validator.py`)**: Pemeriksaan direktif mesin pencari (noindex, nofollow, noarchive, nosnippet) pada meta tag `robots` dan `googlebot`.
+479. **Auditor Aksesibilitas Video HTML5 & Ketersediaan Caption (`seo_validator.py`)**: Verifikasi ketersediaan trek closed caption / subtitle pada elemen video HTML5 sesuai pedoman WCAG.
+480. **Auditor Rasio Perbandingan Teks terhadap Kode HTML Bloat (`seo_validator.py`)**: Analisis proporsi persentase teks terhadap markup HTML untuk optimalisasi crawl budget Googlebot.
+481. **Komponen Akreditasi LAM INFOKOM Program Studi (`components.py`)**: Kartu presentasi reputasi legalitas akreditasi prodi dengan badge Unggul dan rincian SK BAN-PT/LAM INFOKOM.
+482. **Komponen Pameran Alokasi Beasiswa Mahasiswa (`components.py`)**: Kartu responsif Elementor showcase penerima beasiswa prestasi dan bantuan dana kuliah mitra industri.
+483. **Komponen Kalkulasi Redaman Transmisi Serat Optik (`components.py`)**: Kartu ringkasan kalkulasi link budget transmisi optik dengan visualisasi margin daya.
+484. **Komponen Sertifikat Paten Terdaftar & Granted DJKI (`components.py`)**: Kartu showcase kekayaan intelektual paten dosen dan mahasiswa dengan nomor sertifikat resmi.
+485. **Komponen Sertifikasi Kompetensi Profesi BNSP Mahasiswa (`components.py`)**: Kartu sertifikasi keahlian teknis LSP BNSP bidang teknisi fiber optik dan jaringan radio seluler.
+486. **Formatter Pengumuman Telegram Akreditasi Prodi (`formatters.py`)**: Template pesan siaran resmi Telegram untuk pengumuman capaian akreditasi Unggul jurusan.
+487. **Formatter Pengumuman Telegram Alokasi Beasiswa Mahasiswa (`formatters.py`)**: Template pesan siaran Telegram pengumuman penerimaan bantuan dana pendidikan beasiswa mahasiswa.
+488. **Manajer Rekam Akreditasi Program Studi (`storage.py`)**: Skema tabel SQLite `study_program_accreditations` dan operasi CRUD pengarsipan riwayat akreditasi jurusan.
+489. **Manajer Rekam Alokasi Beasiswa Mahasiswa (`storage.py`)**: Skema tabel basis data `student_scholarships` untuk pencatatan distribusi bantuan beasiswa mahasiswa.
+490. **Manajer Rekam Sertifikasi BNSP Mahasiswa (`storage.py`)**: Skema tabel `bnsp_certifications` untuk pendataan kompetensi profesi dan lisensi LSP mahasiswa.
+491. **Helper WordPress Search Media By Keyword (`wordpress_client.py`)**: Pencarian berkas pustaka media WordPress berdasarkan kata kunci via REST API.
+492. **Helper WordPress Update Comment Moderation Status (`wordpress_client.py`)**: Pembaruan status moderasi komentar (approved, hold, spam, trash) via REST API.
+493. **Generator Schema.org FinancialAssistance JSON-LD (`exporter.py`)**: Pembuatan metadata terstruktur JSON-LD untuk program bantuan biaya pendidikan dan beasiswa mahasiswa.
+494. **Eksportir Markdown Kompatibel Jekyll Static Blog (`exporter.py`)**: Ekspor artikel ke format Markdown siap publikasi dengan konfigurasi frontmatter Jekyll standar.
+495. **Subcommand CLI `accreditation` (`cli.py`)**: Perintah konsol manajemen catatan akreditasi prodi (list, add).
+496. **Subcommand CLI `scholarship` (`cli.py`)**: Perintah konsol manajemen alokasi beasiswa mahasiswa (list, add).
+497. **Subcommand CLI `jekyll` (`cli.py`)**: Perintah konsol ekspor artikel database ke berkas markdown Jekyll static site.
+498. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji unit menyeluruh pada sanitizer, parser, seo validator, components, formatters, storage, wp client, exporter, dan cli.
+499. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.5.0.
+500. **Ekspansi Suite Pengujian Unit Terpadu (516 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 516 unit test terverifikasi (100% pass rate).
+
 
 
 
