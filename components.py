@@ -3224,6 +3224,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @staticmethod
+    def render_optical_link_budget_card(
+        fiber_length_km: float,
+        total_attenuation_db: float,
+        allowed_loss_db: float,
+        power_margin_db: float,
+        is_viable: bool
+    ) -> str:
+        """
+        Renders a telecommunication optical fiber transmission link budget calculation card
+        with attenuation metrics, power margin indicators, and viability status badges.
+        """
+        viable_class = "tu-viable-pass" if is_viable else "tu-viable-fail"
+        viable_text = "Memenuhi Standar Margin Daya" if is_viable else "Margin Daya Tidak Cukup"
+
+        return f"""    <div class="tu-optical-budget-card">
+      <div class="tu-budget-header">
+        <span class="tu-budget-title">Kalkulasi Link Budget Transmisi Optik</span>
+        <span class="tu-budget-status {viable_class}">{viable_text}</span>
+      </div>
+      <div class="tu-budget-metrics-grid">
+        <div class="tu-budget-metric">
+          <span class="tu-metric-val">{fiber_length_km:.2f} km</span>
+          <span class="tu-metric-lbl">Panjang Serat</span>
+        </div>
+        <div class="tu-budget-metric">
+          <span class="tu-metric-val">{total_attenuation_db:.2f} dB</span>
+          <span class="tu-metric-lbl">Redaman Total</span>
+        </div>
+        <div class="tu-budget-metric">
+          <span class="tu-metric-val">{allowed_loss_db:.2f} dB</span>
+          <span class="tu-metric-lbl">Redaman Maksimum</span>
+        </div>
+        <div class="tu-budget-metric">
+          <span class="tu-metric-val">{power_margin_db:+.2f} dB</span>
+          <span class="tu-metric-lbl">Margin Daya</span>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
