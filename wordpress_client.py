@@ -570,6 +570,19 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, headers=self._get_headers(), method="DELETE")
         return self._send_request(req)
 
+    def search_media(self, query: str, per_page: int = 10) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress media items matching a search query keyword.
+        """
+        clean_query = urllib.parse.quote(query.strip())
+        endpoint = f"{self.api_url}/media?search={clean_query}&per_page={int(per_page)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
+
 
 
 
