@@ -473,6 +473,32 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "DELETE")
         self.assertIn("/tags/42?force=true", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_search_media(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 55, "title": {"rendered": "Bagan Akreditasi"}, "source_url": "https://example.com/bagan.jpg"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        media_items = self.client.search_media("akreditasi", per_page=5)
+        self.assertEqual(len(media_items), 1)
+        self.assertEqual(media_items[0]["id"], 55)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/media?search=akreditasi&per_page=5", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_update_comment_status(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 88, "status": "approved"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.update_comment_status(88, status="approved")
+        self.assertEqual(res["id"], 88)
+        self.assertEqual(res["status"], "approved")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/comments/88", req.full_url)
+
 
 if __name__ == "__main__":
     unittest.main()
