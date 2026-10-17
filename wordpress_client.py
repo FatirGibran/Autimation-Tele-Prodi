@@ -582,6 +582,19 @@ class WordPressClient:
             return results
         return []
 
+    def update_comment_status(self, comment_id: int, status: str = "approved") -> Dict[str, Any]:
+        """
+        Updates moderation status of a WordPress comment (approved, hold, spam, trash).
+        """
+        endpoint = f"{self.api_url}/comments/{int(comment_id)}"
+        payload = {"status": status.strip().lower()}
+        data_bytes = json.dumps(payload).encode("utf-8")
+        headers = self._get_headers()
+        headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(endpoint, data=data_bytes, headers=headers, method="POST")
+        return self._send_request(req)
+
+
 
 
 
