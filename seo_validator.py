@@ -2713,6 +2713,45 @@ class YoastSEOValidator:
             "conflicting_descriptions": conflicting_descriptions
         }
 
+    @staticmethod
+    def audit_robots_meta_directives(html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML robots and googlebot meta directives for indexing safety and search snippet optimization.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        robots_tags = soup.find_all("meta", attrs={"name": lambda n: n and n.lower() in {"robots", "googlebot", "bingbot"}})
+
+        directives: List[str] = []
+        is_indexable = True
+        is_followable = True
+        has_snippet_control = False
+        blocking_reasons: List[str] = []
+
+        for tag in robots_tags:
+            content = tag.get("content", "")
+            tokens = [t.strip().lower() for t in content.split(",") if t.strip()]
+            directives.extend(tokens)
+
+            for token in tokens:
+                if token in {"noindex", "none"}:
+                    is_indexable = False
+                    blocking_reasons.append(f"Directive '{token}' prevents search indexing.")
+                if token in {"nofollow", "none"}:
+                    is_followable = False
+                    blocking_reasons.append(f"Directive '{token}' blocks link equity transfer.")
+                if "max-snippet" in token or "max-image-preview" in token:
+                    has_snippet_control = True
+
+        return {
+            "has_robots_meta": len(robots_tags) > 0,
+            "directives": list(set(directives)),
+            "is_indexable": is_indexable,
+            "is_followable": is_followable,
+            "has_snippet_control": has_snippet_control,
+            "blocking_reasons": blocking_reasons
+        }
+
+
 
 
 
