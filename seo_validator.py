@@ -2799,6 +2799,49 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def calculate_text_to_code_ratio(html_content: str) -> Dict[str, Any]:
+        """
+        Calculates visible text to HTML markup ratio to detect DOM bloat and ensure content substance.
+        """
+        if not html_content:
+            return {
+                "text_length": 0,
+                "html_length": 0,
+                "ratio_percent": 0.0,
+                "status": "empty",
+                "is_optimal": False
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        for s in soup(["script", "style"]):
+            s.decompose()
+
+        visible_text = soup.get_text(separator=" ", strip=True)
+        text_length = len(visible_text)
+        html_length = len(html_content.strip())
+
+        ratio = (text_length / html_length * 100.0) if html_length > 0 else 0.0
+
+        if ratio >= 15.0:
+            status = "optimal"
+            is_optimal = True
+        elif ratio >= 10.0:
+            status = "moderate"
+            is_optimal = True
+        else:
+            status = "low_content"
+            is_optimal = False
+
+        return {
+            "text_length": text_length,
+            "html_length": html_length,
+            "ratio_percent": round(ratio, 2),
+            "status": status,
+            "is_optimal": is_optimal
+        }
+
+
 
 
 
