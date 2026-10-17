@@ -606,6 +606,44 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('outline: [2, 4]', res)
         self.assertIn("## Langkah 1: Konfigurasi ASN", res)
 
+    def test_generate_financial_assistance_json_ld(self):
+        res = ArticleExporter.generate_financial_assistance_json_ld(
+            scholarship_name="Beasiswa KIP Kuliah Merdeka",
+            sponsor_name="Kemdikbudristek RI",
+            recipient_name="Ahmad Hidayat",
+            amount=6000000.0,
+            semester="Ganjil",
+            academic_year="2026/2027",
+            url="https://kip-kuliah.kemdikbud.go.id"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "FinancialAssistance")
+        self.assertEqual(res["name"], "Beasiswa KIP Kuliah Merdeka")
+        self.assertEqual(res["provider"]["name"], "Kemdikbudristek RI")
+        self.assertEqual(res["recipient"]["name"], "Ahmad Hidayat")
+        self.assertEqual(res["amount"]["value"], 6000000.0)
+        self.assertEqual(res["amount"]["currency"], "IDR")
+        self.assertEqual(res["url"], "https://kip-kuliah.kemdikbud.go.id")
+
+    def test_to_jekyll_markdown(self):
+        meta = {
+            "seo_title": "Tutorial Pemrograman Python 3.12",
+            "publish_date": "2026-10-16 12:00:00",
+            "layout": "post",
+            "category": "Tutorial",
+            "tags": ["python", "jekyll", "telematika"]
+        }
+        res = ArticleExporter.to_jekyll_markdown(meta, "<p>Pengantar Python modern.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn("layout: post", res)
+        self.assertIn('title: "Tutorial Pemrograman Python 3.12"', res)
+        self.assertIn("date: 2026-10-16 12:00:00", res)
+        self.assertIn('category: "Tutorial"', res)
+        self.assertIn("tags:", res)
+        self.assertIn('  - "python"', res)
+        self.assertIn('  - "jekyll"', res)
+        self.assertIn("<p>Pengantar Python modern.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
