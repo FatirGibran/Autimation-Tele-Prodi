@@ -2978,6 +2978,54 @@ def parse_scholarship_allocation(text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def calculate_optical_link_budget(
+    fiber_length_km: float,
+    attenuation_db_per_km: float = 0.25,
+    num_splices: int = 2,
+    splice_loss_db: float = 0.1,
+    num_connectors: int = 2,
+    connector_loss_db: float = 0.5,
+    safety_margin_db: float = 3.0,
+    tx_power_dbm: float = 0.0,
+    rx_sensitivity_dbm: float = -28.0
+) -> Dict[str, Any]:
+    """
+    Calculates telecommunication optical fiber transmission link budget and power margins.
+    Computes total fiber attenuation, connector losses, splice losses, safety margin, and viability.
+    """
+    length = max(0.0, float(fiber_length_km))
+    alpha = max(0.0, float(attenuation_db_per_km))
+    n_splices = max(0, int(num_splices))
+    loss_splice = max(0.0, float(splice_loss_db))
+    n_conn = max(0, int(num_connectors))
+    loss_conn = max(0.0, float(connector_loss_db))
+    margin_safe = max(0.0, float(safety_margin_db))
+    tx_pwr = float(tx_power_dbm)
+    rx_sens = float(rx_sensitivity_dbm)
+
+    total_fiber_loss = length * alpha
+    total_splice_loss = n_splices * loss_splice
+    total_connector_loss = n_conn * loss_conn
+    total_loss_db = total_fiber_loss + total_splice_loss + total_connector_loss + margin_safe
+
+    max_allowable_loss_db = tx_pwr - rx_sens
+    power_margin_db = max_allowable_loss_db - total_loss_db
+    is_viable = power_margin_db >= 0.0
+
+    return {
+        "fiber_length_km": round(length, 2),
+        "total_fiber_loss_db": round(total_fiber_loss, 3),
+        "total_splice_loss_db": round(total_splice_loss, 3),
+        "total_connector_loss_db": round(total_connector_loss, 3),
+        "safety_margin_db": round(margin_safe, 2),
+        "total_attenuation_db": round(total_loss_db, 3),
+        "allowed_optical_loss_db": round(max_allowable_loss_db, 2),
+        "power_margin_db": round(power_margin_db, 3),
+        "is_viable": is_viable
+    }
+
+
+
 
 
 
