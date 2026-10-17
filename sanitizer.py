@@ -10,7 +10,7 @@ ALLOWED_TAGS = {
     "video", "audio", "source", "picture", "track", "canvas",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
     "ruby", "rt", "rp", "rb", "rtc",
-    "meter", "progress"
+    "meter", "progress", "data"
 }
 
 
@@ -676,7 +676,24 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<(?:kbd|samp)\b[^>]*>', sanitize_kbdsamp, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 kbd and samp technical documentation elements.")
 
+        # 8y. Sanitize HTML5 data machine-readable token elements
+        if "<data" in cleaned.lower():
+            def sanitize_data(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                val_m = re.search(r'\bvalue=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                if val_m:
+                    val = val_m.group(1).strip()
+                    if val.lower().startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', val):
+                        tag = re.sub(r'\s+value=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                        warnings.append("Stripped dangerous payload from data element value attribute.")
+                return tag
+            cleaned = re.sub(r'<data\b[^>]*>', sanitize_data, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 data token elements.")
+
         return cleaned, warnings
+
 
 
 
