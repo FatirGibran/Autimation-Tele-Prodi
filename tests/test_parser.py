@@ -947,9 +947,89 @@ PIC: Laboran Ahmad Firdaus, S.T.
         self.assertEqual(res_bullet[0]["band_designation"], "LoRaWAN")
         self.assertEqual(res_bullet[0]["status"], "Uji Coba")
 
+    def test_parse_accreditation_status(self):
+        from parser import parse_accreditation_status
+        text = """
+Program Studi: S1 Teknik Telekomunikasi
+Badan Akreditasi: LAM-INFOKOM
+Peringkat: Unggul
+Nomor SK: 042/SK/LAM-INFOKOM/Ak/S/VIII/2024
+Berlaku Hingga: 2029-08-31
+"""
+        res = parse_accreditation_status(text)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["program_name"], "S1 Teknik Telekomunikasi")
+        self.assertEqual(res["agency"], "LAM INFOKOM")
+        self.assertEqual(res["rating"], "Unggul")
+        self.assertEqual(res["sk_number"], "042/SK/LAM-INFOKOM/Ak/S/VIII/2024")
+        self.assertEqual(res["expiry_date"], "2029-08-31")
+        self.assertTrue(res["is_active"])
+
+    def test_parse_scholarship_allocation(self):
+        from parser import parse_scholarship_allocation
+        text = """
+Nama Mahasiswa: Bayu Pratama
+NIM: 120120001
+Jenis Beasiswa: Beasiswa Prestasi Unggulan
+Penyelenggara: Yayasan Pendidikan Telkom
+Nominal: Rp 7.500.000
+Semester: Semester Ganjil 2026/2027
+Syarat IPK: 3.50
+"""
+        res = parse_scholarship_allocation(text)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["student_name"], "Bayu Pratama")
+        self.assertEqual(res["nim"], "120120001")
+        self.assertEqual(res["scholarship_type"], "Beasiswa Prestasi Unggulan")
+        self.assertEqual(res["amount_idr"], 7500000.0)
+        self.assertEqual(res["minimum_gpa"], 3.50)
+
+    def test_calculate_optical_link_budget(self):
+        from parser import calculate_optical_link_budget
+        res = calculate_optical_link_budget(
+            fiber_length_km=20.0,
+            attenuation_db_per_km=0.25,
+            num_splices=4,
+            splice_loss_db=0.1,
+            num_connectors=2,
+            connector_loss_db=0.5,
+            safety_margin_db=3.0,
+            tx_power_dbm=0.0,
+            rx_sensitivity_dbm=-28.0
+        )
+        self.assertEqual(res["total_fiber_loss_db"], 5.0)
+        self.assertEqual(res["total_splice_loss_db"], 0.4)
+        self.assertEqual(res["total_connector_loss_db"], 1.0)
+        self.assertEqual(res["safety_margin_db"], 3.0)
+        self.assertEqual(res["total_attenuation_db"], 9.4)
+        self.assertEqual(res["allowed_optical_loss_db"], 28.0)
+        self.assertEqual(res["power_margin_db"], 18.6)
+        self.assertTrue(res["is_viable"])
+
+    def test_parse_djki_patent_grant(self):
+        from parser import parse_djki_patent_grant
+        text = """
+Judul Invensi: Antena Mikrostrip Array MIMO 5G Sub-6 GHz untuk Komunikasi Maritim
+Nomor Paten: IDP000098765
+Nomor Permohonan: P00202401234
+Tanggal Penerimaan: 2024-03-15
+Tanggal Pemberian: 2026-08-10
+Inventor: Dr. Ir. Budi Santoso, M.T. dan Siti Rahma, S.T.
+Tipe Paten: Paten Biasa
+Status: Granted
+"""
+        res = parse_djki_patent_grant(text)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["patent_number"], "IDP000098765")
+        self.assertEqual(res["application_number"], "P00202401234")
+        self.assertEqual(res["status"], "Granted")
+        self.assertEqual(res["patent_type"], "Paten Biasa")
+        self.assertEqual(len(res["inventors"]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

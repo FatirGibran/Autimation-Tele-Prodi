@@ -3048,7 +3048,14 @@ def parse_djki_patent_grant(text: str) -> Optional[Dict[str, Any]]:
     inventors: List[str] = []
     if inv_m:
         raw_inv = inv_m.group(1).strip()
-        inventors = [i.strip() for i in re.split(r'[,;]|\bdan\b', raw_inv) if i.strip()]
+        if ";" in raw_inv:
+            parts = [i.strip() for i in raw_inv.split(";") if i.strip()]
+        elif re.search(r'\s+dan\s+', raw_inv, re.IGNORECASE):
+            parts = [i.strip() for i in re.split(r'\s+dan\s+', raw_inv, flags=re.IGNORECASE) if i.strip()]
+        else:
+            parts = [raw_inv]
+        inventors = [p.strip().rstrip(",") for p in parts if p.strip()]
+
 
     return {
         "patent_title": title_m.group(1).strip() if title_m else "Invensi Sistem IoT dan Telekomunikasi",
