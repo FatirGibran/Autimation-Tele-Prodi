@@ -1191,9 +1191,93 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("1.45 dB", html)
         self.assertIn("100 Gbps", html)
 
+    def test_render_accreditation_status_card(self):
+        html = EditorialComponents.render_accreditation_status_card(
+            program_name="S1 Teknik Telekomunikasi",
+            agency="LAM INFOKOM",
+            rating="Unggul",
+            sk_number="042/SK/LAM-INFOKOM/Ak/S/VIII/2024",
+            expiry_date="2029-08-31",
+            is_active=True
+        )
+        self.assertIn("tu-accreditation-card", html)
+        self.assertIn("S1 Teknik Telekomunikasi", html)
+        self.assertIn("LAM INFOKOM", html)
+        self.assertIn("Unggul", html)
+        self.assertIn("042/SK/LAM-INFOKOM/Ak/S/VIII/2024", html)
+        self.assertIn("tu-status-active", html)
+
+    def test_render_scholarship_award_card(self):
+        html = EditorialComponents.render_scholarship_award_card(
+            student_name="Bayu Pratama",
+            nim="120120001",
+            scholarship_type="Beasiswa Prestasi Unggulan",
+            sponsor_name="Yayasan Pendidikan Telkom",
+            amount_idr=7500000.0,
+            semester="Semester Ganjil 2026/2027",
+            minimum_gpa=3.50
+        )
+        self.assertIn("tu-scholarship-card", html)
+        self.assertIn("Bayu Pratama", html)
+        self.assertIn("120120001", html)
+        self.assertIn("Beasiswa Prestasi Unggulan", html)
+        self.assertIn("Yayasan Pendidikan Telkom", html)
+        self.assertIn("Rp 7.500.000", html)
+
+    def test_render_optical_link_budget_card(self):
+        html = EditorialComponents.render_optical_link_budget_card(
+            fiber_length_km=25.0,
+            total_attenuation_db=9.25,
+            allowed_loss_db=28.0,
+            power_margin_db=18.75,
+            is_viable=True
+        )
+        self.assertIn("tu-optical-budget-card", html)
+        self.assertIn("25.00 km", html)
+        self.assertIn("9.25 dB", html)
+        self.assertIn("28.00 dB", html)
+        self.assertIn("+18.75 dB", html)
+        self.assertIn("tu-viable-pass", html)
+
+    def test_render_djki_patent_certificate_card(self):
+        html = EditorialComponents.render_djki_patent_certificate_card(
+            patent_title="Sistem Radar Maritim Doppler Array",
+            patent_number="IDP000098765",
+            application_number="P00202401234",
+            filing_date="2024-03-15",
+            grant_date="2026-08-10",
+            inventors=["Dr. Ir. Budi Santoso", "Siti Rahma, S.T."],
+            patent_type="Paten Biasa",
+            status="Granted"
+        )
+        self.assertIn("tu-patent-grant-card", html)
+        self.assertIn("Sistem Radar Maritim Doppler Array", html)
+        self.assertIn("IDP000098765", html)
+        self.assertIn("Dr. Ir. Budi Santoso", html)
+        self.assertIn("Paten Biasa", html)
+        self.assertIn("Granted", html)
+
+    def test_render_bnsp_certification_card(self):
+        html = EditorialComponents.render_bnsp_certification_card(
+            student_name="Bayu Pratama",
+            nim="120120001",
+            scheme_name="Network Administrator Muda Level 4",
+            assessor_name="Ir. Hendra Wijaya, M.T.",
+            cert_number="BNSP-KOMINFO-2026-08912",
+            issue_date="2026-07-01",
+            valid_until="2029-07-01",
+            is_competent=True
+        )
+        self.assertIn("tu-bnsp-cert-card", html)
+        self.assertIn("Bayu Pratama", html)
+        self.assertIn("Network Administrator Muda Level 4", html)
+        self.assertIn("BNSP-KOMINFO-2026-08912", html)
+        self.assertIn("tu-competent-pass", html)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
