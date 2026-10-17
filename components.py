@@ -3133,6 +3133,53 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @staticmethod
+    def render_accreditation_status_card(
+        program_name: str,
+        agency: str,
+        rating: str,
+        sk_number: str,
+        expiry_date: str,
+        is_active: bool = True
+    ) -> str:
+        """
+        Renders a responsive study program accreditation status showcase card
+        displaying LAM INFOKOM / BAN-PT decree credentials and validity period.
+        """
+        from xml.sax.saxutils import escape
+
+        s_prog = escape(program_name.strip())
+        s_agency = escape(agency.strip())
+        s_rating = escape(rating.strip())
+        s_sk = escape(sk_number.strip())
+        s_expiry = escape(expiry_date.strip())
+
+        status_class = "tu-status-active" if is_active else "tu-status-expired"
+        status_text = "Status Aktif Terakreditasi" if is_active else "Masa Berlaku Berakhir"
+
+        return f"""    <div class="tu-accreditation-card">
+      <div class="tu-accreditation-header">
+        <span class="tu-accreditation-agency">{s_agency}</span>
+        <span class="tu-accreditation-status {status_class}">{status_text}</span>
+      </div>
+      <h4 class="tu-accreditation-program">{s_prog}</h4>
+      <div class="tu-accreditation-badge">
+        <span class="tu-rating-lbl">Peringkat Akreditasi:</span>
+        <strong class="tu-rating-val">{s_rating}</strong>
+      </div>
+      <div class="tu-accreditation-meta">
+        <div class="tu-meta-item">
+          <span class="tu-meta-lbl">Nomor SK:</span>
+          <span class="tu-meta-val">{s_sk}</span>
+        </div>
+        <div class="tu-meta-item">
+          <span class="tu-meta-lbl">Masa Berlaku Hingga:</span>
+          <span class="tu-meta-val">{s_expiry}</span>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
