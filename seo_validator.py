@@ -3031,6 +3031,64 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_figure_figcaption_structure(html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic <figure> and <figcaption> structure for HTML5 and SEO compliance.
+        """
+        if not html_content:
+            return {
+                "has_figures": False,
+                "total_figures": 0,
+                "valid_figures": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        figures = soup.find_all("figure")
+        if not figures:
+            return {
+                "has_figures": False,
+                "total_figures": 0,
+                "valid_figures": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues = []
+        valid_count = 0
+
+        for idx, fig in enumerate(figures, start=1):
+            fig_issues = []
+            captions = fig.find_all("figcaption")
+            if len(captions) > 1:
+                fig_issues.append(f"Figure #{idx} contains multiple ({len(captions)}) <figcaption> elements. Maximum 1 allowed.")
+
+            child_elements = [c for c in fig.children if getattr(c, "name", None)]
+            if captions:
+                cap = captions[0]
+                if child_elements and cap != child_elements[0] and cap != child_elements[-1]:
+                    fig_issues.append(f"Figure #{idx} <figcaption> must be either the first or last child of <figure>.")
+
+            has_media = bool(fig.find(["img", "svg", "table", "pre", "video", "audio", "canvas"]))
+            if not has_media:
+                fig_issues.append(f"Figure #{idx} does not contain standard visual media or data element (img, svg, table, pre, video).")
+
+            if not fig_issues:
+                valid_count += 1
+            else:
+                issues.extend(fig_issues)
+
+        return {
+            "has_figures": True,
+            "total_figures": len(figures),
+            "valid_figures": valid_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
