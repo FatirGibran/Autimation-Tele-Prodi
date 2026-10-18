@@ -644,6 +644,43 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('  - "jekyll"', res)
         self.assertIn("<p>Pengantar Python modern.</p>", res)
 
+    def test_generate_thesis_json_ld(self):
+        res = ArticleExporter.generate_thesis_json_ld(
+            title="Optimasi MIMO Beamforming 5G mmWave",
+            student_name="Dewi Sartika",
+            advisor_name="Dr. Ir. Budi Santoso, M.T.",
+            graduation_year=2026,
+            abstract="Penelitian ini menganalisis efisiensi energi hybrid beamforming.",
+            in_support_of="Sarjana Teknik (S.T.)",
+            university_name="Telkom University Purwokerto",
+            url="https://openlibrary.telkomuniversity.ac.id/thesis/120120005"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "Thesis")
+        self.assertEqual(res["name"], "Optimasi MIMO Beamforming 5G mmWave")
+        self.assertEqual(res["author"]["name"], "Dewi Sartika")
+        self.assertEqual(res["contributor"][0]["name"], "Dr. Ir. Budi Santoso, M.T.")
+        self.assertEqual(res["sourceOrganization"]["name"], "Telkom University Purwokerto")
+        self.assertEqual(res["datePublished"], "2026")
+        self.assertEqual(res["url"], "https://openlibrary.telkomuniversity.ac.id/thesis/120120005")
+
+    def test_to_quartz_markdown(self):
+        meta = {
+            "seo_title": "Catatan Riset Jaringan Seluler",
+            "publish_date": "2026-10-18",
+            "category": "Riset",
+            "tags": ["telekomunikasi", "seluler", "5g"]
+        }
+        res = ArticleExporter.to_quartz_markdown(meta, "<p>Catatan catatan riset.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Catatan Riset Jaringan Seluler"', res)
+        self.assertIn("date: 2026-10-18", res)
+        self.assertIn('description: "Riset note"', res)
+        self.assertIn("tags:", res)
+        self.assertIn('  - "telekomunikasi"', res)
+        self.assertIn('  - "5g"', res)
+        self.assertIn("<p>Catatan catatan riset.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
