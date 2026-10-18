@@ -606,6 +606,18 @@ class WordPressClient:
             return results
         return []
 
+    def get_users_by_role(self, role: str = "author", per_page: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress users filtered by a specific role (administrator, editor, author, contributor, subscriber).
+        """
+        clean_role = urllib.parse.quote(role.strip().lower())
+        endpoint = f"{self.api_url}/users?roles={clean_role}&per_page={int(per_page)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
 
 
 
