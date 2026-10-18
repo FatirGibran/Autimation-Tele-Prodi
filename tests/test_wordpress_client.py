@@ -499,6 +499,32 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "POST")
         self.assertIn("/comments/88", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_categories_with_counts(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 10, "name": "Telekomunikasi", "count": 15}, {"id": 11, "name": "IoT", "count": 8}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        categories = self.client.get_categories_with_counts(hide_empty=True, per_page=50)
+        self.assertEqual(len(categories), 2)
+        self.assertEqual(categories[0]["count"], 15)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/categories?hide_empty=true&per_page=50", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_users_by_role(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 3, "name": "Dr. Budi", "roles": ["author"]}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        users = self.client.get_users_by_role(role="author", per_page=20)
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]["name"], "Dr. Budi")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/users?roles=author&per_page=20", req.full_url)
+
 
 if __name__ == "__main__":
     unittest.main()
