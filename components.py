@@ -3373,6 +3373,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_cum_laude_honor_card(
+        cls,
+        student_name: str,
+        nim: str,
+        ipk: float,
+        honor_predicate: str,
+        thesis_title: str,
+        study_duration_semesters: int = 8
+    ) -> str:
+        """
+        Renders a student graduation judiciary Cum Laude / Summa Cum Laude honor showcase card.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(student_name.strip())
+        s_nim = escape(nim.strip())
+        s_pred = escape(honor_predicate.strip())
+        s_thesis = escape(thesis_title.strip())
+        ipk_val = f"{float(ipk):.2f}"
+        duration = int(study_duration_semesters)
+
+        badge_class = "tu-honor-gold" if "summa" in s_pred.lower() else "tu-honor-silver"
+
+        return f"""    <div class="tu-cum-laude-card">
+      <div class="tu-cum-laude-header">
+        <span class="tu-cum-laude-badge {badge_class}">{s_pred}</span>
+        <span class="tu-cum-laude-duration">{duration} Semester</span>
+      </div>
+      <h3 class="tu-cum-laude-student">{s_name}</h3>
+      <div class="tu-cum-laude-meta">
+        <span class="tu-cum-laude-nim">NIM: <strong>{s_nim}</strong></span>
+        <span class="tu-cum-laude-gpa">IPK: <strong>{ipk_val}</strong></span>
+      </div>
+      <div class="tu-cum-laude-thesis">
+        <span class="tu-lbl">Tugas Akhir:</span>
+        <p class="tu-cum-laude-thesis-title">&ldquo;{s_thesis}&rdquo;</p>
+      </div>
+    </div>"""
+
+
 
 
 
