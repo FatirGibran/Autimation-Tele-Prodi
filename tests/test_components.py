@@ -1274,6 +1274,87 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("BNSP-KOMINFO-2026-08912", html)
         self.assertIn("tu-competent-pass", html)
 
+    def test_render_cum_laude_honor_card(self):
+        html = EditorialComponents.render_cum_laude_honor_card(
+            student_name="Dewi Sartika",
+            nim="120120005",
+            ipk=3.92,
+            honor_predicate="Dengan Pujian (Cum Laude)",
+            thesis_title="Optimasi MIMO Beamforming 5G",
+            study_duration_semesters=8
+        )
+        self.assertIn("tu-cum-laude-card", html)
+        self.assertIn("Dewi Sartika", html)
+        self.assertIn("120120005", html)
+        self.assertIn("3.92", html)
+        self.assertIn("Dengan Pujian (Cum Laude)", html)
+        self.assertIn("Optimasi MIMO Beamforming 5G", html)
+
+    def test_render_friis_path_loss_card(self):
+        html = EditorialComponents.render_friis_path_loss_card(
+            frequency_mhz=2400.0,
+            distance_km=2.5,
+            path_loss_db=108.01,
+            tx_power_dbm=43.0,
+            rx_power_dbm=-65.01
+        )
+        self.assertIn("tu-friis-calc-card", html)
+        self.assertIn("2400.0 MHz", html)
+        self.assertIn("2.50 km", html)
+        self.assertIn("108.01 dB", html)
+        self.assertIn("-65.0 dBm", html)
+
+    def test_render_kkn_thematic_showcase_card(self):
+        html = EditorialComponents.render_kkn_thematic_showcase_card(
+            village_name="Desa Karangmangu",
+            regency="Banyumas",
+            flagship_program="Smart Irrigation IoT",
+            supervisor="Dr. Ir. Budi Santoso, M.T.",
+            student_count=12,
+            impact_summary="Peningkatan efisiensi distribusi air sawah hingga 35%"
+        )
+        self.assertIn("tu-kkn-showcase-card", html)
+        self.assertIn("Desa Karangmangu", html)
+        self.assertIn("Banyumas", html)
+        self.assertIn("Smart Irrigation IoT", html)
+        self.assertIn("12 Mahasiswa", html)
+        self.assertIn("35%", html)
+
+    def test_render_tridharma_grant_award_card(self):
+        html = EditorialComponents.render_tridharma_grant_award_card(
+            lecturer_name="Dr. Ir. Budi Santoso, M.T.",
+            nidn="0612058001",
+            project_title="Rancang Bangun Sensor Akustik Kelautan",
+            grant_amount=25000000.0,
+            fiscal_year=2026,
+            publication_target="Jurnal Nasional Terakreditasi SINTA 2"
+        )
+        self.assertIn("tu-tridharma-grant-card", html)
+        self.assertIn("Dr. Ir. Budi Santoso, M.T.", html)
+        self.assertIn("0612058001", html)
+        self.assertIn("Rp 25.000.000", html)
+        self.assertIn("T.A. 2026", html)
+        self.assertIn("SINTA 2", html)
+
+    def test_render_iot_sensor_telemetry_gauge_card(self):
+        html = EditorialComponents.render_iot_sensor_telemetry_gauge_card(
+            sensor_node_id="NODE-TT-04",
+            sensor_type="Suhu Ruang Server",
+            current_value=23.75,
+            unit="°C",
+            min_val=15.0,
+            max_val=40.0,
+            status="normal"
+        )
+        self.assertIn("tu-iot-sensor-card", html)
+        self.assertIn("NODE-TT-04", html)
+        self.assertIn("Suhu Ruang Server Telemetry", html)
+        self.assertIn("23.75", html)
+        self.assertIn("°C", html)
+        self.assertIn("<meter", html)
+        self.assertIn('min="15.00"', html)
+        self.assertIn('max="40.00"', html)
+
 
 if __name__ == "__main__":
     unittest.main()
