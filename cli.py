@@ -1120,6 +1120,88 @@ def cmd_jekyll(args):
     out_path.write_text(jekyll_md, encoding="utf-8")
     print(f"Export Jekyll markdown berhasil -> {out_path}")
 
+def cmd_honors(args):
+    if args.action == "add":
+        if not args.name or not args.nim or args.ipk is None or not args.predicate or not args.thesis or not args.year:
+            print("Error: Argumen --name, --nim, --ipk, --predicate, --thesis, dan --year wajib diisi untuk penambahan data.")
+            sys.exit(1)
+        data = {
+            "student_name": args.name,
+            "nim": args.nim,
+            "ipk": args.ipk,
+            "honor_predicate": args.predicate,
+            "thesis_title": args.thesis,
+            "study_duration_semesters": args.duration or 8,
+            "graduation_year": args.year
+        }
+        hid = storage.record_graduation_honor(data)
+        print(f"Catatan yudisium berhasil ditambahkan dengan ID: {hid}")
+    else:
+        honors = storage.list_graduation_honors(
+            graduation_year=args.year,
+            predicate_keyword=args.predicate
+        )
+        if not honors:
+            print("Tidak ada catatan yudisium kelulusan yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'IPK':<5} | {'PREDIKAT':<25} | {'NAMA':<20} | {'TAHUN'}")
+        print("-" * 80)
+        for h in honors:
+            print(f"{h['id']:<4} | {h['nim']:<10} | {h['ipk']:<5.2f} | {h['honor_predicate'][:23]:<25} | {h['student_name'][:18]:<20} | {h['graduation_year']}")
+
+def cmd_tridharma(args):
+    if args.action == "add":
+        if not args.lecturer or not args.nidn or not args.title or args.amount is None or not args.year or not args.target:
+            print("Error: Argumen --lecturer, --nidn, --title, --amount, --year, dan --target wajib diisi untuk penambahan data.")
+            sys.exit(1)
+        data = {
+            "lecturer_name": args.lecturer,
+            "nidn": args.nidn,
+            "project_title": args.title,
+            "grant_amount": args.amount,
+            "fiscal_year": args.year,
+            "publication_target": args.target,
+            "status": args.status or "active"
+        }
+        gid = storage.record_tridharma_grant(data)
+        print(f"Catatan hibah riset tridharma berhasil ditambahkan dengan ID: {gid}")
+    else:
+        grants = storage.list_tridharma_grants(
+            fiscal_year=args.year,
+            status=args.status
+        )
+        if not grants:
+            print("Tidak ada catatan hibah riset tridharma yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIDN':<10} | {'DANA (IDR)':<14} | {'TAHUN':<6} | {'DOSEN':<20} | {'STATUS'}")
+        print("-" * 75)
+        for g in grants:
+            print(f"{g['id']:<4} | {g['nidn']:<10} | {g['grant_amount']:<14,.0f} | {g['fiscal_year']:<6} | {g['lecturer_name'][:18]:<20} | {g['status']}")
+
+def cmd_quartz(args):
+    article = storage.get_article_by_slug(args.slug)
+    if not article:
+        print(f"Error: Artikel dengan slug '{args.slug}' tidak ditemukan di database.")
+        sys.exit(1)
+
+    out_path = Path(args.out) if args.out else Path(f"{args.slug}.md")
+    tags = article.get("tags") or []
+    if isinstance(tags, str):
+        try:
+            tags = json.loads(tags)
+        except Exception:
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+    meta = {
+        "seo_title": article.get("seo_title", ""),
+        "topic": article.get("topic", ""),
+        "publish_date": article.get("publish_date", ""),
+        "category": article.get("category", ""),
+        "tags": tags
+    }
+    quartz_md = ArticleExporter.to_quartz_markdown(meta, article.get("html_content", ""))
+    out_path.write_text(quartz_md, encoding="utf-8")
+    print(f"Export Quartz markdown berhasil -> {out_path}")
 
 
 def main():
@@ -1558,6 +1640,36 @@ def main():
     jekyll_parser.add_argument("--out", help="Path berkas output Markdown Jekyll")
     jekyll_parser.add_argument("--layout", default="post", help="Layout Jekyll (default: post)")
     jekyll_parser.set_defaults(func=cmd_jekyll)
+
+    # Honors command
+    honors_parser = subparsers.add_parser("honors", help="Kelola catatan yudisium kelulusan berpredikat kehormatan (list, add)")
+    honors_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan yudisium")
+    honors_parser.add_argument("--name", help="Nama wisudawan")
+    honors_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    honors_parser.add_argument("--ipk", type=float, help="Indeks Prestasi Kumulatif")
+    honors_parser.add_argument("--predicate", help="Predikat yudisium kelulusan")
+    honors_parser.add_argument("--thesis", help="Judul tugas akhir")
+    honors_parser.add_argument("--duration", type=int, default=8, help="Masa studi dalam semester")
+    honors_parser.add_argument("--year", type=int, help="Tahun kelulusan")
+    honors_parser.set_defaults(func=cmd_honors)
+
+    # Tridharma command
+    tridharma_parser = subparsers.add_parser("tridharma", help="Kelola catatan hibah riset internal tridharma (list, add)")
+    tridharma_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan hibah riset")
+    tridharma_parser.add_argument("--lecturer", help="Nama ketua peneliti")
+    tridharma_parser.add_argument("--nidn", help="NIDN ketua peneliti")
+    tridharma_parser.add_argument("--title", help="Judul proyek penelitian")
+    tridharma_parser.add_argument("--amount", type=float, help="Besaran dana hibah disetujui (IDR)")
+    tridharma_parser.add_argument("--year", type=int, help="Tahun anggaran pelaksanaan")
+    tridharma_parser.add_argument("--target", help="Target luaran publikasi / paten")
+    tridharma_parser.add_argument("--status", default="active", help="Status hibah riset")
+    tridharma_parser.set_defaults(func=cmd_tridharma)
+
+    # Quartz command
+    quartz_parser = subparsers.add_parser("quartz", help="Export artikel ke format Markdown kompatibel Quartz digital garden")
+    quartz_parser.add_argument("--slug", required=True, help="Slug artikel di database")
+    quartz_parser.add_argument("--out", help="Path berkas output Markdown Quartz")
+    quartz_parser.set_defaults(func=cmd_quartz)
 
     args = parser.parse_args()
 
