@@ -3219,6 +3219,55 @@ def parse_kkn_thematic_evaluation(
     }
 
 
+def parse_tridharma_internal_grant_compliance(
+    nidn: str,
+    proposal_budget: float,
+    publication_target: str,
+    student_involvement_count: int = 0
+) -> Dict[str, Any]:
+    """
+    Parses and evaluates lecturer internal tridharma research grant compliance
+    based on university research guidelines (budget thresholds, student involvement, target journal).
+    """
+    clean_nidn = nidn.strip()
+    is_valid_nidn = bool(re.match(r'^\d{10}$', clean_nidn))
+
+    budget = float(proposal_budget)
+    max_internal_budget = 50000000.0
+    budget_compliant = (budget > 0 and budget <= max_internal_budget)
+
+    students = max(0, int(student_involvement_count))
+    students_compliant = (students >= 2)
+
+    pub = publication_target.strip().lower()
+    is_high_impact = bool(re.search(r'\b(?:scopus|wos|sinta\s*[12]|ieee)\b', pub))
+    pub_compliant = bool(re.search(r'\b(?:scopus|wos|sinta|ieee|prosiding|jurnal)\b', pub))
+
+    compliance_issues = []
+    if not is_valid_nidn:
+        compliance_issues.append(f"Format NIDN '{clean_nidn}' tidak valid (wajib 10 digit numerik)")
+    if not budget_compliant:
+        compliance_issues.append(f"Anggaran Rp {budget:,.0f} melebihi pagu internal maksimal Rp {max_internal_budget:,.0f}")
+    if not students_compliant:
+        compliance_issues.append(f"Keterlibatan mahasiswa ({students}) belum memenuhi syarat minimal 2 orang")
+    if not pub_compliant:
+        compliance_issues.append(f"Target luaran '{publication_target}' belum terakreditasi")
+
+    is_compliant = is_valid_nidn and budget_compliant and students_compliant and pub_compliant
+
+    return {
+        "nidn": clean_nidn,
+        "is_valid_nidn": is_valid_nidn,
+        "proposal_budget": budget,
+        "student_involvement_count": students,
+        "publication_target": publication_target.strip(),
+        "is_high_impact": is_high_impact,
+        "is_compliant": is_compliant,
+        "compliance_issues": compliance_issues
+    }
+
+
+
 
 
 
