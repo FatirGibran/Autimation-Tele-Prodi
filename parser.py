@@ -3174,6 +3174,52 @@ def calculate_friis_free_space_path_loss(
     }
 
 
+def parse_kkn_thematic_evaluation(
+    village_name: str,
+    student_count: int,
+    program_category: str,
+    performance_score: float,
+    community_impact_metric: str = ""
+) -> Dict[str, Any]:
+    """
+    Evaluates student thematic community service (Kuliah Kerja Nyata / KKN) program performance,
+    grade distribution, and regional community development index.
+    Performance score range: 0.0 to 100.0.
+    """
+    score = round(max(0.0, min(100.0, float(performance_score))), 2)
+    s_count = max(1, int(student_count))
+
+    if score >= 85.0:
+        grade = "A"
+        grade_point = 4.0
+        evaluation_status = "Sangat Berhasil (Program Unggulan)"
+    elif score >= 75.0:
+        grade = "AB"
+        grade_point = 3.5
+        evaluation_status = "Berhasil Baik"
+    elif score >= 65.0:
+        grade = "B"
+        grade_point = 3.0
+        evaluation_status = "Cukup Memadai"
+    else:
+        grade = "C"
+        grade_point = 2.0
+        evaluation_status = "Perlu Perbaikan / Monitoring Lanjutan"
+
+    return {
+        "village_name": village_name.strip(),
+        "student_count": s_count,
+        "program_category": program_category.strip(),
+        "performance_score": score,
+        "letter_grade": grade,
+        "grade_point": grade_point,
+        "evaluation_status": evaluation_status,
+        "community_impact_metric": community_impact_metric.strip() if community_impact_metric else "Pengembangan Digitalisasi Desa",
+        "is_passed": score >= 65.0
+    }
+
+
+
 
 
 
