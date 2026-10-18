@@ -3541,6 +3541,49 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_iot_sensor_telemetry_gauge_card(
+        cls,
+        sensor_node_id: str,
+        sensor_type: str,
+        current_value: float,
+        unit: str,
+        min_val: float,
+        max_val: float,
+        status: str = "normal"
+    ) -> str:
+        """
+        Renders a laboratory IoT sensor telemetry gauge card with semantic meter and output tags.
+        """
+        from xml.sax.saxutils import escape
+
+        s_node = escape(sensor_node_id.strip())
+        s_type = escape(sensor_type.strip())
+        s_unit = escape(unit.strip())
+        s_status = escape(status.strip().lower())
+        c_val = float(current_value)
+        m_min = float(min_val)
+        m_max = float(max_val)
+
+        return f"""    <div class="tu-iot-sensor-card status-{s_status}">
+      <div class="tu-sensor-header">
+        <span class="tu-sensor-node">Node: <code>{s_node}</code></span>
+        <span class="tu-sensor-status-badge">{s_status.upper()}</span>
+      </div>
+      <h4 class="tu-sensor-type">{s_type} Telemetry</h4>
+      <div class="tu-sensor-reading">
+        <span class="tu-sensor-val">{c_val:.2f}</span>
+        <span class="tu-sensor-unit">{s_unit}</span>
+      </div>
+      <div class="tu-sensor-gauge-wrapper">
+        <meter class="tu-sensor-meter" min="{m_min:.2f}" max="{m_max:.2f}" value="{c_val:.2f}"></meter>
+        <div class="tu-gauge-range">
+          <span>Min: {m_min:.1f} {s_unit}</span>
+          <span>Max: {m_max:.1f} {s_unit}</span>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
