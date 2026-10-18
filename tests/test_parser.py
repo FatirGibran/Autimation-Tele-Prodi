@@ -1026,6 +1026,81 @@ Status: Granted
         self.assertEqual(res["patent_type"], "Paten Biasa")
         self.assertEqual(len(res["inventors"]), 2)
 
+    def test_evaluate_cum_laude_predicate(self):
+        from parser import evaluate_cum_laude_predicate
+        res1 = evaluate_cum_laude_predicate(ipk=3.92, study_duration_semesters=7)
+        self.assertEqual(res1["predicate"], "Summa Cum Laude")
+        self.assertTrue(res1["is_honor"])
+        self.assertFalse(res1["is_disqualified"])
+
+        res2 = evaluate_cum_laude_predicate(ipk=3.80, study_duration_semesters=8)
+        self.assertEqual(res2["predicate"], "Magna Cum Laude")
+        self.assertTrue(res2["is_honor"])
+
+        res3 = evaluate_cum_laude_predicate(ipk=3.65, study_duration_semesters=8)
+        self.assertEqual(res3["predicate"], "Dengan Pujian (Cum Laude)")
+        self.assertTrue(res3["is_honor"])
+
+        res4 = evaluate_cum_laude_predicate(ipk=3.75, study_duration_semesters=9)
+        self.assertEqual(res4["predicate"], "Sangat Memuaskan")
+        self.assertFalse(res4["is_honor"])
+        self.assertTrue(res4["is_disqualified"])
+
+    def test_calculate_friis_free_space_path_loss(self):
+        from parser import calculate_friis_free_space_path_loss
+        res = calculate_friis_free_space_path_loss(
+            frequency_mhz=2400.0,
+            distance_km=1.0,
+            tx_gain_dbi=2.0,
+            rx_gain_dbi=2.0
+        )
+        self.assertEqual(res["frequency_mhz"], 2400.0)
+        self.assertEqual(res["distance_km"], 1.0)
+        self.assertAlmostEqual(res["wavelength_meters"], 0.125, places=3)
+        self.assertGreater(res["raw_fspl_db"], 95.0)
+        self.assertLess(res["raw_fspl_db"], 105.0)
+        self.assertEqual(res["net_path_loss_db"], round(res["raw_fspl_db"] - 4.0, 2))
+        self.assertEqual(res["link_quality"], "Baik (Cakupan Seluler Standar)")
+
+    def test_parse_kkn_thematic_evaluation(self):
+        from parser import parse_kkn_thematic_evaluation
+        res = parse_kkn_thematic_evaluation(
+            village_name="Desa Karangmangu",
+            student_count=12,
+            program_category="Pemberdayaan Digital UMKM & IoT Desa",
+            performance_score=88.5,
+            community_impact_metric="Adopsi QRIS dan Marketplace Desa 92%"
+        )
+        self.assertEqual(res["village_name"], "Desa Karangmangu")
+        self.assertEqual(res["student_count"], 12)
+        self.assertEqual(res["letter_grade"], "A")
+        self.assertEqual(res["grade_point"], 4.0)
+        self.assertTrue(res["is_passed"])
+        self.assertIn("Sangat Berhasil", res["evaluation_status"])
+
+    def test_parse_tridharma_internal_grant_compliance(self):
+        from parser import parse_tridharma_internal_grant_compliance
+        res_ok = parse_tridharma_internal_grant_compliance(
+            nidn="0615088501",
+            proposal_budget=35000000.0,
+            publication_target="Jurnal Internasional Terindeks Scopus Q3",
+            student_involvement_count=3
+        )
+        self.assertTrue(res_ok["is_valid_nidn"])
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertTrue(res_ok["is_high_impact"])
+        self.assertEqual(len(res_ok["compliance_issues"]), 0)
+
+        res_fail = parse_tridharma_internal_grant_compliance(
+            nidn="123",
+            proposal_budget=75000000.0,
+            publication_target="Blog Pribadi",
+            student_involvement_count=0
+        )
+        self.assertFalse(res_fail["is_valid_nidn"])
+        self.assertFalse(res_fail["is_compliant"])
+        self.assertGreaterEqual(len(res_fail["compliance_issues"]), 3)
+
 
 if __name__ == "__main__":
     unittest.main()
