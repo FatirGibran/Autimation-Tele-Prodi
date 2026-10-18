@@ -593,6 +593,19 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_tridharma_nidn ON tridharma_research_grants(nidn);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_tridharma_year ON tridharma_research_grants(fiscal_year);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS iot_sensor_telemetry_feeds (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    node_id TEXT NOT NULL,
+                    sensor_type TEXT NOT NULL,
+                    reading_value REAL NOT NULL,
+                    unit TEXT NOT NULL,
+                    battery_level REAL NOT NULL DEFAULT 100.0,
+                    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_iot_node ON iot_sensor_telemetry_feeds(node_id);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_iot_type ON iot_sensor_telemetry_feeds(sensor_type);")
 
 
 
@@ -2964,6 +2977,37 @@ class StorageManager:
             cursor = conn.execute(
                 "SELECT * FROM tridharma_research_grants WHERE nidn = ? ORDER BY id DESC",
                 (nidn.strip(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def record_sensor_telemetry(self, data: Dict[str, Any]) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO iot_sensor_telemetry_feeds (
+                    node_id, sensor_type, reading_value, unit, battery_level
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (
+                data["node_id"].strip(),
+                data["sensor_type"].strip(),
+                float(data["reading_value"]),
+                data["unit"].strip(),
+                float(data.get("battery_level", 100.0))
+            ))
+            return cursor.lastrowid
+
+    def list_latest_sensor_telemetry(self, limit: int = 50) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM iot_sensor_telemetry_feeds ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_sensor_telemetry_by_node(self, node_id: str, limit: int = 20) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM iot_sensor_telemetry_feeds WHERE node_id = ? ORDER BY id DESC LIMIT ?",
+                (node_id.strip(), max(1, int(limit)))
             )
             return [dict(row) for row in cursor.fetchall()]
 
