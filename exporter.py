@@ -1297,6 +1297,35 @@ navigation: true
             data["url"] = url.strip()
         return data
 
+    @staticmethod
+    def to_quartz_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Quartz 4.0 digital garden markdown format with frontmatter and wikilink tags.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        date = metadata.get("publish_date", "").strip()
+        category = metadata.get("category", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        lines = [
+            "---",
+            f'title: "{title}"',
+        ]
+        if date:
+            lines.append(f"date: {date}")
+        if tags and isinstance(tags, list):
+            lines.append("tags:")
+            for t in tags:
+                lines.append(f'  - "{str(t).strip()}"')
+        if category:
+            lines.append(f'description: "{category} note"')
+        lines.append("---")
+        lines.append("")
+        lines.append(html_content.strip())
+        return "\n".join(lines)
+
 
 
 
