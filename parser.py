@@ -3069,6 +3069,69 @@ def parse_djki_patent_grant(text: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def evaluate_cum_laude_predicate(
+    ipk: float,
+    study_duration_semesters: int,
+    has_failing_grades: bool = False,
+    has_disciplinary_violations: bool = False
+) -> Dict[str, Any]:
+    """
+    Evaluates undergraduate graduation judiciary cum laude honor predicate based on
+    Indonesian academic governance and university judiciary guidelines.
+    Criteria:
+    - Summa Cum Laude: IPK >= 3.90, study duration <= 8 semesters, no failing grades (C/D/E), no disciplinary violations.
+    - Magna Cum Laude: IPK >= 3.75, study duration <= 8 semesters, no failing grades, no disciplinary violations.
+    - Cum Laude: IPK >= 3.51, study duration <= 8 semesters, no failing grades, no disciplinary violations.
+    - Sangat Memuaskan: IPK >= 3.00 (or if disqualified from Cum Laude due to duration or repeat courses).
+    - Memuaskan: IPK >= 2.75.
+    - Cukup: IPK >= 2.00.
+    """
+    ipk_val = round(float(ipk), 2)
+    duration = int(study_duration_semesters)
+
+    is_disqualified = has_failing_grades or has_disciplinary_violations or (duration > 8)
+
+    disqualification_reasons = []
+    if duration > 8:
+        disqualification_reasons.append(f"Masa studi {duration} semester melampaui batas maksimal 8 semester")
+    if has_failing_grades:
+        disqualification_reasons.append("Memiliki rekam nilai mengulang atau di bawah ambang batas kelulusan")
+    if has_disciplinary_violations:
+        disqualification_reasons.append("Memiliki catatan pelanggaran kode etik / tata tertib akademik")
+
+    if ipk_val >= 3.90 and not is_disqualified:
+        predicate = "Summa Cum Laude"
+        is_honor = True
+    elif ipk_val >= 3.75 and not is_disqualified:
+        predicate = "Magna Cum Laude"
+        is_honor = True
+    elif ipk_val >= 3.51 and not is_disqualified:
+        predicate = "Dengan Pujian (Cum Laude)"
+        is_honor = True
+    elif ipk_val >= 3.00:
+        predicate = "Sangat Memuaskan"
+        is_honor = False
+    elif ipk_val >= 2.75:
+        predicate = "Memuaskan"
+        is_honor = False
+    elif ipk_val >= 2.00:
+        predicate = "Cukup"
+        is_honor = False
+    else:
+        predicate = "Tidak Lulus (IPK di bawah ambang batas kelulusan)"
+        is_honor = False
+
+    return {
+        "ipk": ipk_val,
+        "study_duration_semesters": duration,
+        "predicate": predicate,
+        "is_honor": is_honor,
+        "is_disqualified": is_disqualified if ipk_val >= 3.51 else False,
+        "disqualification_reasons": disqualification_reasons
+    }
+
+
+
 
 
 
