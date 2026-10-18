@@ -770,6 +770,28 @@ class TelegramFormatter:
             f"👏 *Selamat atas pencapaian beasiswa, pertahankan prestasi akademik dan dedikasi belajar!*"
         )
 
+    @staticmethod
+    def format_cum_laude_announcement_telegram(
+        student_name: str,
+        nim: str,
+        ipk: float,
+        honor_predicate: str,
+        thesis_title: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a graduation judicium cum laude honor announcement bulletin for Telegram.
+        """
+        portal_link = f"\n🔗 **Verifikasi Yudisium:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🎓 **Apresiasi Kelulusan Dengan Pujian (Cum Laude)**\n\n"
+            f"👤 **Nama Wisudawan:** {student_name.strip()} (`{nim.strip()}`)\n"
+            f"⭐ **Predikat Yudisium:** **{honor_predicate.strip()}**\n"
+            f"📊 **Indeks Prestasi Kumulatif (IPK):** `{float(ipk):.2f}`\n"
+            f"📑 **Judul Tugas Akhir:**\n_{thesis_title.strip()}_{portal_link}\n\n"
+            f"💐 *Selamat atas kelulusan yang membanggakan, semoga ilmu yang diperoleh berkah dan bermanfaat!*"
+        )
+
 
 
 
