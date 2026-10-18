@@ -710,6 +710,23 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<meter\b[^>]*>', sanitize_meter, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 meter telemetry elements.")
 
+        # 8aa. Sanitize HTML5 progress gauge elements
+        if "<progress" in cleaned.lower():
+            def sanitize_progress(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                for attr in ["value", "max"]:
+                    attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                    if attr_m:
+                        val = attr_m.group(1).strip()
+                        if not re.match(r'^\d+(?:\.\d+)?$', val):
+                            tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                            warnings.append(f"Stripped invalid {attr} attribute from progress element.")
+                return tag
+            cleaned = re.sub(r'<progress\b[^>]*>', sanitize_progress, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 progress gauge elements.")
+
         return cleaned, warnings
 
 
@@ -735,6 +752,30 @@ def sanitize_html5_meter_elements(html: str) -> str:
         return tag
 
     return re.sub(r'<meter\b[^>]*>', sanitize_meter_tag, html, flags=re.IGNORECASE)
+
+
+def sanitize_html5_progress_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <progress> gauge elements by removing scripting event handlers,
+    style attributes, and verifying non-negative numeric progress quantities for value and max.
+    """
+    if not html or "<progress" not in html.lower():
+        return html
+
+    def sanitize_progress_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        for attr in ["value", "max"]:
+            attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if attr_m:
+                val = attr_m.group(1).strip()
+                if not re.match(r'^\d+(?:\.\d+)?$', val):
+                    tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    return re.sub(r'<progress\b[^>]*>', sanitize_progress_tag, html, flags=re.IGNORECASE)
+
 
 
 
