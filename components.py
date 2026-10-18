@@ -3497,6 +3497,51 @@ class EditorialComponents:
       <p class="tu-kkn-impact">{s_imp}</p>
     </div>"""
 
+    @classmethod
+    def render_tridharma_grant_award_card(
+        cls,
+        lecturer_name: str,
+        nidn: str,
+        project_title: str,
+        grant_amount: float,
+        fiscal_year: int,
+        publication_target: str
+    ) -> str:
+        """
+        Renders a lecturer internal Tridharma research grant funding award card.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(lecturer_name.strip())
+        s_nidn = escape(nidn.strip())
+        s_title = escape(project_title.strip())
+        s_pub = escape(publication_target.strip())
+        amount_str = f"Rp {float(grant_amount):,.0f}".replace(",", ".")
+        year = int(fiscal_year)
+
+        return f"""    <div class="tu-tridharma-grant-card">
+      <div class="tu-tridharma-header">
+        <span class="tu-tridharma-badge">Hibah Riset Internal LPPM</span>
+        <span class="tu-tridharma-year">T.A. {year}</span>
+      </div>
+      <h4 class="tu-tridharma-title">{s_title}</h4>
+      <div class="tu-tridharma-lead">
+        <span>Ketua Peneliti: <strong>{s_name}</strong></span>
+        <span>NIDN: <code>{s_nidn}</code></span>
+      </div>
+      <div class="tu-tridharma-meta">
+        <div class="tu-tridharma-meta-item">
+          <span class="tu-lbl">Pagu Dana Riset:</span>
+          <strong class="tu-val">{amount_str}</strong>
+        </div>
+        <div class="tu-tridharma-meta-item">
+          <span class="tu-lbl">Target Luaran:</span>
+          <span class="tu-val">{s_pub}</span>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
