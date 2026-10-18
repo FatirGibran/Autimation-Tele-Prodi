@@ -3413,6 +3413,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_friis_path_loss_card(
+        cls,
+        frequency_mhz: float,
+        distance_km: float,
+        path_loss_db: float,
+        tx_power_dbm: float,
+        rx_power_dbm: float
+    ) -> str:
+        """
+        Renders a cellular base station Friis path loss and RF attenuation calculation card.
+        """
+        from xml.sax.saxutils import escape
+
+        f_val = f"{float(frequency_mhz):.1f} MHz"
+        d_val = f"{float(distance_km):.2f} km"
+        loss_val = f"{float(path_loss_db):.2f} dB"
+        tx_val = f"{float(tx_power_dbm):.1f} dBm"
+        rx_val = f"{float(rx_power_dbm):.1f} dBm"
+
+        return f"""    <div class="tu-friis-calc-card">
+      <div class="tu-friis-header">
+        <span class="tu-friis-badge">Transmisi Propagasi RF</span>
+        <h4 class="tu-friis-title">Kalkulasi Friis Free Space Path Loss (FSPL)</h4>
+      </div>
+      <div class="tu-friis-grid">
+        <div class="tu-friis-item">
+          <span class="tu-lbl">Frekuensi Kerja:</span>
+          <strong class="tu-val">{f_val}</strong>
+        </div>
+        <div class="tu-friis-item">
+          <span class="tu-lbl">Jarak Transmisi (d):</span>
+          <strong class="tu-val">{d_val}</strong>
+        </div>
+        <div class="tu-friis-item">
+          <span class="tu-lbl">Daya Pancar Tx:</span>
+          <span class="tu-val">{tx_val}</span>
+        </div>
+        <div class="tu-friis-item">
+          <span class="tu-lbl">Level Daya Rx:</span>
+          <span class="tu-val">{rx_val}</span>
+        </div>
+      </div>
+      <div class="tu-friis-total">
+        <span class="tu-friis-total-lbl">Total Redaman Path Loss:</span>
+        <span class="tu-friis-total-val">{loss_val}</span>
+      </div>
+    </div>"""
+
+
 
 
 
