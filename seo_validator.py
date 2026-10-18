@@ -2976,6 +2976,62 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_iframe_performance(html_content: str) -> Dict[str, Any]:
+        """
+        Audits <iframe> elements (e.g. YouTube embeds, interactive campus maps) for performance and accessibility.
+        """
+        if not html_content:
+            return {
+                "has_iframes": False,
+                "total_iframes": 0,
+                "optimized_iframes": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        iframes = soup.find_all("iframe")
+        if not iframes:
+            return {
+                "has_iframes": False,
+                "total_iframes": 0,
+                "optimized_iframes": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues = []
+        optimized_count = 0
+
+        for idx, iframe in enumerate(iframes, start=1):
+            frame_issues = []
+            loading = iframe.get("loading", "").strip().lower()
+            if loading != "lazy":
+                frame_issues.append(f"Iframe #{idx} lacks loading='lazy' attribute.")
+
+            title = iframe.get("title", "").strip()
+            if not title:
+                frame_issues.append(f"Iframe #{idx} lacks an accessible 'title' attribute for screen readers.")
+
+            src = iframe.get("src", "").strip()
+            if src and not src.startswith("https://"):
+                frame_issues.append(f"Iframe #{idx} source '{src}' does not use secure HTTPS protocol.")
+
+            if not frame_issues:
+                optimized_count += 1
+            else:
+                issues.extend(frame_issues)
+
+        return {
+            "has_iframes": True,
+            "total_iframes": len(iframes),
+            "optimized_iframes": optimized_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
