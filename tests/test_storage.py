@@ -1510,6 +1510,120 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(budi_certs), 1)
         self.assertEqual(budi_certs[0]["cert_number"], "BNSP-TEL-2026-00451")
 
+    def test_student_graduation_honors_storage(self):
+        data1 = {
+            "student_name": "Dewi Sartika",
+            "nim": "120120005",
+            "ipk": 3.92,
+            "honor_predicate": "Dengan Pujian (Cum Laude)",
+            "thesis_title": "Optimasi MIMO Beamforming 5G",
+            "study_duration_semesters": 8,
+            "graduation_year": 2026
+        }
+        data2 = {
+            "student_name": "Bambang Pamungkas",
+            "nim": "120120006",
+            "ipk": 3.75,
+            "honor_predicate": "Sangat Memuaskan",
+            "thesis_title": "Analisis Quality of Service LoRaWAN",
+            "study_duration_semesters": 8,
+            "graduation_year": 2025
+        }
+        hid1 = self.storage.record_graduation_honor(data1)
+        hid2 = self.storage.record_graduation_honor(data2)
+        self.assertGreater(hid1, 0)
+        self.assertGreater(hid2, 0)
+
+        all_honors = self.storage.list_graduation_honors()
+        self.assertEqual(len(all_honors), 2)
+
+        honors_2026 = self.storage.list_graduation_honors(graduation_year=2026)
+        self.assertEqual(len(honors_2026), 1)
+        self.assertEqual(honors_2026[0]["student_name"], "Dewi Sartika")
+
+        cum_laude = self.storage.list_graduation_honors(predicate_keyword="Cum Laude")
+        self.assertEqual(len(cum_laude), 1)
+        self.assertEqual(cum_laude[0]["nim"], "120120005")
+
+        dewi = self.storage.get_graduation_honor_by_nim("120120005")
+        self.assertIsNotNone(dewi)
+        self.assertEqual(dewi["honor_predicate"], "Dengan Pujian (Cum Laude)")
+
+    def test_tridharma_grants_storage(self):
+        grant1 = {
+            "lecturer_name": "Dr. Ir. Budi Santoso, M.T.",
+            "nidn": "0612058001",
+            "project_title": "Rancang Bangun Sensor Akustik Kelautan",
+            "grant_amount": 25000000.0,
+            "fiscal_year": 2026,
+            "publication_target": "Jurnal SINTA 2",
+            "status": "active"
+        }
+        grant2 = {
+            "lecturer_name": "Dr. Ir. Budi Santoso, M.T.",
+            "nidn": "0612058001",
+            "project_title": "Antena Mikrostrip Patch Array 28 GHz",
+            "grant_amount": 30000000.0,
+            "fiscal_year": 2025,
+            "publication_target": "IEEE Access",
+            "status": "completed"
+        }
+        gid1 = self.storage.record_tridharma_grant(grant1)
+        gid2 = self.storage.record_tridharma_grant(grant2)
+        self.assertGreater(gid1, 0)
+        self.assertGreater(gid2, 0)
+
+        all_grants = self.storage.list_tridharma_grants()
+        self.assertEqual(len(all_grants), 2)
+
+        grants_2026 = self.storage.list_tridharma_grants(fiscal_year=2026)
+        self.assertEqual(len(grants_2026), 1)
+        self.assertEqual(grants_2026[0]["project_title"], "Rancang Bangun Sensor Akustik Kelautan")
+
+        completed_grants = self.storage.list_tridharma_grants(status="completed")
+        self.assertEqual(len(completed_grants), 1)
+
+        budi_grants = self.storage.get_tridharma_grants_by_nidn("0612058001")
+        self.assertEqual(len(budi_grants), 2)
+
+    def test_iot_sensor_telemetry_storage(self):
+        feed1 = {
+            "node_id": "NODE-01",
+            "sensor_type": "Temperature",
+            "reading_value": 24.5,
+            "unit": "°C",
+            "battery_level": 95.0
+        }
+        feed2 = {
+            "node_id": "NODE-01",
+            "sensor_type": "Humidity",
+            "reading_value": 60.2,
+            "unit": "%",
+            "battery_level": 94.8
+        }
+        feed3 = {
+            "node_id": "NODE-02",
+            "sensor_type": "CO2",
+            "reading_value": 450.0,
+            "unit": "ppm",
+            "battery_level": 98.0
+        }
+        fid1 = self.storage.record_sensor_telemetry(feed1)
+        fid2 = self.storage.record_sensor_telemetry(feed2)
+        fid3 = self.storage.record_sensor_telemetry(feed3)
+        self.assertGreater(fid1, 0)
+        self.assertGreater(fid2, 0)
+        self.assertGreater(fid3, 0)
+
+        latest = self.storage.list_latest_sensor_telemetry(limit=2)
+        self.assertEqual(len(latest), 2)
+
+        node1_feeds = self.storage.get_sensor_telemetry_by_node("NODE-01")
+        self.assertEqual(len(node1_feeds), 2)
+        node2_feeds = self.storage.get_sensor_telemetry_by_node("NODE-02")
+        self.assertEqual(len(node2_feeds), 1)
+        self.assertEqual(node2_feeds[0]["sensor_type"], "CO2")
+
 
 if __name__ == "__main__":
     unittest.main()
