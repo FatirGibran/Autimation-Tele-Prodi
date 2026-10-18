@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 510+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 540+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 516 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 544 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -615,6 +615,40 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 498. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji unit menyeluruh pada sanitizer, parser, seo validator, components, formatters, storage, wp client, exporter, dan cli.
 499. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.5.0.
 500. **Ekspansi Suite Pengujian Unit Terpadu (516 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 516 unit test terverifikasi (100% pass rate).
+
+## 24. Ekspansi Arsitektural v3.6.0 Milestone Release
+
+501. **Sanitasi Elemen HTML5 Meter Telemetri (`sanitizer.py`)**: Sanitasi elemen `<meter>` HTML5, penegakan nilai numerik threshold min, max, value, low, high, optimum, dan pembersihan atribut berbahaya.
+502. **Sanitasi Elemen HTML5 Progress Gauge (`sanitizer.py`)**: Pembersihan elemen `<progress>` HTML5 dengan penegakan rentang rasio ternormalisasi non-negatif.
+503. **Sanitasi Elemen Waktu Durasi ISO 8601 (`sanitizer.py`)**: Validasi token durasi standar ISO 8601 (`PnDTnHnMnS`) pada atribut `datetime` elemen semantik `<time>`.
+504. **Evaluator Predikat Yudisium Cum Laude Mahasiswa (`parser.py`)**: Evaluasi kelayakan predikat kelulusan kehormatan akademik (Cum Laude, Magna Cum Laude, Summa Cum Laude) berdasarkan IPK dan masa studi.
+505. **Kalkulator Friis Free Space Path Loss Gelombang Radio (`parser.py`)**: Perhitungan atenuasi redaman sinyal gelombang radio ruang bebas (FSPL) BTS seluler berdasarkan frekuensi transmisi dan jarak antena.
+506. **Parser Evaluasi KKN Tematik Perdesaan (`parser.py`)**: Penguraian rekam pelaksanaan program kuliah kerja nyata tematik, susunan kelompok, dosen pembimbing, dan dampak sosial.
+507. **Parser Kepatuhan Hibah Riset Tridharma Dosen (`parser.py`)**: Penguraian proposal dan kepatuhan hibah penelitian internal LPPM dosen, pagu dana, tahun anggaran, dan target luaran publikasi.
+508. **Auditor Aksesibilitas Audio & Transkrip Podcast (`seo_validator.py`)**: Verifikasi keberadaan kontrol audio dan tautan transkrip teks pendamping untuk kepatuhan WCAG.
+509. **Auditor Multilingual Rel Alternate Hreflang Tag (`seo_validator.py`)**: Validasi tag `<link rel="alternate" hreflang="...">`, format ISO language/region, self-referencing hreflang, dan fallback `x-default`.
+510. **Auditor Lazy Loading Iframe & Embedded Map Performance (`seo_validator.py`)**: Deteksi sematan `<iframe>` dan peta digital tanpa optimasi `loading="lazy"`.
+511. **Auditor Hubungan Semantik Figure & Figcaption (`seo_validator.py`)**: Validasi struktur semantik posisi `<figcaption>` sebagai anak langsung pertama atau terakhir elemen `<figure>`.
+512. **Komponen Yudisium Kelulusan Cum Laude (`components.py`)**: Kartu visual Elementor penghargaan wisudawan berprestasi akademik tinggi berpredikat Cum Laude.
+513. **Komponen Kalkulasi Redaman Friis Path Loss BTS Seluler (`components.py`)**: Kartu kalkulasi redaman propagasi sinyal RF lengkap dengan daya transmit Tx dan daya terima Rx.
+514. **Komponen Pameran Pengabdian Masyarakat KKN Tematik (`components.py`)**: Kartu presentasi program unggulan KKN tematik perdesaan beserta metrik dampak keberlanjutan.
+515. **Komponen Penetapan Hibah Riset Tridharma Dosen (`components.py`)**: Kartu penetapan pemenang hibah riset internal LPPM dengan pagu dana dan target luaran ilmiah.
+516. **Komponen Gauge Telemetri Sensor IoT Laboratorium (`components.py`)**: Kartu visualisasi status pembacaan sensor nirkabel laboratorium menggunakan elemen pengukur semantik `<meter>`.
+517. **Formatter Telegram Apresiasi Kelulusan Cum Laude (`formatters.py`)**: Template pesan siaran resmi Telegram untuk apresiasi wisudawan berpredikat kehormatan.
+518. **Formatter Telegram Pengumuman Hibah Riset Tridharma (`formatters.py`)**: Template pesan siaran Telegram daftar penerima pendanaan hibah penelitian internal LPPM.
+519. **Manajer Rekam Yudisium Kehormatan Mahasiswa (`storage.py`)**: Skema tabel SQLite `student_graduation_honors` dan operasi CRUD pengarsipan rekam prestasi yudisium sarjana.
+520. **Manajer Rekam Hibah Riset Tridharma Dosen (`storage.py`)**: Skema tabel basis data `tridharma_research_grants` untuk pemantauan alokasi dan status hibah penelitian institusi.
+521. **Manajer Rekam Telemetri Sensor IoT Laboratorium (`storage.py`)**: Skema tabel `iot_sensor_telemetry_feeds` untuk penyimpanan deret waktu log pembacaan sensor nirkabel lab.
+522. **Helper WordPress Get Categories With Post Counts (`wordpress_client.py`)**: Pengambilan daftar taksonomi kategori WordPress lengkap dengan metrik jumlah post terbitan via REST API.
+523. **Helper WordPress Get Users By Role (`wordpress_client.py`)**: Penyaringan akun pengguna WordPress berdasarkan peran otorisasi spesifik via REST API.
+524. **Generator Schema.org Thesis ScholarlyArticle JSON-LD (`exporter.py`)**: Pembuatan metadata terstruktur Schema.org `Thesis` untuk naskah skripsi sarjana teknik telekomunikasi.
+525. **Eksportir Markdown Quartz Digital Garden (`exporter.py`)**: Ekspor artikel database ke berkas markdown berkategori catatan digital garden Quartz 4.0.
+526. **Subcommand CLI `honors` (`cli.py`)**: Perintah konsol manajemen catatan yudisium kelulusan kehormatan mahasiswa (list, add).
+527. **Subcommand CLI `tridharma` (`cli.py`)**: Perintah konsol manajemen catatan hibah riset Tridharma dosen LPPM (list, add).
+528. **Subcommand CLI `quartz` (`cli.py`)**: Perintah konsol ekspor artikel ke format markdown digital garden Quartz.
+529. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji unit komprehensif pada sanitizer, parser, seo validator, components, formatters, storage, wp client, exporter, dan cli.
+530. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.6.0.
+531. **Ekspansi Suite Pengujian Unit Terpadu (544 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 544 unit test terverifikasi (100% pass rate).
 
 
 
