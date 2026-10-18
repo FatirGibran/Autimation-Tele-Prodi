@@ -792,6 +792,31 @@ class TelegramFormatter:
             f"💐 *Selamat atas kelulusan yang membanggakan, semoga ilmu yang diperoleh berkah dan bermanfaat!*"
         )
 
+    @staticmethod
+    def format_tridharma_grant_announcement_telegram(
+        lecturer_name: str,
+        nidn: str,
+        project_title: str,
+        grant_amount: float,
+        fiscal_year: int,
+        publication_target: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a lecturer internal Tridharma research grant award announcement for Telegram.
+        """
+        portal_link = f"\n🔗 **Detail Hibah LPPM:** {portal_url.strip()}" if portal_url else ""
+        amount_str = f"Rp {float(grant_amount):,.0f}".replace(",", ".")
+        return (
+            f"🔬 **Pengumuman Pemenang Hibah Riset Internal LPPM**\n\n"
+            f"👨‍🏫 **Ketua Peneliti:** {lecturer_name.strip()} (`NIDN: {nidn.strip()}`)\n"
+            f"📅 **Tahun Anggaran:** {int(fiscal_year)}\n"
+            f"💡 **Judul Riset:**\n_{project_title.strip()}_\n"
+            f"💰 **Dana Disetujui:** `{amount_str}`\n"
+            f"🎯 **Target Luaran:** {publication_target.strip()}{portal_link}\n\n"
+            f"👏 *Selamat kepada penerima hibah riset internal, selamat berkarya dan menghasilkan inovasi telekomunikasi!*"
+        )
+
 
 
 
