@@ -1144,10 +1144,10 @@ def cmd_honors(args):
         if not honors:
             print("Tidak ada catatan yudisium kelulusan yang ditemukan.")
             return
-        print(f"{'ID':<4} | {'NIM':<10} | {'IPK':<5} | {'PREDIKAT':<25} | {'NAMA':<20} | {'TAHUN'}")
-        print("-" * 80)
+        print(f"{'ID':<4} | {'NIM':<10} | {'IPK':<5} | {'PREDIKAT':<30} | {'NAMA':<20} | {'TAHUN'}")
+        print("-" * 85)
         for h in honors:
-            print(f"{h['id']:<4} | {h['nim']:<10} | {h['ipk']:<5.2f} | {h['honor_predicate'][:23]:<25} | {h['student_name'][:18]:<20} | {h['graduation_year']}")
+            print(f"{h['id']:<4} | {h['nim']:<10} | {h['ipk']:<5.2f} | {h['honor_predicate'][:28]:<30} | {h['student_name'][:18]:<20} | {h['graduation_year']}")
 
 def cmd_tridharma(args):
     if args.action == "add":

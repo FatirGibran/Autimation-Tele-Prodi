@@ -1536,6 +1536,95 @@ class TestCLI(unittest.TestCase):
             if out_file.exists():
                 out_file.unlink()
 
+    def test_cmd_honors(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Dewi Sartika"
+            nim = "120120005"
+            ipk = 3.92
+            predicate = "Dengan Pujian (Cum Laude)"
+            thesis = "Optimasi MIMO Beamforming 5G"
+            duration = 8
+            year = 2026
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_honors(ArgsAdd())
+            self.assertIn("Catatan yudisium berhasil ditambahkan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            year = 2026
+            predicate = "Cum Laude"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_honors(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("120120005", out)
+            self.assertIn("Dewi Sartika", out)
+            self.assertIn("Cum Laude", out)
+
+    def test_cmd_tridharma(self):
+        class ArgsAdd:
+            action = "add"
+            lecturer = "Dr. Ir. Budi Santoso, M.T."
+            nidn = "0612058001"
+            title = "Rancang Bangun Sensor Akustik Kelautan"
+            amount = 25000000.0
+            year = 2026
+            target = "Jurnal SINTA 2"
+            status = "active"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_tridharma(ArgsAdd())
+            self.assertIn("Catatan hibah riset tridharma berhasil ditambahkan", fake_out.getvalue())
+
+        class ArgsList:
+            action = "list"
+            year = 2026
+            status = "active"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_tridharma(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("0612058001", out)
+            self.assertIn("25,000,000", out)
+            self.assertIn("2026", out)
+
+    def test_cmd_quartz(self):
+        slug = "quartz-cli-test-article"
+        cli.storage.save_article({
+            "topic": "Quartz Tutorial",
+            "category": "Catatan",
+            "publish_date": "2026-10-18",
+            "focus_keyphrase": "quartz digital garden",
+            "seo_title": "Membangun Digital Garden Quartz",
+            "slug": slug,
+            "meta_description": "Dokumentasi quartz digital garden prodi",
+            "html_content": "<p>Isi panduan Quartz</p>",
+            "status": "ready"
+        })
+
+        out_file = Path(self.temp_dir.name) / f"{slug}.md"
+        try:
+            class ArgsQuartz:
+                pass
+            args = ArgsQuartz()
+            args.slug = slug
+            args.out = str(out_file)
+
+            with patch("sys.stdout", new=io.StringIO()) as fake_out:
+                cli.cmd_quartz(args)
+                self.assertIn("Export Quartz markdown berhasil", fake_out.getvalue())
+
+            content = out_file.read_text(encoding="utf-8")
+            self.assertTrue(content.startswith("---"))
+            self.assertIn('title: "Membangun Digital Garden Quartz"', content)
+            self.assertIn('description: "Catatan note"', content)
+            self.assertIn("<p>Isi panduan Quartz</p>", content)
+        finally:
+            if out_file.exists():
+                out_file.unlink()
+
 
 if __name__ == "__main__":
     unittest.main()
