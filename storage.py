@@ -563,6 +563,21 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_bnsp_nim ON bnsp_certifications(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_bnsp_scheme ON bnsp_certifications(scheme_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS student_graduation_honors (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    ipk REAL NOT NULL,
+                    honor_predicate TEXT NOT NULL,
+                    thesis_title TEXT NOT NULL,
+                    study_duration_semesters INTEGER NOT NULL DEFAULT 8,
+                    graduation_year INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_honors_nim ON student_graduation_honors(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_honors_year ON student_graduation_honors(graduation_year);")
 
 
 
@@ -2833,6 +2848,58 @@ class StorageManager:
                 (nim.strip(),)
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_graduation_honor(self, data: Dict[str, Any]) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO student_graduation_honors (
+                    student_name, nim, ipk, honor_predicate, thesis_title,
+                    study_duration_semesters, graduation_year
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data["student_name"].strip(),
+                data["nim"].strip(),
+                float(data["ipk"]),
+                data["honor_predicate"].strip(),
+                data["thesis_title"].strip(),
+                int(data.get("study_duration_semesters", 8)),
+                int(data["graduation_year"])
+            ))
+            return cursor.lastrowid
+
+    def list_graduation_honors(
+        self,
+        graduation_year: Optional[int] = None,
+        predicate_keyword: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM student_graduation_honors"
+            conditions = []
+            params = []
+
+            if graduation_year is not None:
+                conditions.append("graduation_year = ?")
+                params.append(int(graduation_year))
+
+            if predicate_keyword:
+                conditions.append("LOWER(honor_predicate) LIKE ?")
+                params.append(f"%{predicate_keyword.strip().lower()}%")
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_graduation_honor_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_graduation_honors WHERE nim = ? ORDER BY id DESC LIMIT 1",
+                (nim.strip(),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
 
 
 
