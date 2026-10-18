@@ -493,6 +493,42 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Semester Ganjil 2026/2027", msg)
         self.assertIn("https://beasiswa.telkomuniversity.ac.id/pengumuman-001", msg)
 
+    def test_format_cum_laude_announcement_telegram(self):
+        msg = TelegramFormatter.format_cum_laude_announcement_telegram(
+            student_name="Dewi Sartika",
+            nim="120120005",
+            ipk=3.92,
+            honor_predicate="Dengan Pujian (Cum Laude)",
+            thesis_title="Optimasi MIMO Beamforming 5G",
+            portal_url="https://akademik.telkomuniversity.ac.id/yudisium/120120005"
+        )
+        self.assertIn("Apresiasi Kelulusan Dengan Pujian", msg)
+        self.assertIn("Dewi Sartika", msg)
+        self.assertIn("120120005", msg)
+        self.assertIn("3.92", msg)
+        self.assertIn("Dengan Pujian (Cum Laude)", msg)
+        self.assertIn("Optimasi MIMO Beamforming 5G", msg)
+        self.assertIn("https://akademik.telkomuniversity.ac.id/yudisium/120120005", msg)
+
+    def test_format_tridharma_grant_announcement_telegram(self):
+        msg = TelegramFormatter.format_tridharma_grant_announcement_telegram(
+            lecturer_name="Dr. Ir. Budi Santoso, M.T.",
+            nidn="0612058001",
+            project_title="Rancang Bangun Sensor Akustik Kelautan",
+            grant_amount=25000000.0,
+            fiscal_year=2026,
+            publication_target="Jurnal SINTA 2",
+            portal_url="https://lppm.telkomuniversity.ac.id/hibah-2026"
+        )
+        self.assertIn("Pengumuman Pemenang Hibah Riset Internal LPPM", msg)
+        self.assertIn("Dr. Ir. Budi Santoso, M.T.", msg)
+        self.assertIn("0612058001", msg)
+        self.assertIn("2026", msg)
+        self.assertIn("Rp 25.000.000", msg)
+        self.assertIn("Rancang Bangun Sensor Akustik Kelautan", msg)
+        self.assertIn("Jurnal SINTA 2", msg)
+        self.assertIn("https://lppm.telkomuniversity.ac.id/hibah-2026", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
