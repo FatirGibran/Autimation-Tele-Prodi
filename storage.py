@@ -578,6 +578,21 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_honors_nim ON student_graduation_honors(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_honors_year ON student_graduation_honors(graduation_year);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS tridharma_research_grants (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lecturer_name TEXT NOT NULL,
+                    nidn TEXT NOT NULL,
+                    project_title TEXT NOT NULL,
+                    grant_amount REAL NOT NULL,
+                    fiscal_year INTEGER NOT NULL,
+                    publication_target TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'active',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_tridharma_nidn ON tridharma_research_grants(nidn);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_tridharma_year ON tridharma_research_grants(fiscal_year);")
 
 
 
@@ -2900,6 +2915,57 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_tridharma_grant(self, data: Dict[str, Any]) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO tridharma_research_grants (
+                    lecturer_name, nidn, project_title, grant_amount,
+                    fiscal_year, publication_target, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data["lecturer_name"].strip(),
+                data["nidn"].strip(),
+                data["project_title"].strip(),
+                float(data["grant_amount"]),
+                int(data["fiscal_year"]),
+                data["publication_target"].strip(),
+                data.get("status", "active").strip()
+            ))
+            return cursor.lastrowid
+
+    def list_tridharma_grants(
+        self,
+        fiscal_year: Optional[int] = None,
+        status: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            query = "SELECT * FROM tridharma_research_grants"
+            conditions = []
+            params = []
+
+            if fiscal_year is not None:
+                conditions.append("fiscal_year = ?")
+                params.append(int(fiscal_year))
+
+            if status:
+                conditions.append("status = ?")
+                params.append(status.strip())
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, tuple(params))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_tridharma_grants_by_nidn(self, nidn: str) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM tridharma_research_grants WHERE nidn = ? ORDER BY id DESC",
+                (nidn.strip(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
 
 
