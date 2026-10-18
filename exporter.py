@@ -1255,6 +1255,48 @@ navigation: true
         lines.append(html_content.strip())
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_thesis_json_ld(
+        title: str,
+        student_name: str,
+        advisor_name: str,
+        graduation_year: int,
+        abstract: str,
+        in_support_of: str = "Sarjana Teknik (S.T.)",
+        university_name: str = "Telkom University Purwokerto",
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org Thesis / ScholarlyArticle JSON-LD metadata for undergraduate dissertations.
+        """
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Thesis",
+            "name": title.strip(),
+            "headline": title.strip(),
+            "inSupportOf": in_support_of.strip(),
+            "author": {
+                "@type": "Person",
+                "name": student_name.strip()
+            },
+            "contributor": [
+                {
+                    "@type": "Person",
+                    "name": advisor_name.strip(),
+                    "roleName": "Thesis Advisor"
+                }
+            ],
+            "sourceOrganization": {
+                "@type": "CollegeOrUniversity",
+                "name": university_name.strip()
+            },
+            "datePublished": f"{int(graduation_year)}",
+            "description": abstract.strip()
+        }
+        if url:
+            data["url"] = url.strip()
+        return data
+
 
 
 
