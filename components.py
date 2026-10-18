@@ -3462,6 +3462,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_kkn_thematic_showcase_card(
+        cls,
+        village_name: str,
+        regency: str,
+        flagship_program: str,
+        supervisor: str,
+        student_count: int,
+        impact_summary: str
+    ) -> str:
+        """
+        Renders a student thematic community service (KKN Tematik) regional showcase card.
+        """
+        from xml.sax.saxutils import escape
+
+        s_vil = escape(village_name.strip())
+        s_reg = escape(regency.strip())
+        s_prog = escape(flagship_program.strip())
+        s_dpl = escape(supervisor.strip())
+        s_imp = escape(impact_summary.strip())
+        count = max(1, int(student_count))
+
+        return f"""    <div class="tu-kkn-showcase-card">
+      <div class="tu-kkn-header">
+        <span class="tu-kkn-badge">KKN Tematik Perdesaan</span>
+        <span class="tu-kkn-region">{s_vil}, {s_reg}</span>
+      </div>
+      <h4 class="tu-kkn-flagship">{s_prog}</h4>
+      <div class="tu-kkn-meta">
+        <span>Dosen Pembimbing (DPL): <strong>{s_dpl}</strong></span>
+        <span>Peserta: <strong>{count} Mahasiswa</strong></span>
+      </div>
+      <p class="tu-kkn-impact">{s_imp}</p>
+    </div>"""
+
+
 
 
 
