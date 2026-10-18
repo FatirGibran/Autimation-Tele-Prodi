@@ -594,6 +594,18 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, data=data_bytes, headers=headers, method="POST")
         return self._send_request(req)
 
+    def get_categories_with_counts(self, hide_empty: bool = True, per_page: int = 100) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress categories including their post count metrics.
+        """
+        hide_empty_str = "true" if hide_empty else "false"
+        endpoint = f"{self.api_url}/categories?hide_empty={hide_empty_str}&per_page={int(per_page)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
 
 
 
