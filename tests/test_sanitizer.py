@@ -1,5 +1,11 @@
 import unittest
-from sanitizer import HTMLSanitizer
+from sanitizer import (
+    HTMLSanitizer,
+    sanitize_html5_meter_elements,
+    sanitize_html5_progress_elements,
+    sanitize_time_duration_microdata
+)
+
 
 class TestHTMLSanitizer(unittest.TestCase):
     def test_strip_script_tags(self):
@@ -548,6 +554,58 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn('javascript:exploit()', clean)
         self.assertNotIn('onclick="steal()"', clean)
         self.assertTrue(any("data token" in w for w in warnings))
+
+    def test_sanitize_html5_meter_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<meter min="0" max="100" low="20" high="80" optimum="90" value="75">75%</meter>'
+            '<meter min="bad" max="100" value="eval()" onclick="steal()">Bad</meter>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('min="0" max="100"', clean)
+        self.assertIn('value="75"', clean)
+        self.assertNotIn('min="bad"', clean)
+        self.assertNotIn('value="eval()"', clean)
+        self.assertNotIn('onclick="steal()"', clean)
+        self.assertTrue(any("meter telemetry" in w for w in warnings))
+
+        res = sanitize_html5_meter_elements('<meter value="50" style="color:red;" onclick="evil()">50</meter>')
+        self.assertIn('value="50"', res)
+        self.assertNotIn("style=", res)
+        self.assertNotIn("onclick=", res)
+
+    def test_sanitize_html5_progress_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<progress value="85" max="100">85%</progress>'
+            '<progress value="javascript:alert(1)" max="100" contenteditable="true">Bad</progress>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('value="85" max="100"', clean)
+        self.assertNotIn('value="javascript:alert(1)"', clean)
+        self.assertNotIn('contenteditable="true"', clean)
+        self.assertTrue(any("progress gauge" in w for w in warnings))
+
+        res = sanitize_html5_progress_elements('<progress value="40" max="100" onclick="hack()">40%</progress>')
+        self.assertIn('value="40" max="100"', res)
+        self.assertNotIn("onclick=", res)
+
+    def test_sanitize_time_duration_microdata(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<time datetime="PT2H30M">2 jam 30 menit</time>'
+            '<time datetime="P1Y2M">1 tahun 2 bulan</time>'
+            '<time datetime="javascript:steal()">Invalid</time>'
+            '<time datetime="P_BAD_DURATION">Bad</time>'
+            '</div>'
+        )
+        clean = sanitize_time_duration_microdata(html)
+        self.assertIn('datetime="PT2H30M"', clean)
+        self.assertIn('datetime="P1Y2M"', clean)
+        self.assertNotIn('datetime="javascript:steal()"', clean)
+        self.assertNotIn('datetime="P_BAD_DURATION"', clean)
 
 
 if __name__ == "__main__":
