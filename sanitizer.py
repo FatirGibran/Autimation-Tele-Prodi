@@ -692,7 +692,50 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<data\b[^>]*>', sanitize_data, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 data token elements.")
 
+        # 8z. Sanitize HTML5 meter telemetry threshold elements
+        if "<meter" in cleaned.lower():
+            def sanitize_meter(m):
+                tag = m.group(0)
+                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                num_attrs = ["value", "min", "max", "low", "high", "optimum"]
+                for attr in num_attrs:
+                    attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+                    if attr_m:
+                        val = attr_m.group(1).strip()
+                        if not re.match(r'^-?\d+(?:\.\d+)?$', val):
+                            tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                            warnings.append(f"Stripped non-numeric {attr} attribute from meter element.")
+                return tag
+            cleaned = re.sub(r'<meter\b[^>]*>', sanitize_meter, cleaned, flags=re.IGNORECASE)
+            warnings.append("Sanitized HTML5 meter telemetry elements.")
+
         return cleaned, warnings
+
+
+def sanitize_html5_meter_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <meter> telemetry gauge elements by stripping scripting event handlers,
+    style attributes, and ensuring that numeric boundaries (min, max, low, high, optimum, value)
+    are strictly valid numeric quantities.
+    """
+    if not html or "<meter" not in html.lower():
+        return html
+
+    def sanitize_meter_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        for attr in ["value", "min", "max", "low", "high", "optimum"]:
+            attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if attr_m:
+                val = attr_m.group(1).strip()
+                if not re.match(r'^-?\d+(?:\.\d+)?$', val):
+                    tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    return re.sub(r'<meter\b[^>]*>', sanitize_meter_tag, html, flags=re.IGNORECASE)
+
 
 
 
