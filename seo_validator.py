@@ -2841,6 +2841,74 @@ class YoastSEOValidator:
             "is_optimal": is_optimal
         }
 
+    @staticmethod
+    def audit_audio_accessibility(html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML5 <audio> podcast elements for accessibility compliance (controls, labels, and text transcripts).
+        """
+        if not html_content:
+            return {
+                "has_audio": False,
+                "total_audios": 0,
+                "accessible_audios": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        audio_tags = soup.find_all("audio")
+        if not audio_tags:
+            return {
+                "has_audio": False,
+                "total_audios": 0,
+                "accessible_audios": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        issues = []
+        accessible_count = 0
+
+        for idx, audio in enumerate(audio_tags, start=1):
+            aud_issues = []
+            if not audio.has_attr("controls"):
+                aud_issues.append(f"Audio #{idx} lacks 'controls' attribute for user playback control.")
+
+            has_label = bool(audio.get("aria-label") or audio.get("aria-labelledby") or audio.get("title"))
+            if not has_label:
+                aud_issues.append(f"Audio #{idx} lacks an accessible label (title, aria-label, or aria-labelledby).")
+
+            # Check for transcript link or adjacent transcript container
+            has_transcript = False
+            if audio.get("aria-describedby"):
+                desc_id = audio.get("aria-describedby")
+                if soup.find(id=desc_id):
+                    has_transcript = True
+
+            parent = audio.parent
+            if parent:
+                trans_link = parent.find("a", string=re.compile(r'transkrip|transcript', re.IGNORECASE))
+                trans_div = parent.find(class_=re.compile(r'transcript|transkrip', re.IGNORECASE))
+                if trans_link or trans_div:
+                    has_transcript = True
+
+            if not has_transcript:
+                aud_issues.append(f"Audio #{idx} lacks companion text transcript or transcript link.")
+
+            if not aud_issues:
+                accessible_count += 1
+            else:
+                issues.extend(aud_issues)
+
+        return {
+            "has_audio": True,
+            "total_audios": len(audio_tags),
+            "accessible_audios": accessible_count,
+            "is_accessible": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
