@@ -994,6 +994,94 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bloat["is_optimal"])
         self.assertEqual(res_bloat["status"], "low_content")
 
+    def test_audit_audio_accessibility(self):
+        html_ok = (
+            '<div class="tu-editorial-container">'
+            '<div>'
+            '<audio controls title="Podcast Telekomunikasi Episode 1" aria-label="Podcast Episode 1">'
+            '<source src="podcast.mp3" type="audio/mpeg">'
+            '</audio>'
+            '<p class="transcript">Transkrip lengkap podcast membahas jaringan 5G...</p>'
+            '</div>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_audio_accessibility(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["accessible_audios"], 1)
+
+        html_bad = '<audio src="bad.mp3"></audio>'
+        res_bad = YoastSEOValidator.audit_audio_accessibility(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["accessible_audios"], 0)
+        self.assertTrue(any("controls" in i for i in res_bad["issues"]))
+
+    def test_audit_hreflang_tags(self):
+        html_ok = (
+            '<html><head>'
+            '<link rel="alternate" hreflang="id" href="https://bif-pwt.telkomuniversity.ac.id/artikel-5g/">'
+            '<link rel="alternate" hreflang="en" href="https://bif-pwt.telkomuniversity.ac.id/en/artikel-5g/">'
+            '<link rel="alternate" hreflang="x-default" href="https://bif-pwt.telkomuniversity.ac.id/artikel-5g/">'
+            '</head><body><p>Konten</p></body></html>'
+        )
+        res_ok = YoastSEOValidator.audit_hreflang_tags(html_ok, current_url="https://bif-pwt.telkomuniversity.ac.id/artikel-5g/")
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["total_tags"], 3)
+        self.assertTrue(res_ok["has_x_default"])
+
+        html_bad = (
+            '<html><head>'
+            '<link rel="alternate" hreflang="bad_lang_code" href="/relative-path">'
+            '</head><body><p>Konten</p></body></html>'
+        )
+        res_bad = YoastSEOValidator.audit_hreflang_tags(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertTrue(any("invalid language code" in i for i in res_bad["issues"]))
+        self.assertTrue(any("absolute URL" in i for i in res_bad["issues"]))
+
+    def test_audit_iframe_performance(self):
+        html_ok = (
+            '<div class="tu-editorial-container">'
+            '<iframe src="https://maps.google.com/embed" loading="lazy" title="Peta Kampus Telkom Purwokerto"></iframe>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_iframe_performance(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["optimized_iframes"], 1)
+
+        html_bad = '<iframe src="http://insecure.com/video"></iframe>'
+        res_bad = YoastSEOValidator.audit_iframe_performance(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("loading='lazy'" in i for i in res_bad["issues"]))
+        self.assertTrue(any("title" in i for i in res_bad["issues"]))
+        self.assertTrue(any("HTTPS" in i for i in res_bad["issues"]))
+
+    def test_audit_figure_figcaption_structure(self):
+        html_ok = (
+            '<div class="tu-editorial-container">'
+            '<figure>'
+            '<img src="diagram.png" alt="Diagram Topologi">'
+            '<figcaption>Gambar 1: Topologi Jaringan Sensor LoRaWAN</figcaption>'
+            '</figure>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_figure_figcaption_structure(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["valid_figures"], 1)
+
+        html_bad = (
+            '<div class="tu-editorial-container">'
+            '<figure>'
+            '<figcaption>Caption 1</figcaption>'
+            '<p>Teks biasa tanpa media</p>'
+            '<figcaption>Caption 2</figcaption>'
+            '</figure>'
+            '</div>'
+        )
+        res_bad = YoastSEOValidator.audit_figure_figcaption_structure(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("multiple" in i for i in res_bad["issues"]))
+        self.assertTrue(any("standard visual media" in i for i in res_bad["issues"]))
+
 
 if __name__ == "__main__":
     unittest.main()
