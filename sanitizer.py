@@ -777,6 +777,36 @@ def sanitize_html5_progress_elements(html: str) -> str:
     return re.sub(r'<progress\b[^>]*>', sanitize_progress_tag, html, flags=re.IGNORECASE)
 
 
+def sanitize_time_duration_microdata(html: str) -> str:
+    """
+    Sanitizes HTML5 <time> duration microdata attributes (e.g. PT2H30M, P1D) by validating
+    ISO 8601 duration syntax and stripping malformed or scriptable injection payloads.
+    """
+    if not html or "<time" not in html.lower():
+        return html
+
+    duration_regex = re.compile(
+        r'^P(?:\d+Y)?(?:\d+M)?(?:\d+W)?(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?$',
+        re.IGNORECASE
+    )
+
+    def sanitize_time_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        dt_m = re.search(r'datetime=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if dt_m:
+            dt_val = dt_m.group(1).strip()
+            if dt_val.upper().startswith("P"):
+                if not duration_regex.match(dt_val) or dt_val.upper() == "P":
+                    tag = re.sub(r'\s+datetime=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+            elif dt_val.lower().startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', dt_val):
+                tag = re.sub(r'\s+datetime=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    return re.sub(r'<time\b[^>]*>', sanitize_time_tag, html, flags=re.IGNORECASE)
+
+
+
 
 
 
