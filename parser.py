@@ -3131,6 +3131,50 @@ def evaluate_cum_laude_predicate(
     }
 
 
+def calculate_friis_free_space_path_loss(
+    frequency_mhz: float,
+    distance_km: float,
+    tx_gain_dbi: float = 0.0,
+    rx_gain_dbi: float = 0.0
+) -> Dict[str, Any]:
+    """
+    Calculates Friis Free Space Path Loss (FSPL) and RF attenuation for cellular base station links.
+    Standard equation:
+      FSPL(dB) = 20 * log10(distance_km) + 20 * log10(frequency_mhz) + 32.44 - tx_gain_dbi - rx_gain_dbi
+    """
+    import math
+
+    freq = max(1.0, float(frequency_mhz))
+    dist = max(0.001, float(distance_km))
+    gtx = float(tx_gain_dbi)
+    grx = float(rx_gain_dbi)
+
+    raw_fspl = 20 * math.log10(dist) + 20 * math.log10(freq) + 32.44
+    net_path_loss = raw_fspl - gtx - grx
+    wavelength_m = 300.0 / freq
+
+    if net_path_loss < 80.0:
+        link_quality = "Sangat Kuat (Line-of-Sight Dekat)"
+    elif net_path_loss < 110.0:
+        link_quality = "Baik (Cakupan Seluler Standar)"
+    elif net_path_loss < 135.0:
+        link_quality = "Batas Marjinal (Peredaman Tinggi)"
+    else:
+        link_quality = "Kritis (Memerlukan Penguat Sinyal / Repeater)"
+
+    return {
+        "frequency_mhz": freq,
+        "distance_km": dist,
+        "tx_gain_dbi": gtx,
+        "rx_gain_dbi": grx,
+        "wavelength_meters": round(wavelength_m, 4),
+        "raw_fspl_db": round(raw_fspl, 2),
+        "net_path_loss_db": round(net_path_loss, 2),
+        "link_quality": link_quality
+    }
+
+
+
 
 
 
