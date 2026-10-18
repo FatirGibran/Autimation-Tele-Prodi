@@ -2908,6 +2908,75 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_hreflang_tags(html_content: str, current_url: str = "") -> Dict[str, Any]:
+        """
+        Audits multilingual <link rel="alternate" hreflang="..."> annotations for international SEO.
+        """
+        if not html_content:
+            return {
+                "has_hreflang": False,
+                "total_tags": 0,
+                "languages_detected": [],
+                "has_x_default": False,
+                "is_valid": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        alt_links = [
+            l for l in soup.find_all("link")
+            if l.get("rel") and "alternate" in l.get("rel") and l.has_attr("hreflang")
+        ]
+
+        if not alt_links:
+            return {
+                "has_hreflang": False,
+                "total_tags": 0,
+                "languages_detected": [],
+                "has_x_default": False,
+                "is_valid": True,
+                "issues": []
+            }
+
+        issues = []
+        languages = []
+        has_x_default = False
+        lang_regex = re.compile(r'^[a-zA-Z]{2}(?:-[a-zA-Z]{2})?$|^x-default$', re.IGNORECASE)
+
+        for idx, link in enumerate(alt_links, start=1):
+            lang = link.get("hreflang", "").strip()
+            href = link.get("href", "").strip()
+
+            if not lang_regex.match(lang):
+                issues.append(f"Hreflang #{idx} has invalid language code '{lang}'. Expected ISO 639-1 or 'x-default'.")
+            else:
+                languages.append(lang.lower())
+                if lang.lower() == "x-default":
+                    has_x_default = True
+
+            if not href or not href.startswith(("http://", "https://")):
+                issues.append(f"Hreflang #{idx} href '{href}' must be a fully qualified absolute URL.")
+
+        if len(languages) > 1 and not has_x_default:
+            issues.append("Multilingual alternate links lack an 'x-default' fallback entry.")
+
+        if current_url:
+            clean_curr = current_url.strip().rstrip("/")
+            has_self = any(l.get("href", "").strip().rstrip("/") == clean_curr for l in alt_links)
+            if not has_self:
+                issues.append(f"Missing self-referencing hreflang tag pointing back to current URL '{current_url}'.")
+
+        return {
+            "has_hreflang": True,
+            "total_tags": len(alt_links),
+            "languages_detected": languages,
+            "has_x_default": has_x_default,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
