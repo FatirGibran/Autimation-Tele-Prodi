@@ -642,6 +642,17 @@ class WordPressClient:
             "errors": errors
         }
 
+    def get_site_settings(self) -> Dict[str, Any]:
+        """
+        Retrieves site settings from /settings endpoint (site title, tagline, timezone, date_format, url, etc.).
+        """
+        endpoint = f"{self.api_url}/settings"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, dict):
+            return results
+        return {}
+
 
 
 
