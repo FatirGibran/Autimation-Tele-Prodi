@@ -1624,6 +1624,116 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(len(node2_feeds), 1)
         self.assertEqual(node2_feeds[0]["sensor_type"], "CO2")
 
+    def test_fast_track_students_storage(self):
+        sid1 = self.storage.record_fast_track_student(
+            student_name="Ahmad Zaki",
+            nim="1101230045",
+            ipk=3.85,
+            completed_sks=124,
+            toefl_score=530,
+            masters_specialization="Telecommunications & IoT",
+            status="Eligible"
+        )
+        sid2 = self.storage.record_fast_track_student(
+            student_name="Rina Safitri",
+            nim="1101230088",
+            ipk=3.55,
+            completed_sks=118,
+            toefl_score=480,
+            masters_specialization="Wireless Systems",
+            status="Provisionally Eligible"
+        )
+        self.assertGreater(sid1, 0)
+        self.assertGreater(sid2, 0)
+
+        all_students = self.storage.list_fast_track_students()
+        self.assertEqual(len(all_students), 2)
+        self.assertEqual(all_students[0]["nim"], "1101230045")
+
+        eligible_only = self.storage.list_fast_track_students(status="Eligible")
+        self.assertEqual(len(eligible_only), 1)
+
+        single = self.storage.get_fast_track_student_by_nim("1101230045")
+        self.assertIsNotNone(single)
+        self.assertEqual(single["student_name"], "Ahmad Zaki")
+        self.assertAlmostEqual(single["ipk"], 3.85)
+
+        missing = self.storage.get_fast_track_student_by_nim("9999999999")
+        self.assertIsNone(missing)
+
+    def test_lab_calibration_compliance_storage(self):
+        cid1 = self.storage.record_lab_calibration_compliance(
+            equipment_name="Rohde & Schwarz FSW Spectrum Analyzer",
+            serial_number="RS-FSW-84920",
+            lab_room="Lab Frekuensi Radio LT.3",
+            last_calibration_date="2025-11-15",
+            next_due_date="2026-11-15",
+            calibration_status="Valid",
+            cert_number="CAL/RS/2025/1109"
+        )
+        cid2 = self.storage.record_lab_calibration_compliance(
+            equipment_name="Anritsu Site Master S331E",
+            serial_number="ANR-S331E-1002",
+            lab_room="Lab Antena & Propagasi",
+            last_calibration_date="2024-05-10",
+            next_due_date="2025-05-10",
+            calibration_status="Expired",
+            cert_number="CAL/ANR/2024/052"
+        )
+        self.assertGreater(cid1, 0)
+        self.assertGreater(cid2, 0)
+
+        all_cals = self.storage.list_lab_calibration_compliance()
+        self.assertEqual(len(all_cals), 2)
+
+        valid_cals = self.storage.list_lab_calibration_compliance(status="Valid")
+        self.assertEqual(len(valid_cals), 1)
+        self.assertEqual(valid_cals[0]["serial_number"], "RS-FSW-84920")
+
+        single = self.storage.get_lab_calibration_by_serial("RS-FSW-84920")
+        self.assertIsNotNone(single)
+        self.assertEqual(single["equipment_name"], "Rohde & Schwarz FSW Spectrum Analyzer")
+
+        missing = self.storage.get_lab_calibration_by_serial("UNKNOWN-SN")
+        self.assertIsNone(missing)
+
+    def test_lecturer_hki_records_storage(self):
+        hid1 = self.storage.record_lecturer_hki(
+            work_title="Perangkat Lunak Simulasi Propagasi Gelombang Mikro 5G",
+            creators=["Dr. Ir. Budi Santoso, M.T.", "Ahmad Zaki"],
+            creation_type="Program Komputer",
+            application_number="EC002026104829",
+            registration_number="000492819",
+            registration_date="2026-10-14",
+            rubric_points=20.0
+        )
+        hid2 = self.storage.record_lecturer_hki(
+            work_title="Monograf Desain Antena MIMO Berbasis Metamaterial",
+            creators=["Dr. Siti Rahmawati, M.T."],
+            creation_type="Buku / Monograf",
+            application_number="EC002026104830",
+            registration_number="000492820",
+            registration_date="2026-10-15",
+            rubric_points=40.0
+        )
+        self.assertGreater(hid1, 0)
+        self.assertGreater(hid2, 0)
+
+        all_hki = self.storage.list_lecturer_hki_records()
+        self.assertEqual(len(all_hki), 2)
+
+        software_hki = self.storage.list_lecturer_hki_records(creation_type="Program Komputer")
+        self.assertEqual(len(software_hki), 1)
+        self.assertEqual(software_hki[0]["registration_number"], "000492819")
+
+        single = self.storage.get_lecturer_hki_by_reg_number("000492819")
+        self.assertIsNotNone(single)
+        self.assertEqual(single["work_title"], "Perangkat Lunak Simulasi Propagasi Gelombang Mikro 5G")
+        self.assertEqual(single["creators"], ["Dr. Ir. Budi Santoso, M.T.", "Ahmad Zaki"])
+
+        missing = self.storage.get_lecturer_hki_by_reg_number("99999999")
+        self.assertIsNone(missing)
+
 
 if __name__ == "__main__":
     unittest.main()
