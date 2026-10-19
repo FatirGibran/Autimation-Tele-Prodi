@@ -621,6 +621,21 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fasttrack_nim ON fast_track_students(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fasttrack_status ON fast_track_students(status);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS lab_calibration_compliance (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    equipment_name TEXT NOT NULL,
+                    serial_number TEXT NOT NULL UNIQUE,
+                    lab_room TEXT NOT NULL,
+                    last_calibration_date TEXT NOT NULL,
+                    next_due_date TEXT NOT NULL,
+                    calibration_status TEXT NOT NULL,
+                    cert_number TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_calib_compliance_sn ON lab_calibration_compliance(serial_number);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_calib_compliance_status ON lab_calibration_compliance(calibration_status);")
 
 
 
@@ -3075,6 +3090,59 @@ class StorageManager:
         """
         with self._get_connection() as conn:
             cursor = conn.execute("SELECT * FROM fast_track_students WHERE nim = ?", (nim.strip(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_lab_calibration_compliance(
+        self,
+        equipment_name: str,
+        serial_number: str,
+        lab_room: str,
+        last_calibration_date: str,
+        next_due_date: str,
+        calibration_status: str,
+        cert_number: str
+    ) -> int:
+        """
+        Records laboratory telecommunications equipment calibration compliance under ISO/IEC 17025.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO lab_calibration_compliance (
+                    equipment_name, serial_number, lab_room, last_calibration_date,
+                    next_due_date, calibration_status, cert_number
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                equipment_name.strip(),
+                serial_number.strip(),
+                lab_room.strip(),
+                last_calibration_date.strip(),
+                next_due_date.strip(),
+                calibration_status.strip(),
+                cert_number.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_lab_calibration_compliance(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists equipment calibration compliance records with optional status filtering.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM lab_calibration_compliance"
+            params = []
+            if status:
+                query += " WHERE calibration_status = ?"
+                params.append(status.strip())
+            query += " ORDER BY next_due_date ASC, id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_lab_calibration_by_serial(self, serial_number: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an equipment calibration record by serial number.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM lab_calibration_compliance WHERE serial_number = ?", (serial_number.strip(),))
             row = cursor.fetchone()
             return dict(row) if row else None
 
