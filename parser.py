@@ -3370,6 +3370,70 @@ def calculate_optical_snr_and_ber(
     }
 
 
+def parse_lab_equipment_calibration(
+    equipment_name: str,
+    serial_number: str,
+    last_calibration_date: str,
+    calibration_interval_months: int = 12,
+    reference_date: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Evaluates laboratory telecommunication instrumentation calibration status (ISO/IEC 17025 standard).
+    Calculates expiration deadline, remaining validity days, and operational compliance.
+    """
+    from datetime import datetime, timedelta
+
+    eq_name = equipment_name.strip()
+    sn = serial_number.strip().upper()
+    interval_m = max(1, int(calibration_interval_months))
+
+    try:
+        last_dt = datetime.strptime(last_calibration_date.strip(), "%Y-%m-%d")
+    except ValueError:
+        return {
+            "equipment_name": eq_name,
+            "serial_number": sn,
+            "error": f"Format tanggal kalibrasi '{last_calibration_date}' tidak valid (gunakan YYYY-MM-DD).",
+            "is_operational_compliant": False
+        }
+
+    if reference_date:
+        try:
+            ref_dt = datetime.strptime(reference_date.strip(), "%Y-%m-%d")
+        except ValueError:
+            ref_dt = datetime.now()
+    else:
+        ref_dt = datetime.now()
+
+    due_dt = last_dt + timedelta(days=int(interval_m * 30.4375))
+    days_left = (due_dt.date() - ref_dt.date()).days
+
+    if days_left < 0:
+        status = "Expired"
+        is_compliant = False
+        recommendation = "Alat lab harus dihentikan dari praktikum / pengujian akreditasi dan segera dikalibrasi ulang di laboratorium kalibrasi terakreditasi KAN."
+    elif days_left <= 30:
+        status = "Due Soon"
+        is_compliant = True
+        recommendation = f"Masa kalibrasi tersisa {days_left} hari. Jadwalkan pengiriman kalibrasi sebelum tanggal jatuh tempo."
+    else:
+        status = "Valid"
+        is_compliant = True
+        recommendation = "Peralatan memenuhi standar kepatuhan pengujian ISO/IEC 17025 dan laik pakai untuk praktikum dan riset."
+
+    return {
+        "equipment_name": eq_name,
+        "serial_number": sn,
+        "last_calibration_date": last_dt.strftime("%Y-%m-%d"),
+        "next_due_date": due_dt.strftime("%Y-%m-%d"),
+        "interval_months": interval_m,
+        "days_remaining": days_left,
+        "status": status,
+        "is_operational_compliant": is_compliant,
+        "recommendation": recommendation
+    }
+
+
 
 
 
