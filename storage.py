@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -636,6 +637,21 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_calib_compliance_sn ON lab_calibration_compliance(serial_number);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_calib_compliance_status ON lab_calibration_compliance(calibration_status);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS lecturer_hki_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    work_title TEXT NOT NULL,
+                    creators_json TEXT NOT NULL,
+                    creation_type TEXT NOT NULL,
+                    application_number TEXT NOT NULL,
+                    registration_number TEXT NOT NULL UNIQUE,
+                    registration_date TEXT NOT NULL,
+                    rubric_points REAL DEFAULT 0.0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_hki_reg ON lecturer_hki_records(registration_number);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_hki_type ON lecturer_hki_records(creation_type);")
 
 
 
@@ -3145,6 +3161,78 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM lab_calibration_compliance WHERE serial_number = ?", (serial_number.strip(),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_lecturer_hki(
+        self,
+        work_title: str,
+        creators: List[str],
+        creation_type: str,
+        application_number: str,
+        registration_number: str,
+        registration_date: str,
+        rubric_points: float = 0.0
+    ) -> int:
+        """
+        Records a DJKI Kemenkumham Intellectual Property / HKI copyright registration for BKD and SINTA tracking.
+        """
+        clean_creators = [c.strip() for c in creators if c.strip()]
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO lecturer_hki_records (
+                    work_title, creators_json, creation_type, application_number,
+                    registration_number, registration_date, rubric_points
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                work_title.strip(),
+                json.dumps(clean_creators, ensure_ascii=False),
+                creation_type.strip(),
+                application_number.strip(),
+                registration_number.strip(),
+                registration_date.strip(),
+                float(rubric_points)
+            ))
+            return cursor.lastrowid
+
+    def list_lecturer_hki_records(self, creation_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists lecturer HKI copyright registrations with decoded creators list and optional creation type filtering.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM lecturer_hki_records"
+            params = []
+            if creation_type:
+                query += " WHERE creation_type = ?"
+                params.append(creation_type.strip())
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, params)
+            results = []
+            for row in cursor.fetchall():
+                data = dict(row)
+                try:
+                    data["creators"] = json.loads(data.get("creators_json") or "[]")
+                except Exception:
+                    data["creators"] = []
+                results.append(data)
+            return results
+
+    def get_lecturer_hki_by_reg_number(self, registration_number: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an HKI copyright record by official registration number.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM lecturer_hki_records WHERE registration_number = ?",
+                (registration_number.strip(),)
+            )
+            row = cursor.fetchone()
+            if not row:
+                return None
+            data = dict(row)
+            try:
+                data["creators"] = json.loads(data.get("creators_json") or "[]")
+            except Exception:
+                data["creators"] = []
+            return data
 
 
 
