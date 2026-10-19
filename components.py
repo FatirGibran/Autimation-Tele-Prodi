@@ -3785,6 +3785,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_accessible_disclosure_card(
+        cls,
+        title: str,
+        summary_heading: str,
+        details_html: str,
+        category_badge: str = "Informasi Akademik"
+    ) -> str:
+        """
+        Renders a WCAG 2.1 accessible HTML5 details/summary interactive disclosure card.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(title.strip())
+        summary_clean = escape(summary_heading.strip())
+        badge_clean = escape(category_badge.strip())
+
+        return f"""    <div class="tu-disclosure-card">
+      <div class="tu-disclosure-header">
+        <span class="tu-disclosure-badge">{badge_clean}</span>
+        <h4 class="tu-disclosure-title">{title_clean}</h4>
+      </div>
+      <details class="tu-disclosure-element">
+        <summary class="tu-disclosure-summary">
+          <span class="tu-summary-text">{summary_clean}</span>
+          <span class="tu-summary-chevron" aria-hidden="true">&#9662;</span>
+        </summary>
+        <div class="tu-disclosure-content">
+          {details_html}
+        </div>
+      </details>
+    </div>"""
+
 
 
 
