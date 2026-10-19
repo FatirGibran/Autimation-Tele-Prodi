@@ -3623,6 +3623,68 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_osnr_ber_card(
+        cls,
+        signal_power_dbm: float,
+        noise_power_dbm: float,
+        bitrate_gbps: float,
+        osnr_db: float,
+        q_factor: float,
+        estimated_ber: float,
+        quality_status: str = "Good"
+    ) -> str:
+        """
+        Renders an optical fiber link Optical Signal-to-Noise Ratio (OSNR) and Bit Error Rate (BER) evaluation card.
+        """
+        from xml.sax.saxutils import escape
+
+        status_clean = escape(quality_status.strip())
+        sig_str = f"{float(signal_power_dbm):.1f} dBm"
+        noise_str = f"{float(noise_power_dbm):.1f} dBm"
+        rate_str = f"{float(bitrate_gbps):.1f} Gbps"
+        osnr_str = f"{float(osnr_db):.2f} dB"
+        q_str = f"{float(q_factor):.2f}"
+        ber_str = f"{float(estimated_ber):.2e}"
+
+        status_class = "tu-status-good" if quality_status.lower() in ("excellent", "good") else "tu-status-warning"
+
+        return f"""    <div class="tu-optical-calc-card">
+      <div class="tu-optical-header">
+        <span class="tu-optical-badge">Transmisi Serat Optik DWDM</span>
+        <span class="tu-optical-status {status_class}">{status_clean}</span>
+      </div>
+      <h4 class="tu-optical-title">Kalkulasi OSNR &amp; Bit Error Rate (BER)</h4>
+      <div class="tu-optical-grid">
+        <div class="tu-optical-item">
+          <span class="tu-lbl">Daya Sinyal:</span>
+          <strong class="tu-val">{sig_str}</strong>
+        </div>
+        <div class="tu-optical-item">
+          <span class="tu-lbl">Tingkat Derau:</span>
+          <strong class="tu-val">{noise_str}</strong>
+        </div>
+        <div class="tu-optical-item">
+          <span class="tu-lbl">Laju Data:</span>
+          <span class="tu-val">{rate_str}</span>
+        </div>
+        <div class="tu-optical-item">
+          <span class="tu-lbl">Q-Factor:</span>
+          <span class="tu-val">{q_str}</span>
+        </div>
+      </div>
+      <div class="tu-optical-results">
+        <div class="tu-res-block">
+          <span class="tu-lbl">Optical SNR:</span>
+          <span class="tu-osnr-val">{osnr_str}</span>
+        </div>
+        <div class="tu-res-block">
+          <span class="tu-lbl">Estimasi BER:</span>
+          <code class="tu-ber-val">{ber_str}</code>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
