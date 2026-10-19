@@ -525,6 +525,31 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "GET")
         self.assertIn("/users?roles=author&per_page=20", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_bulk_trash_posts(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 101, "status": "trash"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.bulk_trash_posts([101, 102])
+        self.assertEqual(res["total_requested"], 2)
+        self.assertEqual(res["trashed_count"], 2)
+        self.assertEqual(res["trashed_ids"], [101, 102])
+        self.assertEqual(res["failed_count"], 0)
+
+    @patch("urllib.request.urlopen")
+    def test_get_site_settings(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"title": "S1 Teknik Telekomunikasi", "description": "Website Resmi Prodi", "timezone": "Asia/Jakarta"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        settings = self.client.get_site_settings()
+        self.assertEqual(settings["title"], "S1 Teknik Telekomunikasi")
+        self.assertEqual(settings["timezone"], "Asia/Jakarta")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/settings", req.full_url)
+
 
 if __name__ == "__main__":
     unittest.main()
