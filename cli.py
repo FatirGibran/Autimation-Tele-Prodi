@@ -1223,7 +1223,7 @@ def cmd_fast_track(args):
         if not students:
             print("Tidak ada data kandidat fast-track ditemukan.")
             return
-        print(f"{'ID':<4} | {'NIM':<10} | {'IPK':<5.2f} | {'SKS':<4} | {'TOEFL':<5} | {'NAMA':<20} | {'STATUS'}")
+        print(f"{'ID':<4} | {'NIM':<10} | {'IPK':<5} | {'SKS':<4} | {'TOEFL':<5} | {'NAMA':<20} | {'STATUS'}")
         print("-" * 75)
         for s in students:
             print(f"{s['id']:<4} | {s['nim']:<10} | {s['ipk']:<5.2f} | {s['completed_sks']:<4} | {s['toefl_score']:<5} | {s['student_name'][:18]:<20} | {s['status']}")

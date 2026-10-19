@@ -1625,6 +1625,85 @@ class TestCLI(unittest.TestCase):
             if out_file.exists():
                 out_file.unlink()
 
+    def test_cmd_fast_track(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Ahmad Zaki"
+            nim = "1101230045"
+            ipk = 3.85
+            sks = 124
+            toefl = 530
+            specialization = "Telekomunikasi Seluler"
+            status = "Eligible"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fast_track(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Kandidat fast-track berhasil dicatat", out)
+
+        class ArgsList:
+            action = "list"
+            status = "Eligible"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fast_track(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("1101230045", out)
+            self.assertIn("3.85", out)
+            self.assertIn("Ahmad Zaki", out)
+
+    def test_cmd_calibration(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Rohde & Schwarz Spectrum Analyzer"
+            sn = "RS-FSW-84920"
+            lab = "Lab RF LT.3"
+            last = "2025-11-15"
+            due = "2026-11-15"
+            status = "Valid"
+            cert = "CAL/RS/2025/1109"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_calibration(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Data kalibrasi peralatan berhasil dicatat", out)
+
+        class ArgsList:
+            action = "list"
+            status = "Valid"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_calibration(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("RS-FSW-84920", out)
+            self.assertIn("2026-11-15", out)
+
+    def test_cmd_hki(self):
+        class ArgsAdd:
+            action = "add"
+            title = "Perangkat Lunak Simulasi Propagasi 5G"
+            creators = "Dr. Ir. Budi Santoso, Ahmad Zaki"
+            type = "Program Komputer"
+            app_num = "EC002026104829"
+            reg_num = "000492819"
+            date = "2026-10-14"
+            points = 20.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_hki(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Pencatatan HKI/Hak Cipta berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            type = "Program Komputer"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_hki(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("000492819", out)
+            self.assertIn("Program Komputer", out)
+
 
 if __name__ == "__main__":
     unittest.main()
