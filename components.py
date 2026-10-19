@@ -3584,6 +3584,45 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_fast_track_program_card(
+        cls,
+        student_name: str,
+        nim: str,
+        ipk: float,
+        completed_sks: int,
+        toefl_score: int,
+        masters_specialization: str
+    ) -> str:
+        """
+        Renders an accelerated Fast-Track Master's program (S1 + S2) student recognition card.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(student_name.strip())
+        s_nim = escape(nim.strip())
+        s_spec = escape(masters_specialization.strip())
+        c_ipk = f"{float(ipk):.2f}"
+        sks = int(completed_sks)
+        toefl = int(toefl_score)
+
+        return f"""    <div class="tu-fast-track-card">
+      <div class="tu-fast-track-header">
+        <span class="tu-fast-track-badge">Program Akselerasi S1 + S2 (Fast-Track)</span>
+        <span class="tu-fast-track-sks">{sks} SKS Lulus</span>
+      </div>
+      <h3 class="tu-fast-track-student">{s_name}</h3>
+      <div class="tu-fast-track-meta">
+        <span>NIM: <strong>{s_nim}</strong></span>
+        <span>IPK: <strong>{c_ipk}</strong></span>
+        <span>TOEFL: <strong>{toefl}</strong></span>
+      </div>
+      <div class="tu-fast-track-specialization">
+        <span class="tu-lbl">Peminatan Magister:</span>
+        <strong class="tu-val">{s_spec}</strong>
+      </div>
+    </div>"""
+
 
 
 
