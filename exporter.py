@@ -1361,6 +1361,31 @@ navigation: true
             payload["url"] = url.strip()
         return payload
 
+    @staticmethod
+    def to_astro_starlight_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Astro Starlight documentation markdown format with sidebar order and badge frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        description = metadata.get("meta_description", "").strip()
+        category = metadata.get("category", "").strip()
+        sidebar_order = metadata.get("sidebar_order", 1)
+
+        lines = [
+            "---",
+            f'title: "{title}"',
+        ]
+        if description:
+            lines.append(f'description: "{description}"')
+        lines.append("sidebar:")
+        lines.append(f"  order: {int(sidebar_order)}")
+        if category:
+            lines.append(f'  badge: "{category}"')
+        lines.append("---")
+        lines.append("")
+        lines.append(html_content.strip())
+        return "\n".join(lines)
+
 
 
 
