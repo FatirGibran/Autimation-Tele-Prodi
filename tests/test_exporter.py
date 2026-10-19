@@ -681,6 +681,42 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('  - "5g"', res)
         self.assertIn("<p>Catatan catatan riset.</p>", res)
 
+    def test_generate_educational_credential_json_ld(self):
+        res = ArticleExporter.generate_educational_credential_json_ld(
+            credential_name="Sertifikasi Kompetensi Perekayasa Jaringan Seluler 5G",
+            recipient_name="Ahmad Zaki",
+            issuer_name="Badan Nasional Sertifikasi Profesi (BNSP)",
+            valid_from="2026-10-15",
+            credential_category="Professional License",
+            cert_id="BNSP-TEL-2026-0912",
+            url="https://bnsp.go.id/cert/BNSP-TEL-2026-0912"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "EducationalOccupationalCredential")
+        self.assertEqual(res["name"], "Sertifikasi Kompetensi Perekayasa Jaringan Seluler 5G")
+        self.assertEqual(res["credentialCategory"], "Professional License")
+        self.assertEqual(res["recognizedBy"]["name"], "Badan Nasional Sertifikasi Profesi (BNSP)")
+        self.assertEqual(res["about"]["name"], "Ahmad Zaki")
+        self.assertEqual(res["validFrom"], "2026-10-15")
+        self.assertEqual(res["identifier"], "BNSP-TEL-2026-0912")
+        self.assertEqual(res["url"], "https://bnsp.go.id/cert/BNSP-TEL-2026-0912")
+
+    def test_to_astro_starlight_markdown(self):
+        meta = {
+            "seo_title": "Panduan Instalasi Lab Antena",
+            "meta_description": "Dokumentasi setup pengujian antena horn lab RF.",
+            "category": "Panduan Lab",
+            "sidebar_order": 3
+        }
+        res = ArticleExporter.to_astro_starlight_markdown(meta, "<p>Langkah 1: Pasang tripod dudukan antena.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Instalasi Lab Antena"', res)
+        self.assertIn('description: "Dokumentasi setup pengujian antena horn lab RF."', res)
+        self.assertIn("sidebar:", res)
+        self.assertIn("order: 3", res)
+        self.assertIn('badge: "Panduan Lab"', res)
+        self.assertIn("<p>Langkah 1: Pasang tripod dudukan antena.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
