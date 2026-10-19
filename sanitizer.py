@@ -100,6 +100,7 @@ class HTMLSanitizer:
                 return tag
 
             det_before = cleaned
+            cleaned = sanitize_html5_details_summary_elements(cleaned)
             cleaned = re.sub(r'<details\b[^>]*>', fix_details, cleaned, flags=re.IGNORECASE)
             cleaned = re.sub(r'<summary\b[^>]*>', fix_summary, cleaned, flags=re.IGNORECASE)
             if cleaned != det_before:
@@ -821,6 +822,36 @@ def sanitize_html5_dialog_elements(html: str) -> str:
         return tag
 
     return re.sub(r'<dialog\b[^>]*>', sanitize_dialog_tag, html, flags=re.IGNORECASE)
+
+
+def sanitize_html5_details_summary_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <details> and <summary> disclosure elements by removing scripting event handlers,
+    style attributes, ensuring valid open attributes on details, and enforcing safe class bindings.
+    """
+    if not html or ("<details" not in html.lower() and "<summary" not in html.lower()):
+        return html
+
+    def fix_details(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        open_m = re.search(r'\bopen=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if open_m:
+            val = open_m.group(1).strip().lower()
+            if val not in ("open", "", "true"):
+                tag = re.sub(r'\s+open=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    def fix_summary(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<details\b[^>]*>', fix_details, html, flags=re.IGNORECASE)
+    out = re.sub(r'<summary\b[^>]*>', fix_summary, out, flags=re.IGNORECASE)
+    return out
 
 
 
