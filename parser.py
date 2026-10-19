@@ -3267,6 +3267,57 @@ def parse_tridharma_internal_grant_compliance(
     }
 
 
+def evaluate_fast_track_masters_eligibility(
+    ipk: float,
+    completed_sks: int,
+    english_score: int,
+    min_ipk: float = 3.50,
+    min_sks: int = 120,
+    min_toefl: int = 475
+) -> Dict[str, Any]:
+    """
+    Evaluates undergraduate student eligibility for the Fast-Track accelerated Master's program (S1 + S2).
+    Requires high academic standing (IPK >= 3.50), minimum 120 SKS credit completion, and certified English score.
+    """
+    c_ipk = max(0.0, min(4.0, float(ipk)))
+    c_sks = max(0, int(completed_sks))
+    c_eng = max(0, int(english_score))
+
+    deficiencies: List[str] = []
+    if c_ipk < min_ipk:
+        deficiencies.append(f"IPK kumulatif {c_ipk:.2f} di bawah ambang batas minimal {min_ipk:.2f}")
+    if c_sks < min_sks:
+        deficiencies.append(f"Jumlah SKS lulus {c_sks} kurang dari syarat minimal {min_sks} SKS")
+    if c_eng < min_toefl:
+        deficiencies.append(f"Skor kemahiran bahasa Inggris {c_eng} di bawah syarat minimal {min_toefl}")
+
+    is_eligible = len(deficiencies) == 0
+    if is_eligible:
+        tier = "Lolos Seleksi Utama"
+    elif len(deficiencies) == 1 and c_eng < min_toefl and c_ipk >= min_ipk and c_sks >= min_sks:
+        tier = "Lolos Bersyarat"
+    else:
+        tier = "Belum Memenuhi Syarat"
+
+    recommendations: List[str] = []
+    if is_eligible:
+        recommendations.append("Dapat langsung memilih calon pembimbing tesis dan rencana studi Magister.")
+    elif tier == "Lolos Bersyarat":
+        recommendations.append("Diberikan kesempatan 1 semester untuk memenuhi sertifikasi TOEFL minimal.")
+    else:
+        recommendations.append("Fokus menuntaskan mata kuliah S1 dan perbaikan nilai untuk mencapai kriteria.")
+
+    return {
+        "ipk": c_ipk,
+        "completed_sks": c_sks,
+        "english_score": c_eng,
+        "is_eligible": is_eligible,
+        "eligibility_tier": tier,
+        "deficiencies": deficiencies,
+        "recommendations": recommendations
+    }
+
+
 
 
 
