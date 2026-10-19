@@ -618,6 +618,30 @@ class WordPressClient:
             return results
         return []
 
+    def bulk_trash_posts(self, post_ids: List[int]) -> Dict[str, Any]:
+        """
+        Moves multiple WordPress posts to the trash in bulk by calling DELETE on /posts/<id>.
+        Returns summary dictionary containing trashed_count, trashed_ids, and any errors.
+        """
+        trashed_ids: List[int] = []
+        errors: Dict[int, str] = {}
+        for pid in post_ids:
+            try:
+                endpoint = f"{self.api_url}/posts/{int(pid)}"
+                req = urllib.request.Request(endpoint, headers=self._get_headers(), method="DELETE")
+                self._send_request(req)
+                trashed_ids.append(int(pid))
+            except Exception as e:
+                errors[int(pid)] = str(e)
+
+        return {
+            "total_requested": len(post_ids),
+            "trashed_count": len(trashed_ids),
+            "trashed_ids": trashed_ids,
+            "failed_count": len(errors),
+            "errors": errors
+        }
+
 
 
 
