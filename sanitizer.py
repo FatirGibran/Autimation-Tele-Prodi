@@ -10,7 +10,7 @@ ALLOWED_TAGS = {
     "video", "audio", "source", "picture", "track", "canvas",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
     "ruby", "rt", "rp", "rb", "rtc",
-    "meter", "progress", "data"
+    "meter", "progress", "data", "template"
 }
 
 
@@ -723,6 +723,11 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<progress\b[^>]*>', sanitize_progress, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 progress gauge elements.")
 
+        # 8ab. Sanitize HTML5 template elements and declarative shadow DOM
+        if "<template" in cleaned.lower():
+            cleaned = sanitize_html5_template_elements(cleaned)
+            warnings.append("Sanitized HTML5 template elements and neutralized declarative shadow DOM scripts.")
+
         return cleaned, warnings
 
 
@@ -851,6 +856,39 @@ def sanitize_html5_details_summary_elements(html: str) -> str:
 
     out = re.sub(r'<details\b[^>]*>', fix_details, html, flags=re.IGNORECASE)
     out = re.sub(r'<summary\b[^>]*>', fix_summary, out, flags=re.IGNORECASE)
+    return out
+
+
+def sanitize_html5_template_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <template> elements and declarative shadow DOM roots by neutralizing
+    nested executable script tags, stripping unsafe shadowrootmode attributes, and scrubbing event handlers.
+    """
+    if not html or "<template" not in html.lower():
+        return html
+
+    def sanitize_template_block(m):
+        full_tag = m.group(1)
+        inner_content = m.group(2)
+        full_tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', full_tag, flags=re.IGNORECASE)
+        srm_m = re.search(r'\b(shadowrootmode|shadowroot)=["\']([^"\']*)["\']', full_tag, re.IGNORECASE)
+        if srm_m:
+            attr_name = srm_m.group(1)
+            val = srm_m.group(2).strip().lower()
+            if val not in ("open", "closed"):
+                full_tag = re.sub(rf'\s+{attr_name}=["\'][^"\']*["\']', '', full_tag, flags=re.IGNORECASE)
+        inner_cleaned = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', inner_content, flags=re.IGNORECASE)
+        inner_cleaned = re.sub(r'<script\b[^>]*>', '', inner_cleaned, flags=re.IGNORECASE)
+        inner_cleaned = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', inner_cleaned, flags=re.IGNORECASE)
+        return f"{full_tag}{inner_cleaned}</template>"
+
+    out = re.sub(r'(<template\b[^>]*>)([\s\S]*?)</template>', sanitize_template_block, html, flags=re.IGNORECASE)
+
+    def sanitize_lone_template(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+    out = re.sub(r'<template\b[^>]*>', sanitize_lone_template, out, flags=re.IGNORECASE)
     return out
 
 
