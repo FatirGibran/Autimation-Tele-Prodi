@@ -1203,6 +1203,82 @@ def cmd_quartz(args):
     out_path.write_text(quartz_md, encoding="utf-8")
     print(f"Export Quartz markdown berhasil -> {out_path}")
 
+def cmd_fast_track(args):
+    if args.action == "add":
+        if not args.name or not args.nim or args.ipk is None or args.sks is None or args.toefl is None or not args.specialization:
+            print("Error: Argumen --name, --nim, --ipk, --sks, --toefl, dan --specialization wajib diisi.")
+            sys.exit(1)
+        sid = storage.record_fast_track_student(
+            student_name=args.name,
+            nim=args.nim,
+            ipk=args.ipk,
+            completed_sks=args.sks,
+            toefl_score=args.toefl,
+            masters_specialization=args.specialization,
+            status=args.status or "Eligible"
+        )
+        print(f"Kandidat fast-track berhasil dicatat dengan ID: {sid}")
+    else:
+        students = storage.list_fast_track_students(status=args.status)
+        if not students:
+            print("Tidak ada data kandidat fast-track ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'IPK':<5.2f} | {'SKS':<4} | {'TOEFL':<5} | {'NAMA':<20} | {'STATUS'}")
+        print("-" * 75)
+        for s in students:
+            print(f"{s['id']:<4} | {s['nim']:<10} | {s['ipk']:<5.2f} | {s['completed_sks']:<4} | {s['toefl_score']:<5} | {s['student_name'][:18]:<20} | {s['status']}")
+
+def cmd_calibration(args):
+    if args.action == "add":
+        if not args.name or not args.sn or not args.lab or not args.last or not args.due or not args.cert:
+            print("Error: Argumen --name, --sn, --lab, --last, --due, dan --cert wajib diisi.")
+            sys.exit(1)
+        cid = storage.record_lab_calibration_compliance(
+            equipment_name=args.name,
+            serial_number=args.sn,
+            lab_room=args.lab,
+            last_calibration_date=args.last,
+            next_due_date=args.due,
+            calibration_status=args.status or "Valid",
+            cert_number=args.cert
+        )
+        print(f"Data kalibrasi peralatan berhasil dicatat dengan ID: {cid}")
+    else:
+        cals = storage.list_lab_calibration_compliance(status=args.status)
+        if not cals:
+            print("Tidak ada catatan kepatuhan kalibrasi lab ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NO SERI':<15} | {'JATUH TEMPO':<12} | {'STATUS':<10} | {'ALAT':<25} | {'RUANG LAB'}")
+        print("-" * 85)
+        for c in cals:
+            print(f"{c['id']:<4} | {c['serial_number'][:14]:<15} | {c['next_due_date']:<12} | {c['calibration_status']:<10} | {c['equipment_name'][:23]:<25} | {c['lab_room']}")
+
+def cmd_hki(args):
+    if args.action == "add":
+        if not args.title or not args.creators or not args.type or not args.app_num or not args.reg_num or not args.date:
+            print("Error: Argumen --title, --creators, --type, --app-num, --reg-num, dan --date wajib diisi.")
+            sys.exit(1)
+        creators_list = [c.strip() for c in args.creators.split(",") if c.strip()]
+        hid = storage.record_lecturer_hki(
+            work_title=args.title,
+            creators=creators_list,
+            creation_type=args.type,
+            application_number=args.app_num,
+            registration_number=args.reg_num,
+            registration_date=args.date,
+            rubric_points=args.points or 0.0
+        )
+        print(f"Pencatatan HKI/Hak Cipta berhasil disimpan dengan ID: {hid}")
+    else:
+        hkis = storage.list_lecturer_hki_records(creation_type=args.type)
+        if not hkis:
+            print("Tidak ada catatan HKI/Hak Cipta yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NO PENCATATAN':<16} | {'JENIS':<18} | {'POIN':<5} | {'JUDUL CIPTAAN'}")
+        print("-" * 80)
+        for h in hkis:
+            print(f"{h['id']:<4} | {h['registration_number']:<16} | {h['creation_type'][:16]:<18} | {h.get('rubric_points', 0.0):<5.1f} | {h['work_title'][:30]}")
+
 
 def main():
 
@@ -1670,6 +1746,42 @@ def main():
     quartz_parser.add_argument("--slug", required=True, help="Slug artikel di database")
     quartz_parser.add_argument("--out", help="Path berkas output Markdown Quartz")
     quartz_parser.set_defaults(func=cmd_quartz)
+
+    # Fast-track command
+    ft_parser = subparsers.add_parser("fast-track", help="Kelola data seleksi program magister fast-track (list, add)")
+    ft_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan fast-track")
+    ft_parser.add_argument("--name", help="Nama lengkap mahasiswa")
+    ft_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    ft_parser.add_argument("--ipk", type=float, help="Indeks Prestasi Kumulatif")
+    ft_parser.add_argument("--sks", type=int, help="Jumlah SKS lulus")
+    ft_parser.add_argument("--toefl", type=int, help="Skor TOEFL")
+    ft_parser.add_argument("--specialization", help="Peminatan magister")
+    ft_parser.add_argument("--status", default="Eligible", help="Status kelayakan fast-track")
+    ft_parser.set_defaults(func=cmd_fast_track)
+
+    # Calibration command
+    cal_parser = subparsers.add_parser("calibration", help="Kelola kepatuhan kalibrasi alat lab telekomunikasi (list, add)")
+    cal_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan kalibrasi")
+    cal_parser.add_argument("--name", help="Nama peralatan laboratorium")
+    cal_parser.add_argument("--sn", help="Nomor seri peralatan")
+    cal_parser.add_argument("--lab", help="Ruang laboratorium")
+    cal_parser.add_argument("--last", help="Tanggal kalibrasi terakhir (YYYY-MM-DD)")
+    cal_parser.add_argument("--due", help="Tanggal jatuh tempo kalibrasi (YYYY-MM-DD)")
+    cal_parser.add_argument("--status", default="Valid", help="Status kalibrasi (Valid, Expired, Due Soon)")
+    cal_parser.add_argument("--cert", help="Nomor sertifikat kalibrasi")
+    cal_parser.set_defaults(func=cmd_calibration)
+
+    # HKI command
+    hki_parser = subparsers.add_parser("hki", help="Kelola pencatatan hak cipta dan kekayaan intelektual dosen (list, add)")
+    hki_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan HKI")
+    hki_parser.add_argument("--title", help="Judul ciptaan / karya intelektual")
+    hki_parser.add_argument("--creators", help="Daftar pencipta dipisahkan koma")
+    hki_parser.add_argument("--type", help="Jenis ciptaan (Program Komputer, Buku, Modul)")
+    hki_parser.add_argument("--app-num", help="Nomor permohonan DJKI")
+    hki_parser.add_argument("--reg-num", help="Nomor pencatatan sertifikat DJKI")
+    hki_parser.add_argument("--date", help="Tanggal pencatatan")
+    hki_parser.add_argument("--points", type=float, default=0.0, help="Poin BKD / SINTA")
+    hki_parser.set_defaults(func=cmd_hki)
 
     args = parser.parse_args()
 
