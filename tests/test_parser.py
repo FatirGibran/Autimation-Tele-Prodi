@@ -1101,6 +1101,113 @@ Status: Granted
         self.assertFalse(res_fail["is_compliant"])
         self.assertGreaterEqual(len(res_fail["compliance_issues"]), 3)
 
+    def test_evaluate_fast_track_masters_eligibility(self):
+        from parser import evaluate_fast_track_masters_eligibility
+        res_ok = evaluate_fast_track_masters_eligibility(
+            ipk=3.85,
+            completed_sks=130,
+            english_score=525
+        )
+        self.assertTrue(res_ok["is_eligible"])
+        self.assertEqual(res_ok["eligibility_tier"], "Lolos Seleksi Utama")
+        self.assertEqual(len(res_ok["deficiencies"]), 0)
+
+        res_cond = evaluate_fast_track_masters_eligibility(
+            ipk=3.65,
+            completed_sks=124,
+            english_score=450
+        )
+        self.assertFalse(res_cond["is_eligible"])
+        self.assertEqual(res_cond["eligibility_tier"], "Lolos Bersyarat")
+        self.assertEqual(len(res_cond["deficiencies"]), 1)
+
+        res_fail = evaluate_fast_track_masters_eligibility(
+            ipk=3.10,
+            completed_sks=95,
+            english_score=400
+        )
+        self.assertFalse(res_fail["is_eligible"])
+        self.assertEqual(res_fail["eligibility_tier"], "Belum Memenuhi Syarat")
+        self.assertEqual(len(res_fail["deficiencies"]), 3)
+
+    def test_calculate_optical_snr_and_ber(self):
+        from parser import calculate_optical_snr_and_ber
+        res_excel = calculate_optical_snr_and_ber(
+            signal_power_dbm=2.0,
+            noise_power_dbm=-26.0,
+            bitrate_gbps=10.0
+        )
+        self.assertEqual(res_excel["osnr_db"], 28.0)
+        self.assertEqual(res_excel["quality_status"], "Excellent")
+        self.assertLess(res_excel["estimated_ber"], 1e-8)
+
+        res_marg = calculate_optical_snr_and_ber(
+            signal_power_dbm=-5.0,
+            noise_power_dbm=-20.0,
+            bitrate_gbps=10.0
+        )
+        self.assertEqual(res_marg["osnr_db"], 15.0)
+        self.assertEqual(res_marg["quality_status"], "Marginal")
+
+    def test_parse_lab_equipment_calibration(self):
+        from parser import parse_lab_equipment_calibration
+        res_valid = parse_lab_equipment_calibration(
+            equipment_name="Rohde & Schwarz Spectrum Analyzer 6 GHz",
+            serial_number="RS-FPL-100234",
+            last_calibration_date="2026-05-01",
+            calibration_interval_months=12,
+            reference_date="2026-10-19"
+        )
+        self.assertEqual(res_valid["status"], "Valid")
+        self.assertTrue(res_valid["is_operational_compliant"])
+        self.assertGreater(res_valid["days_remaining"], 30)
+
+        res_exp = parse_lab_equipment_calibration(
+            equipment_name="OTDR Yokogawa AQ7280",
+            serial_number="YOKO-OTDR-099",
+            last_calibration_date="2025-01-01",
+            calibration_interval_months=12,
+            reference_date="2026-10-19"
+        )
+        self.assertEqual(res_exp["status"], "Expired")
+        self.assertFalse(res_exp["is_operational_compliant"])
+        self.assertLess(res_exp["days_remaining"], 0)
+
+        res_err = parse_lab_equipment_calibration(
+            equipment_name="Test Tool",
+            serial_number="TT-01",
+            last_calibration_date="invalid-date"
+        )
+        self.assertFalse(res_err["is_operational_compliant"])
+        self.assertIn("error", res_err)
+
+    def test_parse_lecturer_hki_copyright(self):
+        from parser import parse_lecturer_hki_copyright
+        res_prog = parse_lecturer_hki_copyright(
+            work_title="Software Analisis Propagasi MIMO 5G Purwokerto",
+            creator_names=["Dr. Ir. Budi Santoso, M.T.", "Ahmad Fauzi, S.T."],
+            creation_type="Program Komputer",
+            application_number="EC00202619876",
+            registration_number="000543210",
+            registration_date="2026-08-15"
+        )
+        self.assertTrue(res_prog["is_valid_registration"])
+        self.assertEqual(res_prog["creation_type"], "Program Komputer")
+        self.assertEqual(res_prog["sinta_bkd_rubric_points"], 20.0)
+        self.assertEqual(res_prog["primary_creator"], "Dr. Ir. Budi Santoso, M.T.")
+        self.assertEqual(res_prog["legal_status"], "Granted")
+
+        res_book = parse_lecturer_hki_copyright(
+            work_title="Buku Ajar Jaringan Seluler 5G & 6G",
+            creator_names=["Prof. Hendra Wijaya"],
+            creation_type="Buku / Monograf",
+            application_number="EC00202654321",
+            registration_number="000987654",
+            registration_date="2026-07-10"
+        )
+        self.assertEqual(res_book["sinta_bkd_rubric_points"], 40.0)
+        self.assertTrue(res_book["is_valid_registration"])
+
 
 if __name__ == "__main__":
     unittest.main()
