@@ -1082,6 +1082,73 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertTrue(any("multiple" in i for i in res_bad["issues"]))
         self.assertTrue(any("standard visual media" in i for i in res_bad["issues"]))
 
+    def test_audit_table_accessibility(self):
+        html_ok = (
+            '<div class="tu-editorial-container">'
+            '<table>'
+            '<caption>Tabel 1: Perbandingan Metrik Modulasi</caption>'
+            '<thead><tr><th scope="col">Modulasi</th><th scope="col">Spektrum</th></tr></thead>'
+            '<tbody><tr><td>QPSK</td><td>2 bps/Hz</td></tr></tbody>'
+            '</table>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_table_accessibility(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_tables"], 1)
+
+        html_bad = '<table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>'
+        res_bad = YoastSEOValidator.audit_table_accessibility(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("lacks an accessible description" in i for i in res_bad["issues"]))
+        self.assertTrue(any("scope attribute" in i for i in res_bad["issues"]))
+
+    def test_audit_form_labels_and_autocomplete(self):
+        html_ok = (
+            '<form>'
+            '<label for="u_email">Email:</label>'
+            '<input type="email" id="u_email" autocomplete="email">'
+            '<label><input type="checkbox"> Setuju</label>'
+            '</form>'
+        )
+        res_ok = YoastSEOValidator.audit_form_labels_and_autocomplete(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["labeled_controls"], 2)
+
+        html_bad = '<form><input type="email" id="bad_email"></form>'
+        res_bad = YoastSEOValidator.audit_form_labels_and_autocomplete(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("associated <label>" in i for i in res_bad["issues"]))
+        self.assertTrue(any("autocomplete" in i for i in res_bad["issues"]))
+
+    def test_audit_content_language_and_direction(self):
+        html_ok = '<div class="tu-editorial-container" lang="id-ID" dir="ltr"><p>Konten Bahasa Indonesia</p></div>'
+        res_ok = YoastSEOValidator.audit_content_language_and_direction(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["declared_lang"], "id-ID")
+        self.assertEqual(res_ok["declared_dir"], "ltr")
+
+        html_bad = '<div class="tu-editorial-container" dir="diagonal"><p>Teks</p></div>'
+        res_bad = YoastSEOValidator.audit_content_language_and_direction(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("lacks a declared 'lang'" in i for i in res_bad["issues"]))
+        self.assertTrue(any("directionality" in i for i in res_bad["issues"]))
+
+    def test_audit_svg_accessibility(self):
+        html_ok = (
+            '<div>'
+            '<svg aria-hidden="true"><circle cx="5" cy="5" r="5"/></svg>'
+            '<svg role="img" aria-label="Grafik Antena"><rect width="10" height="10"/></svg>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_svg_accessibility(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_svgs"], 2)
+
+        html_bad = '<svg><path d="M0 0"/></svg>'
+        res_bad = YoastSEOValidator.audit_svg_accessibility(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("lacks accessible labeling" in i for i in res_bad["issues"]))
+
 
 if __name__ == "__main__":
     unittest.main()
