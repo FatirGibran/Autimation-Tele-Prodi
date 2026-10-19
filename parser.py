@@ -3434,6 +3434,62 @@ def parse_lab_equipment_calibration(
     }
 
 
+def parse_lecturer_hki_copyright(
+    work_title: str,
+    creator_names: List[str],
+    creation_type: str,
+    application_number: str,
+    registration_number: str,
+    registration_date: str
+) -> Dict[str, Any]:
+    """
+    Parses and evaluates lecturer intellectual property copyright certificates (HKI Hak Cipta DJKI Kemenkumham RI)
+    for BKD (Beban Kerja Dosen) Tridharma compliance and SINTA score calculation.
+    """
+    clean_title = work_title.strip()
+    clean_creators = [c.strip() for c in creator_names if c.strip()]
+    c_type = creation_type.strip()
+    app_num = application_number.strip().upper()
+    reg_num = registration_number.strip()
+    reg_date = registration_date.strip()
+
+    type_lower = c_type.lower()
+    if "program komputer" in type_lower or "software" in type_lower:
+        rubric_points = 20.0
+        standard_category = "Program Komputer"
+    elif "buku" in type_lower or "monograf" in type_lower:
+        rubric_points = 40.0
+        standard_category = "Buku / Monograf"
+    elif "modul" in type_lower or "panduan" in type_lower:
+        rubric_points = 15.0
+        standard_category = "Modul / Bahan Ajar"
+    elif "karya" in type_lower or "ilmiah" in type_lower:
+        rubric_points = 15.0
+        standard_category = "Karya Tulis Ilmiah"
+    else:
+        rubric_points = 10.0
+        standard_category = c_type
+
+    is_valid_format = bool(re.match(r'^[A-Z0-9\-]+$', app_num)) and len(reg_num) >= 5
+    has_creators = len(clean_creators) > 0
+    is_valid_registration = is_valid_format and has_creators and bool(clean_title)
+
+    primary_creator = clean_creators[0] if clean_creators else "Tidak Diketahui"
+
+    return {
+        "work_title": clean_title,
+        "creators": clean_creators,
+        "primary_creator": primary_creator,
+        "creation_type": standard_category,
+        "application_number": app_num,
+        "registration_number": reg_num,
+        "registration_date": reg_date,
+        "is_valid_registration": is_valid_registration,
+        "sinta_bkd_rubric_points": rubric_points,
+        "legal_status": "Granted" if is_valid_registration else "Pending Verification"
+    }
+
+
 
 
 
