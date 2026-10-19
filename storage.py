@@ -606,6 +606,21 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_iot_node ON iot_sensor_telemetry_feeds(node_id);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_iot_type ON iot_sensor_telemetry_feeds(sensor_type);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS fast_track_students (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL UNIQUE,
+                    ipk REAL NOT NULL,
+                    completed_sks INTEGER NOT NULL,
+                    toefl_score INTEGER NOT NULL,
+                    masters_specialization TEXT NOT NULL,
+                    status TEXT DEFAULT 'Eligible',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fasttrack_nim ON fast_track_students(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fasttrack_status ON fast_track_students(status);")
 
 
 
@@ -3010,6 +3025,58 @@ class StorageManager:
                 (node_id.strip(), max(1, int(limit)))
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def record_fast_track_student(
+        self,
+        student_name: str,
+        nim: str,
+        ipk: float,
+        completed_sks: int,
+        toefl_score: int,
+        masters_specialization: str,
+        status: str = "Eligible"
+    ) -> int:
+        """
+        Records a student eligible for the fast-track accelerated master's program.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO fast_track_students (
+                    student_name, nim, ipk, completed_sks, toefl_score, masters_specialization, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(),
+                nim.strip(),
+                float(ipk),
+                int(completed_sks),
+                int(toefl_score),
+                masters_specialization.strip(),
+                status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_fast_track_students(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists fast-track master's student candidates with optional status filtering.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM fast_track_students"
+            params = []
+            if status:
+                query += " WHERE status = ?"
+                params.append(status.strip())
+            query += " ORDER BY ipk DESC, id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_fast_track_student_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a fast-track student profile by student identification number (NIM).
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM fast_track_students WHERE nim = ?", (nim.strip(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
 
 
 
