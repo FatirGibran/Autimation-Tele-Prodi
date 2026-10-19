@@ -1355,6 +1355,92 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn('min="15.00"', html)
         self.assertIn('max="40.00"', html)
 
+    def test_render_fast_track_program_card(self):
+        html = EditorialComponents.render_fast_track_program_card(
+            student_name="Ahmad Zaki",
+            nim="1101230045",
+            ipk=3.75,
+            completed_sks=122,
+            toefl_score=520,
+            masters_specialization="Wireless & Optical Communications"
+        )
+        self.assertIn("tu-fast-track-card", html)
+        self.assertIn("Ahmad Zaki", html)
+        self.assertIn("1101230045", html)
+        self.assertIn("3.75", html)
+        self.assertIn("122 SKS", html)
+        self.assertIn("520", html)
+        self.assertIn("Wireless &amp; Optical Communications", html)
+
+    def test_render_optical_osnr_ber_card(self):
+        html = EditorialComponents.render_optical_osnr_ber_card(
+            signal_power_dbm=2.5,
+            noise_power_dbm=-25.0,
+            bitrate_gbps=100.0,
+            osnr_db=27.5,
+            q_factor=7.2,
+            estimated_ber=1.2e-9,
+            quality_status="Excellent"
+        )
+        self.assertIn("tu-optical-calc-card", html)
+        self.assertIn("2.5 dBm", html)
+        self.assertIn("-25.0 dBm", html)
+        self.assertIn("100.0 Gbps", html)
+        self.assertIn("27.50 dB", html)
+        self.assertIn("7.20", html)
+        self.assertIn("1.20e-09", html)
+        self.assertIn("Excellent", html)
+
+    def test_render_lab_equipment_calibration_card(self):
+        html = EditorialComponents.render_lab_equipment_calibration_card(
+            equipment_name="Rohde & Schwarz Spectrum Analyzer FSW",
+            serial_number="RS-FSW-84920",
+            lab_room="Lab Transmisi & RF LT.3",
+            last_calibration="2025-11-15",
+            next_due="2026-11-15",
+            status="Valid",
+            cert_number="CAL/RS/2025/1109"
+        )
+        self.assertIn("tu-calib-cert-card", html)
+        self.assertIn("Rohde &amp; Schwarz Spectrum Analyzer FSW", html)
+        self.assertIn("RS-FSW-84920", html)
+        self.assertIn("Lab Transmisi &amp; RF LT.3", html)
+        self.assertIn("2025-11-15", html)
+        self.assertIn("2026-11-15", html)
+        self.assertIn("CAL/RS/2025/1109", html)
+        self.assertIn("tu-status-valid", html)
+
+    def test_render_hki_copyright_certificate_card(self):
+        html = EditorialComponents.render_hki_copyright_certificate_card(
+            work_title="Perangkat Lunak Simulasi Propagasi Gelombang Mikro 5G",
+            creators=["Dr. Ir. Budi Santoso, M.T.", "Ahmad Zaki"],
+            creation_type="Program Komputer",
+            registration_number="EC002026104829",
+            registration_date="14 Oktober 2026"
+        )
+        self.assertIn("tu-hki-cert-card", html)
+        self.assertIn("Perangkat Lunak Simulasi Propagasi Gelombang Mikro 5G", html)
+        self.assertIn("Dr. Ir. Budi Santoso, M.T.", html)
+        self.assertIn("Ahmad Zaki", html)
+        self.assertIn("Program Komputer", html)
+        self.assertIn("EC002026104829", html)
+        self.assertIn("14 Oktober 2026", html)
+
+    def test_render_accessible_disclosure_card(self):
+        html = EditorialComponents.render_accessible_disclosure_card(
+            title="Persyaratan Sidang Skripsi",
+            summary_heading="Klik untuk melihat dokumen prasyarat pendaftaran",
+            details_html="<p>Transkrip nilai, sertifikat TOEFL >= 450, dan draft skripsi.</p>",
+            category_badge="Pedoman Akademik"
+        )
+        self.assertIn("tu-disclosure-card", html)
+        self.assertIn("Persyaratan Sidang Skripsi", html)
+        self.assertIn("Pedoman Akademik", html)
+        self.assertIn("<details class=\"tu-disclosure-element\">", html)
+        self.assertIn("<summary class=\"tu-disclosure-summary\">", html)
+        self.assertIn("Klik untuk melihat dokumen prasyarat pendaftaran", html)
+        self.assertIn("<p>Transkrip nilai, sertifikat TOEFL >= 450, dan draft skripsi.</p>", html)
+
 
 if __name__ == "__main__":
     unittest.main()
