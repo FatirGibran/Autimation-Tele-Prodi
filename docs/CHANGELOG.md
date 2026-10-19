@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 540+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 570+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 544 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 570 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -649,6 +649,41 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 529. **Pengujian Unit Terpadu Seluruh Modul (`tests/`)**: Penambahan kasus uji unit komprehensif pada sanitizer, parser, seo validator, components, formatters, storage, wp client, exporter, dan cli.
 530. **Dokumentasi Rilis & Catatan Perubahan (`docs/`)**: Pembaruan dokumen ringkasan arsitektur, release changelog, dan sinkronisasi rincian rilis v3.6.0.
 531. **Ekspansi Suite Pengujian Unit Terpadu (544 Tests Passing)**: Verifikasi menyeluruh seluruh modul sistem dengan 544 unit test terverifikasi (100% pass rate).
+
+---
+
+## 25. Siklus Pengembangan v3.7.0 (Fast-Track Masters, Optical SNR BER, Lab Calibration, HKI DJKI, Accessibility & SSG Expansions)
+
+532. **Sanitasi Elemen HTML5 Dialog & Backdrop Modal (`sanitizer.py`)**: Sanitasi elemen modal `<dialog>` HTML5 dengan penegakan atribut aksesibilitas `open`, `aria-modal`, dan pembersihan skrip injeksi.
+533. **Sanitasi Elemen HTML5 Details & Summary Disclosure (`sanitizer.py`)**: Pembersihan elemen interaktif `<details>` dan `<summary>` dengan pencegahan injeksi atribut berbahaya.
+534. **Sanitasi Elemen HTML5 Template & Netralisasi Declarative Shadow DOM (`sanitizer.py`)**: Sanitasi aman konten template deklaratif dan netralisasi elemen skrip dalam shadow DOM.
+535. **Evaluator Seleksi Mahasiswa Program Magister Fast-Track (`parser.py`)**: Evaluasi kelayakan mahasiswa S1 untuk program akselerasi S1 + S2 (Fast-Track) berdasarkan batas minimum IPK, SKS lulus, dan skor TOEFL.
+536. **Kalkulator OSNR & Bit Error Rate Transmisi Serat Optik DWDM (`parser.py`)**: Perhitungan Optical Signal-to-Noise Ratio (OSNR), Q-factor, dan estimasi BER pada jaringan komunikasi serat optik DWDM.
+537. **Parser Kepatuhan Kalibrasi Instrumen Lab ISO/IEC 17025 (`parser.py`)**: Evaluasi kepatuhan kalibrasi alat ukur telekomunikasi (spectrum analyzer, power meter, OTDR) beserta sisa hari masa berlaku.
+538. **Parser Pendaftaran Hak Cipta / HKI Dosen Kemenkumham RI (`parser.py`)**: Penguraian sertifikat HKI Hak Cipta DJKI Kemenkumham RI untuk kepatuhan BKD Tridharma dan perolehan skor SINTA.
+539. **Auditor Aksesibilitas Tabel Data WCAG 2.1 (`seo_validator.py`)**: Verifikasi keberadaan elemen `<caption>` atau label `aria-label`/`aria-labelledby`, serta atribut `scope` pada sel header `<th>`.
+540. **Auditor Asosiasi Label & Atribut Autocomplete Formulir (`seo_validator.py`)**: Pemeriksaan keterkaitan eksplisit `<label for="...">` dengan input formulir dan atribut autocomplete pada input identitas pengguna.
+541. **Auditor Deklarasi Bahasa & Arah Teks Konten (`seo_validator.py`)**: Validasi atribut `lang` berstandar ISO 639-1 serta atribut arah pembacaan `dir` (`ltr`/`rtl`).
+542. **Auditor Aksesibilitas Inline SVG Title & Desc (`seo_validator.py`)**: Verifikasi ketersediaan elemen `<title>` atau atribut `aria-label`/`aria-labelledby` serta peranan `role="img"` pada elemen visual `<svg>`.
+543. **Komponen Pengakuan Mahasiswa Fast-Track Magister (`components.py`)**: Kartu visual Elementor mahasiswa berprestasi peserta program magister akselerasi fast-track S1 + S2.
+544. **Komponen Kalkulasi OSNR & Bit Error Rate Serat Optik (`components.py`)**: Kartu visual kalkulasi metrik transmisi optik DWDM lengkap dengan sinyal, derau, OSNR, dan estimasi BER.
+545. **Komponen Sertifikat Kalibrasi Alat Lab Telekomunikasi (`components.py`)**: Kartu penjaminan mutu instrumen RF/telekomunikasi laboratorium terakreditasi ISO/IEC 17025.
+546. **Komponen Showcase Sertifikat Hak Cipta / HKI Dosen (`components.py`)**: Kartu showcase pencatatan hak cipta resmi DJKI Kemenkumham RI karya dosen dan mahasiswa.
+547. **Komponen Kartu Pengungkapan Interaktif Aksesibel (`components.py`)**: Kartu visualisasi FAQ dan informasi akademik berbasis `<details>` dan `<summary>` dengan kepatuhan WCAG 2.1.
+548. **Formatter Telegram Pengumuman Seleksi Fast-Track (`formatters.py`)**: Template buletin resmi Telegram pengumuman kelolosan seleksi program akselerasi magister fast-track.
+549. **Formatter Telegram Pencatatan Hak Cipta HKI Kemenkumham (`formatters.py`)**: Template pengumuman resmi Telegram perolehan sertifikat Hak Cipta dosen dan mahasiswa.
+550. **Manajer Rekam Mahasiswa Fast-Track Magister (`storage.py`)**: Skema tabel basis data SQLite `fast_track_students` dan operasi CRUD rekam seleksi akselerasi akademik.
+551. **Manajer Rekam Kepatuhan Kalibrasi Laboratorium (`storage.py`)**: Skema tabel SQLite `lab_calibration_compliance` untuk pemantauan masa berlaku kalibrasi peralatan lab.
+552. **Manajer Rekam Hak Cipta / HKI Dosen (`storage.py`)**: Skema tabel SQLite `lecturer_hki_records` dengan pengodean JSON pencipta karya dan poin rubrik BKD/SINTA.
+553. **Helper WordPress Bulk Trash Posts (`wordpress_client.py`)**: Penghapusan massal postingan WordPress ke folder tempat sampah (*trash*) via REST API batch operations.
+554. **Helper WordPress Get Site Settings (`wordpress_client.py`)**: Pengambilan pengaturan global situs web WordPress (judul situs, tagline, timezone, URL situs).
+555. **Generator Schema.org EducationalOccupationalCredential JSON-LD (`exporter.py`)**: Pembuatan metadata terstruktur Schema.org kredensial dan sertifikasi akademik/profesi.
+556. **Eksportir Markdown Astro Starlight SSG (`exporter.py`)**: Ekspor artikel ke format markdown dokumentasi Astro Starlight lengkap dengan frontmatter urutan sidebar dan badge kategori.
+557. **Subcommand CLI `fast-track` (`cli.py`)**: Perintah konsol manajemen data seleksi program magister fast-track (list, add).
+558. **Subcommand CLI `calibration` (`cli.py`)**: Perintah konsol kepatuhan kalibrasi instrumen laboratorium telekomunikasi (list, add).
+559. **Subcommand CLI `hki` (`cli.py`)**: Perintah konsol pencatatan karya hak cipta dan kekayaan intelektual dosen (list, add).
+560. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/74_v3_7_feature_expansions.md`)**: Dokumentasi menyeluruh seluruh pembaruan arsitektur v3.7.0.
+561. **Ekspansi Suite Pengujian Unit Terpadu (570 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 570 unit test terverifikasi (100% pass rate).
 
 
 
