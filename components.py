@@ -3741,6 +3741,50 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_hki_copyright_certificate_card(
+        cls,
+        work_title: str,
+        creators: List[str],
+        creation_type: str,
+        registration_number: str,
+        registration_date: str
+    ) -> str:
+        """
+        Renders a Ministry of Law and Human Rights (DJKI Kemenkumham) Intellectual Property / HKI copyright showcase card.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(work_title.strip())
+        type_clean = escape(creation_type.strip())
+        reg_clean = escape(registration_number.strip())
+        date_clean = escape(registration_date.strip())
+        creators_list = "".join(f"<li>{escape(c.strip())}</li>" for c in creators if c.strip())
+
+        return f"""    <div class="tu-hki-cert-card">
+      <div class="tu-hki-header">
+        <span class="tu-hki-badge">Hak Cipta Terdaftar (DJKI)</span>
+        <span class="tu-hki-type">{type_clean}</span>
+      </div>
+      <h4 class="tu-hki-title">{title_clean}</h4>
+      <div class="tu-hki-body">
+        <div class="tu-hki-meta">
+          <span class="tu-lbl">Nomor Permohonan / Pencatatan:</span>
+          <code class="tu-hki-reg">{reg_clean}</code>
+        </div>
+        <div class="tu-hki-meta">
+          <span class="tu-lbl">Tanggal Pencatatan:</span>
+          <span class="tu-val">{date_clean}</span>
+        </div>
+        <div class="tu-hki-creators-section">
+          <span class="tu-lbl">Pencipta / Penemu:</span>
+          <ul class="tu-hki-creators-list">
+            {creators_list}
+          </ul>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
