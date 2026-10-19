@@ -3138,6 +3138,56 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_form_labels_and_autocomplete(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits form control elements (<input>, <select>, <textarea>) for accessible label association
+        (via matching <label for="...">, parent <label>, or aria-label/aria-labelledby) and autocomplete usage.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        controls = soup.find_all(["input", "select", "textarea"])
+
+        interactive_controls = [
+            c for c in controls
+            if c.name in ("select", "textarea") or c.get("type", "text").lower() not in ("hidden", "submit", "button", "reset", "image")
+        ]
+
+        if not interactive_controls:
+            return {
+                "has_form_controls": False,
+                "total_controls": 0,
+                "labeled_controls": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        labeled_count = 0
+
+        for idx, ctrl in enumerate(interactive_controls, start=1):
+            ctrl_id = ctrl.get("id")
+            ctrl_type = ctrl.get("type", "text") if ctrl.name == "input" else ctrl.name
+
+            has_aria = bool(ctrl.get("aria-label") or ctrl.get("aria-labelledby"))
+            has_explicit_label = bool(ctrl_id and soup.find("label", attrs={"for": ctrl_id}))
+            has_parent_label = bool(ctrl.find_parent("label"))
+
+            if has_aria or has_explicit_label or has_parent_label:
+                labeled_count += 1
+            else:
+                issues.append(f"Form control #{idx} (<{ctrl.name} type='{ctrl_type}'>) lacks an associated <label> or aria-label.")
+
+            if ctrl.name == "input" and ctrl_type in ("email", "tel", "password", "username") and not ctrl.get("autocomplete"):
+                issues.append(f"Identity input #{idx} (type='{ctrl_type}') lacks an 'autocomplete' attribute.")
+
+        return {
+            "has_form_controls": True,
+            "total_controls": len(interactive_controls),
+            "labeled_controls": labeled_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
