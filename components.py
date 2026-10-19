@@ -3685,6 +3685,62 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lab_equipment_calibration_card(
+        cls,
+        equipment_name: str,
+        serial_number: str,
+        lab_room: str,
+        last_calibration: str,
+        next_due: str,
+        status: str,
+        cert_number: str
+    ) -> str:
+        """
+        Renders an RF & Telecommunications laboratory equipment calibration certificate compliance card.
+        """
+        from xml.sax.saxutils import escape
+
+        eq_clean = escape(equipment_name.strip())
+        sn_clean = escape(serial_number.strip())
+        room_clean = escape(lab_room.strip())
+        last_clean = escape(last_calibration.strip())
+        due_clean = escape(next_due.strip())
+        status_clean = escape(status.strip())
+        cert_clean = escape(cert_number.strip())
+
+        status_class = "tu-status-valid" if status.lower() in ("valid", "terkalibrasi", "calibrated", "ok") else "tu-status-expired"
+
+        return f"""    <div class="tu-calib-cert-card">
+      <div class="tu-calib-header">
+        <span class="tu-calib-badge">Sertifikasi Kalibrasi Alat Lab</span>
+        <span class="tu-calib-status {status_class}">{status_clean}</span>
+      </div>
+      <h4 class="tu-calib-title">{eq_clean}</h4>
+      <div class="tu-calib-grid">
+        <div class="tu-calib-item">
+          <span class="tu-lbl">Nomor Seri:</span>
+          <code class="tu-sn">{sn_clean}</code>
+        </div>
+        <div class="tu-calib-item">
+          <span class="tu-lbl">Laboratorium:</span>
+          <span class="tu-val">{room_clean}</span>
+        </div>
+        <div class="tu-calib-item">
+          <span class="tu-lbl">No. Sertifikat:</span>
+          <span class="tu-val">{cert_clean}</span>
+        </div>
+        <div class="tu-calib-item">
+          <span class="tu-lbl">Terakhir Dikalibrasi:</span>
+          <span class="tu-val">{last_clean}</span>
+        </div>
+        <div class="tu-calib-item">
+          <span class="tu-lbl">Jatuh Tempo Kalibrasi:</span>
+          <strong class="tu-due">{due_clean}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
