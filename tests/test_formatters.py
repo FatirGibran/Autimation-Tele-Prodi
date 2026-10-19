@@ -529,6 +529,37 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Jurnal SINTA 2", msg)
         self.assertIn("https://lppm.telkomuniversity.ac.id/hibah-2026", msg)
 
+    def test_format_fast_track_announcement_telegram(self):
+        msg = TelegramFormatter.format_fast_track_announcement_telegram(
+            student_name="Ahmad Zaki",
+            nim="1101230045",
+            ipk=3.75,
+            masters_program="Magister Teknik Telekomunikasi",
+            portal_url="https://akademik.telkomuniversity.ac.id/fast-track"
+        )
+        self.assertIn("Program Akselerasi S1 + S2 (Fast-Track)", msg)
+        self.assertIn("Ahmad Zaki", msg)
+        self.assertIn("1101230045", msg)
+        self.assertIn("3.75", msg)
+        self.assertIn("Magister Teknik Telekomunikasi", msg)
+        self.assertIn("https://akademik.telkomuniversity.ac.id/fast-track", msg)
+
+    def test_format_hki_copyright_announcement_telegram(self):
+        msg = TelegramFormatter.format_hki_copyright_announcement_telegram(
+            work_title="Perangkat Lunak Simulasi Propagasi Gelombang Mikro 5G",
+            creators=["Dr. Ir. Budi Santoso, M.T.", "Ahmad Zaki"],
+            reg_number="EC002026104829",
+            creation_type="Program Komputer",
+            portal_url="https://e-hakcipta.dgip.go.id/check/EC002026104829"
+        )
+        self.assertIn("Pengumuman Pencatatan Hak Cipta / HKI Kemenkumham", msg)
+        self.assertIn("Perangkat Lunak Simulasi Propagasi Gelombang Mikro 5G", msg)
+        self.assertIn("Dr. Ir. Budi Santoso, M.T.", msg)
+        self.assertIn("Ahmad Zaki", msg)
+        self.assertIn("EC002026104829", msg)
+        self.assertIn("Program Komputer", msg)
+        self.assertIn("https://e-hakcipta.dgip.go.id/check/EC002026104829", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
