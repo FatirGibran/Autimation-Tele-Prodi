@@ -1326,6 +1326,41 @@ navigation: true
         lines.append(html_content.strip())
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_educational_credential_json_ld(
+        credential_name: str,
+        recipient_name: str,
+        issuer_name: str,
+        valid_from: str,
+        credential_category: str = "Certificate",
+        cert_id: str = "",
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates schema.org EducationalOccupationalCredential structured data (JSON-LD)
+        for academic certifications, fast-track credentials, and laboratory training compliance.
+        """
+        payload: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "EducationalOccupationalCredential",
+            "name": credential_name.strip(),
+            "credentialCategory": credential_category.strip(),
+            "recognizedBy": {
+                "@type": "EducationalOrganization",
+                "name": issuer_name.strip()
+            },
+            "validFrom": valid_from.strip(),
+            "about": {
+                "@type": "Person",
+                "name": recipient_name.strip()
+            }
+        }
+        if cert_id:
+            payload["identifier"] = cert_id.strip()
+        if url:
+            payload["url"] = url.strip()
+        return payload
+
 
 
 
