@@ -723,11 +723,6 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<progress\b[^>]*>', sanitize_progress, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 progress gauge elements.")
 
-        # 8ab. Sanitize HTML5 template elements and declarative shadow DOM
-        if "<template" in cleaned.lower():
-            cleaned = sanitize_html5_template_elements(cleaned)
-            warnings.append("Sanitized HTML5 template elements and neutralized declarative shadow DOM scripts.")
-
         return cleaned, warnings
 
 

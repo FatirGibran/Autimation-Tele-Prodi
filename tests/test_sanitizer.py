@@ -3,7 +3,10 @@ from sanitizer import (
     HTMLSanitizer,
     sanitize_html5_meter_elements,
     sanitize_html5_progress_elements,
-    sanitize_time_duration_microdata
+    sanitize_time_duration_microdata,
+    sanitize_html5_dialog_elements,
+    sanitize_html5_details_summary_elements,
+    sanitize_html5_template_elements
 )
 
 
@@ -606,6 +609,64 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('datetime="P1Y2M"', clean)
         self.assertNotIn('datetime="javascript:steal()"', clean)
         self.assertNotIn('datetime="P_BAD_DURATION"', clean)
+
+    def test_sanitize_html5_dialog_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<dialog open="open" style="border:none;" onclick="steal()">Modal</dialog>'
+            '<dialog open="invalid-token" autofocus="autofocus">Bad</dialog>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('open="open"', clean)
+        self.assertNotIn("style=", clean)
+        self.assertNotIn("onclick=", clean)
+        self.assertNotIn('open="invalid-token"', clean)
+        self.assertNotIn("autofocus=", clean)
+
+        standalone = sanitize_html5_dialog_elements('<dialog open="true" onclick="pwn()">Dialog</dialog>')
+        self.assertIn('open="true"', standalone)
+        self.assertNotIn("onclick=", standalone)
+
+    def test_sanitize_html5_details_summary_elements(self):
+        html = (
+            '<div class="tu-editorial-container">'
+            '<details open="open" ontoggle="pwn()">'
+            '<summary onclick="hack()">Info</summary>'
+            '<p>Content</p>'
+            '</details>'
+            '</div>'
+        )
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertIn('open="open"', clean)
+        self.assertNotIn("ontoggle=", clean)
+        self.assertNotIn("onclick=", clean)
+
+        standalone = sanitize_html5_details_summary_elements('<details open="bad-val" onkeydown="evil()"><summary style="color:red">S</summary></details>')
+        self.assertNotIn('open="bad-val"', standalone)
+        self.assertNotIn("onkeydown=", standalone)
+        self.assertNotIn("style=", standalone)
+
+    def test_sanitize_html5_template_elements(self):
+        raw = (
+            '<template shadowrootmode="open">'
+            '<script>alert(1)</script>'
+            '<div onclick="evil()">Content</div>'
+            '</template>'
+        )
+        cleaned = sanitize_html5_template_elements(raw)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertIn('shadowrootmode="open"', cleaned)
+        self.assertIn("Content", cleaned)
+
+        standalone = sanitize_html5_template_elements(
+            '<template shadowrootmode="javascript:alert(1)"><script>danger()</script><p onclick="click()">Hi</p></template>'
+        )
+        self.assertNotIn("shadowrootmode=", standalone)
+        self.assertNotIn("<script>", standalone)
+        self.assertNotIn("onclick=", standalone)
+        self.assertIn("<p>Hi</p>", standalone)
 
 
 if __name__ == "__main__":
