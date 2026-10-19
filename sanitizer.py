@@ -580,12 +580,7 @@ class HTMLSanitizer:
 
         # 8s. Sanitize dialog modal elements and backdrop form method attributes
         if "<dialog" in cleaned.lower():
-            def sanitize_dialog(m):
-                tag = m.group(0)
-                tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
-                tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
-                return tag
-            cleaned = re.sub(r'<dialog\b[^>]*>', sanitize_dialog, cleaned, flags=re.IGNORECASE)
+            cleaned = sanitize_html5_dialog_elements(cleaned)
 
             def sanitize_dialog_button(m):
                 btn_tag = m.group(0)
@@ -804,6 +799,28 @@ def sanitize_time_duration_microdata(html: str) -> str:
         return tag
 
     return re.sub(r'<time\b[^>]*>', sanitize_time_tag, html, flags=re.IGNORECASE)
+
+
+def sanitize_html5_dialog_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <dialog> modal elements by removing scripting event handlers,
+    style attributes, enforcing valid boolean open attributes, and stripping unsafe form actions.
+    """
+    if not html or "<dialog" not in html.lower():
+        return html
+
+    def sanitize_dialog_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable|autofocus)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        open_m = re.search(r'\bopen=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if open_m:
+            val = open_m.group(1).strip().lower()
+            if val not in ("open", "", "true"):
+                tag = re.sub(r'\s+open=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    return re.sub(r'<dialog\b[^>]*>', sanitize_dialog_tag, html, flags=re.IGNORECASE)
 
 
 
