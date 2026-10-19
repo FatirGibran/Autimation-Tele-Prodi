@@ -3229,6 +3229,50 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_svg_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits inline <svg> graphics for WCAG accessibility compliance.
+        Ensures SVGs either have aria-hidden='true' (if purely decorative) or have
+        accessible naming via <title>, <desc>, aria-label, or role='img'.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        svgs = soup.find_all("svg")
+
+        if not svgs:
+            return {
+                "has_svgs": False,
+                "total_svgs": 0,
+                "accessible_svgs": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        accessible_count = 0
+
+        for idx, svg in enumerate(svgs, start=1):
+            is_hidden = svg.get("aria-hidden", "").lower() in ("true", "1")
+            has_title = bool(svg.find("title"))
+            has_desc = bool(svg.find("desc"))
+            has_aria = bool(svg.get("aria-label") or svg.get("aria-labelledby"))
+            has_img_role = svg.get("role", "").lower() == "img"
+
+            if is_hidden:
+                accessible_count += 1
+            elif (has_title or has_desc or has_aria) and (has_img_role or has_title or has_aria):
+                accessible_count += 1
+            else:
+                issues.append(f"Inline SVG #{idx} lacks accessible labeling (missing <title>, aria-label, or aria-hidden='true' for decorative graphics).")
+
+        return {
+            "has_svgs": True,
+            "total_svgs": len(svgs),
+            "accessible_svgs": accessible_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
