@@ -3188,6 +3188,47 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_content_language_and_direction(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits root and content block language declarations (lang / xml:lang) and text directionality (dir).
+        Ensures search engines and screen readers can identify the spoken language and rendering direction.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues: List[str] = []
+
+        root = soup.find(["html", "div", "article", "section"])
+        declared_lang = None
+        declared_dir = None
+
+        if root:
+            declared_lang = root.get("lang") or root.get("xml:lang")
+            declared_dir = root.get("dir")
+
+        if not declared_lang:
+            any_lang_el = soup.find(attrs={"lang": True})
+            if any_lang_el:
+                declared_lang = any_lang_el.get("lang")
+
+        if not declared_lang:
+            issues.append("Document or primary container lacks a declared 'lang' attribute (e.g. lang='id' or lang='en').")
+        else:
+            lang_clean = declared_lang.strip().lower()
+            if not re.match(r'^[a-z]{2,3}(?:-[a-z0-9]+)?$', lang_clean):
+                issues.append(f"Declared language '{declared_lang}' does not conform to ISO 639-1 / BCP 47 standard.")
+
+        if declared_dir:
+            dir_clean = declared_dir.strip().lower()
+            if dir_clean not in ("ltr", "rtl", "auto"):
+                issues.append(f"Text directionality dir='{declared_dir}' is invalid; must be 'ltr', 'rtl', or 'auto'.")
+
+        return {
+            "declared_lang": declared_lang,
+            "declared_dir": declared_dir or "ltr",
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
