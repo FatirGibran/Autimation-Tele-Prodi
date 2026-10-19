@@ -837,6 +837,28 @@ class TelegramFormatter:
             f"🌟 *Selamat kepada mahasiswa terpilih program Fast-Track Magister Teknik Elektro/Telekomunikasi!*"
         )
 
+    @staticmethod
+    def format_hki_copyright_announcement_telegram(
+        work_title: str,
+        creators: List[str],
+        reg_number: str,
+        creation_type: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a DJKI Kemenkumham Intellectual Property / HKI copyright grant announcement for Telegram.
+        """
+        portal_link = f"\n🔗 **Pangkalan Data DJKI:** {portal_url.strip()}" if portal_url else ""
+        creators_str = ", ".join(c.strip() for c in creators if c.strip())
+        return (
+            f"📜 **Pengumuman Pencatatan Hak Cipta / HKI Kemenkumham**\n\n"
+            f"💡 **Judul Ciptaan:**\n_{work_title.strip()}_\n"
+            f"🏷️ **Jenis Ciptaan:** {creation_type.strip()}\n"
+            f"🔢 **Nomor Pencatatan:** `{reg_number.strip()}`\n"
+            f"👥 **Pencipta:** {creators_str}{portal_link}\n\n"
+            f"🎉 *Selamat dan sukses atas perolehan sertifikat Hak Cipta, memajukan portofolio kekayaan intelektual Program Studi!*"
+        )
+
 
 
 
