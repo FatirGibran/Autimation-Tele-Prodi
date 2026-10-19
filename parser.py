@@ -3318,6 +3318,58 @@ def evaluate_fast_track_masters_eligibility(
     }
 
 
+def calculate_optical_snr_and_ber(
+    signal_power_dbm: float,
+    noise_power_dbm: float,
+    bitrate_gbps: float = 10.0
+) -> Dict[str, Any]:
+    """
+    Calculates Optical Signal-to-Noise Ratio (OSNR), Q-factor, and estimated Bit Error Rate (BER)
+    for high-speed optical fiber transmission links (DWDM / metro optical networks).
+    """
+    import math
+
+    sig_p = float(signal_power_dbm)
+    noise_p = float(noise_power_dbm)
+    rate = max(0.1, float(bitrate_gbps))
+
+    osnr_db = sig_p - noise_p
+    linear_snr = 10.0 ** (osnr_db / 10.0)
+
+    q_factor = math.sqrt(max(0.001, linear_snr))
+    q_factor_db = 20.0 * math.log10(max(0.001, q_factor))
+
+    try:
+        ber_est = 0.5 * math.erfc(q_factor / math.sqrt(2.0))
+    except OverflowError:
+        ber_est = 0.0
+
+    if osnr_db >= 25.0:
+        quality_status = "Excellent"
+        assessment = "Kualitas sinyal optik sangat prima; transmisi bebas hambatan tanpa ketergantungan kritis pada FEC."
+    elif osnr_db >= 18.0:
+        quality_status = "Good"
+        assessment = "Kualitas transmisi memenuhi standar link DWDM metro berkinerja stabil."
+    elif osnr_db >= 14.0:
+        quality_status = "Marginal"
+        assessment = "Kualitas sinyal berada di batas toleransi; aktivasi Forward Error Correction (FEC) diwajibkan."
+    else:
+        quality_status = "Unacceptable"
+        assessment = "Tingkat redaman atau derau terlalu tinggi; risiko bit error tinggi melampaui batas ambang."
+
+    return {
+        "signal_power_dbm": sig_p,
+        "noise_power_dbm": noise_p,
+        "bitrate_gbps": rate,
+        "osnr_db": round(osnr_db, 2),
+        "q_factor": round(q_factor, 2),
+        "q_factor_db": round(q_factor_db, 2),
+        "estimated_ber": float(f"{ber_est:.2e}"),
+        "quality_status": quality_status,
+        "assessment": assessment
+    }
+
+
 
 
 
