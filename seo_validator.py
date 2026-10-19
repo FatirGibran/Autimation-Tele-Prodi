@@ -3088,6 +3088,56 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_table_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits <table> elements for WCAG 2.1 accessibility compliance.
+        Checks for caption or aria-label/aria-labelledby, table headers (<th>),
+        and header scope attributes (scope="col" or scope="row").
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+
+        if not tables:
+            return {
+                "has_tables": False,
+                "total_tables": 0,
+                "accessible_tables": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        accessible_count = 0
+
+        for idx, table in enumerate(tables, start=1):
+            tbl_issues = []
+            has_caption = bool(table.find("caption"))
+            has_aria_label = bool(table.get("aria-label") or table.get("aria-labelledby"))
+            if not has_caption and not has_aria_label:
+                tbl_issues.append(f"Table #{idx} lacks an accessible description (missing <caption> or aria-label).")
+
+            headers = table.find_all("th")
+            if not headers:
+                tbl_issues.append(f"Table #{idx} has no header cells (<th>) defining data relationships.")
+            else:
+                missing_scope = sum(1 for th in headers if not th.get("scope"))
+                if missing_scope > 0:
+                    tbl_issues.append(f"Table #{idx} has {missing_scope} header cell(s) without a scope attribute (col/row).")
+
+            if not tbl_issues:
+                accessible_count += 1
+            else:
+                issues.extend(tbl_issues)
+
+        return {
+            "has_tables": True,
+            "total_tables": len(tables),
+            "accessible_tables": accessible_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
