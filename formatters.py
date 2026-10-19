@@ -817,6 +817,26 @@ class TelegramFormatter:
             f"👏 *Selamat kepada penerima hibah riset internal, selamat berkarya dan menghasilkan inovasi telekomunikasi!*"
         )
 
+    @staticmethod
+    def format_fast_track_announcement_telegram(
+        student_name: str,
+        nim: str,
+        ipk: float,
+        masters_program: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student selection announcement for the accelerated Fast-Track Master's program.
+        """
+        portal_link = f"\n🔗 **Portal Akademik:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🚀 **Pengumuman Seleksi Program Akselerasi S1 + S2 (Fast-Track)**\n\n"
+            f"👤 **Nama Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"📊 **Indeks Prestasi Kumulatif (IPK):** `{float(ipk):.2f}`\n"
+            f"🎓 **Program Studi Magister:** {masters_program.strip()}{portal_link}\n\n"
+            f"🌟 *Selamat kepada mahasiswa terpilih program Fast-Track Magister Teknik Elektro/Telekomunikasi!*"
+        )
+
 
 
 
