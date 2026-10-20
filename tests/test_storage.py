@@ -1734,6 +1734,109 @@ class TestStorageManager(unittest.TestCase):
         missing = self.storage.get_lecturer_hki_by_reg_number("99999999")
         self.assertIsNone(missing)
 
+    def test_student_msib_internships_storage(self):
+        mid1 = self.storage.record_msib_internship(
+            student_name="Ahmad Zaki",
+            nim="1101230045",
+            industry_partner="PT Telkom Indonesia",
+            internship_role="Cloud & Network Engineer",
+            mentor_grade=88.5,
+            letter_grade="A",
+            converted_sks=20,
+            duration_months=5
+        )
+        mid2 = self.storage.record_msib_internship(
+            student_name="Rina Safitri",
+            nim="1101230088",
+            industry_partner="PT Indosat Ooredoo Hutchison",
+            internship_role="RF Optimization Associate",
+            mentor_grade=76.0,
+            letter_grade="AB",
+            converted_sks=20,
+            duration_months=5
+        )
+        self.assertGreater(mid1, 0)
+        self.assertGreater(mid2, 0)
+
+        all_msib = self.storage.list_msib_internships()
+        self.assertEqual(len(all_msib), 2)
+
+        telkom_msib = self.storage.list_msib_internships(partner="Telkom")
+        self.assertEqual(len(telkom_msib), 1)
+        self.assertEqual(telkom_msib[0]["nim"], "1101230045")
+
+        single = self.storage.get_msib_by_nim("1101230045")
+        self.assertIsNotNone(single)
+        self.assertEqual(single["student_name"], "Ahmad Zaki")
+        self.assertEqual(single["converted_sks"], 20)
+
+        none_res = self.storage.get_msib_by_nim("0000000000")
+        self.assertIsNone(none_res)
+
+    def test_lecturer_pkm_grants_storage(self):
+        gid1 = self.storage.record_pkm_grant(
+            project_title="Pemberdayaan IoT Petani Karangmangu",
+            team_leader="Dr. Ir. Budi Santoso, M.T.",
+            nidn="0612058001",
+            partner_name="Kelompok Tani Makmur",
+            target_location="Desa Karangmangu",
+            proposed_budget=15000000.0,
+            approved_budget=15000000.0,
+            fiscal_year=2026,
+            focus_area="Pemberdayaan Teknologi Digital"
+        )
+        gid2 = self.storage.record_pkm_grant(
+            project_title="Pelatihan Jaringan Komputer SMK",
+            team_leader="Dr. Siti Rahmawati",
+            nidn="0612058002",
+            partner_name="SMK Telkom",
+            target_location="Purwokerto",
+            proposed_budget=12000000.0,
+            approved_budget=12000000.0,
+            fiscal_year=2025,
+            focus_area="Pelatihan Vokasi"
+        )
+        self.assertGreater(gid1, 0)
+        self.assertGreater(gid2, 0)
+
+        all_grants = self.storage.list_pkm_grants()
+        self.assertEqual(len(all_grants), 2)
+
+        grants_2026 = self.storage.list_pkm_grants(fiscal_year=2026)
+        self.assertEqual(len(grants_2026), 1)
+        self.assertEqual(grants_2026[0]["id"], gid1)
+
+        single = self.storage.get_pkm_grant_by_id(gid1)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["team_leader"], "Dr. Ir. Budi Santoso, M.T.")
+
+        none_g = self.storage.get_pkm_grant_by_id(999999)
+        self.assertIsNone(none_g)
+
+    def test_fso_link_budget_records_storage(self):
+        fid1 = self.storage.record_fso_link_budget(
+            link_name="FSO Kampus 1 - Kampus 2",
+            link_distance_km=1.2,
+            tx_power_dbm=10.0,
+            rx_power_dbm=-18.0,
+            geometric_loss_db=25.0,
+            atmospheric_loss_db=3.0,
+            link_margin_db=20.0,
+            status="Robust"
+        )
+        self.assertGreater(fid1, 0)
+
+        all_fso = self.storage.list_fso_link_budgets()
+        self.assertEqual(len(all_fso), 1)
+        self.assertEqual(all_fso[0]["link_name"], "FSO Kampus 1 - Kampus 2")
+
+        single = self.storage.get_fso_link_budget_by_id(fid1)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status"], "Robust")
+
+        none_f = self.storage.get_fso_link_budget_by_id(999999)
+        self.assertIsNone(none_f)
+
 
 if __name__ == "__main__":
     unittest.main()
