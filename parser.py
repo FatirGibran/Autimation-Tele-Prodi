@@ -3637,6 +3637,93 @@ def evaluate_student_msib_internship(
     }
 
 
+def calculate_antenna_polarization_loss(
+    tx_polarization: str,
+    rx_polarization: str,
+    tilt_angle_deg: float = 0.0,
+    axial_ratio_db: float = 0.0
+) -> Dict[str, Any]:
+    """
+    Calculates RF antenna Polarization Loss Factor (PLF), polarization efficiency, and axial ratio mismatch.
+    Evaluates linear, circular (RHCP/LHCP), and elliptical antenna polarization alignments.
+    """
+    import math
+
+    tx_pol = tx_polarization.strip().upper()
+    rx_pol = rx_polarization.strip().upper()
+    theta = abs(float(tilt_angle_deg)) % 180.0
+    ar_db = max(0.0, float(axial_ratio_db))
+
+    is_tx_linear = any(k in tx_pol for k in ("LIN", "VERT", "HORIZ", "SLANT"))
+    is_rx_linear = any(k in rx_pol for k in ("LIN", "VERT", "HORIZ", "SLANT"))
+    is_tx_circ = any(k in tx_pol for k in ("RHCP", "LHCP", "CIRC"))
+    is_rx_circ = any(k in rx_pol for k in ("RHCP", "LHCP", "CIRC"))
+
+    if is_tx_linear and is_rx_linear:
+        # Tilt angle between linear polarization vectors
+        rad = math.radians(theta)
+        cos_val = math.cos(rad)
+        plf_linear = cos_val ** 2
+        # Avoid log of zero
+        plf_linear = max(1e-4, plf_linear)
+        plf_db = -10.0 * math.log10(plf_linear)
+        alignment_note = f"Penyelarasan linear dengan beda sudut kemiringan {theta:.1f}°"
+    elif (is_tx_circ and is_rx_linear) or (is_tx_linear and is_rx_circ):
+        plf_linear = 0.50
+        plf_db = 3.01
+        alignment_note = "Kombinasi sirkuler dan linier menghasilkan rugi-rugi intrinsik tetap 3 dB."
+    elif is_tx_circ and is_rx_circ:
+        is_tx_rhcp = "RHCP" in tx_pol
+        is_rx_rhcp = "RHCP" in rx_pol
+        is_tx_lhcp = "LHCP" in tx_pol
+        is_rx_lhcp = "LHCP" in rx_pol
+
+        if (is_tx_rhcp and is_rx_rhcp) or (is_tx_lhcp and is_rx_lhcp):
+            plf_linear = 1.0
+            plf_db = 0.0
+            alignment_note = "Penyelarasan sirkuler ko-polarisasi sempurna (RHCP-RHCP / LHCP-LHCP)."
+        elif (is_tx_rhcp and is_rx_lhcp) or (is_tx_lhcp and is_rx_rhcp):
+            plf_linear = 0.001
+            plf_db = 30.0
+            alignment_note = "Isolasi silang polarisasi sirkuler (Cross-Polarization Isolation RHCP vs LHCP)."
+        else:
+            plf_linear = 1.0
+            plf_db = 0.0
+            alignment_note = "Penyelarasan polarisasi sirkuler teridentifikasi."
+    else:
+        # Elliptical polarization model with axial ratio
+        r = 10.0 ** (ar_db / 20.0) if ar_db > 0 else 1.0
+        plf_linear = (2.0 * r) / (r ** 2 + 1.0)
+        plf_linear = min(1.0, max(1e-4, plf_linear))
+        plf_db = -10.0 * math.log10(plf_linear)
+        alignment_note = f"Polarisasi elips dengan rasio aksial (Axial Ratio) {ar_db:.1f} dB"
+
+    efficiency_pct = round(plf_linear * 100.0, 2)
+    loss_db = round(plf_db, 2)
+
+    if loss_db <= 0.5:
+        status = "Optimal"
+    elif loss_db <= 3.5:
+        status = "Acceptable"
+    elif loss_db <= 10.0:
+        status = "Degraded"
+    else:
+        status = "High Loss / Mismatch"
+
+    return {
+        "tx_polarization": tx_pol,
+        "rx_polarization": rx_pol,
+        "tilt_angle_deg": round(theta, 1),
+        "axial_ratio_db": round(ar_db, 2),
+        "plf_factor": round(plf_linear, 4),
+        "polarization_loss_db": loss_db,
+        "polarization_efficiency_pct": efficiency_pct,
+        "status": status,
+        "alignment_note": alignment_note
+    }
+
+
+
 
 
 
