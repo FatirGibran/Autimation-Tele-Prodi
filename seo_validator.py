@@ -3457,6 +3457,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_blockquote_citations(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits <blockquote> elements in academic editorial content for appropriate attribution.
+        Ensures presence of either a semantic <cite> element or a cite="..." source reference attribute.
+        """
+        if not html_content or "<blockquote" not in html_content.lower():
+            return {
+                "total_blockquotes": 0,
+                "attributed_quotes": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        quotes = soup.find_all("blockquote")
+        if not quotes:
+            return {
+                "total_blockquotes": 0,
+                "attributed_quotes": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        attributed_count = 0
+
+        for idx, bq in enumerate(quotes, start=1):
+            has_cite_attr = bool(bq.get("cite"))
+            has_cite_elem = bool(bq.find("cite"))
+            text = bq.get_text().strip()
+
+            if not text:
+                issues.append(f"Kutipan blockquote #{idx} kosong tanpa konten teks.")
+            elif not (has_cite_attr or has_cite_elem):
+                issues.append(f"Kutipan blockquote #{idx} ({text[:35]}...) tidak menyertakan sumber atribusi (<cite> atau atribut cite).")
+            else:
+                attributed_count += 1
+
+        return {
+            "total_blockquotes": len(quotes),
+            "attributed_quotes": attributed_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
