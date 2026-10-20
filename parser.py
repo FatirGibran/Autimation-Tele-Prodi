@@ -3490,6 +3490,77 @@ def parse_lecturer_hki_copyright(
     }
 
 
+def calculate_fso_link_budget(
+    tx_power_dbm: float,
+    tx_beam_divergence_mrad: float,
+    rx_aperture_diam_cm: float,
+    link_distance_km: float,
+    atmospheric_attenuation_db_km: float = 2.0,
+    optical_rx_sensitivity_dbm: float = -38.0
+) -> Dict[str, Any]:
+    """
+    Calculates Free Space Optics (FSO) laser telecommunications link budget.
+    Computes geometric beam divergence loss, atmospheric extinction loss, received power, and link fade margin.
+    """
+    import math
+
+    p_tx = float(tx_power_dbm)
+    theta_mrad = max(0.01, float(tx_beam_divergence_mrad))
+    d_rx_cm = max(0.1, float(rx_aperture_diam_cm))
+    dist_km = max(0.001, float(link_distance_km))
+    alpha_atm = max(0.0, float(atmospheric_attenuation_db_km))
+    p_sens = float(optical_rx_sensitivity_dbm)
+
+    # Beam footprint diameter at receiver in meters
+    dist_m = dist_km * 1000.0
+    beam_diam_m = dist_m * (theta_mrad * 1e-3)
+    rx_diam_m = d_rx_cm * 1e-2
+
+    # Geometric loss
+    if beam_diam_m > rx_diam_m:
+        geo_ratio = (rx_diam_m / beam_diam_m) ** 2
+        l_geo = -10.0 * math.log10(geo_ratio)
+    else:
+        l_geo = 0.0
+
+    # Atmospheric loss
+    l_atm = alpha_atm * dist_km
+
+    # Total path loss and received power
+    total_loss = l_geo + l_atm
+    p_rx = p_tx - total_loss
+    margin = p_rx - p_sens
+
+    if margin >= 15.0:
+        status = "Robust"
+        feasibility = "Sangat Layak (Mendukung transmisi laser pada segala kondisi cuaca umum)."
+    elif margin >= 6.0:
+        status = "Adequate"
+        feasibility = "Layak (Margin memadai untuk kondisi kabut tipis dan hujan ringan)."
+    elif margin >= 0.0:
+        status = "Marginal"
+        feasibility = "Kritis (Rentan terjadi link outage apabila terjadi kabut tebal)."
+    else:
+        status = "Link Outage"
+        feasibility = "Tidak Layak (Daya terima di bawah ambang batas sensitivitas fotodetektor)."
+
+    return {
+        "tx_power_dbm": round(p_tx, 2),
+        "link_distance_km": round(dist_km, 3),
+        "beam_footprint_diam_m": round(beam_diam_m, 2),
+        "geometric_loss_db": round(l_geo, 2),
+        "atmospheric_loss_db": round(l_atm, 2),
+        "total_path_loss_db": round(total_loss, 2),
+        "received_power_dbm": round(p_rx, 2),
+        "rx_sensitivity_dbm": round(p_sens, 2),
+        "link_margin_db": round(margin, 2),
+        "status": status,
+        "is_link_feasible": margin >= 0.0,
+        "feasibility_assessment": feasibility
+    }
+
+
+
 
 
 
