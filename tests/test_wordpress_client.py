@@ -550,6 +550,32 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "GET")
         self.assertIn("/settings", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_post_media_attachments(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 401, "source_url": "https://example.com/antenna.jpg", "media_type": "image"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        media = self.client.get_post_media_attachments(post_id=999, per_page=10)
+        self.assertEqual(len(media), 1)
+        self.assertEqual(media[0]["id"], 401)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/media?parent=999&per_page=10", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_set_post_sticky_status(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 888, "sticky": true}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.set_post_sticky_status(post_id=888, is_sticky=True)
+        self.assertEqual(res["id"], 888)
+        self.assertTrue(res["sticky"])
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/posts/888", req.full_url)
+
 
 if __name__ == "__main__":
     unittest.main()
