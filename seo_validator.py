@@ -3392,6 +3392,72 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_external_links_security(cls, html_content: str, internal_domain: str = "telkomuniversity.ac.id") -> Dict[str, Any]:
+        """
+        Audits outbound hyperlinks targeting external websites with target="_blank" for security compliance.
+        Ensures rel attributes feature 'noopener' and 'noreferrer' to prevent reverse tab-nabbing security risks.
+        """
+        if not html_content or "<a" not in html_content.lower():
+            return {
+                "total_links": 0,
+                "external_links": 0,
+                "secure_links": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        links = soup.find_all("a", href=True)
+        if not links:
+            return {
+                "total_links": 0,
+                "external_links": 0,
+                "secure_links": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        domain_clean = internal_domain.strip().lower()
+        external_count = 0
+        secure_count = 0
+        issues: List[str] = []
+
+        for idx, a in enumerate(links, start=1):
+            href = a["href"].strip().lower()
+            if not href.startswith(("http://", "https://")):
+                continue
+
+            # Check if domain is external
+            if domain_clean in href:
+                continue
+
+            external_count += 1
+            target = (a.get("target") or "").strip().lower()
+            rel = (a.get("rel") or [])
+            if isinstance(rel, str):
+                rel_tokens = set(rel.lower().split())
+            else:
+                rel_tokens = set(t.lower() for t in rel)
+
+            if target == "_blank":
+                has_noopener = "noopener" in rel_tokens
+                if not has_noopener:
+                    issues.append(f"Tautan eksternal #{idx} ({href[:40]}...) menggunakan target='_blank' tanpa atribut rel='noopener'.")
+                else:
+                    secure_count += 1
+            else:
+                secure_count += 1
+
+        return {
+            "total_links": len(links),
+            "external_links": external_count,
+            "secure_links": secure_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
