@@ -3912,6 +3912,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_antenna_polarization_card(
+        cls,
+        tx_pol: str,
+        rx_pol: str,
+        plf_db: float,
+        efficiency_percent: float,
+        status: str = "Optimal"
+    ) -> str:
+        """
+        Renders an RF antenna Polarization Loss Factor (PLF) and efficiency evaluation card.
+        """
+        from xml.sax.saxutils import escape
+
+        tx_clean = escape(tx_pol.strip())
+        rx_clean = escape(rx_pol.strip())
+        status_clean = escape(status.strip())
+        loss_str = f"{float(plf_db):.2f} dB"
+        eff_str = f"{float(efficiency_percent):.1f}%"
+
+        status_class = "tu-status-good" if status.lower() in ("optimal", "acceptable") else "tu-status-warning"
+
+        return f"""    <div class="tu-polarization-card">
+      <div class="tu-pol-header">
+        <span class="tu-pol-badge">Kesesuaian Polarisasi Antena RF</span>
+        <span class="tu-pol-status {status_class}">{status_clean}</span>
+      </div>
+      <h4 class="tu-pol-title">Polarization Loss Factor (PLF)</h4>
+      <div class="tu-pol-grid">
+        <div class="tu-pol-item">
+          <span class="tu-lbl">Polarisasi Tx:</span>
+          <strong class="tu-val">{tx_clean}</strong>
+        </div>
+        <div class="tu-pol-item">
+          <span class="tu-lbl">Polarisasi Rx:</span>
+          <strong class="tu-val">{rx_clean}</strong>
+        </div>
+        <div class="tu-pol-item">
+          <span class="tu-lbl">Rugi Polarisasi:</span>
+          <span class="tu-val">{loss_str}</span>
+        </div>
+        <div class="tu-pol-item">
+          <span class="tu-lbl">Efisiensi Transfer Daya:</span>
+          <strong class="tu-eff">{eff_str}</strong>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
