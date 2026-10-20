@@ -1704,6 +1704,95 @@ class TestCLI(unittest.TestCase):
             self.assertIn("000492819", out)
             self.assertIn("Program Komputer", out)
 
+    def test_cmd_msib(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Rizky Pratama"
+            nim = "1101230078"
+            partner = "PT Telkom Indonesia"
+            role = "Cloud Network Engineer"
+            grade = 92.5
+            letter = "A"
+            sks = 20
+            duration = 6
+            status = "Completed"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_msib(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan magang MSIB berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            partner = "PT Telkom Indonesia"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_msib(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("1101230078", out)
+            self.assertIn("PT Telkom Indonesia", out)
+            self.assertIn("Rizky Pratama", out)
+
+    def test_cmd_pkm(self):
+        class ArgsAdd:
+            action = "add"
+            title = "Digitalisasi UMKM Kerajinan Logam Berbasis IoT"
+            leader = "Dr. Hendra Gunawan"
+            nidn = "0015088203"
+            partner = "Kelompok Pengrajin Logam Tumiyang"
+            location = "Desa Tumiyang, Banyumas"
+            proposed = 25000000.0
+            approved = 20000000.0
+            year = 2026
+            focus = "Pemberdayaan Masyarakat"
+            status = "Approved"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkm(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan hibah PKM berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            year = 2026
+            status = "Approved"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("0015088203", out)
+            self.assertIn("20,000,000", out)
+            self.assertIn("Dr. Hendra Gunawan", out)
+
+    def test_cmd_fso(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Link FSO Gedung Rektorat - Lab Terpadu"
+            distance = 1.25
+            tx = 15.0
+            rx = -22.5
+            geo = 12.8
+            loss = 4.2
+            margin = 5.5
+            status = "Viable"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fso(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan link budget FSO berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            status = "Viable"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fso(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("1.25", out)
+            self.assertIn("5.50", out)
+            self.assertIn("Viable", out)
+
+
 
 if __name__ == "__main__":
     unittest.main()
