@@ -3868,6 +3868,51 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_msib_internship_card(
+        cls,
+        student_name: str,
+        nim: str,
+        industry_partner: str,
+        internship_role: str,
+        converted_sks: int,
+        final_grade: str
+    ) -> str:
+        """
+        Renders a certified Kampus Merdeka MSIB industrial internship credit conversion card.
+        """
+        from xml.sax.saxutils import escape
+
+        s_name = escape(student_name.strip())
+        s_nim = escape(nim.strip())
+        partner_clean = escape(industry_partner.strip())
+        role_clean = escape(internship_role.strip())
+        grade_clean = escape(final_grade.strip())
+        sks = int(converted_sks)
+
+        return f"""    <div class="tu-msib-card">
+      <div class="tu-msib-header">
+        <span class="tu-msib-badge">Magang Bersertifikat Kampus Merdeka (MSIB)</span>
+        <span class="tu-msib-sks">{sks} SKS Terkonversi</span>
+      </div>
+      <h3 class="tu-msib-student">{s_name}</h3>
+      <div class="tu-msib-meta">
+        <span>NIM: <strong>{s_nim}</strong></span>
+        <span>Nilai Akhir: <strong class="tu-grade">{grade_clean}</strong></span>
+      </div>
+      <div class="tu-msib-body">
+        <div class="tu-msib-row">
+          <span class="tu-lbl">Mitra Industri:</span>
+          <strong class="tu-val">{partner_clean}</strong>
+        </div>
+        <div class="tu-msib-row">
+          <span class="tu-lbl">Posisi Magang:</span>
+          <span class="tu-val">{role_clean}</span>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
