@@ -664,6 +664,19 @@ class WordPressClient:
             return results
         return []
 
+    def set_post_sticky_status(self, post_id: int, is_sticky: bool = True) -> Dict[str, Any]:
+        """
+        Sets or unsets a WordPress post's sticky feature status (featured pinned editorial headline).
+        """
+        endpoint = f"{self.api_url}/posts/{int(post_id)}"
+        payload = {"sticky": bool(is_sticky)}
+        data_bytes = json.dumps(payload).encode("utf-8")
+        headers = self._get_headers()
+        headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(endpoint, data=data_bytes, headers=headers, method="POST")
+        return self._send_request(req)
+
+
 
 
 
