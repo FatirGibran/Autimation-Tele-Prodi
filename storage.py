@@ -652,6 +652,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_hki_reg ON lecturer_hki_records(registration_number);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_hki_type ON lecturer_hki_records(creation_type);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS student_msib_internships (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL UNIQUE,
+                    industry_partner TEXT NOT NULL,
+                    internship_role TEXT NOT NULL,
+                    mentor_grade REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    duration_months INTEGER NOT NULL DEFAULT 5,
+                    status TEXT DEFAULT 'Approved',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_msib_nim ON student_msib_internships(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_msib_partner ON student_msib_internships(industry_partner);")
 
 
 
@@ -3233,6 +3250,64 @@ class StorageManager:
             except Exception:
                 data["creators"] = []
             return data
+
+    def record_msib_internship(
+        self,
+        student_name: str,
+        nim: str,
+        industry_partner: str,
+        internship_role: str,
+        mentor_grade: float,
+        letter_grade: str,
+        converted_sks: int,
+        duration_months: int = 5,
+        status: str = "Approved"
+    ) -> int:
+        """
+        Records a certified MSIB Kampus Merdeka internship and credit conversion record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO student_msib_internships (
+                    student_name, nim, industry_partner, internship_role, mentor_grade,
+                    letter_grade, converted_sks, duration_months, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(),
+                nim.strip(),
+                industry_partner.strip(),
+                internship_role.strip(),
+                float(mentor_grade),
+                letter_grade.strip(),
+                int(converted_sks),
+                int(duration_months),
+                status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_msib_internships(self, partner: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists MSIB internship student records with optional industry partner filtering.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM student_msib_internships"
+            params = []
+            if partner:
+                query += " WHERE industry_partner LIKE ?"
+                params.append(f"%{partner.strip()}%")
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_msib_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a student MSIB internship record by student ID (NIM).
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM student_msib_internships WHERE nim = ?", (nim.strip(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
