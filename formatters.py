@@ -859,6 +859,29 @@ class TelegramFormatter:
             f"🎉 *Selamat dan sukses atas perolehan sertifikat Hak Cipta, memajukan portofolio kekayaan intelektual Program Studi!*"
         )
 
+    @staticmethod
+    def format_msib_internship_announcement_telegram(
+        student_name: str,
+        nim: str,
+        partner_name: str,
+        internship_role: str,
+        converted_sks: int,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student certified MSIB industrial internship completion announcement for Telegram.
+        """
+        portal_link = f"\n🔗 **Portal MBKM:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🏢 **Apresiasi Kelulusan Magang Bersertifikat (MSIB Kampus Merdeka)**\n\n"
+            f"👤 **Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏭 **Mitra Industri:** {partner_name.strip()}\n"
+            f"💼 **Peran / Divisi:** {internship_role.strip()}\n"
+            f"📚 **Rekognisi Kurikulum:** `{int(converted_sks)} SKS Disetujui`{portal_link}\n\n"
+            f"👏 *Selamat atas pencapaian pengalaman profesional industri telekomunikasi riil!*"
+        )
+
+
 
 
 
