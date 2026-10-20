@@ -717,6 +717,53 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('badge: "Panduan Lab"', res)
         self.assertIn("<p>Langkah 1: Pasang tripod dudukan antena.</p>", res)
 
+    def test_generate_community_action_project_json_ld(self):
+        res = ArticleExporter.generate_community_action_project_json_ld(
+            project_title="Pemberdayaan UMKM Sentra Kerajinan Logam Berbasis IoT",
+            description="Pelatihan dan implementasi monitoring inventaris IoT di Desa Tumiyang.",
+            leader_name="Dr. Hendra Gunawan, S.T., M.T.",
+            location="Desa Tumiyang, Kebasen, Banyumas",
+            funder_name="Telkom University Purwokerto",
+            fiscal_year=2026,
+            url="https://pkm.telkomuniversity.ac.id/2026/umkm-logam"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "Project")
+        self.assertEqual(res["name"], "Pemberdayaan UMKM Sentra Kerajinan Logam Berbasis IoT")
+        self.assertEqual(res["description"], "Pelatihan dan implementasi monitoring inventaris IoT di Desa Tumiyang.")
+        self.assertEqual(res["founder"]["name"], "Dr. Hendra Gunawan, S.T., M.T.")
+        self.assertEqual(res["locationCreated"]["name"], "Desa Tumiyang, Kebasen, Banyumas")
+        self.assertEqual(res["funder"]["name"], "Telkom University Purwokerto")
+        self.assertEqual(res["temporalCoverage"], "2026")
+        self.assertEqual(res["url"], "https://pkm.telkomuniversity.ac.id/2026/umkm-logam")
+
+    def test_to_docusaurus_v3_tabs_markdown(self):
+        meta = {
+            "seo_title": "Implementasi Link Budget FSO Python",
+            "meta_description": "Dokumentasi dan simulasi Free Space Optics.",
+            "slug": "fso-link-budget-guide",
+            "sidebar_position": 4
+        }
+        tabs = [
+            {"label": "Python", "value": "python", "content": "```python\ncalc_fso_link()\n```"},
+            {"label": "MATLAB", "value": "matlab", "content": "```matlab\nfso_sim();\n```"}
+        ]
+        res = ArticleExporter.to_docusaurus_v3_tabs_markdown(
+            meta,
+            "<p>Berikut implementasi kalkulasi optical margin.</p>",
+            tabs=tabs
+        )
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Implementasi Link Budget FSO Python"', res)
+        self.assertIn('slug: /fso-link-budget-guide', res)
+        self.assertIn("sidebar_position: 4", res)
+        self.assertIn("import Tabs from '@theme/Tabs';", res)
+        self.assertIn("<Tabs>", res)
+        self.assertIn('<TabItem value="python" label="Python">', res)
+        self.assertIn('calc_fso_link()', res)
+        self.assertIn('</Tabs>', res)
+        self.assertIn("<p>Berikut implementasi kalkulasi optical margin.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
