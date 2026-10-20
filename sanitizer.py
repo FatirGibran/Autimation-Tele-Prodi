@@ -938,6 +938,9 @@ def sanitize_html5_datalist_autocomplete_elements(html: str) -> str:
     if not html or "<datalist" not in html.lower():
         return html
 
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
     def fix_datalist_block(m):
         full_tag = m.group(1)
         inner = m.group(2)
@@ -986,6 +989,9 @@ def sanitize_html5_output_calculation_elements(html: str) -> str:
     """
     if not html or "<output" not in html.lower():
         return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
 
     def fix_output(m):
         tag = m.group(0)

@@ -6,7 +6,10 @@ from sanitizer import (
     sanitize_time_duration_microdata,
     sanitize_html5_dialog_elements,
     sanitize_html5_details_summary_elements,
-    sanitize_html5_template_elements
+    sanitize_html5_template_elements,
+    sanitize_html5_media_track_caption_elements,
+    sanitize_html5_datalist_autocomplete_elements,
+    sanitize_html5_output_calculation_elements
 )
 
 
@@ -667,6 +670,55 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("<script>", standalone)
         self.assertNotIn("onclick=", standalone)
         self.assertIn("<p>Hi</p>", standalone)
+
+    def test_sanitize_html5_media_track_caption_elements(self):
+        raw = (
+            '<video controls>'
+            '<source src="intro.mp4" type="video/mp4">'
+            '<track src="javascript:evil()" kind="malicious" srclang="invalid!!!@#" label="Indonesian" onclick="danger()">'
+            '<track src="/subtitles/id.vtt" kind="captions" srclang="id-ID" label="Bahasa Indonesia">'
+            '</video>'
+        )
+        cleaned = sanitize_html5_media_track_caption_elements(raw)
+        self.assertNotIn("javascript:evil()", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("srclang=\"invalid", cleaned)
+        self.assertIn('kind="subtitles"', cleaned)
+        self.assertIn('src="/subtitles/id.vtt"', cleaned)
+        self.assertIn('kind="captions"', cleaned)
+        self.assertIn('srclang="id-ID"', cleaned)
+
+    def test_sanitize_html5_datalist_autocomplete_elements(self):
+        raw = (
+            '<datalist id="freq-bands<script>evil()</script>" onclick="danger()">'
+            '<option value="Sub-6 GHz" onclick="alert(1)">'
+            '<option value="mmWave 28 GHz" style="color:red">'
+            '<script>alert(2)</script>'
+            '</datalist>'
+        )
+        cleaned = sanitize_html5_datalist_autocomplete_elements(raw)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn('id="freq-bands"', cleaned)
+        self.assertIn('value="Sub-6 GHz"', cleaned)
+        self.assertIn('value="mmWave 28 GHz"', cleaned)
+
+    def test_sanitize_html5_output_calculation_elements(self):
+        raw = (
+            '<form>'
+            '<input type="number" id="a" value="10">'
+            '<input type="number" id="b" value="20">'
+            '<output for="a b <script>evil()</script>" name="result$eval" onclick="danger()" style="font-weight:bold">30</output>'
+            '</form>'
+        )
+        cleaned = sanitize_html5_output_calculation_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertIn('for="a b"', cleaned)
+        self.assertIn('name="resulteval"', cleaned)
+        self.assertIn('>30</output>', cleaned)
 
 
 if __name__ == "__main__":
