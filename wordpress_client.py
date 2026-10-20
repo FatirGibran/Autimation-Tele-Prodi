@@ -653,6 +653,18 @@ class WordPressClient:
             return results
         return {}
 
+    def get_post_media_attachments(self, post_id: int, per_page: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves all uploaded media attachments associated with a specific WordPress post parent ID.
+        """
+        endpoint = f"{self.api_url}/media?parent={int(post_id)}&per_page={max(1, int(per_page))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
+
 
 
 
