@@ -1208,6 +1208,140 @@ Status: Granted
         self.assertEqual(res_book["sinta_bkd_rubric_points"], 40.0)
         self.assertTrue(res_book["is_valid_registration"])
 
+    def test_calculate_fso_link_budget(self):
+        from parser import calculate_fso_link_budget
+        # Standard 1 km link with 10 dBm TX power
+        res = calculate_fso_link_budget(
+            tx_power_dbm=10.0,
+            tx_beam_divergence_mrad=1.5,
+            rx_aperture_diam_cm=20.0,
+            link_distance_km=1.0,
+            atmospheric_attenuation_db_km=2.5,
+            optical_rx_sensitivity_dbm=-38.0
+        )
+        self.assertTrue(res["is_link_feasible"])
+        self.assertGreater(res["link_margin_db"], 15.0)
+        self.assertEqual(res["status"], "Robust")
+        self.assertEqual(res["atmospheric_loss_db"], 2.5)
+
+        # Distant link under heavy fog with high loss
+        res_fog = calculate_fso_link_budget(
+            tx_power_dbm=5.0,
+            tx_beam_divergence_mrad=2.0,
+            rx_aperture_diam_cm=10.0,
+            link_distance_km=5.0,
+            atmospheric_attenuation_db_km=12.0,
+            optical_rx_sensitivity_dbm=-30.0
+        )
+        self.assertFalse(res_fog["is_link_feasible"])
+        self.assertEqual(res_fog["status"], "Link Outage")
+
+    def test_evaluate_student_msib_internship(self):
+        from parser import evaluate_student_msib_internship
+        res_pass = evaluate_student_msib_internship(
+            student_name="Ahmad Zaki",
+            nim="1101230045",
+            industry_partner="PT Telkom Indonesia (Persero) Tbk",
+            internship_role="Optical Transport & Cloud Network Engineer",
+            mentor_grade=88.5,
+            duration_months=5
+        )
+        self.assertTrue(res_pass["is_conversion_approved"])
+        self.assertEqual(res_pass["letter_grade"], "A")
+        self.assertEqual(res_pass["converted_sks"], 20)
+        self.assertEqual(len(res_pass["converted_courses"]), 5)
+
+        # 4 months duration gives partial 16 SKS
+        res_part = evaluate_student_msib_internship(
+            student_name="Rina Safitri",
+            nim="1101230088",
+            industry_partner="Huawei Technologies Indonesia",
+            internship_role="Wireless RF Associate",
+            mentor_grade=72.0,
+            duration_months=4
+        )
+        self.assertTrue(res_part["is_conversion_approved"])
+        self.assertEqual(res_part["letter_grade"], "B")
+        self.assertEqual(res_part["converted_sks"], 16)
+
+        # Failing grade
+        res_fail = evaluate_student_msib_internship(
+            student_name="Budi",
+            nim="1101230099",
+            industry_partner="Vendor X",
+            internship_role="Tester",
+            mentor_grade=45.0,
+            duration_months=5
+        )
+        self.assertFalse(res_fail["is_conversion_approved"])
+        self.assertEqual(res_fail["converted_sks"], 0)
+
+    def test_calculate_antenna_polarization_loss(self):
+        from parser import calculate_antenna_polarization_loss
+        # Co-polarized linear (0 deg tilt)
+        res_lin0 = calculate_antenna_polarization_loss("VERTICAL", "VERTICAL", tilt_angle_deg=0.0)
+        self.assertEqual(res_lin0["polarization_loss_db"], 0.0)
+        self.assertEqual(res_lin0["polarization_efficiency_pct"], 100.0)
+        self.assertEqual(res_lin0["status"], "Optimal")
+
+        # Cross-polarized linear (90 deg tilt)
+        res_lin90 = calculate_antenna_polarization_loss("VERTICAL", "HORIZONTAL", tilt_angle_deg=90.0)
+        self.assertGreaterEqual(res_lin90["polarization_loss_db"], 30.0)
+        self.assertEqual(res_lin90["status"], "High Loss / Mismatch")
+
+        # Circular to linear has 3.01 dB loss
+        res_circ_lin = calculate_antenna_polarization_loss("RHCP", "VERTICAL")
+        self.assertAlmostEqual(res_circ_lin["polarization_loss_db"], 3.01, places=1)
+        self.assertEqual(res_circ_lin["polarization_efficiency_pct"], 50.0)
+
+        # Circular co-pol vs cross-pol
+        res_rhcp = calculate_antenna_polarization_loss("RHCP", "RHCP")
+        self.assertEqual(res_rhcp["polarization_loss_db"], 0.0)
+        res_cross = calculate_antenna_polarization_loss("RHCP", "LHCP")
+        self.assertGreaterEqual(res_cross["polarization_loss_db"], 25.0)
+
+    def test_parse_lecturer_pkm_grant(self):
+        from parser import parse_lecturer_pkm_grant
+        res_ok = parse_lecturer_pkm_grant(
+            project_title="Pemberdayaan Digitalisasi Internet of Things untuk Petani Desa Karangmangu",
+            team_leader="Dr. Ir. Budi Santoso, M.T.",
+            nidn="0612058001",
+            partner_name="Kelompok Tani Makmur Sejahtera",
+            target_location="Desa Karangmangu, Banyumas",
+            proposed_budget=15000000.0,
+            fiscal_year=2026
+        )
+        self.assertTrue(res_ok["is_grant_approved"])
+        self.assertEqual(res_ok["status"], "Approved")
+        self.assertEqual(res_ok["approved_budget"], 15000000.0)
+        self.assertEqual(len(res_ok["mandatory_deliverables"]), 4)
+
+        # Exceed budget
+        res_exceed = parse_lecturer_pkm_grant(
+            project_title="Instalasi Panel Surya UMKM",
+            team_leader="Dr. Ir. Budi Santoso, M.T.",
+            nidn="0612058001",
+            partner_name="Toko Mitra",
+            target_location="Purwokerto",
+            proposed_budget=30000000.0,
+            fiscal_year=2026
+        )
+        self.assertFalse(res_exceed["is_grant_approved"])
+        self.assertEqual(res_exceed["status"], "Budget Cap Exceeded")
+
+        # Invalid NIDN
+        res_bad_nidn = parse_lecturer_pkm_grant(
+            project_title="Program Literasi",
+            team_leader="Dosen A",
+            nidn="123",
+            partner_name="Mitra",
+            target_location="Banyumas",
+            proposed_budget=10000000.0,
+            fiscal_year=2026
+        )
+        self.assertFalse(res_bad_nidn["is_grant_approved"])
+        self.assertEqual(res_bad_nidn["status"], "NIDN Invalid")
+
 
 if __name__ == "__main__":
     unittest.main()
