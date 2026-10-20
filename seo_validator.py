@@ -3273,6 +3273,71 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_breadcrumb_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits breadcrumb navigation markup for WCAG 2.1 accessibility and semantic hierarchy.
+        Verifies nav landmark labeling (aria-label="breadcrumb"), ordered list structure (<ol>),
+        and aria-current="page" on the terminal active page item.
+        """
+        if not html_content or "<nav" not in html_content.lower():
+            return {
+                "has_breadcrumb": False,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        # Locate breadcrumb navigation container
+        breadcrumb_nav = None
+        for nav in soup.find_all("nav"):
+            aria_lbl = (nav.get("aria-label") or "").strip().lower()
+            cls_name = " ".join(nav.get("class") or []).lower()
+            if "breadcrumb" in aria_lbl or "breadcrumb" in cls_name:
+                breadcrumb_nav = nav
+                break
+
+        if not breadcrumb_nav:
+            return {
+                "has_breadcrumb": False,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        # Check aria-label="breadcrumb"
+        aria_label = (breadcrumb_nav.get("aria-label") or "").strip().lower()
+        if aria_label != "breadcrumb" and "breadcrumb" not in aria_label:
+            issues.append("Navigasi breadcrumb disarankan memiliki atribut aria-label='breadcrumb'.")
+
+        # Check list structure (<ol> or <ul>)
+        list_container = breadcrumb_nav.find(["ol", "ul"])
+        if not list_container:
+            issues.append("Breadcrumb harus menstrukturkan tautan hierarki di dalam elemen daftar semantik (<ol> atau <ul>).")
+            crumbs = breadcrumb_nav.find_all("a")
+        else:
+            crumbs = list_container.find_all("li")
+
+        if not crumbs:
+            issues.append("Breadcrumb tidak memuat item tautan hierarki navigasi.")
+        else:
+            # Check last crumb for aria-current="page"
+            last_crumb = crumbs[-1]
+            has_aria_current = (
+                last_crumb.get("aria-current") == "page" or
+                bool(last_crumb.find(attrs={"aria-current": "page"}))
+            )
+            if not has_aria_current:
+                issues.append("Item breadcrumb terakhir (halaman aktif) harus menyertakan atribut aria-current='page'.")
+
+        return {
+            "has_breadcrumb": True,
+            "total_crumbs": len(crumbs) if crumbs else 0,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
