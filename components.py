@@ -4006,6 +4006,43 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_canvas_waveform_container_card(
+        cls,
+        title: str,
+        canvas_id: str,
+        width: int = 600,
+        height: int = 300,
+        signal_type: str = "OFDM Subcarrier Spectrum",
+        caption: str = "Tampilan Gelombang Domain Waktu"
+    ) -> str:
+        """
+        Renders a responsive oscilloscope / signal spectrum waveform HTML5 canvas container component.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(title.strip())
+        c_id = escape(canvas_id.strip())
+        sig_clean = escape(signal_type.strip())
+        cap_clean = escape(caption.strip())
+        w = max(100, int(width))
+        h = max(50, int(height))
+
+        return f"""    <div class="tu-canvas-waveform-card">
+      <div class="tu-waveform-header">
+        <span class="tu-waveform-badge">Visualisasi Sinyal &amp; Spektrum</span>
+        <span class="tu-waveform-type">{sig_clean}</span>
+      </div>
+      <h4 class="tu-waveform-title">{title_clean}</h4>
+      <div class="tu-canvas-wrap">
+        <canvas id="{c_id}" width="{w}" height="{h}" class="tu-waveform-canvas">
+          <p class="tu-canvas-fallback">Browser Anda tidak mendukung rendering visualisasi HTML5 canvas.</p>
+        </canvas>
+      </div>
+      <p class="tu-waveform-caption">{cap_clean}</p>
+    </div>"""
+
+
 
 
 
