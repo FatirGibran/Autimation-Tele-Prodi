@@ -3960,6 +3960,53 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_grant_project_card(
+        cls,
+        project_title: str,
+        team_leader: str,
+        nidn: str,
+        partner_name: str,
+        location: str,
+        budget_amount: float,
+        fiscal_year: int
+    ) -> str:
+        """
+        Renders a lecturer Tridharma Community Service (PKM) internal grant award project card.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(project_title.strip())
+        leader_clean = escape(team_leader.strip())
+        nidn_clean = escape(nidn.strip())
+        partner_clean = escape(partner_name.strip())
+        loc_clean = escape(location.strip())
+        budget_str = f"Rp {float(budget_amount):,.0f}".replace(",", ".")
+        year_str = str(int(fiscal_year))
+
+        return f"""    <div class="tu-pkm-grant-card">
+      <div class="tu-pkm-header">
+        <span class="tu-pkm-badge">Hibah Pengabdian Masyarakat (PKM)</span>
+        <span class="tu-pkm-year">T.A. {year_str}</span>
+      </div>
+      <h4 class="tu-pkm-title">{title_clean}</h4>
+      <div class="tu-pkm-body">
+        <div class="tu-pkm-leader">
+          <span class="tu-lbl">Ketua Pengabdi:</span>
+          <strong>{leader_clean}</strong> (NIDN: <code>{nidn_clean}</code>)
+        </div>
+        <div class="tu-pkm-partner">
+          <span class="tu-lbl">Mitra Sasaran:</span>
+          <span>{partner_clean} ({loc_clean})</span>
+        </div>
+        <div class="tu-pkm-budget">
+          <span class="tu-lbl">Dana Disetujui LPPM:</span>
+          <strong class="tu-amount">{budget_str}</strong>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
