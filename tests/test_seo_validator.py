@@ -1149,6 +1149,90 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertTrue(any("lacks accessible labeling" in i for i in res_bad["issues"]))
 
+    def test_audit_breadcrumb_accessibility(self):
+        html_ok = (
+            '<nav aria-label="breadcrumb">'
+            '<ol class="breadcrumb">'
+            '<li><a href="/">Beranda</a></li>'
+            '<li><a href="/kurikulum">Kurikulum</a></li>'
+            '<li aria-current="page">S1 Teknik Telekomunikasi</li>'
+            '</ol>'
+            '</nav>'
+        )
+        res_ok = YoastSEOValidator.audit_breadcrumb_accessibility(html_ok)
+        self.assertTrue(res_ok["has_breadcrumb"])
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["total_crumbs"], 3)
+
+        html_bad = (
+            '<nav class="breadcrumb">'
+            '<a href="/">Home</a> > <span>Kurikulum</span>'
+            '</nav>'
+        )
+        res_bad = YoastSEOValidator.audit_breadcrumb_accessibility(html_bad)
+        self.assertTrue(res_bad["has_breadcrumb"])
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("daftar semantik" in i for i in res_bad["issues"]))
+        self.assertTrue(any("aria-current='page'" in i for i in res_bad["issues"]))
+
+    def test_audit_video_media_accessibility(self):
+        html_ok = (
+            '<div class="tu-editorial-container">'
+            '<video controls poster="https://example.com/poster.jpg">'
+            '<source src="video.mp4" type="video/mp4">'
+            '<track kind="captions" src="sub.vtt" srclang="id" label="Indonesia">'
+            '<p>Browser Anda tidak mendukung HTML5 video.</p>'
+            '</video>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_video_media_accessibility(html_ok)
+        self.assertTrue(res_ok["has_videos"])
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["compliant_videos"], 1)
+
+        html_bad = '<video src="stream.mp4"></video>'
+        res_bad = YoastSEOValidator.audit_video_media_accessibility(html_bad)
+        self.assertTrue(res_bad["has_videos"])
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("controls" in i for i in res_bad["issues"]))
+        self.assertTrue(any("poster" in i for i in res_bad["issues"]))
+        self.assertTrue(any("track" in i for i in res_bad["issues"]))
+
+    def test_audit_external_links_security(self):
+        html_ok = (
+            '<p>'
+            '<a href="https://telkomuniversity.ac.id/profil" target="_blank">Internal</a> '
+            '<a href="https://ieee.org/papers" target="_blank" rel="noopener noreferrer">IEEE Portal</a>'
+            '</p>'
+        )
+        res_ok = YoastSEOValidator.audit_external_links_security(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["external_links"], 1)
+        self.assertEqual(res_ok["secure_links"], 1)
+
+        html_bad = (
+            '<p><a href="https://external-hacker.com/exploit" target="_blank">Insecure Link</a></p>'
+        )
+        res_bad = YoastSEOValidator.audit_external_links_security(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("rel='noopener'" in i for i in res_bad["issues"]))
+
+    def test_audit_blockquote_citations(self):
+        html_ok = (
+            '<blockquote cite="https://itu.int/standards">'
+            '<p>Standarisasi 5G New Radio menetapkan latensi ultra-rendah.</p>'
+            '<cite>ITU-R Recommendation M.2083</cite>'
+            '</blockquote>'
+        )
+        res_ok = YoastSEOValidator.audit_blockquote_citations(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["attributed_quotes"], 1)
+
+        html_bad = '<blockquote><p>Kutipan tanpa atribusi apa pun.</p></blockquote>'
+        res_bad = YoastSEOValidator.audit_blockquote_citations(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("sumber atribusi" in i for i in res_bad["issues"]))
+
 
 if __name__ == "__main__":
     unittest.main()
