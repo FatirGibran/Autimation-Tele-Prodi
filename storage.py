@@ -687,6 +687,22 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_nidn ON lecturer_pkm_grants(nidn);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_year ON lecturer_pkm_grants(fiscal_year);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS fso_link_budget_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_name TEXT NOT NULL,
+                    link_distance_km REAL NOT NULL,
+                    tx_power_dbm REAL NOT NULL,
+                    rx_power_dbm REAL NOT NULL,
+                    geometric_loss_db REAL NOT NULL,
+                    atmospheric_loss_db REAL NOT NULL,
+                    link_margin_db REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fso_link ON fso_link_budget_records(link_name);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fso_status ON fso_link_budget_records(status);")
 
 
 
@@ -3396,6 +3412,62 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM lecturer_pkm_grants WHERE id = ?", (int(grant_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_fso_link_budget(
+        self,
+        link_name: str,
+        link_distance_km: float,
+        tx_power_dbm: float,
+        rx_power_dbm: float,
+        geometric_loss_db: float,
+        atmospheric_loss_db: float,
+        link_margin_db: float,
+        status: str
+    ) -> int:
+        """
+        Records an FSO laser telecommunications link budget computation audit.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO fso_link_budget_records (
+                    link_name, link_distance_km, tx_power_dbm, rx_power_dbm,
+                    geometric_loss_db, atmospheric_loss_db, link_margin_db, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                link_name.strip(),
+                float(link_distance_km),
+                float(tx_power_dbm),
+                float(rx_power_dbm),
+                float(geometric_loss_db),
+                float(atmospheric_loss_db),
+                float(link_margin_db),
+                status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_fso_link_budgets(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists FSO optical link budget calculation records.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM fso_link_budget_records"
+            params = []
+            if status:
+                query += " WHERE status = ?"
+                params.append(status.strip())
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_fso_link_budget_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an FSO link budget computation record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM fso_link_budget_records WHERE id = ?", (int(record_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
