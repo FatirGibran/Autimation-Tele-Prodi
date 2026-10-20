@@ -930,6 +930,56 @@ def sanitize_html5_media_track_caption_elements(html: str) -> str:
     return re.sub(r'<track\b[^>]*>', fix_track, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_datalist_autocomplete_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <datalist> and nested <option> autocomplete elements for telecommunication search forms.
+    Scans for valid alphanumeric id bindings, strips malicious script event handlers, and scrubs unsafe inline styling.
+    """
+    if not html or "<datalist" not in html.lower():
+        return html
+
+    def fix_datalist_block(m):
+        full_tag = m.group(1)
+        inner = m.group(2)
+        # Scrub event handlers and unsafe styling on datalist tag
+        full_tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', full_tag, flags=re.IGNORECASE)
+        full_tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', full_tag, flags=re.IGNORECASE)
+
+        # Sanitize id attribute
+        id_m = re.search(r'\bid=["\']([^"\']*)["\']', full_tag, re.IGNORECASE)
+        if id_m:
+            id_val = id_m.group(1).strip()
+            clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '', id_val)
+            if clean_id:
+                full_tag = re.sub(r'\bid=["\'][^"\']*["\']', f'id="{clean_id}"', full_tag, flags=re.IGNORECASE)
+            else:
+                full_tag = re.sub(r'\s+id=["\'][^"\']*["\']', '', full_tag, flags=re.IGNORECASE)
+
+        # Sanitize option tags inside
+        def fix_option(opt_m):
+            opt_tag = opt_m.group(0)
+            opt_tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', opt_tag, flags=re.IGNORECASE)
+            opt_tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', opt_tag, flags=re.IGNORECASE)
+            return opt_tag
+
+        clean_inner = re.sub(r'<option\b[^>]*>', fix_option, inner, flags=re.IGNORECASE)
+        # Strip any nested script tags
+        clean_inner = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', clean_inner, flags=re.IGNORECASE)
+        return f"{full_tag}{clean_inner}</datalist>"
+
+    out = re.sub(r'(<datalist\b[^>]*>)([\s\S]*?)</datalist>', fix_datalist_block, html, flags=re.IGNORECASE)
+
+    def fix_lone_datalist(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<datalist\b[^>]*>(?![\s\S]*?</datalist>)', fix_lone_datalist, out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
