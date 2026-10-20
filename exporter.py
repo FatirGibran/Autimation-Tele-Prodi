@@ -1422,6 +1422,52 @@ navigation: true
             payload["url"] = url.strip()
         return payload
 
+    @staticmethod
+    def to_docusaurus_v3_tabs_markdown(
+        metadata: Dict[str, Any],
+        html_content: str,
+        tabs: Optional[List[Dict[str, str]]] = None
+    ) -> str:
+        """
+        Exports content formatted for Docusaurus v3 MDX with tabbed code blocks or content sections.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        sidebar_position = metadata.get("sidebar_position", 1)
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+        ]
+        if slug:
+            frontmatter.append(f'slug: /{slug.lstrip("/")}')
+        frontmatter.append(f'sidebar_position: {int(sidebar_position)}')
+        frontmatter.append("---")
+
+        output = ["\n".join(frontmatter), ""]
+        if tabs:
+            output.append("import Tabs from '@theme/Tabs';")
+            output.append("import TabItem from '@theme/TabItem';")
+            output.append("")
+
+        output.append(html_content.strip())
+
+        if tabs:
+            output.append("")
+            output.append("<Tabs>")
+            for tab in tabs:
+                label = tab.get("label", "Tab")
+                val = tab.get("value", label.lower().replace(" ", "_"))
+                content = tab.get("content", "")
+                output.append(f'  <TabItem value="{val}" label="{label}">')
+                output.append(f'    {content.strip()}')
+                output.append("  </TabItem>")
+            output.append("</Tabs>")
+
+        return "\n".join(output)
+
 
 
 
