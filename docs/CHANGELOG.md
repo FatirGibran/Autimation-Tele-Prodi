@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 570+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 600+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 570 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 597 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -684,6 +684,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 559. **Subcommand CLI `hki` (`cli.py`)**: Perintah konsol pencatatan karya hak cipta dan kekayaan intelektual dosen (list, add).
 560. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/74_v3_7_feature_expansions.md`)**: Dokumentasi menyeluruh seluruh pembaruan arsitektur v3.7.0.
 561. **Ekspansi Suite Pengujian Unit Terpadu (570 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 570 unit test terverifikasi (100% pass rate).
+
+---
+
+## 26. Siklus Pengembangan v3.8.0 (FSO Link Budget, MSIB Internship, Antenna PLF, PKM Grant, Accessibility & SSG Expansions)
+
+562. **Sanitasi Elemen HTML5 Media Track Subtitle (`sanitizer.py`)**: Sanitasi elemen `<track>`, penegakan protokol aman `kind`, `srclang`, `label`, `default`, dan netralisasi url berbahaya pada `src`.
+563. **Sanitasi Elemen HTML5 Datalist Autocomplete (`sanitizer.py`)**: Pembersihan elemen `<datalist>` dan anak `<option>`, validasi atribut `value`/`label`, serta pelucutan atribut event handler inline.
+564. **Sanitasi Elemen HTML5 Output Komputasi (`sanitizer.py`)**: Pembersihan elemen semantik `<output>`, validasi atribut asosiasi `for` dan `name`, serta pencegahan injeksi event listener.
+565. **Kalkulator Link Budget Laser Ruang Bebas FSO (`parser.py`)**: Perhitungan geometric path loss, total redaman atmosferik, daya terima optik, dan link margin komunikasi laser optik nirkabel FSO.
+566. **Evaluator Konversi SKS Magang Bersertifikat MSIB (`parser.py`)**: Penguraian nilai mentor industri, konversi nilai angka ke huruf mutu, dan penetapan ekuivalensi hingga 20 SKS Kampus Merdeka.
+567. **Kalkulator Polarization Loss Factor (PLF) & Rasio Aksial Antena (`parser.py`)**: Perhitungan faktor kerugian ketidaksesuaian polarisasi antara antena pemancar dan penerima berdasarkan sudut orientasi dan axial ratio dB.
+568. **Parser Usulan Hibah Pengabdian Masyarakat Dosen PKM (`parser.py`)**: Penguraian proposal hibah pengabdian masyarakat, bidang fokus LPPM, pagu usulan, lokasi mitra sasaran, dan alokasi anggaran yang disetujui.
+569. **Auditor Aksesibilitas Breadcrumb Navigation Structured List (`seo_validator.py`)**: Pemeriksaan elemen navigasi hierarki `<nav aria-label="Breadcrumb">`, urutan list `<ol>` atau `<ul>`, dan atribut penanda `aria-current="page"`.
+570. **Auditor Metadata Schema & Durasi Video (`seo_validator.py`)**: Validasi elemen video, durasi ISO 8601, poster thumbnail gambar, dan kepatuhan teks deskripsi aksesibilitas video.
+571. **Auditor Kepatuhan External Rel Noopener Link Baru (`seo_validator.py`)**: Verifikasi keberadaan atribut `rel="noopener noreferrer"` pada tautan target baru `target="_blank"` untuk mitigasi celah tabnabbing.
+572. **Auditor Atribusi Kutipan Blockquote & Cite (`seo_validator.py`)**: Pemeriksaan semantik elemen `<blockquote>` dan ketersediaan atribusi rujukan sumber `<cite>` atau atribut `cite="..."`.
+573. **Komponen Kalkulasi Transmisi Laser FSO (`components.py`)**: Kartu visual Elementor kalkulasi link budget optik nirkabel dengan daya pemancar, penerima, dan indikator margin tautan.
+574. **Komponen Pengakuan Magang Bersertifikat MSIB (`components.py`)**: Kartu visual Elementor apresiasi mahasiswa berprestasi peserta program magang bersertifikat Kampus Merdeka di industri mitra.
+575. **Komponen Ketidaksesuaian Polarisasi Antena PLF (`components.py`)**: Kartu kalkulasi teknis RF ketidaksesuaian polarisasi gelombang elektromagnetik dan axial ratio antena telekomunikasi.
+576. **Komponen Proyek Hibah Pengabdian Masyarakat PKM Dosen (`components.py`)**: Kartu showcase pameran dan publikasi kegiatan pengabdian kepada masyarakat berbasis penerapan teknologi informasi.
+577. **Komponen Wadah Osiloskop Gelombang Responsif Canvas (`components.py`)**: Kontainer HTML5 semantik `<canvas>` terisolasi untuk visualisasi bentuk gelombang sinyal RF dan modulasi digital.
+578. **Formatter Telegram Apresiasi Magang MSIB (`formatters.py`)**: Template buletin resmi Telegram ucapan selamat atas kelulusan dan konversi SKS program magang bersertifikat MSIB.
+579. **Formatter Telegram Pengumuman Hibah PKM LPPM (`formatters.py`)**: Template pengumuman resmi Telegram penerima pendanaan program pengabdian masyarakat bagi sivitas akademika prodi.
+580. **Manajer Rekam Magang MSIB Mahasiswa (`storage.py`)**: Skema tabel basis data `student_msib_internships` dan metode `record_msib_internship`, `list_msib_internships`, `get_msib_by_nim`.
+581. **Manajer Rekam Hibah Pengabdian Masyarakat PKM (`storage.py`)**: Skema tabel `lecturer_pkm_grants` dan metode `record_pkm_grant`, `list_pkm_grants`, `get_pkm_grant_by_id`.
+582. **Manajer Rekam Audit Kalkulasi Link Budget FSO (`storage.py`)**: Skema tabel `fso_link_budget_records` dan metode `record_fso_link_budget`, `list_fso_link_budgets`, `get_fso_link_budget_by_id`.
+583. **Helper WordPress Get Media Attachments By Post ID (`wordpress_client.py`)**: Metode `get_media_attachments_by_post_id` untuk mengambil seluruh berkas media yang dilampirkan pada postingan tertentu via REST API.
+584. **Helper WordPress Update Post Sticky Status (`wordpress_client.py`)**: Metode `update_post_sticky_status` untuk menetapkan atau melepas status sticky/sematan pada artikel WordPress.
+585. **Generator Schema.org Project & CommunityAction JSON-LD (`exporter.py`)**: Metode `generate_community_action_project_json_ld` untuk standarisasi luaran pengabdian masyarakat dan proyek Tridharma.
+586. **Eksportir Markdown Docusaurus v3 MDX Tabs (`exporter.py`)**: Metode `to_docusaurus_v3_tabs_markdown` untuk transformasi artikel ke format dokumentasi Docusaurus v3 MDX dengan tab interaktif.
+587. **Subcommand CLI `msib` (`cli.py`)**: Perintah konsol `msib` untuk mencatat dan menginventarisasi konversi kredit magang bersertifikat mahasiswa.
+588. **Subcommand CLI `pkm` (`cli.py`)**: Perintah konsol `pkm` untuk mencatat dan memantau usulan hibah pengabdian masyarakat dosen.
+589. **Subcommand CLI `fso` (`cli.py`)**: Perintah konsol `fso` untuk mencatat dan mengaudit kalkulasi link budget transmisi optik nirkabel.
+590. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/75_v3_8_feature_expansions.md`)**: Dokumentasi menyeluruh seluruh pembaruan arsitektur v3.8.0.
+591. **Ekspansi Suite Pengujian Unit Terpadu (597 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 597 unit test terverifikasi (100% pass rate).
+592. **Finalisasi Milestone v3.8.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
 
 
 
