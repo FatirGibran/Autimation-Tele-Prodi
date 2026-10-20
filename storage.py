@@ -669,6 +669,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_msib_nim ON student_msib_internships(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_msib_partner ON student_msib_internships(industry_partner);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS lecturer_pkm_grants (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_title TEXT NOT NULL,
+                    team_leader TEXT NOT NULL,
+                    nidn TEXT NOT NULL,
+                    partner_name TEXT NOT NULL,
+                    target_location TEXT NOT NULL,
+                    proposed_budget REAL NOT NULL,
+                    approved_budget REAL NOT NULL,
+                    fiscal_year INTEGER NOT NULL,
+                    focus_area TEXT NOT NULL,
+                    status TEXT DEFAULT 'Approved',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_nidn ON lecturer_pkm_grants(nidn);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_year ON lecturer_pkm_grants(fiscal_year);")
 
 
 
@@ -3307,6 +3325,78 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM student_msib_internships WHERE nim = ?", (nim.strip(),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_pkm_grant(
+        self,
+        project_title: str,
+        team_leader: str,
+        nidn: str,
+        partner_name: str,
+        target_location: str,
+        proposed_budget: float,
+        approved_budget: float,
+        fiscal_year: int,
+        focus_area: str,
+        status: str = "Approved"
+    ) -> int:
+        """
+        Records a lecturer Tridharma Community Service (PKM) grant award and budget allocation.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO lecturer_pkm_grants (
+                    project_title, team_leader, nidn, partner_name, target_location,
+                    proposed_budget, approved_budget, fiscal_year, focus_area, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                project_title.strip(),
+                team_leader.strip(),
+                nidn.strip(),
+                partner_name.strip(),
+                target_location.strip(),
+                float(proposed_budget),
+                float(approved_budget),
+                int(fiscal_year),
+                focus_area.strip(),
+                status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_grants(
+        self,
+        fiscal_year: Optional[int] = None,
+        status: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Lists lecturer PKM grants with optional fiscal year and status filters.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM lecturer_pkm_grants"
+            params = []
+            conditions = []
+            if fiscal_year:
+                conditions.append("fiscal_year = ?")
+                params.append(int(fiscal_year))
+            if status:
+                conditions.append("status = ?")
+                params.append(status.strip())
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY fiscal_year DESC, id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_grant_by_id(self, grant_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a PKM grant record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM lecturer_pkm_grants WHERE id = ?", (int(grant_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
