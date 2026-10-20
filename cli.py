@@ -1279,6 +1279,88 @@ def cmd_hki(args):
         for h in hkis:
             print(f"{h['id']:<4} | {h['registration_number']:<16} | {h['creation_type'][:16]:<18} | {h.get('rubric_points', 0.0):<5.1f} | {h['work_title'][:30]}")
 
+def cmd_msib(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.partner or not args.role or args.grade is None or not args.letter or args.sks is None:
+            print("Error: Argumen --name, --nim, --partner, --role, --grade, --letter, dan --sks wajib diisi.")
+            sys.exit(1)
+        mid = storage.record_msib_internship(
+            student_name=args.name,
+            nim=args.nim,
+            industry_partner=args.partner,
+            internship_role=args.role,
+            mentor_grade=args.grade,
+            letter_grade=args.letter,
+            converted_sks=args.sks,
+            duration_months=args.duration or 6,
+            status=args.status or "Completed"
+        )
+        print(f"Catatan magang MSIB berhasil disimpan dengan ID: {mid}")
+    else:
+        internships = storage.list_msib_internships(partner=args.partner)
+        if not internships:
+            print("Tidak ada catatan magang MSIB yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'MITRA':<25} | {'NAMA':<20} | {'STATUS'}")
+        print("-" * 85)
+        for m in internships:
+            print(f"{m['id']:<4} | {m['nim']:<10} | {m['converted_sks']:<4} | {m['letter_grade']:<5} | {m['industry_partner'][:23]:<25} | {m['student_name'][:18]:<20} | {m['status']}")
+
+def cmd_pkm(args):
+    if args.action == "add":
+        if not args.title or not args.leader or not args.nidn or not args.partner or not args.location or args.proposed is None or args.approved is None or not args.year or not args.focus:
+            print("Error: Argumen --title, --leader, --nidn, --partner, --location, --proposed, --approved, --year, dan --focus wajib diisi.")
+            sys.exit(1)
+        pid = storage.record_pkm_grant(
+            project_title=args.title,
+            team_leader=args.leader,
+            nidn=args.nidn,
+            partner_name=args.partner,
+            target_location=args.location,
+            proposed_budget=args.proposed,
+            approved_budget=args.approved,
+            fiscal_year=args.year,
+            focus_area=args.focus,
+            status=args.status or "Approved"
+        )
+        print(f"Catatan hibah PKM berhasil disimpan dengan ID: {pid}")
+    else:
+        grants = storage.list_pkm_grants(fiscal_year=args.year, status=args.status)
+        if not grants:
+            print("Tidak ada catatan hibah PKM yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIDN':<10} | {'DANA (IDR)':<14} | {'TAHUN':<6} | {'KETUA':<20} | {'STATUS'}")
+        print("-" * 75)
+        for g in grants:
+            print(f"{g['id']:<4} | {g['nidn']:<10} | {g['approved_budget']:<14,.0f} | {g['fiscal_year']:<6} | {g['team_leader'][:18]:<20} | {g['status']}")
+
+def cmd_fso(args):
+    if args.action == "add":
+        if not args.name or args.distance is None or args.tx is None or args.rx is None or args.geo is None or args.loss is None or args.margin is None:
+            print("Error: Argumen --name, --distance, --tx, --rx, --geo, --loss, dan --margin wajib diisi.")
+            sys.exit(1)
+        fid = storage.record_fso_link_budget(
+            link_name=args.name,
+            link_distance_km=args.distance,
+            tx_power_dbm=args.tx,
+            rx_power_dbm=args.rx,
+            geometric_loss_db=args.geo,
+            atmospheric_loss_db=args.loss,
+            link_margin_db=args.margin,
+            status=args.status or ("Viable" if args.margin >= 3.0 else "Unviable")
+        )
+        print(f"Catatan link budget FSO berhasil disimpan dengan ID: {fid}")
+    else:
+        records = storage.list_fso_link_budgets(status=args.status)
+        if not records:
+            print("Tidak ada catatan link budget FSO yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'JARAK (KM)':<10} | {'MARGIN (DB)':<12} | {'STATUS':<10} | {'NAMA LINK'}")
+        print("-" * 65)
+        for r in records:
+            print(f"{r['id']:<4} | {r['link_distance_km']:<10.2f} | {r['link_margin_db']:<12.2f} | {r['status']:<10} | {r['link_name'][:30]}")
+
+
 
 def main():
 
@@ -1782,6 +1864,48 @@ def main():
     hki_parser.add_argument("--date", help="Tanggal pencatatan")
     hki_parser.add_argument("--points", type=float, default=0.0, help="Poin BKD / SINTA")
     hki_parser.set_defaults(func=cmd_hki)
+
+    # MSIB command
+    msib_parser = subparsers.add_parser("msib", help="Kelola rekam magang bersertifikat MSIB (list, add)")
+    msib_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan MSIB")
+    msib_parser.add_argument("--name", help="Nama mahasiswa")
+    msib_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    msib_parser.add_argument("--partner", help="Nama mitra industri MSIB")
+    msib_parser.add_argument("--role", help="Posisi / peran magang")
+    msib_parser.add_argument("--grade", type=float, help="Nilai mentor industri")
+    msib_parser.add_argument("--letter", help="Konversi nilai huruf (A/AB/B)")
+    msib_parser.add_argument("--sks", type=int, help="Jumlah SKS konversi")
+    msib_parser.add_argument("--duration", type=int, default=6, help="Durasi magang dalam bulan")
+    msib_parser.add_argument("--status", default="Completed", help="Status magang")
+    msib_parser.set_defaults(func=cmd_msib)
+
+    # PKM command
+    pkm_parser = subparsers.add_parser("pkm", help="Kelola usulan hibah pengabdian masyarakat PKM (list, add)")
+    pkm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan hibah PKM")
+    pkm_parser.add_argument("--title", help="Judul proyek pengabdian")
+    pkm_parser.add_argument("--leader", help="Nama ketua tim pelaksana")
+    pkm_parser.add_argument("--nidn", help="NIDN ketua tim")
+    pkm_parser.add_argument("--partner", help="Nama mitra sasaran")
+    pkm_parser.add_argument("--location", help="Lokasi pelaksanaan PKM")
+    pkm_parser.add_argument("--proposed", type=float, help="Anggaran usulan (IDR)")
+    pkm_parser.add_argument("--approved", type=float, help="Anggaran disetujui (IDR)")
+    pkm_parser.add_argument("--year", type=int, help="Tahun pelaksanaan")
+    pkm_parser.add_argument("--focus", help="Bidang fokus PKM")
+    pkm_parser.add_argument("--status", default="Approved", help="Status hibah")
+    pkm_parser.set_defaults(func=cmd_pkm)
+
+    # FSO command
+    fso_parser = subparsers.add_parser("fso", help="Kelola kalkulasi link budget laser optik ruang bebas FSO (list, add)")
+    fso_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan FSO link budget")
+    fso_parser.add_argument("--name", help="Nama link FSO")
+    fso_parser.add_argument("--distance", type=float, help="Jarak link (km)")
+    fso_parser.add_argument("--tx", type=float, help="Daya pancar Tx (dBm)")
+    fso_parser.add_argument("--rx", type=float, help="Daya terima Rx (dBm)")
+    fso_parser.add_argument("--geo", type=float, help="Rugi geometrik (dB)")
+    fso_parser.add_argument("--loss", type=float, help="Rugi redaman atmosfer (dB)")
+    fso_parser.add_argument("--margin", type=float, help="Link margin (dB)")
+    fso_parser.add_argument("--status", help="Status kelayakan link")
+    fso_parser.set_defaults(func=cmd_fso)
 
     args = parser.parse_args()
 
