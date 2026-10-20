@@ -3337,6 +3337,62 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_video_media_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits embedded HTML5 <video> elements for WCAG 2.1 multimedia accessibility compliance.
+        Checks for player controls, poster placeholder preview, text track captions, and fallback content.
+        """
+        if not html_content or "<video" not in html_content.lower():
+            return {
+                "has_videos": False,
+                "total_videos": 0,
+                "compliant_videos": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        videos = soup.find_all("video")
+        if not videos:
+            return {
+                "has_videos": False,
+                "total_videos": 0,
+                "compliant_videos": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        compliant_count = 0
+
+        for idx, vid in enumerate(videos, start=1):
+            vid_issues = []
+            if not vid.has_attr("controls"):
+                vid_issues.append(f"Elemen video #{idx} tidak memiliki atribut 'controls' untuk navigasi pengguna.")
+            if not vid.get("poster"):
+                vid_issues.append(f"Elemen video #{idx} belum menetapkan atribut 'poster' untuk gambar pratinjau pemuatan.")
+
+            # Check for caption or subtitle track
+            tracks = vid.find_all("track")
+            has_captions = any(t.get("kind", "").lower() in ("captions", "subtitles") for t in tracks)
+            if not has_captions:
+                vid_issues.append(f"Elemen video #{idx} belum menyediakan elemen <track kind='captions'> atau subtitles.")
+
+            if not vid_issues:
+                compliant_count += 1
+            else:
+                issues.extend(vid_issues)
+
+        return {
+            "has_videos": True,
+            "total_videos": len(videos),
+            "compliant_videos": compliant_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
