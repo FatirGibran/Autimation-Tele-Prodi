@@ -560,6 +560,43 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Program Komputer", msg)
         self.assertIn("https://e-hakcipta.dgip.go.id/check/EC002026104829", msg)
 
+    def test_format_msib_internship_announcement_telegram(self):
+        msg = TelegramFormatter.format_msib_internship_announcement_telegram(
+            student_name="Ahmad Zaki",
+            nim="1101230045",
+            partner_name="PT Telkom Indonesia",
+            internship_role="Cloud & Network Engineer",
+            converted_sks=20,
+            portal_url="https://kampusmerdeka.kemdikbud.go.id/msib"
+        )
+        self.assertIn("Magang Bersertifikat (MSIB Kampus Merdeka)", msg)
+        self.assertIn("Ahmad Zaki", msg)
+        self.assertIn("1101230045", msg)
+        self.assertIn("PT Telkom Indonesia", msg)
+        self.assertIn("Cloud & Network Engineer", msg)
+        self.assertIn("20 SKS Disetujui", msg)
+        self.assertIn("https://kampusmerdeka.kemdikbud.go.id/msib", msg)
+
+    def test_format_pkm_grant_announcement_telegram(self):
+        msg = TelegramFormatter.format_pkm_grant_announcement_telegram(
+            project_title="Pemberdayaan Teknologi IoT Desa Karangmangu",
+            team_leader="Dr. Ir. Budi Santoso, M.T.",
+            nidn="0612058001",
+            partner_name="Kelompok Tani Makmur",
+            budget_amount=15000000.0,
+            fiscal_year=2026,
+            portal_url="https://lppm.telkomuniversity.ac.id/pkm-2026"
+        )
+        self.assertIn("Hibah Pengabdian Masyarakat (PKM)", msg)
+        self.assertIn("Pemberdayaan Teknologi IoT Desa Karangmangu", msg)
+        self.assertIn("Dr. Ir. Budi Santoso, M.T.", msg)
+        self.assertIn("0612058001", msg)
+        self.assertIn("Kelompok Tani Makmur", msg)
+        self.assertIn("Rp 15.000.000", msg)
+        self.assertIn("2026", msg)
+        self.assertIn("https://lppm.telkomuniversity.ac.id/pkm-2026", msg)
+
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
