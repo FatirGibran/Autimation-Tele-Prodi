@@ -887,6 +887,50 @@ def sanitize_html5_template_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_media_track_caption_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <track> timed text track elements for WebVTT subtitles, captions, and descriptions.
+    Neutralizes script-bearing src protocols (javascript:, data:text/html), strips inline event handlers,
+    and enforces standardized kind and srclang attributes.
+    """
+    if not html or "<track" not in html.lower():
+        return html
+
+    def fix_track(m):
+        tag = m.group(0)
+        # Strip script event handlers and inline styles
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize src protocol
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src_val = src_m.group(1).strip()
+            src_lower = src_val.lower()
+            if src_lower.startswith("javascript:") or "data:text/html" in src_lower or "<script" in src_lower:
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate kind attribute
+        kind_m = re.search(r'\bkind=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if kind_m:
+            kind_val = kind_m.group(1).strip().lower()
+            allowed_kinds = ("subtitles", "captions", "descriptions", "chapters", "metadata")
+            if kind_val not in allowed_kinds:
+                tag = re.sub(r'\s+kind=["\'][^"\']*["\']', ' kind="subtitles"', tag, flags=re.IGNORECASE)
+
+        # Validate srclang
+        srclang_m = re.search(r'\bsrclang=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if srclang_m:
+            srclang_val = srclang_m.group(1).strip()
+            if not re.match(r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,4})?$', srclang_val):
+                tag = re.sub(r'\s+srclang=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<track\b[^>]*>', fix_track, html, flags=re.IGNORECASE)
+
+
+
 
 
 
