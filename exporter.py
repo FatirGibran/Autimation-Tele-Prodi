@@ -1386,6 +1386,43 @@ navigation: true
         lines.append(html_content.strip())
         return "\n".join(lines)
 
+    @staticmethod
+    def generate_community_action_project_json_ld(
+        project_title: str,
+        description: str,
+        leader_name: str,
+        location: str,
+        funder_name: str = "Telkom University Purwokerto",
+        fiscal_year: int = 2026,
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates schema.org Project & CommunityAction JSON-LD metadata for university community service (PKM).
+        """
+        payload: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Project",
+            "name": project_title.strip(),
+            "description": description.strip(),
+            "founder": {
+                "@type": "Person",
+                "name": leader_name.strip()
+            },
+            "locationCreated": {
+                "@type": "Place",
+                "name": location.strip()
+            },
+            "funder": {
+                "@type": "Organization",
+                "name": funder_name.strip()
+            },
+            "temporalCoverage": str(fiscal_year)
+        }
+        if url:
+            payload["url"] = url.strip()
+        return payload
+
+
 
 
 
