@@ -1441,6 +1441,88 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Klik untuk melihat dokumen prasyarat pendaftaran", html)
         self.assertIn("<p>Transkrip nilai, sertifikat TOEFL >= 450, dan draft skripsi.</p>", html)
 
+    def test_render_fso_link_budget_card(self):
+        html = EditorialComponents.render_fso_link_budget_card(
+            link_name="Tautan Laser FSO Gedung Rektorat - Lab Terpadu",
+            distance_km=1.25,
+            tx_power_dbm=12.0,
+            rx_power_dbm=-18.45,
+            link_margin_db=19.55,
+            link_status="Robust"
+        )
+        self.assertIn("tu-fso-budget-card", html)
+        self.assertIn("Tautan Laser FSO Gedung Rektorat - Lab Terpadu", html)
+        self.assertIn("1.25 km", html)
+        self.assertIn("12.0 dBm", html)
+        self.assertIn("-18.45 dBm", html)
+        self.assertIn("19.55 dB", html)
+        self.assertIn("tu-status-good", html)
+
+    def test_render_msib_internship_card(self):
+        html = EditorialComponents.render_msib_internship_card(
+            student_name="Ahmad Zaki",
+            nim="1101230045",
+            industry_partner="PT Telkom Indonesia",
+            internship_role="Cloud & Network Engineer",
+            converted_sks=20,
+            final_grade="A"
+        )
+        self.assertIn("tu-msib-card", html)
+        self.assertIn("Ahmad Zaki", html)
+        self.assertIn("1101230045", html)
+        self.assertIn("PT Telkom Indonesia", html)
+        self.assertIn("Cloud &amp; Network Engineer", html)
+        self.assertIn("20 SKS Terkonversi", html)
+        self.assertIn(">A<", html)
+
+    def test_render_antenna_polarization_card(self):
+        html = EditorialComponents.render_antenna_polarization_card(
+            tx_pol="RHCP",
+            rx_pol="RHCP",
+            plf_db=0.0,
+            efficiency_percent=100.0,
+            status="Optimal"
+        )
+        self.assertIn("tu-polarization-card", html)
+        self.assertIn("RHCP", html)
+        self.assertIn("0.00 dB", html)
+        self.assertIn("100.0%", html)
+        self.assertIn("tu-status-good", html)
+
+    def test_render_pkm_grant_project_card(self):
+        html = EditorialComponents.render_pkm_grant_project_card(
+            project_title="Digitalisasi Sensor IoT Pertanian",
+            team_leader="Dr. Ir. Budi Santoso, M.T.",
+            nidn="0612058001",
+            partner_name="Kelompok Tani Desa",
+            location="Banyumas",
+            budget_amount=15000000.0,
+            fiscal_year=2026
+        )
+        self.assertIn("tu-pkm-grant-card", html)
+        self.assertIn("Digitalisasi Sensor IoT Pertanian", html)
+        self.assertIn("Dr. Ir. Budi Santoso, M.T.", html)
+        self.assertIn("0612058001", html)
+        self.assertIn("Kelompok Tani Desa", html)
+        self.assertIn("Rp 15.000.000", html)
+        self.assertIn("T.A. 2026", html)
+
+    def test_render_canvas_waveform_container_card(self):
+        html = EditorialComponents.render_canvas_waveform_container_card(
+            title="Sinyal Carrier QAM-64",
+            canvas_id="canvas-qam-signal",
+            width=800,
+            height=350,
+            signal_type="QAM Modulated Spectrum",
+            caption="Visualisasi Domain Waktu Osiloskop Digital"
+        )
+        self.assertIn("tu-canvas-waveform-card", html)
+        self.assertIn("Sinyal Carrier QAM-64", html)
+        self.assertIn('id="canvas-qam-signal"', html)
+        self.assertIn('width="800"', html)
+        self.assertIn('height="350"', html)
+        self.assertIn("Visualisasi Domain Waktu Osiloskop Digital", html)
+
 
 if __name__ == "__main__":
     unittest.main()
