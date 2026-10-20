@@ -3560,6 +3560,84 @@ def calculate_fso_link_budget(
     }
 
 
+def evaluate_student_msib_internship(
+    student_name: str,
+    nim: str,
+    industry_partner: str,
+    internship_role: str,
+    mentor_grade: float,
+    duration_months: int = 5,
+    partner_category: str = "BUMN/Multinasional"
+) -> Dict[str, Any]:
+    """
+    Evaluates student Magang dan Studi Independen Bersertifikat (MSIB Kampus Merdeka) industrial internships.
+    Converts mentor assessment score into university letter grade and maps 20 academic SKS curriculum course credits.
+    """
+    s_name = student_name.strip()
+    s_nim = nim.strip()
+    partner = industry_partner.strip()
+    role = internship_role.strip()
+    grade = max(0.0, min(100.0, float(mentor_grade)))
+    dur = max(1, int(duration_months))
+    category = partner_category.strip()
+
+    if grade >= 80.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif grade >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif grade >= 70.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif grade >= 65.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    elif grade >= 60.0:
+        letter_grade = "C"
+        grade_point = 2.0
+    else:
+        letter_grade = "E"
+        grade_point = 0.0
+
+    is_passed = grade >= 60.0 and dur >= 4
+    if not is_passed:
+        converted_sks = 0
+        conversion_status = "Tidak Lolos Konversi SKS"
+    elif dur >= 5:
+        converted_sks = 20
+        conversion_status = "Konversi Penuh (20 SKS)"
+    else:
+        converted_sks = 16
+        conversion_status = "Konversi Parsial (16 SKS)"
+
+    curriculum_mappings = [
+        {"course_code": "TT4012", "course_name": "Kerja Praktik", "sks": 2},
+        {"course_code": "TT4024", "course_name": "Proyek Rekayasa Industri", "sks": 4},
+        {"course_code": "TT4036", "course_name": "Praktik Sistem Telekomunikasi Lapangan", "sks": 6},
+        {"course_code": "TT4044", "course_name": "Kapita Selekta Industri Telekomunikasi", "sks": 4},
+        {"course_code": "TT4054", "course_name": "Komunikasi Profesional & Etika Rekayasa", "sks": 4 if converted_sks == 20 else 0}
+    ]
+    approved_courses = [c for c in curriculum_mappings if c["sks"] > 0] if is_passed else []
+
+    return {
+        "student_name": s_name,
+        "nim": s_nim,
+        "industry_partner": partner,
+        "internship_role": role,
+        "partner_category": category,
+        "duration_months": dur,
+        "mentor_grade": round(grade, 2),
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "is_conversion_approved": is_passed,
+        "conversion_status": conversion_status,
+        "converted_courses": approved_courses
+    }
+
+
+
 
 
 
