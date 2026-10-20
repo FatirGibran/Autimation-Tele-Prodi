@@ -3723,6 +3723,81 @@ def calculate_antenna_polarization_loss(
     }
 
 
+def parse_lecturer_pkm_grant(
+    project_title: str,
+    team_leader: str,
+    nidn: str,
+    partner_name: str,
+    target_location: str,
+    proposed_budget: float,
+    fiscal_year: int,
+    focus_area: str = "Pemberdayaan Teknologi Digital"
+) -> Dict[str, Any]:
+    """
+    Parses and evaluates lecturer Tridharma Community Service (Pengabdian kepada Masyarakat - PKM) grant proposals.
+    Verifies partner eligibility, NIDN registration, budget caps, and generates compliance deliverables.
+    """
+    clean_title = project_title.strip()
+    clean_leader = team_leader.strip()
+    clean_nidn = nidn.strip()
+    partner = partner_name.strip()
+    location = target_location.strip()
+    budget = max(0.0, float(proposed_budget))
+    year = int(fiscal_year)
+    area = focus_area.strip()
+
+    is_valid_nidn = bool(re.match(r'^\d{10}$', clean_nidn))
+    is_strategic = "desa" in location.lower() or "binaan" in partner.lower()
+    max_budget_cap = 25000000.0 if is_strategic else 15000000.0
+
+    if not clean_title or not clean_leader or not partner:
+        status = "Invalid Data"
+        is_approved = False
+        recom_budget = 0.0
+        recommendation = "Proposal tidak lengkap; judul, ketua peneliti, dan nama mitra wajib diisi."
+    elif not is_valid_nidn:
+        status = "NIDN Invalid"
+        is_approved = False
+        recom_budget = 0.0
+        recommendation = f"NIDN '{clean_nidn}' tidak valid (wajib 10 digit numerik)."
+    elif budget > max_budget_cap:
+        status = "Budget Cap Exceeded"
+        is_approved = False
+        recom_budget = max_budget_cap
+        recommendation = f"Anggaran Rp {budget:,.0f} melebihi pagu maksimal (Rp {max_budget_cap:,.0f}). Ajukan revisi anggaran."
+    else:
+        status = "Approved"
+        is_approved = True
+        recom_budget = budget
+        recommendation = "Proposal memenuhi kelayakan skema pengabdian masyarakat LPPM dan disetujui untuk pendanaan."
+
+    deliverables = [
+        "Laporan Kemajuan & Laporan Akhir Pelaksanaan PKM",
+        "Publikasi Artikel di Jurnal Nasional Pengabdian Masyarakat Terakreditasi",
+        "Publikasi Pemberitaan Kegiatan di Media Massa Online Nasional",
+        "Video Dokumentasi Implementasi Solusi Teknologi di Kanal YouTube Prodi"
+    ]
+
+    return {
+        "project_title": clean_title,
+        "team_leader": clean_leader,
+        "nidn": clean_nidn,
+        "is_valid_nidn": is_valid_nidn,
+        "partner_name": partner,
+        "target_location": location,
+        "proposed_budget": round(budget, 2),
+        "approved_budget": round(recom_budget, 2),
+        "fiscal_year": year,
+        "focus_area": area,
+        "is_strategic_partner": is_strategic,
+        "status": status,
+        "is_grant_approved": is_approved,
+        "evaluation_recommendation": recommendation,
+        "mandatory_deliverables": deliverables
+    }
+
+
+
 
 
 
