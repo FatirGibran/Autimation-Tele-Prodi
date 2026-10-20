@@ -979,6 +979,46 @@ def sanitize_html5_datalist_autocomplete_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_output_calculation_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <output> calculation elements used in engineering calculators (link budgets, BER, path loss).
+    Removes malicious scripting event handlers, scrubs unsafe inline styles, and enforces validated 'for' and 'name' attributes.
+    """
+    if not html or "<output" not in html.lower():
+        return html
+
+    def fix_output(m):
+        tag = m.group(0)
+        # Scrub inline event handlers and styles
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize 'for' attribute (space-separated list of element IDs)
+        for_m = re.search(r'\bfor=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if for_m:
+            for_val = for_m.group(1).strip()
+            tokens = [re.sub(r'[^a-zA-Z0-9_\-]', '', tok) for tok in for_val.split() if re.sub(r'[^a-zA-Z0-9_\-]', '', tok)]
+            if tokens:
+                tag = re.sub(r'\bfor=["\'][^"\']*["\']', f'for="{" ".join(tokens)}"', tag, flags=re.IGNORECASE)
+            else:
+                tag = re.sub(r'\s+for=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize 'name' attribute
+        name_m = re.search(r'\bname=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if name_m:
+            name_val = name_m.group(1).strip()
+            clean_name = re.sub(r'[^a-zA-Z0-9_\-]', '', name_val)
+            if clean_name:
+                tag = re.sub(r'\bname=["\'][^"\']*["\']', f'name="{clean_name}"', tag, flags=re.IGNORECASE)
+            else:
+                tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<output\b[^>]*>', fix_output, html, flags=re.IGNORECASE)
+
+
+
 
 
 
