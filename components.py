@@ -3818,6 +3818,57 @@ class EditorialComponents:
       </details>
     </div>"""
 
+    @classmethod
+    def render_fso_link_budget_card(
+        cls,
+        link_name: str,
+        distance_km: float,
+        tx_power_dbm: float,
+        rx_power_dbm: float,
+        link_margin_db: float,
+        link_status: str = "Robust"
+    ) -> str:
+        """
+        Renders a Free Space Optical (FSO) laser telecommunications link budget and fade margin card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(link_name.strip())
+        status_clean = escape(link_status.strip())
+        dist_str = f"{float(distance_km):.2f} km"
+        tx_str = f"{float(tx_power_dbm):.1f} dBm"
+        rx_str = f"{float(rx_power_dbm):.2f} dBm"
+        margin_str = f"{float(link_margin_db):.2f} dB"
+
+        status_class = "tu-status-good" if link_status.lower() in ("robust", "adequate") else "tu-status-warning"
+
+        return f"""    <div class="tu-fso-budget-card">
+      <div class="tu-fso-header">
+        <span class="tu-fso-badge">Komunikasi Optik Ruang Bebas (FSO)</span>
+        <span class="tu-fso-status {status_class}">{status_clean}</span>
+      </div>
+      <h4 class="tu-fso-title">{name_clean}</h4>
+      <div class="tu-fso-grid">
+        <div class="tu-fso-item">
+          <span class="tu-lbl">Jarak Tautan:</span>
+          <strong class="tu-val">{dist_str}</strong>
+        </div>
+        <div class="tu-fso-item">
+          <span class="tu-lbl">Daya Pancar Tx:</span>
+          <span class="tu-val">{tx_str}</span>
+        </div>
+        <div class="tu-fso-item">
+          <span class="tu-lbl">Daya Terima Rx:</span>
+          <span class="tu-val">{rx_str}</span>
+        </div>
+        <div class="tu-fso-item">
+          <span class="tu-lbl">Fade Margin:</span>
+          <strong class="tu-margin">{margin_str}</strong>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
