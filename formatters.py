@@ -881,6 +881,31 @@ class TelegramFormatter:
             f"👏 *Selamat atas pencapaian pengalaman profesional industri telekomunikasi riil!*"
         )
 
+    @staticmethod
+    def format_pkm_grant_announcement_telegram(
+        project_title: str,
+        team_leader: str,
+        nidn: str,
+        partner_name: str,
+        budget_amount: float,
+        fiscal_year: int,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a lecturer Tridharma Community Service (PKM) internal grant award announcement for Telegram.
+        """
+        portal_link = f"\n🔗 **Portal Pengabdian LPPM:** {portal_url.strip()}" if portal_url else ""
+        amount_str = f"Rp {float(budget_amount):,.0f}".replace(",", ".")
+        return (
+            f"🤝 **Pengumuman Penetapan Pemenang Hibah Pengabdian Masyarakat (PKM)**\n\n"
+            f"💡 **Judul Pengabdian:**\n_{project_title.strip()}_\n"
+            f"👨‍🏫 **Ketua Pengabdi:** {team_leader.strip()} (`NIDN: {nidn.strip()}`)\n"
+            f"🏘️ **Mitra Sasaran:** {partner_name.strip()}\n"
+            f"💰 **Dana Disetujui:** `{amount_str}` (`T.A. {int(fiscal_year)}`){portal_link}\n\n"
+            f"🌟 *Selamat mengabdi dan menghadirkan kemanfaatan teknologi telekomunikasi bagi masyarakat luas!*"
+        )
+
+
 
 
 
