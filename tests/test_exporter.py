@@ -764,6 +764,47 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('</Tabs>', res)
         self.assertIn("<p>Berikut implementasi kalkulasi optical margin.</p>", res)
 
+    def test_generate_educational_organization_json_ld(self):
+        res = ArticleExporter.generate_educational_organization_json_ld(
+            name="S1 Teknik Telekomunikasi Telkom University Purwokerto",
+            alternate_name="Telecommunication Engineering TUP",
+            url="https://tele.telkomuniversity.ac.id",
+            logo_url="https://tele.telkomuniversity.ac.id/logo.png",
+            description="Program Studi S1 Teknik Telekomunikasi terakreditasi Unggul.",
+            address={
+                "street": "Jl. DI Panjaitan No. 128",
+                "locality": "Purwokerto",
+                "region": "Jawa Tengah",
+                "postal_code": "53147",
+                "country": "ID"
+            },
+            accreditation="Unggul (LAM INFOKOM)"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "EducationalOrganization")
+        self.assertEqual(res["name"], "S1 Teknik Telekomunikasi Telkom University Purwokerto")
+        self.assertEqual(res["alternateName"], "Telecommunication Engineering TUP")
+        self.assertEqual(res["address"]["postalCode"], "53147")
+        self.assertEqual(res["hasCredential"]["name"], "Unggul (LAM INFOKOM)")
+
+    def test_to_nextjs_contentlayer_mdx(self):
+        meta = {
+            "seo_title": "Optimasi Jaringan Nirkabel 5G",
+            "meta_description": "Studi kasus propagasi mmWave 28 GHz di area urban.",
+            "publish_date": "2026-10-21",
+            "category": "Riset Nirkabel",
+            "tags": ["5g", "mmwave", "propagation"]
+        }
+        res = ArticleExporter.to_nextjs_contentlayer_mdx(meta, "<p>Analisis coverage dan path loss.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Optimasi Jaringan Nirkabel 5G"', res)
+        self.assertIn('date: "2026-10-21"', res)
+        self.assertIn('category: "Riset Nirkabel"', res)
+        self.assertIn('"5g", "mmwave", "propagation"', res)
+        self.assertIn("published: true", res)
+        self.assertIn("<p>Analisis coverage dan path loss.</p>", res)
+
+
 
 if __name__ == "__main__":
     unittest.main()
