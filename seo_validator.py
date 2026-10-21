@@ -3566,6 +3566,66 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_semantic_definition_lists(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic HTML <dl> definition lists for telecommunication glossaries and formulas.
+        Verifies proper term (<dt>) and description (<dd>) structure, prevents orphaned terms,
+        and enforces non-empty content in technical documentation.
+        """
+        if not html_content or "<dl" not in html_content.lower():
+            return {
+                "total_dl": 0,
+                "valid_dl": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        dl_tags = soup.find_all("dl")
+        if not dl_tags:
+            return {
+                "total_dl": 0,
+                "valid_dl": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        valid_count = 0
+
+        for idx, dl in enumerate(dl_tags, start=1):
+            dts = dl.find_all("dt")
+            dds = dl.find_all("dd")
+
+            dl_issues = []
+            if not dts and not dds:
+                dl_issues.append(f"Daftar definisi <dl> #{idx} kosong tanpa elemen <dt> dan <dd>.")
+            elif not dts:
+                dl_issues.append(f"Daftar definisi <dl> #{idx} memiliki <dd> tetapi tidak memiliki istilah <dt>.")
+            elif not dds:
+                dl_issues.append(f"Daftar definisi <dl> #{idx} memiliki <dt> tetapi tidak memiliki penjelasan <dd>.")
+            else:
+                for dt in dts:
+                    if not dt.get_text().strip():
+                        dl_issues.append(f"Elemen istilah <dt> pada <dl> #{idx} kosong tanpa teks.")
+                for dd in dds:
+                    if not dd.get_text().strip():
+                        dl_issues.append(f"Elemen deskripsi <dd> pada <dl> #{idx} kosong tanpa teks.")
+
+            if dl_issues:
+                issues.extend(dl_issues)
+            else:
+                valid_count += 1
+
+        return {
+            "total_dl": len(dl_tags),
+            "valid_dl": valid_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
