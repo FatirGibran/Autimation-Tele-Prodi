@@ -930,6 +930,29 @@ class TelegramFormatter:
             f"🚀 *Perhitungan link budget memenuhi ambang batas keandalan transmisi satelit DVB-S2!*"
         )
 
+    @staticmethod
+    def format_kampus_mengajar_announcement_telegram(
+        student_name: str,
+        nim: str,
+        target_school: str,
+        converted_sks: int,
+        letter_grade: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student Kampus Mengajar teaching completion announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal MBKM Kemdikbud:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🏫 **Apresiasi Kelulusan Program Kampus Mengajar MBKM**\n\n"
+            f"👤 **Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🎒 **Sekolah Penugasan:** {target_school.strip()}\n"
+            f"📊 **Nilai Mutu:** `{letter_grade.strip()}`\n"
+            f"📚 **Konversi Kurikulum:** `{int(converted_sks)} SKS Diakui`{portal_link}\n\n"
+            f"👏 *Terima kasih atas kontribusi dan dedikasi dalam memajukan literasi dan numerasi pendidikan dasar!*"
+        )
+
+
 
 
 
