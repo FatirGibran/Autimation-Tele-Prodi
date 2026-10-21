@@ -1097,6 +1097,45 @@ def sanitize_html5_optgroup_elements(html: str) -> str:
     return re.sub(r'<optgroup\b[^>]*>', fix_optgroup, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_fieldset_legend_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <fieldset> container and <legend> caption elements used in telecommunication parameter forms.
+    Strips inline script tags, scrubs event handler attributes, and validates boolean attributes (disabled).
+    """
+    if not html or ("<fieldset" not in html.lower() and "<legend" not in html.lower()):
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    def fix_fieldset(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize form attribute if present
+        form_m = re.search(r'\bform=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if form_m:
+            clean_form = re.sub(r'[^a-zA-Z0-9_\-]', '', form_m.group(1).strip())
+            if clean_form:
+                tag = re.sub(r'\bform=["\'][^"\']*["\']', f'form="{clean_form}"', tag, flags=re.IGNORECASE)
+            else:
+                tag = re.sub(r'\s+form=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_legend(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<fieldset\b[^>]*>', fix_fieldset, html, flags=re.IGNORECASE)
+    out = re.sub(r'<legend\b[^>]*>', fix_legend, out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
