@@ -1342,6 +1342,68 @@ Status: Granted
         self.assertFalse(res_bad_nidn["is_grant_approved"])
         self.assertEqual(res_bad_nidn["status"], "NIDN Invalid")
 
+    def test_calculate_satellite_link_budget(self):
+        from parser import calculate_satellite_link_budget
+        res = calculate_satellite_link_budget(
+            downlink_freq_ghz=12.2,
+            slant_range_km=38000.0,
+            tx_eirp_dbw=52.0,
+            rx_g_over_t_db_k=14.5,
+            bandwidth_mhz=36.0,
+            atmospheric_loss_db=0.8
+        )
+        self.assertAlmostEqual(res["downlink_freq_ghz"], 12.2)
+        self.assertGreater(res["fspl_db"], 200.0)
+        self.assertGreater(res["cnr_db"], 5.0)
+        self.assertIn("is_viable", res)
+        self.assertIn("modulation_recommendation", res)
+
+    def test_calculate_rf_intermod_distortion(self):
+        from parser import calculate_rf_intermod_distortion
+        res = calculate_rf_intermod_distortion(
+            input_power_dbm=-20.0,
+            gain_db=15.0,
+            iip3_dbm=10.0
+        )
+        self.assertEqual(res["fundamental_output_power_dbm"], -5.0)
+        self.assertEqual(res["oip3_dbm"], 25.0)
+        self.assertEqual(res["imd3_suppression_dbc"], 60.0)
+        self.assertEqual(res["linearity_status"], "Excellent")
+        self.assertTrue(res["is_linear"])
+
+    def test_calculate_optical_fiber_dispersion(self):
+        from parser import calculate_optical_fiber_dispersion
+        res = calculate_optical_fiber_dispersion(
+            fiber_length_km=50.0,
+            dispersion_coeff_ps_nm_km=17.0,
+            spectral_width_nm=0.02,
+            pmd_coeff_ps_sqrt_km=0.1,
+            bit_rate_gbps=10.0
+        )
+        self.assertGreater(res["cd_delay_ps"], 10.0)
+        self.assertGreater(res["pmd_delay_ps"], 0.5)
+        self.assertEqual(res["bit_duration_ps"], 100.0)
+        self.assertTrue(res["is_viable"])
+        self.assertIn("status", res)
+
+    def test_parse_kampus_mengajar_evaluation(self):
+        from parser import parse_kampus_mengajar_evaluation
+        res = parse_kampus_mengajar_evaluation(
+            student_name="Annisa Rahma",
+            nim="1201200045",
+            target_school="SMP Negeri 2 Kedungbanteng",
+            school_level="SMP",
+            teaching_hours=350,
+            principal_grade=90.0,
+            faculty_supervisor_grade=88.0,
+            duration_months=4
+        )
+        self.assertEqual(res["letter_grade"], "A")
+        self.assertEqual(res["converted_sks"], 20)
+        self.assertTrue(res["is_eligible"])
+        self.assertEqual(len(res["course_equivalencies"]), 5)
+
+
 
 if __name__ == "__main__":
     unittest.main()
