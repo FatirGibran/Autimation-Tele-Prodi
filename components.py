@@ -4243,6 +4243,51 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_spectral_power_density_card(
+        cls,
+        title: str,
+        center_freq_mhz: float,
+        span_mhz: float,
+        rbw_khz: float,
+        noise_floor_dbm: float,
+        peak_power_dbm: float,
+        svg_points: Optional[str] = None
+    ) -> str:
+        """
+        Renders an RF spectrum analyzer power spectral density (PSD) visualization component card with inline SVG.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(title.strip())
+        fc_str = f"{float(center_freq_mhz):.2f} MHz"
+        span_str = f"{float(span_mhz):.1f} MHz"
+        rbw_str = f"{float(rbw_khz):.1f} kHz"
+        noise_str = f"{float(noise_floor_dbm):.1f} dBm"
+        peak_str = f"{float(peak_power_dbm):.1f} dBm"
+        points = svg_points.strip() if svg_points else "20,120 60,118 100,119 140,70 150,20 160,70 200,119 240,118 280,120"
+
+        return f"""    <div class="tu-spectral-psd-card">
+      <div class="tu-psd-header">
+        <span class="tu-psd-badge">Kerapatan Daya Spektral (PSD)</span>
+        <span class="tu-psd-rbw">RBW: {rbw_str}</span>
+      </div>
+      <h4 class="tu-psd-title">{title_clean}</h4>
+      <div class="tu-psd-display">
+        <svg viewBox="0 0 300 140" class="tu-psd-svg" aria-label="Grafik Spektrum RF">
+          <line x1="20" y1="20" x2="280" y2="20" stroke="#334155" stroke-dasharray="2,2" />
+          <line x1="20" y1="70" x2="280" y2="70" stroke="#334155" stroke-dasharray="2,2" />
+          <line x1="20" y1="120" x2="280" y2="120" stroke="#475569" />
+          <polyline points="{points}" fill="none" stroke="#0284c7" stroke-width="2" />
+        </svg>
+      </div>
+      <div class="tu-psd-footer">
+        <span class="tu-psd-fc">Fc: <strong>{fc_str}</strong> (Span: {span_str})</span>
+        <span class="tu-psd-peak">Puncak: <strong>{peak_str}</strong> (Noise Floor: {noise_str})</span>
+      </div>
+    </div>"""
+
+
 
 
 
