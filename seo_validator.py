@@ -3625,6 +3625,56 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_image_cls_dimensions(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits <img> tags for explicit width and height attributes to prevent layout instability
+        and Cumulative Layout Shift (CLS), upholding Google Core Web Vitals performance benchmarks.
+        """
+        if not html_content or "<img" not in html_content.lower():
+            return {
+                "total_images": 0,
+                "sized_images": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        images = soup.find_all("img")
+        if not images:
+            return {
+                "total_images": 0,
+                "sized_images": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        sized_count = 0
+
+        for idx, img in enumerate(images, start=1):
+            src = img.get("src", f"image-{idx}")
+            has_w = img.has_attr("width") and bool(img.get("width", "").strip())
+            has_h = img.has_attr("height") and bool(img.get("height", "").strip())
+
+            if not has_w or not has_h:
+                missing = []
+                if not has_w:
+                    missing.append("width")
+                if not has_h:
+                    missing.append("height")
+                issues.append(f"Gambar #{idx} ('{src[:35]}') tidak memiliki atribut eksplisit: {', '.join(missing)}.")
+            else:
+                sized_count += 1
+
+        return {
+            "total_images": len(images),
+            "sized_images": sized_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
