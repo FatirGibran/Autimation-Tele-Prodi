@@ -3911,6 +3911,76 @@ def calculate_rf_intermod_distortion(
     }
 
 
+def calculate_optical_fiber_dispersion(
+    fiber_length_km: float,
+    dispersion_coeff_ps_nm_km: float,
+    spectral_width_nm: float,
+    pmd_coeff_ps_sqrt_km: float,
+    bit_rate_gbps: float
+) -> Dict[str, Any]:
+    """
+    Calculates optical fiber pulse broadening caused by Chromatic Dispersion (CD)
+    and Polarization Mode Dispersion (PMD), bit duration ratio, and optical power penalty.
+    Crucial for high-speed single-mode fiber (G.652/G.655) DWDM transmission engineering.
+    """
+    import math
+
+    length = max(0.1, float(fiber_length_km))
+    d_cd = float(dispersion_coeff_ps_nm_km)
+    delta_lambda = max(0.001, float(spectral_width_nm))
+    d_pmd = max(0.0, float(pmd_coeff_ps_sqrt_km))
+    bit_rate = max(0.1, float(bit_rate_gbps))
+
+    # Chromatic dispersion delay in ps: Delta t_CD = |D| * L * Delta lambda
+    delta_t_cd_ps = abs(d_cd) * length * delta_lambda
+
+    # PMD differential group delay (DGD) in ps: Delta t_PMD = D_pmd * sqrt(L)
+    delta_t_pmd_ps = d_pmd * math.sqrt(length)
+
+    # Total dispersion delay in ps (root-sum-square): sqrt(t_CD^2 + t_PMD^2)
+    delta_t_total_ps = math.sqrt(delta_t_cd_ps ** 2 + delta_t_pmd_ps ** 2)
+
+    # Bit slot duration in ps: Tb = 1000 / bit_rate_gbps
+    bit_duration_ps = 1000.0 / bit_rate
+
+    # Pulse broadening ratio: rho = Delta t_total / Tb
+    broadening_ratio = delta_t_total_ps / bit_duration_ps
+
+    # Power penalty estimation in dB: ~ 5 * (rho)^2 for moderate broadening
+    power_penalty_db = 5.0 * (broadening_ratio ** 2)
+
+    if broadening_ratio <= 0.10:
+        status = "Negligible Dispersion"
+        recommendation = "Transmission within acceptable linear limits; no DCF required."
+        is_viable = True
+    elif broadening_ratio <= 0.25:
+        status = "Moderate Dispersion"
+        recommendation = "Minor eye-opening penalty; consider electronic dispersion compensation (EDC)."
+        is_viable = True
+    else:
+        status = "Excessive Dispersion"
+        recommendation = "Severe inter-symbol interference (ISI); deploy Dispersion Compensating Fiber (DCF) or coherent DSP."
+        is_viable = False
+
+    return {
+        "fiber_length_km": round(length, 2),
+        "dispersion_coeff_ps_nm_km": round(d_cd, 2),
+        "spectral_width_nm": round(delta_lambda, 3),
+        "pmd_coeff_ps_sqrt_km": round(d_pmd, 3),
+        "bit_rate_gbps": round(bit_rate, 2),
+        "cd_delay_ps": round(delta_t_cd_ps, 2),
+        "pmd_delay_ps": round(delta_t_pmd_ps, 2),
+        "total_delay_ps": round(delta_t_total_ps, 2),
+        "bit_duration_ps": round(bit_duration_ps, 2),
+        "broadening_ratio": round(broadening_ratio, 4),
+        "power_penalty_db": round(power_penalty_db, 2),
+        "status": status,
+        "recommendation": recommendation,
+        "is_viable": is_viable
+    }
+
+
+
 
 
 
