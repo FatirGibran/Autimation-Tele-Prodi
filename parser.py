@@ -3857,6 +3857,61 @@ def calculate_satellite_link_budget(
     }
 
 
+def calculate_rf_intermod_distortion(
+    input_power_dbm: float,
+    gain_db: float,
+    iip3_dbm: float
+) -> Dict[str, Any]:
+    """
+    Calculates RF front-end amplifier/mixer linearity metrics including Output IP3 (OIP3),
+    third-order intermodulation distortion level (IMD3), and intermodulation rejection ratio (Delta IM3).
+    Essential for RF receiver sensitivity and co-channel rejection analysis in telecommunication systems.
+    """
+    pin = float(input_power_dbm)
+    gain = float(gain_db)
+    iip3 = float(iip3_dbm)
+
+    # Fundamental output power
+    pout = pin + gain
+
+    # Output Third-Order Intercept Point: OIP3 = IIP3 + Gain
+    oip3 = iip3 + gain
+
+    # Third-Order Intermodulation output level: P_IM3 = 3*Pout - 2*OIP3
+    pim3_out = 3.0 * pout - 2.0 * oip3
+
+    # Intermodulation Suppression Ratio (Delta IM3) in dBc: Pout - P_IM3 = 2*(OIP3 - Pout)
+    imd3_suppression_dbc = 2.0 * (oip3 - pout)
+
+    # Linearity Classification
+    if imd3_suppression_dbc >= 50.0:
+        linearity_status = "Excellent"
+        operational_mode = "Highly Linear / Low Distortion"
+    elif imd3_suppression_dbc >= 35.0:
+        linearity_status = "Acceptable"
+        operational_mode = "Linear Region"
+    elif imd3_suppression_dbc >= 20.0:
+        linearity_status = "Marginal"
+        operational_mode = "Compression Impending"
+    else:
+        linearity_status = "Severe Distortion"
+        operational_mode = "Nonlinear Saturation"
+
+    return {
+        "input_power_dbm": round(pin, 2),
+        "gain_db": round(gain, 2),
+        "iip3_dbm": round(iip3, 2),
+        "fundamental_output_power_dbm": round(pout, 2),
+        "oip3_dbm": round(oip3, 2),
+        "third_order_intermod_power_dbm": round(pim3_out, 2),
+        "imd3_suppression_dbc": round(imd3_suppression_dbc, 2),
+        "linearity_status": linearity_status,
+        "operational_mode": operational_mode,
+        "is_linear": imd3_suppression_dbc >= 35.0
+    }
+
+
+
 
 
 
