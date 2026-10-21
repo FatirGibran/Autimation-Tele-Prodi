@@ -703,6 +703,25 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fso_link ON fso_link_budget_records(link_name);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fso_status ON fso_link_budget_records(status);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS satellite_link_budgets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    satellite_name TEXT NOT NULL,
+                    downlink_freq_ghz REAL NOT NULL,
+                    slant_range_km REAL NOT NULL,
+                    tx_eirp_dbw REAL NOT NULL,
+                    rx_g_over_t_db_k REAL NOT NULL,
+                    bandwidth_mhz REAL NOT NULL,
+                    cnr_db REAL NOT NULL,
+                    link_margin_db REAL NOT NULL,
+                    is_viable INTEGER NOT NULL DEFAULT 1,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_name ON satellite_link_budgets(satellite_name);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_viable ON satellite_link_budgets(is_viable);")
+
 
 
 
@@ -3467,6 +3486,67 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM fso_link_budget_records WHERE id = ?", (int(record_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_satellite_link_budget(
+        self,
+        satellite_name: str,
+        downlink_freq_ghz: float,
+        slant_range_km: float,
+        tx_eirp_dbw: float,
+        rx_g_over_t_db_k: float,
+        bandwidth_mhz: float,
+        cnr_db: float,
+        link_margin_db: float,
+        is_viable: bool,
+        status: str
+    ) -> int:
+        """
+        Records a satellite downlink link budget and ground station G/T calculation audit.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO satellite_link_budgets (
+                    satellite_name, downlink_freq_ghz, slant_range_km, tx_eirp_dbw,
+                    rx_g_over_t_db_k, bandwidth_mhz, cnr_db, link_margin_db,
+                    is_viable, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                satellite_name.strip(),
+                float(downlink_freq_ghz),
+                float(slant_range_km),
+                float(tx_eirp_dbw),
+                float(rx_g_over_t_db_k),
+                float(bandwidth_mhz),
+                float(cnr_db),
+                float(link_margin_db),
+                1 if is_viable else 0,
+                status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_satellite_link_budgets(self, is_viable: Optional[bool] = None) -> List[Dict[str, Any]]:
+        """
+        Lists satellite link budget computation audit records with optional feasibility filter.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM satellite_link_budgets"
+            params = []
+            if is_viable is not None:
+                query += " WHERE is_viable = ?"
+                params.append(1 if is_viable else 0)
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_satellite_link_budget_by_id(self, budget_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a satellite link budget computation record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM satellite_link_budgets WHERE id = ?", (int(budget_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
