@@ -4097,6 +4097,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_rf_intermod_distortion_card(
+        cls,
+        component_name: str,
+        input_power_dbm: float,
+        gain_db: float,
+        iip3_dbm: float,
+        imd3_suppression_dbc: float,
+        linearity_status: str
+    ) -> str:
+        """
+        Renders an RF front-end mixer / amplifier linearity and IMD3 intermodulation distortion card.
+        """
+        from xml.sax.saxutils import escape
+
+        comp_clean = escape(component_name.strip())
+        pin_str = f"{float(input_power_dbm):.1f} dBm"
+        gain_str = f"{float(gain_db):.1f} dB"
+        iip3_str = f"{float(iip3_dbm):.1f} dBm"
+        imd3_str = f"{float(imd3_suppression_dbc):.1f} dBc"
+        stat_clean = escape(linearity_status.strip())
+
+        return f"""    <div class="tu-rf-intermod-card">
+      <div class="tu-rf-header">
+        <span class="tu-rf-badge">RF Linearitas &amp; Intermodulasi (IMD3)</span>
+        <span class="tu-rf-status">{stat_clean}</span>
+      </div>
+      <h4 class="tu-rf-title">Linearitas RF: {comp_clean}</h4>
+      <div class="tu-rf-specs">
+        <div class="tu-rf-spec">
+          <span class="tu-lbl">Daya Input (Pin):</span>
+          <strong>{pin_str}</strong>
+        </div>
+        <div class="tu-rf-spec">
+          <span class="tu-lbl">Penguatan (Gain):</span>
+          <strong>{gain_str}</strong>
+        </div>
+        <div class="tu-rf-spec">
+          <span class="tu-lbl">Input IP3 (IIP3):</span>
+          <strong>{iip3_str}</strong>
+        </div>
+        <div class="tu-rf-spec">
+          <span class="tu-lbl">Supresi IMD3:</span>
+          <strong class="tu-imd3">{imd3_str}</strong>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
