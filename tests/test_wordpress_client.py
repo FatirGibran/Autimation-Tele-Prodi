@@ -576,6 +576,39 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "POST")
         self.assertIn("/posts/888", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_posts_by_status(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 201, "title": {"rendered": "Draf Riset Satelit"}, "status": "draft"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        posts = self.client.get_posts_by_status(status="draft", page=2, per_page=10)
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts[0]["id"], 201)
+        self.assertEqual(posts[0]["status"], "draft")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/posts?status=draft&page=2&per_page=10", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_duplicate_post_as_draft(self, mock_urlopen):
+        mock_get_resp = MagicMock()
+        mock_get_resp.read.return_value = b'{"id": 105, "title": {"rendered": "Panduan Praktikum Antena"}, "content": {"rendered": "<p>Modul 1</p>"}, "categories": [1, 2], "tags": [3]}'
+
+        mock_post_resp = MagicMock()
+        mock_post_resp.read.return_value = b'{"id": 106, "title": {"rendered": "Panduan Praktikum Antena (Salinan)"}, "status": "draft"}'
+
+        mock_urlopen.side_effect = [
+            MagicMock(__enter__=MagicMock(return_value=mock_get_resp)),
+            MagicMock(__enter__=MagicMock(return_value=mock_post_resp))
+        ]
+
+        cloned = self.client.duplicate_post_as_draft(post_id=105, title_suffix=" (Salinan)")
+        self.assertEqual(cloned["id"], 106)
+        self.assertIn("Salinan", cloned["title"]["rendered"])
+        self.assertEqual(mock_urlopen.call_count, 2)
+
+
 
 if __name__ == "__main__":
     unittest.main()

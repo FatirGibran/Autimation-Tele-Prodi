@@ -694,7 +694,7 @@ class WordPressClient:
         """
         Clones an existing published or draft WordPress post into a new draft post with an amended title.
         """
-        source_post = self.get_post_by_id(post_id)
+        source_post = self.get_post(post_id)
         raw_title = source_post.get("title", {})
         if isinstance(raw_title, dict):
             orig_title = raw_title.get("rendered", "")
@@ -708,14 +708,16 @@ class WordPressClient:
             orig_content = str(raw_content)
 
         new_title = f"{orig_title}{title_suffix}".strip()
-        new_payload = {
-            "title": new_title,
-            "content": orig_content,
-            "status": "draft",
-            "categories": source_post.get("categories", []),
-            "tags": source_post.get("tags", [])
-        }
-        return self.create_post(new_payload)
+        orig_slug = source_post.get("slug", "")
+        new_slug = f"{orig_slug}-salinan".strip("-")
+        return self.create_post(
+            title=new_title,
+            content=orig_content,
+            slug=new_slug,
+            status="draft",
+            categories=source_post.get("categories", [])
+        )
+
 
 
 
