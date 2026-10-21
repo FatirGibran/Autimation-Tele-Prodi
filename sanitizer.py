@@ -1068,6 +1068,36 @@ def sanitize_html5_picture_source_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_optgroup_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <optgroup> semantic category groups within select dropdowns.
+    Strips inline script tags, scrubs event handler attributes, and validates label attributes
+    against script injection and unescaped HTML characters.
+    """
+    if not html or "<optgroup" not in html.lower():
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    def fix_optgroup(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize label attribute
+        label_m = re.search(r'\blabel=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if label_m:
+            raw_label = label_m.group(1).strip()
+            clean_label = re.sub(r'<[^>]+>', '', raw_label).replace('"', '&quot;')
+            tag = re.sub(r'\blabel=["\'][^"\']*["\']', f'label="{clean_label}"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<optgroup\b[^>]*>', fix_optgroup, html, flags=re.IGNORECASE)
+
+
+
 
 
 
