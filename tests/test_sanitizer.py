@@ -9,7 +9,10 @@ from sanitizer import (
     sanitize_html5_template_elements,
     sanitize_html5_media_track_caption_elements,
     sanitize_html5_datalist_autocomplete_elements,
-    sanitize_html5_output_calculation_elements
+    sanitize_html5_output_calculation_elements,
+    sanitize_html5_picture_source_elements,
+    sanitize_html5_optgroup_elements,
+    sanitize_html5_fieldset_legend_elements
 )
 
 
@@ -719,6 +722,52 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('for="a b"', cleaned)
         self.assertIn('name="resulteval"', cleaned)
         self.assertIn('>30</output>', cleaned)
+
+    def test_sanitize_html5_picture_source_elements(self):
+        raw = (
+            '<picture onclick="evil()" style="display:block">'
+            '<source srcset="javascript:alert(1)" type="application/x-malware">'
+            '<source srcset="/img/diagram.webp 1x, /img/diagram-2x.webp 2x" type="image/webp" media="(min-width: 800px)">'
+            '<img src="/img/diagram.png" alt="Topology">'
+            '</picture>'
+        )
+        cleaned = sanitize_html5_picture_source_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertNotIn("application/x-malware", cleaned)
+        self.assertIn('type="image/webp"', cleaned)
+        self.assertIn('/img/diagram.webp', cleaned)
+
+    def test_sanitize_html5_optgroup_elements(self):
+        raw = (
+            '<select>'
+            '<optgroup label="Teknik Telekomunikasi<script>alert(1)</script>" onclick="danger()" style="color:red">'
+            '<option value="antenna">Antena dan Propagasi</option>'
+            '</optgroup>'
+            '</select>'
+        )
+        cleaned = sanitize_html5_optgroup_elements(raw)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn('label="Teknik Telekomunikasi"', cleaned)
+        self.assertIn('<option value="antenna">Antena dan Propagasi</option>', cleaned)
+
+    def test_sanitize_html5_fieldset_legend_elements(self):
+        raw = (
+            '<fieldset form="calc-form<script>evil()</script>" onclick="danger()" style="border:1px solid #ccc">'
+            '<legend onclick="alert(2)" style="font-weight:bold">Parameter Link Budget</legend>'
+            '<input type="text" name="eirp">'
+            '</fieldset>'
+        )
+        cleaned = sanitize_html5_fieldset_legend_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertIn('form="calc-form"', cleaned)
+        self.assertIn('<legend>Parameter Link Budget</legend>', cleaned)
+
 
 
 if __name__ == "__main__":
