@@ -1414,7 +1414,8 @@ def cmd_mengajar(args):
         print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'SKOR':<6} | {'NAMA':<20} | {'SEKOLAH'}")
         print("-" * 80)
         for s in students:
-            print(f"{s['id']:<4} | {s['nim']:<10} | {s['converted_sks']:<4} | {s['letter_grade']:<5} | {s['composite_score']:<6.1f} | {s['student_name'][:18]:<20} | {s['target_school'][:20]}")
+            print(f"{s['id']:<4} | {s['nim']:<10} | {s['converted_sks']:<4} | {s['letter_grade']:<5} | {s['composite_score']:<6.1f} | {s['student_name'][:18]:<20} | {s['target_school']}")
+
 
 def cmd_rf_intermod(args):
     if args.action == "add":

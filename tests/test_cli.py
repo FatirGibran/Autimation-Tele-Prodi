@@ -1792,6 +1792,94 @@ class TestCLI(unittest.TestCase):
             self.assertIn("5.50", out)
             self.assertIn("Viable", out)
 
+    def test_cmd_satellite(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Telkom-4 (Merah Putih)"
+            freq = 12.2
+            range = 38000.0
+            eirp = 53.5
+            gt = 15.0
+            bw = 36.0
+            cnr = 11.25
+            margin = 4.25
+            status = "Feasible"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_satellite(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan link budget satelit berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            viable = True
+            unviable = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_satellite(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Telkom-4 (Merah Putih)", out)
+            self.assertIn("12.20", out)
+            self.assertIn("11.25", out)
+
+    def test_cmd_mengajar(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Annisa Rahma"
+            nim = "1201200045"
+            school = "SMP Negeri 2 Kedungbanteng"
+            level = "SMP"
+            hours = 350
+            score = 89.0
+            grade = "A"
+            sks = 20
+            status = "Completed with Full Recognition"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mengajar(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Kampus Mengajar berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            status = None
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mengajar(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Annisa Rahma", out)
+            self.assertIn("1201200045", out)
+            self.assertIn("SMP Negeri 2 Kedungbanteng", out)
+
+    def test_cmd_rf_intermod(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Mixer Downconverter Stage"
+            pin = -15.0
+            gain = 12.0
+            iip3 = 8.0
+            pout = -3.0
+            imd3 = 46.0
+            status = "Acceptable"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_rf_intermod(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan distorsi intermodulasi RF berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            linear = True
+            nonlinear = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_rf_intermod(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Mixer Downconverter Stage", out)
+            self.assertIn("8.0", out)
+            self.assertIn("46.0", out)
+
+
 
 
 if __name__ == "__main__":
