@@ -4205,6 +4205,45 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_kampus_mengajar_recognition_card(
+        cls,
+        student_name: str,
+        nim: str,
+        target_school: str,
+        converted_sks: int,
+        letter_grade: str,
+        status: str
+    ) -> str:
+        """
+        Renders a student Kampus Mengajar teaching assistantship completion and credit conversion recognition card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(student_name.strip())
+        nim_clean = escape(nim.strip())
+        school_clean = escape(target_school.strip())
+        sks_str = f"{int(converted_sks)} SKS"
+        grade_clean = escape(letter_grade.strip())
+        status_clean = escape(status.strip())
+
+        return f"""    <div class="tu-mengajar-card">
+      <div class="tu-km-header">
+        <span class="tu-km-badge">Program Kampus Mengajar MBKM</span>
+        <span class="tu-km-sks">{sks_str} Diakui</span>
+      </div>
+      <h4 class="tu-km-name">{name_clean}</h4>
+      <div class="tu-km-meta">
+        <span class="tu-km-nim">NIM: <code>{nim_clean}</code></span>
+        <span class="tu-km-school">Sekolah Penugasan: <strong>{school_clean}</strong></span>
+      </div>
+      <div class="tu-km-footer">
+        <span class="tu-km-grade">Nilai Mutu: <strong>{grade_clean}</strong></span>
+        <span class="tu-km-status">{status_clean}</span>
+      </div>
+    </div>"""
+
+
 
 
 
