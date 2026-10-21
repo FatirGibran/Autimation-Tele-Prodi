@@ -690,6 +690,34 @@ class WordPressClient:
             return results
         return []
 
+    def duplicate_post_as_draft(self, post_id: int, title_suffix: str = " (Salinan)") -> Dict[str, Any]:
+        """
+        Clones an existing published or draft WordPress post into a new draft post with an amended title.
+        """
+        source_post = self.get_post_by_id(post_id)
+        raw_title = source_post.get("title", {})
+        if isinstance(raw_title, dict):
+            orig_title = raw_title.get("rendered", "")
+        else:
+            orig_title = str(raw_title)
+
+        raw_content = source_post.get("content", {})
+        if isinstance(raw_content, dict):
+            orig_content = raw_content.get("rendered", "")
+        else:
+            orig_content = str(raw_content)
+
+        new_title = f"{orig_title}{title_suffix}".strip()
+        new_payload = {
+            "title": new_title,
+            "content": orig_content,
+            "status": "draft",
+            "categories": source_post.get("categories", []),
+            "tags": source_post.get("tags", [])
+        }
+        return self.create_post(new_payload)
+
+
 
 
 
