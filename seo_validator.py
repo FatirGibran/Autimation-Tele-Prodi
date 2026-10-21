@@ -3503,6 +3503,70 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_audio_accessibility_controls(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits <audio> elements for WCAG 2.1 accessibility compliance.
+        Verifies presence of user controls, absence of disruptive autoplay, and availability
+        of text transcripts or caption tracks for speech accessibility.
+        """
+        if not html_content or "<audio" not in html_content.lower():
+            return {
+                "total_audio": 0,
+                "accessible_audio": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        audio_tags = soup.find_all("audio")
+        if not audio_tags:
+            return {
+                "total_audio": 0,
+                "accessible_audio": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        accessible_count = 0
+
+        for idx, a in enumerate(audio_tags, start=1):
+            has_controls = a.has_attr("controls")
+            has_autoplay = a.has_attr("autoplay")
+            has_track = bool(a.find("track", kind=lambda k: k and k.lower() in ("captions", "subtitles", "descriptions")))
+
+            # Check next siblings or parent container for transcript link
+            parent = a.parent
+            has_transcript_link = False
+            if parent:
+                for link in parent.find_all("a", href=True):
+                    txt = link.get_text().lower()
+                    if "transkrip" in txt or "transcript" in txt or "teks" in txt:
+                        has_transcript_link = True
+                        break
+
+            item_issues = []
+            if not has_controls:
+                item_issues.append(f"Elemen audio #{idx} tidak memiliki atribut 'controls'.")
+            if has_autoplay:
+                item_issues.append(f"Elemen audio #{idx} mengaktifkan 'autoplay' yang mengganggu pengguna.")
+            if not has_track and not has_transcript_link:
+                item_issues.append(f"Elemen audio #{idx} tidak menyertakan track subtitle atau tautan transkrip teks pendamping.")
+
+            if item_issues:
+                issues.extend(item_issues)
+            else:
+                accessible_count += 1
+
+        return {
+            "total_audio": len(audio_tags),
+            "accessible_audio": accessible_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
