@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 600+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 630+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 597 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 625 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -720,6 +720,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 590. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/75_v3_8_feature_expansions.md`)**: Dokumentasi menyeluruh seluruh pembaruan arsitektur v3.8.0.
 591. **Ekspansi Suite Pengujian Unit Terpadu (597 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 597 unit test terverifikasi (100% pass rate).
 592. **Finalisasi Milestone v3.8.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
+---
+
+## 27. Siklus Pengembangan v3.9.0 (Satellite Link Budget, RF Mixer IIP3, Fiber Dispersion, Kampus Mengajar, Accessibility & Contentlayer Expansions)
+
+593. **Sanitasi Elemen HTML5 Picture & Source (`sanitizer.py`)**: Sanitasi kontainer `<picture>` dan elemen `<source>`, pembersihan `srcset` terhadap payload berbahaya (`javascript:`, `data:text/html`), serta validasi MIME type gambar.
+594. **Sanitasi Elemen HTML5 Optgroup Dropdown (`sanitizer.py`)**: Pembersihan elemen grup `<optgroup>`, pengamanan atribut `label`, dan pelucutan event handler inline.
+595. **Sanitasi Elemen HTML5 Fieldset & Legend (`sanitizer.py`)**: Pembersihan kontainer formulir `<fieldset>` dan elemen label semantik `<legend>`, memastikan atribut `form` dan `disabled` aman.
+596. **Kalkulator Link Budget Satelit & G/T Stasiun Bumi (`parser.py`)**: Perhitungan Free-Space Path Loss (FSPL) downlink, spectral noise density $C/N_0$, Carrier-to-Noise Ratio ($C/N$), dan link margin transmisi satelit DVB-S2.
+597. **Kalkulator Linearitas RF Mixer IIP3 & Distorsi Intermodulasi (`parser.py`)**: Perhitungan Output IP3 (OIP3), daya produk intermodulasi orde ketiga (IMD3), dan rasio supresi linearitas $\Delta IM3$ pada penguat/mixer RF.
+598. **Kalkulator Penalti Dispersi Serat Optik DWDM (`parser.py`)**: Perhitungan delay dispersi kromatik (CD), Differential Group Delay (DGD) PMD, rasio pelebaran pulsa terhadap slot bit, dan estimasi power penalty optik.
+599. **Evaluator Rekognisi SKS Program Kampus Mengajar MBKM (`parser.py`)**: Penguraian evaluasi kepala sekolah dan dosen pembimbing lapangan, menghitung skor komposit, konversi nilai mutu, dan ekuivalensi hingga 20 SKS kurikulum.
+600. **Auditor Aksesibilitas Kontrol Audio & Transkrip Teks (`seo_validator.py`)**: Pemeriksaan ketersediaan atribut `controls`, ketiadaan `autoplay` agresif, dan tautan transkrip teks pendamping pada elemen `<audio>`.
+601. **Auditor Kelengkapan Semantic Definition List DL DT DD (`seo_validator.py`)**: Memverifikasi kepatuhan hirarki `<dl>`, mencegah istilah yatim `<dt>` tanpa `<dd>`, serta memastikan konten istilah dan deskripsi tidak kosong.
+602. **Auditor Pencegahan Cumulative Layout Shift (CLS) Gambar (`seo_validator.py`)**: Memverifikasi keberadaan atribut eksplisit `width` dan `height` pada setiap tag `<img>` untuk stabilitas tata letak visual Core Web Vitals.
+603. **Auditor Aksesibilitas Notasi Rumus MathML (`seo_validator.py`)**: Pemeriksaan elemen `<math>`, atribut display mode (`inline` / `block`), dan ketersediaan anotasi alternatif (`alttext`, `aria-label`, `<annotation>`).
+604. **Komponen Link Budget Satelit Downlink (`components.py`)**: Kartu visual Elementor ringkasan parameter satelit (EIRP, G/T, $C/N$, link margin, status kelayakan).
+605. **Komponen Linearitas & Intermodulasi Mixer RF (`components.py`)**: Kartu visualisasi spesifikasi RF front-end dengan metrik Pin, Gain, IIP3, dan supresi IMD3.
+606. **Komponen Analisis Penalti Dispersi Serat Optik (`components.py`)**: Kartu kalkulasi transmisi optik jarak jauh dengan visualisasi delay CD, delay PMD, dan penalti daya redaman.
+607. **Komponen Apresiasi Program Kampus Mengajar MBKM (`components.py`)**: Kartu visual Elementor pengakuan pencapaian mahasiswa dalam penugasan asistensi mengajar di sekolah mitra.
+608. **Komponen Visualisasi Kerapatan Daya Spektral PSD (`components.py`)**: Kartu visualisasi domain frekuensi penganalisis spektrum RF dengan grafik polyline SVG inline terisolasi.
+609. **Formatter Telegram Audit Link Budget Satelit (`formatters.py`)**: Template pesan siaran resmi Telegram untuk hasil audit keandalan tautan komunikasi satelit transponder.
+610. **Formatter Telegram Apresiasi Kelulusan Kampus Mengajar (`formatters.py`)**: Template pesan siaran Telegram ucapan selamat atas kelulusan dan penyelesaian program Kampus Mengajar.
+611. **Manajer Rekam Audit Link Budget Satelit (`storage.py`)**: Skema tabel basis data `satellite_link_budgets` dan metode `record_satellite_link_budget`, `list_satellite_link_budgets`, `get_satellite_link_budget_by_id`.
+612. **Manajer Rekam Mahasiswa Kampus Mengajar (`storage.py`)**: Skema tabel `student_kampus_mengajar` dan metode `record_kampus_mengajar_student`, `list_kampus_mengajar_students`, `get_kampus_mengajar_by_nim`.
+613. **Manajer Rekam Linearitas & Intermodulasi RF (`storage.py`)**: Skema tabel `rf_intermod_records` dan metode `record_rf_intermod_distortion`, `list_rf_intermod_records`, `get_rf_intermod_by_id`.
+614. **Helper WordPress Get Posts By Status Paginasi (`wordpress_client.py`)**: Metode `get_posts_by_status` untuk mengambil daftar postingan terfilter berdasarkan status (draft, pending, publish, future, trash).
+615. **Helper WordPress Duplicate Post As Draft (`wordpress_client.py`)**: Metode `duplicate_post_as_draft` untuk mengkloning artikel terbitan/draf menjadi artikel draf baru.
+616. **Generator Schema.org EducationalOrganization JSON-LD (`exporter.py`)**: Metode `generate_educational_organization_json_ld` untuk standarisasi profil institusional program studi perguruan tinggi.
+617. **Eksportir Markdown Next.js Contentlayer MDX (`exporter.py`)**: Metode `to_nextjs_contentlayer_mdx` untuk transformasi artikel ke format Contentlayer MDX modern.
+618. **Subcommand CLI `satellite` (`cli.py`)**: Perintah konsol `satellite` untuk mencatat dan mengaudit kalkulasi link budget satelit.
+619. **Subcommand CLI `mengajar` (`cli.py`)**: Perintah konsol `mengajar` untuk mencatat dan menginventarisasi rekognisi SKS program Kampus Mengajar.
+620. **Subcommand CLI `rf-intermod` (`cli.py`)**: Perintah konsol `rf-intermod` untuk mencatat dan memantau linearitas modul RF.
+621. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/76_v3_9_feature_expansions.md`)**: Dokumentasi menyeluruh seluruh pembaruan arsitektur v3.9.0.
+622. **Ekspansi Suite Pengujian Unit Terpadu (625 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 625 unit test terverifikasi (100% pass rate).
+623. **Finalisasi Milestone v3.9.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
 
 
 
