@@ -4042,6 +4042,62 @@ class EditorialComponents:
       <p class="tu-waveform-caption">{cap_clean}</p>
     </div>"""
 
+    @classmethod
+    def render_satellite_link_budget_card(
+        cls,
+        satellite_name: str,
+        downlink_freq_ghz: float,
+        tx_eirp_dbw: float,
+        rx_g_over_t_db_k: float,
+        cnr_db: float,
+        link_margin_db: float,
+        is_viable: bool
+    ) -> str:
+        """
+        Renders a satellite telecommunication downlink budget calculation card.
+        """
+        from xml.sax.saxutils import escape
+
+        sat_clean = escape(satellite_name.strip())
+        freq_str = f"{float(downlink_freq_ghz):.2f} GHz"
+        eirp_str = f"{float(tx_eirp_dbw):.1f} dBW"
+        g_t_str = f"{float(rx_g_over_t_db_k):.1f} dB/K"
+        cnr_str = f"{float(cnr_db):.2f} dB"
+        margin_str = f"{float(link_margin_db):+.2f} dB"
+        status_cls = "tu-sat-viable" if is_viable else "tu-sat-unviable"
+        status_lbl = "Link Feasible / Optimal" if is_viable else "Link Margin Deficient"
+
+        return f"""    <div class="tu-satellite-budget-card">
+      <div class="tu-sat-header">
+        <span class="tu-sat-badge">Komunikasi Satelit &amp; Stasiun Bumi</span>
+        <span class="tu-sat-status {status_cls}">{status_lbl}</span>
+      </div>
+      <h4 class="tu-sat-title">Link Budget Downlink: {sat_clean}</h4>
+      <div class="tu-sat-grid">
+        <div class="tu-sat-param">
+          <span class="tu-lbl">Frekuensi Downlink:</span>
+          <strong>{freq_str}</strong>
+        </div>
+        <div class="tu-sat-param">
+          <span class="tu-lbl">Satelit EIRP:</span>
+          <strong>{eirp_str}</strong>
+        </div>
+        <div class="tu-sat-param">
+          <span class="tu-lbl">Antena G/T:</span>
+          <strong>{g_t_str}</strong>
+        </div>
+        <div class="tu-sat-param">
+          <span class="tu-lbl">Carrier-to-Noise (C/N):</span>
+          <strong class="tu-cnr">{cnr_str}</strong>
+        </div>
+        <div class="tu-sat-param">
+          <span class="tu-lbl">Fade Link Margin:</span>
+          <strong class="tu-margin">{margin_str}</strong>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
