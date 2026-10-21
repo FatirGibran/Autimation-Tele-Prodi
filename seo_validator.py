@@ -3674,6 +3674,60 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_mathml_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits MathML <math> elements used for mathematical and RF engineering formulas.
+        Verifies display attributes (inline vs block) and alt text annotations (alttext or <annotation>)
+        for screen reader accessibility and semantic search engine indexing.
+        """
+        if not html_content or "<math" not in html_content.lower():
+            return {
+                "total_math": 0,
+                "accessible_math": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        math_tags = soup.find_all("math")
+        if not math_tags:
+            return {
+                "total_math": 0,
+                "accessible_math": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        accessible_count = 0
+
+        for idx, m in enumerate(math_tags, start=1):
+            has_alttext = bool(m.get("alttext", "").strip())
+            has_aria_label = bool(m.get("aria-label", "").strip())
+            has_annotation = bool(m.find("annotation"))
+            display_mode = m.get("display", "inline").strip().lower()
+
+            item_issues = []
+            if display_mode not in ("inline", "block"):
+                item_issues.append(f"Elemen MathML #{idx} memiliki atribut display '{display_mode}' yang tidak standar (gunakan 'inline' atau 'block').")
+
+            if not (has_alttext or has_aria_label or has_annotation):
+                item_issues.append(f"Elemen MathML #{idx} tidak memiliki anotasi teks aksesibel (alttext, aria-label, atau <annotation>).")
+
+            if item_issues:
+                issues.extend(item_issues)
+            else:
+                accessible_count += 1
+
+        return {
+            "total_math": len(math_tags),
+            "accessible_math": accessible_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
