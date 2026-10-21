@@ -1523,6 +1523,95 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn('height="350"', html)
         self.assertIn("Visualisasi Domain Waktu Osiloskop Digital", html)
 
+    def test_render_satellite_link_budget_card(self):
+        html = EditorialComponents.render_satellite_link_budget_card(
+            satellite_name="Telkom-4 (Merah Putih)",
+            downlink_freq_ghz=12.2,
+            tx_eirp_dbw=53.5,
+            rx_g_over_t_db_k=15.0,
+            cnr_db=11.25,
+            link_margin_db=4.25,
+            is_viable=True
+        )
+        self.assertIn("tu-satellite-budget-card", html)
+        self.assertIn("Telkom-4 (Merah Putih)", html)
+        self.assertIn("12.20 GHz", html)
+        self.assertIn("53.5 dBW", html)
+        self.assertIn("15.0 dB/K", html)
+        self.assertIn("11.25 dB", html)
+        self.assertIn("+4.25 dB", html)
+        self.assertIn("tu-sat-viable", html)
+
+    def test_render_rf_intermod_distortion_card(self):
+        html = EditorialComponents.render_rf_intermod_distortion_card(
+            component_name="Downconverter Mixer LNA Stage",
+            input_power_dbm=-15.0,
+            gain_db=12.0,
+            iip3_dbm=8.0,
+            imd3_suppression_dbc=46.0,
+            linearity_status="Acceptable"
+        )
+        self.assertIn("tu-rf-intermod-card", html)
+        self.assertIn("Downconverter Mixer LNA Stage", html)
+        self.assertIn("-15.0 dBm", html)
+        self.assertIn("12.0 dB", html)
+        self.assertIn("8.0 dBm", html)
+        self.assertIn("46.0 dBc", html)
+        self.assertIn("Acceptable", html)
+
+    def test_render_optical_fiber_dispersion_card(self):
+        html = EditorialComponents.render_optical_fiber_dispersion_card(
+            link_title="DWDM Backbone Purwokerto - Semarang",
+            fiber_length_km=120.0,
+            bit_rate_gbps=100.0,
+            cd_delay_ps=40.8,
+            pmd_delay_ps=1.1,
+            total_delay_ps=40.8,
+            power_penalty_db=0.85,
+            status="Acceptable"
+        )
+        self.assertIn("tu-fiber-dispersion-card", html)
+        self.assertIn("DWDM Backbone Purwokerto - Semarang", html)
+        self.assertIn("120.0 km", html)
+        self.assertIn("100.0 Gbps", html)
+        self.assertIn("40.8 ps", html)
+        self.assertIn("0.85 dB", html)
+
+    def test_render_kampus_mengajar_recognition_card(self):
+        html = EditorialComponents.render_kampus_mengajar_recognition_card(
+            student_name="Annisa Rahma",
+            nim="1201200045",
+            target_school="SMP Negeri 2 Kedungbanteng",
+            converted_sks=20,
+            letter_grade="A",
+            status="Completed with Full Recognition"
+        )
+        self.assertIn("tu-mengajar-card", html)
+        self.assertIn("Annisa Rahma", html)
+        self.assertIn("1201200045", html)
+        self.assertIn("SMP Negeri 2 Kedungbanteng", html)
+        self.assertIn("20 SKS", html)
+        self.assertIn("A", html)
+
+    def test_render_spectral_power_density_card(self):
+        html = EditorialComponents.render_spectral_power_density_card(
+            title="Spektrum Sinyal LoRa 920-923 MHz",
+            center_freq_mhz=921.5,
+            span_mhz=5.0,
+            rbw_khz=10.0,
+            noise_floor_dbm=-110.0,
+            peak_power_dbm=-45.0
+        )
+        self.assertIn("tu-spectral-psd-card", html)
+        self.assertIn("Spektrum Sinyal LoRa 920-923 MHz", html)
+        self.assertIn("921.50 MHz", html)
+        self.assertIn("5.0 MHz", html)
+        self.assertIn("10.0 kHz", html)
+        self.assertIn("-110.0 dBm", html)
+        self.assertIn("-45.0 dBm", html)
+        self.assertIn("<svg", html)
+
+
 
 if __name__ == "__main__":
     unittest.main()
