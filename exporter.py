@@ -1468,6 +1468,45 @@ navigation: true
 
         return "\n".join(output)
 
+    @staticmethod
+    def generate_educational_organization_json_ld(
+        name: str,
+        alternate_name: str,
+        url: str,
+        logo_url: str,
+        description: str,
+        address: Dict[str, str],
+        accreditation: str = "Unggul (LAM INFOKOM)"
+    ) -> Dict[str, Any]:
+        """
+        Generates schema.org EducationalOrganization JSON-LD metadata for university department/program.
+        """
+        payload: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "EducationalOrganization",
+            "name": name.strip(),
+            "alternateName": alternate_name.strip(),
+            "url": url.strip(),
+            "logo": logo_url.strip(),
+            "description": description.strip(),
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": address.get("street", ""),
+                "addressLocality": address.get("locality", "Purwokerto"),
+                "addressRegion": address.get("region", "Jawa Tengah"),
+                "postalCode": address.get("postal_code", "53147"),
+                "addressCountry": address.get("country", "ID")
+            }
+        }
+        if accreditation:
+            payload["hasCredential"] = {
+                "@type": "EducationalOccupationalCredential",
+                "credentialCategory": "Program Accreditation",
+                "name": accreditation.strip()
+            }
+        return payload
+
+
 
 
 
