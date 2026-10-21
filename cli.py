@@ -1360,6 +1360,90 @@ def cmd_fso(args):
         for r in records:
             print(f"{r['id']:<4} | {r['link_distance_km']:<10.2f} | {r['link_margin_db']:<12.2f} | {r['status']:<10} | {r['link_name'][:30]}")
 
+def cmd_satellite(args):
+    if args.action == "add":
+        if not args.name or args.freq is None or args.range is None or args.eirp is None or args.gt is None or args.bw is None or args.cnr is None or args.margin is None:
+            print("Error: Argumen --name, --freq, --range, --eirp, --gt, --bw, --cnr, dan --margin wajib diisi.")
+            sys.exit(1)
+        bid = storage.record_satellite_link_budget(
+            satellite_name=args.name,
+            downlink_freq_ghz=args.freq,
+            slant_range_km=args.range,
+            tx_eirp_dbw=args.eirp,
+            rx_g_over_t_db_k=args.gt,
+            bandwidth_mhz=args.bw,
+            cnr_db=args.cnr,
+            link_margin_db=args.margin,
+            is_viable=args.margin >= 0.0,
+            status=args.status or ("Feasible" if args.margin >= 0.0 else "Margin Deficient")
+        )
+        print(f"Catatan link budget satelit berhasil disimpan dengan ID: {bid}")
+    else:
+        viable_filter = True if args.viable else (False if args.unviable else None)
+        budgets = storage.list_satellite_link_budgets(is_viable=viable_filter)
+        if not budgets:
+            print("Tidak ada catatan link budget satelit yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FREQ':<8} | {'C/N (DB)':<10} | {'MARGIN':<10} | {'STATUS':<15} | {'SATELIT'}")
+        print("-" * 75)
+        for b in budgets:
+            print(f"{b['id']:<4} | {b['downlink_freq_ghz']:<8.2f} | {b['cnr_db']:<10.2f} | {b['link_margin_db']:<+10.2f} | {b['status'][:14]:<15} | {b['satellite_name'][:25]}")
+
+def cmd_mengajar(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.school or not args.level or args.hours is None or args.score is None or not args.grade or args.sks is None:
+            print("Error: Argumen --name, --nim, --school, --level, --hours, --score, --grade, dan --sks wajib diisi.")
+            sys.exit(1)
+        kid = storage.record_kampus_mengajar_student(
+            student_name=args.name,
+            nim=args.nim,
+            target_school=args.school,
+            school_level=args.level,
+            teaching_hours=args.hours,
+            composite_score=args.score,
+            letter_grade=args.grade,
+            converted_sks=args.sks,
+            status=args.status or "Completed with Full Recognition"
+        )
+        print(f"Catatan Kampus Mengajar berhasil disimpan dengan ID: {kid}")
+    else:
+        students = storage.list_kampus_mengajar_students(status=args.status)
+        if not students:
+            print("Tidak ada catatan Kampus Mengajar yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'SKOR':<6} | {'NAMA':<20} | {'SEKOLAH'}")
+        print("-" * 80)
+        for s in students:
+            print(f"{s['id']:<4} | {s['nim']:<10} | {s['converted_sks']:<4} | {s['letter_grade']:<5} | {s['composite_score']:<6.1f} | {s['student_name'][:18]:<20} | {s['target_school'][:20]}")
+
+def cmd_rf_intermod(args):
+    if args.action == "add":
+        if not args.name or args.pin is None or args.gain is None or args.iip3 is None or args.pout is None or args.imd3 is None:
+            print("Error: Argumen --name, --pin, --gain, --iip3, --pout, dan --imd3 wajib diisi.")
+            sys.exit(1)
+        rid = storage.record_rf_intermod_distortion(
+            component_name=args.name,
+            input_power_dbm=args.pin,
+            gain_db=args.gain,
+            iip3_dbm=args.iip3,
+            fundamental_pout_dbm=args.pout,
+            imd3_suppression_dbc=args.imd3,
+            linearity_status=args.status or ("Linear" if args.imd3 >= 35.0 else "Nonlinear"),
+            is_linear=args.imd3 >= 35.0
+        )
+        print(f"Catatan distorsi intermodulasi RF berhasil disimpan dengan ID: {rid}")
+    else:
+        linear_filter = True if args.linear else (False if args.nonlinear else None)
+        records = storage.list_rf_intermod_records(is_linear=linear_filter)
+        if not records:
+            print("Tidak ada catatan distorsi intermodulasi RF yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'IIP3':<8} | {'POUT':<8} | {'IMD3 (DBC)':<12} | {'STATUS':<15} | {'KOMPONEN'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['iip3_dbm']:<8.1f} | {r['fundamental_pout_dbm']:<8.1f} | {r['imd3_suppression_dbc']:<12.1f} | {r['linearity_status'][:14]:<15} | {r['component_name'][:25]}")
+
+
 
 
 def main():
@@ -1907,7 +1991,52 @@ def main():
     fso_parser.add_argument("--status", help="Status kelayakan link")
     fso_parser.set_defaults(func=cmd_fso)
 
+    # Satellite command
+    sat_parser = subparsers.add_parser("satellite", help="Kelola kalkulasi link budget satelit & stasiun bumi (list, add)")
+    sat_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan link budget satelit")
+    sat_parser.add_argument("--name", help="Nama satelit transponder")
+    sat_parser.add_argument("--freq", type=float, help="Frekuensi downlink (GHz)")
+    sat_parser.add_argument("--range", type=float, help="Jarak miring slant range (km)")
+    sat_parser.add_argument("--eirp", type=float, help="EIRP satelit (dBW)")
+    sat_parser.add_argument("--gt", type=float, help="Figure of merit G/T antena stasiun bumi (dB/K)")
+    sat_parser.add_argument("--bw", type=float, help="Lebar pita transponder (MHz)")
+    sat_parser.add_argument("--cnr", type=float, help="Carrier-to-Noise Ratio (dB)")
+    sat_parser.add_argument("--margin", type=float, help="Fade link margin (dB)")
+    sat_parser.add_argument("--status", help="Status kelayakan link")
+    sat_parser.add_argument("--viable", action="store_true", help="Filter hanya link yang layak")
+    sat_parser.add_argument("--unviable", action="store_true", help="Filter hanya link yang tidak layak")
+    sat_parser.set_defaults(func=cmd_satellite)
+
+    # Mengajar command
+    mengajar_parser = subparsers.add_parser("mengajar", help="Kelola evaluasi & rekognisi SKS program Kampus Mengajar MBKM (list, add)")
+    mengajar_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan Kampus Mengajar")
+    mengajar_parser.add_argument("--name", help="Nama lengkap mahasiswa")
+    mengajar_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    mengajar_parser.add_argument("--school", help="Nama sekolah penugasan")
+    mengajar_parser.add_argument("--level", help="Jenjang sekolah (SD/SMP/SMA)")
+    mengajar_parser.add_argument("--hours", type=int, help="Jumlah jam penugasan")
+    mengajar_parser.add_argument("--score", type=float, help="Skor komposit evaluasi")
+    mengajar_parser.add_argument("--grade", help="Nilai huruf mutu (A/AB/B)")
+    mengajar_parser.add_argument("--sks", type=int, help="Jumlah SKS konversi")
+    mengajar_parser.add_argument("--status", help="Status kelulusan")
+    mengajar_parser.set_defaults(func=cmd_mengajar)
+
+    # RF-Intermod command
+    rf_parser = subparsers.add_parser("rf-intermod", help="Kelola kalkulasi linearitas & distorsi intermodulasi RF (list, add)")
+    rf_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan distorsi intermodulasi RF")
+    rf_parser.add_argument("--name", help="Nama modul / komponen RF")
+    rf_parser.add_argument("--pin", type=float, help="Daya input fundamental (dBm)")
+    rf_parser.add_argument("--gain", type=float, help="Penguatan RF (dB)")
+    rf_parser.add_argument("--iip3", type=float, help="Input IP3 (dBm)")
+    rf_parser.add_argument("--pout", type=float, help="Daya output fundamental (dBm)")
+    rf_parser.add_argument("--imd3", type=float, help="Supresi intermodulasi IMD3 (dBc)")
+    rf_parser.add_argument("--status", help="Status linearitas")
+    rf_parser.add_argument("--linear", action="store_true", help="Filter hanya komponen linear")
+    rf_parser.add_argument("--nonlinear", action="store_true", help="Filter hanya komponen nonlinear")
+    rf_parser.set_defaults(func=cmd_rf_intermod)
+
     args = parser.parse_args()
+
 
 
 
