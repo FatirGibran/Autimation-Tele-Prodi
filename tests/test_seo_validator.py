@@ -1233,6 +1233,67 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertTrue(any("sumber atribusi" in i for i in res_bad["issues"]))
 
+    def test_audit_audio_accessibility_controls(self):
+        html_ok = (
+            '<div>'
+            '<audio controls><source src="podcast.mp3" type="audio/mpeg"></audio>'
+            '<p><a href="/transkrip/podcast.txt">Baca transkrip teks rekaman</a></p>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_audio_accessibility_controls(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_audio"], 1)
+
+        html_bad = '<audio autoplay src="audio.mp3"></audio>'
+        res_bad = YoastSEOValidator.audit_audio_accessibility_controls(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("controls" in i for i in res_bad["issues"]))
+        self.assertTrue(any("autoplay" in i for i in res_bad["issues"]))
+
+    def test_audit_semantic_definition_lists(self):
+        html_ok = (
+            '<dl>'
+            '<dt>EIRP</dt><dd>Effective Isotropic Radiated Power</dd>'
+            '<dt>FSPL</dt><dd>Free Space Path Loss</dd>'
+            '</dl>'
+        )
+        res_ok = YoastSEOValidator.audit_semantic_definition_lists(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["valid_dl"], 1)
+
+        html_bad = '<dl><dt>Orphaned Term</dt></dl>'
+        res_bad = YoastSEOValidator.audit_semantic_definition_lists(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("tidak memiliki penjelasan <dd>" in i for i in res_bad["issues"]))
+
+    def test_audit_image_cls_dimensions(self):
+        html_ok = '<img src="/img/diagram.png" width="800" height="600" alt="Topology">'
+        res_ok = YoastSEOValidator.audit_image_cls_dimensions(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["sized_images"], 1)
+
+        html_bad = '<img src="/img/no-size.png" alt="No size">'
+        res_bad = YoastSEOValidator.audit_image_cls_dimensions(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("tidak memiliki atribut eksplisit" in i for i in res_bad["issues"]))
+
+    def test_audit_mathml_accessibility(self):
+        html_ok = (
+            '<math display="block" alttext="E = m c^2">'
+            '<mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow>'
+            '</math>'
+        )
+        res_ok = YoastSEOValidator.audit_mathml_accessibility(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_math"], 1)
+
+        html_bad = '<math display="random"><mi>x</mi></math>'
+        res_bad = YoastSEOValidator.audit_mathml_accessibility(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("tidak standar" in i for i in res_bad["issues"]))
+        self.assertTrue(any("anotasi teks aksesibel" in i for i in res_bad["issues"]))
+
+
 
 if __name__ == "__main__":
     unittest.main()
