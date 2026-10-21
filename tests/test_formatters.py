@@ -596,6 +596,43 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("2026", msg)
         self.assertIn("https://lppm.telkomuniversity.ac.id/pkm-2026", msg)
 
+    def test_format_satellite_link_announcement_telegram(self):
+        msg = TelegramFormatter.format_satellite_link_announcement_telegram(
+            satellite_name="Telkom-4 (Merah Putih)",
+            downlink_freq_ghz=12.2,
+            station_name="Stasiun Bumi Banyumas",
+            cnr_db=11.25,
+            link_margin_db=4.25,
+            modulation="DVB-S2 8PSK",
+            portal_url="https://telemetry.telkomuniversity.ac.id/sat"
+        )
+        self.assertIn("Hasil Audit Link Budget Komunikasi Satelit", msg)
+        self.assertIn("Telkom-4 (Merah Putih)", msg)
+        self.assertIn("12.20 GHz", msg)
+        self.assertIn("Stasiun Bumi Banyumas", msg)
+        self.assertIn("11.25 dB", msg)
+        self.assertIn("+4.25 dB", msg)
+        self.assertIn("DVB-S2 8PSK", msg)
+        self.assertIn("https://telemetry.telkomuniversity.ac.id/sat", msg)
+
+    def test_format_kampus_mengajar_announcement_telegram(self):
+        msg = TelegramFormatter.format_kampus_mengajar_announcement_telegram(
+            student_name="Annisa Rahma",
+            nim="1201200045",
+            target_school="SMP Negeri 2 Kedungbanteng",
+            converted_sks=20,
+            letter_grade="A",
+            portal_url="https://kampusmerdeka.kemdikbud.go.id"
+        )
+        self.assertIn("Apresiasi Kelulusan Program Kampus Mengajar MBKM", msg)
+        self.assertIn("Annisa Rahma", msg)
+        self.assertIn("1201200045", msg)
+        self.assertIn("SMP Negeri 2 Kedungbanteng", msg)
+        self.assertIn("20 SKS Diakui", msg)
+        self.assertIn("A", msg)
+        self.assertIn("https://kampusmerdeka.kemdikbud.go.id", msg)
+
+
 
 
 class TestCommandRateLimiter(unittest.TestCase):
