@@ -1837,6 +1837,92 @@ class TestStorageManager(unittest.TestCase):
         none_f = self.storage.get_fso_link_budget_by_id(999999)
         self.assertIsNone(none_f)
 
+    def test_satellite_link_budgets_storage(self):
+        bid1 = self.storage.record_satellite_link_budget(
+            satellite_name="Telkom-4 (Merah Putih)",
+            downlink_freq_ghz=12.2,
+            slant_range_km=38000.0,
+            tx_eirp_dbw=53.5,
+            rx_g_over_t_db_k=15.0,
+            bandwidth_mhz=36.0,
+            cnr_db=11.25,
+            link_margin_db=4.25,
+            is_viable=True,
+            status="Feasible"
+        )
+        bid2 = self.storage.record_satellite_link_budget(
+            satellite_name="BRIsat",
+            downlink_freq_ghz=11.7,
+            slant_range_km=39000.0,
+            tx_eirp_dbw=45.0,
+            rx_g_over_t_db_k=10.0,
+            bandwidth_mhz=72.0,
+            cnr_db=4.5,
+            link_margin_db=-2.5,
+            is_viable=False,
+            status="Margin Deficient"
+        )
+        self.assertGreater(bid1, 0)
+        self.assertGreater(bid2, 0)
+
+        all_budgets = self.storage.list_satellite_link_budgets()
+        self.assertEqual(len(all_budgets), 2)
+
+        viable_budgets = self.storage.list_satellite_link_budgets(is_viable=True)
+        self.assertEqual(len(viable_budgets), 1)
+        self.assertEqual(viable_budgets[0]["satellite_name"], "Telkom-4 (Merah Putih)")
+
+        single = self.storage.get_satellite_link_budget_by_id(bid1)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status"], "Feasible")
+
+    def test_kampus_mengajar_students_storage(self):
+        kid1 = self.storage.record_kampus_mengajar_student(
+            student_name="Annisa Rahma",
+            nim="1201200045",
+            target_school="SMP Negeri 2 Kedungbanteng",
+            school_level="SMP",
+            teaching_hours=350,
+            composite_score=89.0,
+            letter_grade="A",
+            converted_sks=20,
+            status="Completed with Full Recognition"
+        )
+        self.assertGreater(kid1, 0)
+
+        all_km = self.storage.list_kampus_mengajar_students()
+        self.assertEqual(len(all_km), 1)
+        self.assertEqual(all_km[0]["student_name"], "Annisa Rahma")
+
+        by_nim = self.storage.get_kampus_mengajar_by_nim("1201200045")
+        self.assertIsNotNone(by_nim)
+        self.assertEqual(by_nim["converted_sks"], 20)
+
+    def test_rf_intermod_records_storage(self):
+        rid1 = self.storage.record_rf_intermod_distortion(
+            component_name="Mixer Downconverter Stage",
+            input_power_dbm=-15.0,
+            gain_db=12.0,
+            iip3_dbm=8.0,
+            fundamental_pout_dbm=-3.0,
+            imd3_suppression_dbc=46.0,
+            linearity_status="Acceptable",
+            is_linear=True
+        )
+        self.assertGreater(rid1, 0)
+
+        all_rf = self.storage.list_rf_intermod_records()
+        self.assertEqual(len(all_rf), 1)
+
+        linear_rf = self.storage.list_rf_intermod_records(is_linear=True)
+        self.assertEqual(len(linear_rf), 1)
+        self.assertEqual(linear_rf[0]["component_name"], "Mixer Downconverter Stage")
+
+        single = self.storage.get_rf_intermod_by_id(rid1)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["linearity_status"], "Acceptable")
+
+
 
 if __name__ == "__main__":
     unittest.main()
