@@ -4145,6 +4145,67 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_fiber_dispersion_card(
+        cls,
+        link_title: str,
+        fiber_length_km: float,
+        bit_rate_gbps: float,
+        cd_delay_ps: float,
+        pmd_delay_ps: float,
+        total_delay_ps: float,
+        power_penalty_db: float,
+        status: str
+    ) -> str:
+        """
+        Renders an optical fiber chromatic and polarization mode dispersion (PMD) penalty analysis card.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(link_title.strip())
+        len_str = f"{float(fiber_length_km):.1f} km"
+        rate_str = f"{float(bit_rate_gbps):.1f} Gbps"
+        cd_str = f"{float(cd_delay_ps):.1f} ps"
+        pmd_str = f"{float(pmd_delay_ps):.2f} ps"
+        tot_str = f"{float(total_delay_ps):.1f} ps"
+        penalty_str = f"{float(power_penalty_db):.2f} dB"
+        stat_clean = escape(status.strip())
+
+        return f"""    <div class="tu-fiber-dispersion-card">
+      <div class="tu-disp-header">
+        <span class="tu-disp-badge">Dispersi Serat Optik DWDM</span>
+        <span class="tu-disp-status">{stat_clean}</span>
+      </div>
+      <h4 class="tu-disp-title">{title_clean}</h4>
+      <div class="tu-disp-specs">
+        <div class="tu-disp-item">
+          <span class="tu-lbl">Panjang Fiber:</span>
+          <strong>{len_str}</strong>
+        </div>
+        <div class="tu-disp-item">
+          <span class="tu-lbl">Laju Data Transmisi:</span>
+          <strong>{rate_str}</strong>
+        </div>
+        <div class="tu-disp-item">
+          <span class="tu-lbl">Delay Dispersi Kromatik (CD):</span>
+          <strong>{cd_str}</strong>
+        </div>
+        <div class="tu-disp-item">
+          <span class="tu-lbl">Delay PMD (DGD):</span>
+          <strong>{pmd_str}</strong>
+        </div>
+        <div class="tu-disp-item">
+          <span class="tu-lbl">Total Pelebaran Pulsa:</span>
+          <strong class="tu-delay">{tot_str}</strong>
+        </div>
+        <div class="tu-disp-item">
+          <span class="tu-lbl">Optical Power Penalty:</span>
+          <strong class="tu-penalty">{penalty_str}</strong>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
