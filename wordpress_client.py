@@ -676,6 +676,21 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, data=data_bytes, headers=headers, method="POST")
         return self._send_request(req)
 
+    def get_posts_by_status(self, status: str = "draft", page: int = 1, per_page: int = 20) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress posts filtered by lifecycle status (publish, draft, pending, future, trash) with pagination.
+        """
+        st = status.strip().lower()
+        p = max(1, int(page))
+        pp = max(1, min(100, int(per_page)))
+        endpoint = f"{self.api_url}/posts?status={st}&page={p}&per_page={pp}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list):
+            return results
+        return []
+
+
 
 
 
