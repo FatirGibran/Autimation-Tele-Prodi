@@ -3980,6 +3980,98 @@ def calculate_optical_fiber_dispersion(
     }
 
 
+def parse_kampus_mengajar_evaluation(
+    student_name: str,
+    nim: str,
+    target_school: str,
+    school_level: str,
+    teaching_hours: int,
+    principal_grade: float,
+    faculty_supervisor_grade: float,
+    duration_months: int = 4
+) -> Dict[str, Any]:
+    """
+    Evaluates MBKM Kampus Mengajar teaching assistantship program completion,
+    calculates composite performance score, letter grade, and credit conversion (up to 20 SKS).
+    """
+    clean_name = student_name.strip()
+    clean_nim = nim.strip()
+    clean_school = target_school.strip()
+    clean_level = school_level.strip()
+    hours = max(0, int(teaching_hours))
+    p_grade = min(100.0, max(0.0, float(principal_grade)))
+    f_grade = min(100.0, max(0.0, float(faculty_supervisor_grade)))
+    months = max(1, int(duration_months))
+
+    is_valid_nim = bool(re.match(r'^\d{8,12}$', clean_nim))
+
+    # Composite grade: 50% Principal / School Mentor, 50% Faculty Field Supervisor (DPL)
+    composite_score = round(0.50 * p_grade + 0.50 * f_grade, 2)
+
+    # Letter Grade Conversion
+    if composite_score >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite_score >= 80.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite_score >= 70.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite_score >= 65.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    elif composite_score >= 60.0:
+        letter_grade = "C"
+        grade_point = 2.0
+    else:
+        letter_grade = "D"
+        grade_point = 1.0
+
+    # Credit Conversion Calculation
+    # Standard: 320 teaching/service hours over 4 months = 20 SKS
+    if hours >= 320 and months >= 4 and composite_score >= 65.0:
+        converted_sks = 20
+        status = "Completed with Full Recognition"
+        is_eligible = True
+    elif hours >= 200 and composite_score >= 60.0:
+        converted_sks = min(16, max(10, int(hours / 16.0)))
+        status = "Partial Credit Recognition"
+        is_eligible = True
+    else:
+        converted_sks = 0
+        status = "Ineligible for Credit Conversion"
+        is_eligible = False
+
+    course_equivalencies = [
+        {"code": "TT-4101", "name": "Kuliah Kerja Nyata Tematik Pendidikan", "credits": 4},
+        {"code": "TT-4102", "name": "Komunikasi Publik dan Kepemimpinan", "credits": 4},
+        {"code": "TT-4103", "name": "Literasi Digital & Pembelajaran Komputasi", "credits": 4},
+        {"code": "TT-4104", "name": "Pengembangan Karakter & Etika Profesi", "credits": 4},
+        {"code": "TT-4105", "name": "Proyek Pengabdian Sekolah Mandiri", "credits": 4}
+    ] if converted_sks == 20 else []
+
+    return {
+        "student_name": clean_name,
+        "nim": clean_nim,
+        "is_valid_nim": is_valid_nim,
+        "target_school": clean_school,
+        "school_level": clean_level,
+        "teaching_hours": hours,
+        "duration_months": months,
+        "principal_grade": p_grade,
+        "faculty_supervisor_grade": f_grade,
+        "composite_score": composite_score,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible,
+        "course_equivalencies": course_equivalencies
+    }
+
+
+
 
 
 
