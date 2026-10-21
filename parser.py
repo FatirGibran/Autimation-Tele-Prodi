@@ -3797,6 +3797,67 @@ def parse_lecturer_pkm_grant(
     }
 
 
+def calculate_satellite_link_budget(
+    downlink_freq_ghz: float,
+    slant_range_km: float,
+    tx_eirp_dbw: float,
+    rx_g_over_t_db_k: float,
+    bandwidth_mhz: float,
+    atmospheric_loss_db: float = 0.5
+) -> Dict[str, Any]:
+    """
+    Computes satellite space-to-ground downlink link budget, free-space path loss,
+    carrier-to-noise spectral density (C/No), and overall carrier-to-noise ratio (C/N).
+    Based on ITU-R P.618 and standard DVB-S2/S2X telecommunication link parameters.
+    """
+    import math
+
+    f_ghz = max(0.1, float(downlink_freq_ghz))
+    d_km = max(100.0, float(slant_range_km))
+    eirp = float(tx_eirp_dbw)
+    g_over_t = float(rx_g_over_t_db_k)
+    bw_mhz = max(0.1, float(bandwidth_mhz))
+    l_atm = max(0.0, float(atmospheric_loss_db))
+
+    # Free Space Path Loss (FSPL) in dB: 92.45 + 20*log10(f_GHz) + 20*log10(d_km)
+    fspl_db = 92.45 + 20.0 * math.log10(f_ghz) + 20.0 * math.log10(d_km)
+
+    # Boltzmann constant in dBW/K/Hz: -228.6 dBW/K/Hz
+    k_boltzmann_dbw = -228.6
+
+    # C/No = EIRP - FSPL - Latm + (G/T) - k
+    c_over_n0_db_hz = eirp - fspl_db - l_atm + g_over_t - k_boltzmann_dbw
+
+    # Noise Bandwidth in dBHz: 10 * log10(BW_MHz * 1e6)
+    noise_bw_db_hz = 10.0 * math.log10(bw_mhz * 1e6)
+
+    # Carrier-to-Noise Ratio (C/N) in dB: C/No - B_dBHz
+    cnr_db = c_over_n0_db_hz - noise_bw_db_hz
+
+    # Minimum threshold for DVB-S2 QPSK 3/4 is ~4.0 dB; 7.0 dB gives adequate fade margin
+    min_cnr_threshold_db = 7.0
+    link_margin_db = cnr_db - min_cnr_threshold_db
+    is_viable = cnr_db >= min_cnr_threshold_db
+
+    return {
+        "downlink_freq_ghz": round(f_ghz, 3),
+        "slant_range_km": round(d_km, 2),
+        "tx_eirp_dbw": round(eirp, 2),
+        "rx_g_over_t_db_k": round(g_over_t, 2),
+        "bandwidth_mhz": round(bw_mhz, 2),
+        "atmospheric_loss_db": round(l_atm, 2),
+        "fspl_db": round(fspl_db, 2),
+        "c_over_n0_db_hz": round(c_over_n0_db_hz, 2),
+        "noise_bandwidth_db_hz": round(noise_bw_db_hz, 2),
+        "cnr_db": round(cnr_db, 2),
+        "link_margin_db": round(link_margin_db, 2),
+        "min_cnr_threshold_db": min_cnr_threshold_db,
+        "is_viable": is_viable,
+        "modulation_recommendation": "DVB-S2 8PSK/16APSK" if cnr_db >= 10.0 else ("DVB-S2 QPSK" if is_viable else "Increase Antenna Aperture or EIRP")
+    }
+
+
+
 
 
 
