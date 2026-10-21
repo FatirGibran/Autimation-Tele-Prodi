@@ -905,6 +905,32 @@ class TelegramFormatter:
             f"🌟 *Selamat mengabdi dan menghadirkan kemanfaatan teknologi telekomunikasi bagi masyarakat luas!*"
         )
 
+    @staticmethod
+    def format_satellite_link_announcement_telegram(
+        satellite_name: str,
+        downlink_freq_ghz: float,
+        station_name: str,
+        cnr_db: float,
+        link_margin_db: float,
+        modulation: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a satellite ground station downlink budget calculation bulletin for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Telemetri Satelit:** {portal_url.strip()}" if portal_url else ""
+        margin_prefix = "+" if link_margin_db >= 0 else ""
+        return (
+            f"🛰️ **Hasil Audit Link Budget Komunikasi Satelit**\n\n"
+            f"📡 **Satelit Transponder:** {satellite_name.strip()} (`{float(downlink_freq_ghz):.2f} GHz`)\n"
+            f"🏢 **Stasiun Bumi (Earth Station):** {station_name.strip()}\n"
+            f"📶 **Carrier-to-Noise (C/N):** `{float(cnr_db):.2f} dB`\n"
+            f"🛡️ **Fade Link Margin:** `{margin_prefix}{float(link_margin_db):.2f} dB`\n"
+            f"🎛️ **Rekomendasi Modulasi:** `{modulation.strip()}`{portal_link}\n\n"
+            f"🚀 *Perhitungan link budget memenuhi ambang batas keandalan transmisi satelit DVB-S2!*"
+        )
+
+
 
 
 
