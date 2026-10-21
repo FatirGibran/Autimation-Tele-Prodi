@@ -738,6 +738,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_km_nim ON student_kampus_mengajar(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_km_school ON student_kampus_mengajar(target_school);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS rf_intermod_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    component_name TEXT NOT NULL,
+                    input_power_dbm REAL NOT NULL,
+                    gain_db REAL NOT NULL,
+                    iip3_dbm REAL NOT NULL,
+                    fundamental_pout_dbm REAL NOT NULL,
+                    imd3_suppression_dbc REAL NOT NULL,
+                    linearity_status TEXT NOT NULL,
+                    is_linear INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_rf_comp ON rf_intermod_records(component_name);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_rf_linear ON rf_intermod_records(is_linear);")
+
 
 
 
@@ -3621,6 +3638,62 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM student_kampus_mengajar WHERE nim = ?", (nim.strip(),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_rf_intermod_distortion(
+        self,
+        component_name: str,
+        input_power_dbm: float,
+        gain_db: float,
+        iip3_dbm: float,
+        fundamental_pout_dbm: float,
+        imd3_suppression_dbc: float,
+        linearity_status: str,
+        is_linear: bool
+    ) -> int:
+        """
+        Records an RF front-end intermodulation distortion (IMD3) calculation audit.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO rf_intermod_records (
+                    component_name, input_power_dbm, gain_db, iip3_dbm,
+                    fundamental_pout_dbm, imd3_suppression_dbc, linearity_status, is_linear
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                component_name.strip(),
+                float(input_power_dbm),
+                float(gain_db),
+                float(iip3_dbm),
+                float(fundamental_pout_dbm),
+                float(imd3_suppression_dbc),
+                linearity_status.strip(),
+                1 if is_linear else 0
+            ))
+            return cursor.lastrowid
+
+    def list_rf_intermod_records(self, is_linear: Optional[bool] = None) -> List[Dict[str, Any]]:
+        """
+        Lists RF intermodulation distortion audit records with optional linearity filter.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM rf_intermod_records"
+            params = []
+            if is_linear is not None:
+                query += " WHERE is_linear = ?"
+                params.append(1 if is_linear else 0)
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_rf_intermod_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an RF intermodulation distortion calculation record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM rf_intermod_records WHERE id = ?", (int(record_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
