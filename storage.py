@@ -721,6 +721,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_name ON satellite_link_budgets(satellite_name);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_viable ON satellite_link_budgets(is_viable);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS student_kampus_mengajar (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL UNIQUE,
+                    target_school TEXT NOT NULL,
+                    school_level TEXT NOT NULL,
+                    teaching_hours INTEGER NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_km_nim ON student_kampus_mengajar(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_km_school ON student_kampus_mengajar(target_school);")
+
 
 
 
@@ -3546,6 +3564,64 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM satellite_link_budgets WHERE id = ?", (int(budget_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_kampus_mengajar_student(
+        self,
+        student_name: str,
+        nim: str,
+        target_school: str,
+        school_level: str,
+        teaching_hours: int,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str
+    ) -> int:
+        """
+        Records an MBKM Kampus Mengajar teaching assistantship student evaluation.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO student_kampus_mengajar (
+                    student_name, nim, target_school, school_level, teaching_hours,
+                    composite_score, letter_grade, converted_sks, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(),
+                nim.strip(),
+                target_school.strip(),
+                school_level.strip(),
+                int(teaching_hours),
+                float(composite_score),
+                letter_grade.strip(),
+                int(converted_sks),
+                status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_kampus_mengajar_students(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Lists student Kampus Mengajar records with optional status filter.
+        """
+        with self._get_connection() as conn:
+            query = "SELECT * FROM student_kampus_mengajar"
+            params = []
+            if status:
+                query += " WHERE status LIKE ?"
+                params.append(f"%{status.strip()}%")
+            query += " ORDER BY id DESC"
+            cursor = conn.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_kampus_mengajar_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a student Kampus Mengajar record by student NIM.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM student_kampus_mengajar WHERE nim = ?", (nim.strip(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
