@@ -1024,6 +1024,51 @@ def sanitize_html5_output_calculation_elements(html: str) -> str:
     return re.sub(r'<output\b[^>]*>', fix_output, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_picture_source_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <picture> and nested <source> elements used in responsive telecommunication figures.
+    Neutralizes dangerous URI schemes in srcset (e.g. javascript:, data:text/html), strips inline event handlers,
+    and validates MIME type declarations against standard web image formats.
+    """
+    if not html or ("<picture" not in html.lower() and "<source" not in html.lower()):
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    def fix_picture(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    def fix_source(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize srcset
+        srcset_m = re.search(r'\bsrcset=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if srcset_m:
+            srcset_val = srcset_m.group(1).strip()
+            if re.search(r'(?:javascript:|data:text/html|<|>|;)', srcset_val, re.IGNORECASE):
+                tag = re.sub(r'\s+srcset=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize type attribute
+        type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if type_m:
+            type_val = type_m.group(1).strip().lower()
+            if not type_val.startswith("image/"):
+                tag = re.sub(r'\s+type=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    out = re.sub(r'<picture\b[^>]*>', fix_picture, html, flags=re.IGNORECASE)
+    out = re.sub(r'<source\b[^>]*>', fix_source, out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
