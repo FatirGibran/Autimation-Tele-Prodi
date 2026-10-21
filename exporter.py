@@ -1506,6 +1506,34 @@ navigation: true
             }
         return payload
 
+    @staticmethod
+    def to_nextjs_contentlayer_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Next.js Contentlayer MDX format with typed date, tags, and summary frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        date = metadata.get("publish_date", "2026-10-21")
+        category = metadata.get("category", "Umum").replace('"', '\\"')
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'date: "{date}"',
+            f'description: "{desc}"',
+            f'category: "{category}"',
+            f'tags: {json.dumps(tags)}',
+            "published: true",
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
