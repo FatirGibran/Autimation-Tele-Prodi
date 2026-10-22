@@ -4,7 +4,13 @@ import json
 from pathlib import Path
 
 from config import settings
-from parser import parse_telegram_input, parse_llm_response
+from parser import (
+    parse_telegram_input,
+    parse_llm_response,
+    calculate_radar_range_equation,
+    parse_wirausaha_merdeka_evaluation,
+    calculate_edfa_amplifier_gain
+)
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
 from storage import StorageManager
@@ -1445,6 +1451,113 @@ def cmd_rf_intermod(args):
             print(f"{r['id']:<4} | {r['iip3_dbm']:<8.1f} | {r['fundamental_pout_dbm']:<8.1f} | {r['imd3_suppression_dbc']:<12.1f} | {r['linearity_status'][:14]:<15} | {r['component_name'][:25]}")
 
 
+def cmd_radar(args):
+    if args.action == "add":
+        if not args.name or args.power is None or args.gain is None or args.rcs is None or args.freq is None:
+            print("Error: Argumen --name, --power, --gain, --rcs, dan --freq wajib diisi.")
+            sys.exit(1)
+        smin = args.smin if args.smin is not None else -100.0
+        calc = calculate_radar_range_equation(
+            peak_power_kw=args.power,
+            antenna_gain_dbi=args.gain,
+            radar_cross_section_m2=args.rcs,
+            freq_ghz=args.freq,
+            min_detectable_signal_dbm=smin
+        )
+        rec_id = storage.record_radar_detection({
+            "radar_name": args.name,
+            "peak_power_kw": args.power,
+            "antenna_gain_dbi": args.gain,
+            "rcs_m2": args.rcs,
+            "freq_ghz": args.freq,
+            "min_detectable_signal_dbm": smin,
+            "max_range_km": calc["max_range_km"],
+            "round_trip_delay_us": calc["round_trip_delay_us"]
+        })
+        print(f"Catatan radar berhasil disimpan dengan ID: {rec_id} (R_max: {calc['max_range_km']:.2f} km)")
+    else:
+        records = storage.list_radar_detections(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan telemetri radar yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FREQ':<8} | {'POWER':<8} | {'R_MAX (KM)':<12} | {'SISTEM RADAR'}")
+        print("-" * 65)
+        for r in records:
+            print(f"{r['id']:<4} | {r['freq_ghz']:<8.2f} | {r['peak_power_kw']:<8.1f} | {r['max_range_km']:<12.2f} | {r['radar_name']}")
+
+
+def cmd_wmk(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.startup or not args.sector:
+            print("Error: Argumen --name, --nim, --startup, dan --sector wajib diisi.")
+            sys.exit(1)
+        m_score = args.mentor if args.mentor is not None else 85.0
+        p_score = args.pitch if args.pitch is not None else 85.0
+        eval_res = parse_wirausaha_merdeka_evaluation(
+            student_name=args.name,
+            nim=args.nim,
+            startup_name=args.startup,
+            business_sector=args.sector,
+            mentor_score=m_score,
+            pitch_score=p_score
+        )
+        wid = storage.record_wmk_startup({
+            "student_name": args.name,
+            "nim": args.nim,
+            "startup_name": args.startup,
+            "business_sector": args.sector,
+            "mentor_score": m_score,
+            "pitch_score": p_score,
+            "composite_score": eval_res["composite_score"],
+            "converted_sks": eval_res["converted_sks"],
+            "letter_grade": eval_res["letter_grade"],
+            "status": eval_res["status"]
+        })
+        print(f"Catatan Wirausaha Merdeka berhasil disimpan dengan ID: {wid}")
+    else:
+        startups = storage.list_wmk_startups(limit=args.limit or 50)
+        if not startups:
+            print("Tidak ada catatan Wirausaha Merdeka yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'STARTUP':<20} | {'SEKTOR'}")
+        print("-" * 75)
+        for s in startups:
+            print(f"{s['id']:<4} | {s['nim']:<10} | {s['converted_sks']:<4} | {s['letter_grade']:<5} | {s['startup_name'][:18]:<20} | {s['business_sector']}")
+
+
+def cmd_edfa(args):
+    if args.action == "add":
+        if not args.name or args.pin is None or args.pump is None or args.gain is None:
+            print("Error: Argumen --name, --pin, --pump, dan --gain wajib diisi.")
+            sys.exit(1)
+        calc = calculate_edfa_amplifier_gain(
+            input_power_dbm=args.pin,
+            pump_power_mw=args.pump,
+            small_signal_gain_db=args.gain
+        )
+        eid = storage.record_edfa_amplifier({
+            "device_name": args.name,
+            "input_power_dbm": args.pin,
+            "pump_power_mw": args.pump,
+            "small_signal_gain_db": args.gain,
+            "actual_gain_db": calc["actual_gain_db"],
+            "output_power_dbm": calc["output_power_dbm"],
+            "noise_figure_db": calc["noise_figure_db"],
+            "operating_regime": calc["operating_regime"]
+        })
+        print(f"Catatan EDFA berhasil disimpan dengan ID: {eid} (Gain: +{calc['actual_gain_db']:.2f} dB)")
+    else:
+        records = storage.list_edfa_amplifiers(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan penguat EDFA yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'PIN (DBM)':<10} | {'GAIN (DB)':<10} | {'POUT (DBM)':<11} | {'NF (DB)':<8} | {'PERANGKAT'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['input_power_dbm']:<10.1f} | {r['actual_gain_db']:<+10.2f} | {r['output_power_dbm']:<11.2f} | {r['noise_figure_db']:<8.2f} | {r['device_name']}")
+
+
+
 
 
 def main():
@@ -2036,7 +2149,42 @@ def main():
     rf_parser.add_argument("--nonlinear", action="store_true", help="Filter hanya komponen nonlinear")
     rf_parser.set_defaults(func=cmd_rf_intermod)
 
+    # Radar command
+    radar_parser = subparsers.add_parser("radar", help="Kelola kalkulasi telemetri persamaan jangkauan radar (list, add)")
+    radar_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan telemetri radar")
+    radar_parser.add_argument("--name", help="Nama sistem radar")
+    radar_parser.add_argument("--power", type=float, help="Peak transmit power (kW)")
+    radar_parser.add_argument("--gain", type=float, help="Gain antena pengarah (dBi)")
+    radar_parser.add_argument("--rcs", type=float, help="Radar cross-section target (m²)")
+    radar_parser.add_argument("--freq", type=float, help="Frekuensi kerja carrier (GHz)")
+    radar_parser.add_argument("--smin", type=float, default=-100.0, help="Sinyal minimum penerima (dBm)")
+    radar_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    radar_parser.set_defaults(func=cmd_radar)
+
+    # WMK command
+    wmk_parser = subparsers.add_parser("wmk", help="Kelola evaluasi & konversi SKS MBKM Wirausaha Merdeka (list, add)")
+    wmk_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi Wirausaha Merdeka")
+    wmk_parser.add_argument("--name", help="Nama lengkap mahasiswa founder")
+    wmk_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    wmk_parser.add_argument("--startup", help="Nama produk / startup")
+    wmk_parser.add_argument("--sector", help="Sektor bisnis startup")
+    wmk_parser.add_argument("--mentor", type=float, help="Skor pembimbing mentor (0-100)")
+    wmk_parser.add_argument("--pitch", type=float, help="Skor pitching presentasi (0-100)")
+    wmk_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    wmk_parser.set_defaults(func=cmd_wmk)
+
+    # EDFA command
+    edfa_parser = subparsers.add_parser("edfa", help="Kelola kalkulasi saturasi penguat optik EDFA (list, add)")
+    edfa_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan penguat EDFA")
+    edfa_parser.add_argument("--name", help="Nama perangkat penguat optik")
+    edfa_parser.add_argument("--pin", type=float, help="Daya sinyal optik masukan (dBm)")
+    edfa_parser.add_argument("--pump", type=float, help="Daya laser pompa pump 980/1480nm (mW)")
+    edfa_parser.add_argument("--gain", type=float, help="Penguatan sinyal kecil small-signal gain (dB)")
+    edfa_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    edfa_parser.set_defaults(func=cmd_edfa)
+
     args = parser.parse_args()
+
 
 
 
