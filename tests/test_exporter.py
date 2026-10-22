@@ -804,6 +804,36 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("published: true", res)
         self.assertIn("<p>Analisis coverage dan path loss.</p>", res)
 
+    def test_generate_startup_incubation_project_json_ld(self):
+        meta = {
+            "startup_name": "IoT AgroSense",
+            "founder": "Budi Santoso",
+            "sector": "Smart Agriculture",
+            "url": "https://agrosense.telkomuniversity.ac.id",
+            "description": "Inkubasi sensor IoT pertanian mandiri."
+        }
+        res = ArticleExporter.generate_startup_incubation_project_json_ld(meta)
+        self.assertEqual(res["@type"], "Project")
+        self.assertEqual(res["name"], "IoT AgroSense")
+        self.assertEqual(res["founder"]["name"], "Budi Santoso")
+        self.assertEqual(res["category"], "Smart Agriculture")
+        self.assertEqual(res["funder"]["name"], "Program Wirausaha Merdeka Telkom University Purwokerto")
+
+    def test_to_remix_route_mdx(self):
+        meta = {
+            "seo_title": "Desain Antena Mikrostrip 5G",
+            "meta_description": "Simulasi CST Studio Suite untuk patch antenna.",
+            "slug": "antena-mikrostrip-5g",
+            "publish_date": "2026-10-22"
+        }
+        res = ArticleExporter.to_remix_route_mdx(meta, "<p>Hasil simulasi S-parameter.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('breadcrumb: "Desain Antena Mikrostrip 5G"', res)
+        self.assertIn('slug: "antena-mikrostrip-5g"', res)
+        self.assertIn('meta:', res)
+        self.assertIn('og:title', res)
+        self.assertIn("<p>Hasil simulasi S-parameter.</p>", res)
+
 
 
 if __name__ == "__main__":
