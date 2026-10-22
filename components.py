@@ -4287,6 +4287,53 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_radar_detection_card(
+        cls,
+        peak_power_kw: float,
+        antenna_gain_dbi: float,
+        rcs_m2: float,
+        freq_ghz: float,
+        max_range_km: float,
+        round_trip_delay_us: float
+    ) -> str:
+        """
+        Renders a radar detection telemetry card displaying transmit parameters,
+        target cross section, and calculated maximum detection range and propagation delay.
+        """
+        return f"""    <div class="tu-radar-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #f8fafc;">
+      <div class="tu-radar-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span class="tu-radar-badge" style="font-weight: 700; color: #0284c7; font-size: 13px; text-transform: uppercase;">Radar Range Telemetry</span>
+        <span style="font-size: 12px; color: #64748b;">Carrier: {freq_ghz:.2f} GHz</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Jangkauan Deteksi Target Monostatik</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Peak Power</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{peak_power_kw:.1f} kW</div>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Gain Antena</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{antenna_gain_dbi:.1f} dBi</div>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Target RCS (\u03c3)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{rcs_m2:.2f} m\u00b2</div>
+        </div>
+      </div>
+      <div style="background: #e0f2fe; padding: 12px; border-radius: 6px; border-left: 4px solid #0284c7; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: #0369a1; font-weight: 600;">Jangkauan Maksimum (R_max):</span>
+          <div style="font-size: 18px; font-weight: 800; color: #0c4a6e;">{max_range_km:.2f} km</div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: #0369a1;">Waktu Tempuh Pulsa:</span>
+          <div style="font-size: 14px; font-weight: 700; color: #0c4a6e;">{round_trip_delay_us:.1f} \u03bcs</div>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
