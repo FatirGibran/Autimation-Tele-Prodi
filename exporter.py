@@ -1561,6 +1561,37 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_remix_route_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Remix / React Router v7 MDX format with route meta headers and breadcrumbs.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "").replace('"', '\\"')
+        date = metadata.get("publish_date", "2026-10-21")
+
+        frontmatter = [
+            "---",
+            "meta:",
+            f'  - title: "{title}"',
+            f'  - name: "description"',
+            f'    content: "{desc}"',
+            f'  - property: "og:title"',
+            f'    content: "{title}"',
+            f'  - property: "og:description"',
+            f'    content: "{desc}"',
+            "handle:",
+            f'  breadcrumb: "{title}"',
+            f'  slug: "{slug}"',
+            f'  publishDate: "{date}"',
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
