@@ -4121,6 +4121,66 @@ def calculate_radar_range_equation(
     }
 
 
+def calculate_phase_noise_and_evm(
+    carrier_freq_mhz: float,
+    phase_jitter_ps: float = 0.0,
+    integrated_phase_noise_dbc: Optional[float] = None
+) -> Dict[str, Any]:
+    """
+    Computes phase noise in radians/degrees and estimates Error Vector Magnitude (EVM)
+    constellation degradation from timing jitter or integrated single-sideband phase noise.
+    
+    Formula: phi_rms (rad) = 2 * pi * f_c * Delta_t_rms = sqrt(2 * 10^(dBc / 10))
+    """
+    if carrier_freq_mhz <= 0:
+        raise ValueError("Carrier frequency must be strictly positive.")
+    if phase_jitter_ps < 0:
+        raise ValueError("Phase jitter cannot be negative.")
+
+    fc_hz = float(carrier_freq_mhz) * 1e6
+
+    if integrated_phase_noise_dbc is not None:
+        phi_rad = math.sqrt(2.0 * (10.0 ** (float(integrated_phase_noise_dbc) / 10.0)))
+        jitter_s = phi_rad / (2.0 * math.pi * fc_hz)
+        jitter_ps = jitter_s * 1e12
+        dbc_val = float(integrated_phase_noise_dbc)
+    else:
+        jitter_s = float(phase_jitter_ps) * 1e-12
+        jitter_ps = float(phase_jitter_ps)
+        phi_rad = 2.0 * math.pi * fc_hz * jitter_s
+        dbc_val = 10.0 * math.log10(max((phi_rad ** 2) / 2.0, 1e-15))
+
+    phi_deg = phi_rad * (180.0 / math.pi)
+    evm_pct = phi_rad * 100.0
+    evm_db = 20.0 * math.log10(phi_rad) if phi_rad > 0 else -100.0
+
+    if evm_pct <= 2.0:
+        modulation_support = "Excellent (High-Order 256/1024-QAM)"
+        quality_rating = "Excellent"
+    elif evm_pct <= 5.0:
+        modulation_support = "Good (64-QAM / 16-QAM compatible)"
+        quality_rating = "Good"
+    elif evm_pct <= 8.0:
+        modulation_support = "Marginal (QPSK / BPSK only)"
+        quality_rating = "Marginal"
+    else:
+        modulation_support = "Degraded (Constellation closure risk)"
+        quality_rating = "Degraded"
+
+    return {
+        "carrier_freq_mhz": float(carrier_freq_mhz),
+        "phase_jitter_ps": round(jitter_ps, 3),
+        "integrated_phase_noise_dbc": round(dbc_val, 2),
+        "phase_noise_rad": round(phi_rad, 6),
+        "phase_noise_deg": round(phi_deg, 4),
+        "evm_percent": round(evm_pct, 3),
+        "evm_db": round(evm_db, 2),
+        "modulation_support": modulation_support,
+        "quality_rating": quality_rating
+    }
+
+
+
 
 
 
