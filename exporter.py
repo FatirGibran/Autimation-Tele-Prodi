@@ -1533,6 +1533,36 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_startup_incubation_project_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org Project and Organization JSON-LD metadata for university-incubated startups.
+        """
+        name = metadata.get("startup_name", "Startup Inovasi").strip()
+        founder = metadata.get("founder", "Mahasiswa").strip()
+        sector = metadata.get("sector", "Teknologi Informasi & Komunikasi").strip()
+        url = metadata.get("url", "https://bif-pwt.telkomuniversity.ac.id/startup").strip()
+        desc = metadata.get("description", f"Startup inkubasi prodi: {name}").strip()
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "Project",
+            "name": name,
+            "description": desc,
+            "url": url,
+            "founder": {
+                "@type": "Person",
+                "name": founder
+            },
+            "category": sector,
+            "funder": {
+                "@type": "EducationalOrganization",
+                "name": "Program Wirausaha Merdeka Telkom University Purwokerto"
+            }
+        }
+
+
+
 
 
 
