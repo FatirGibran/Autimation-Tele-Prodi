@@ -4333,6 +4333,54 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_phase_noise_evm_card(
+        cls,
+        carrier_freq_mhz: float,
+        phase_jitter_ps: float,
+        phase_noise_rad: float,
+        evm_percent: float,
+        quality_rating: str
+    ) -> str:
+        """
+        Renders an RF phase noise and EVM constellation degradation card.
+        """
+        color_map = {
+            "Excellent": "#16a34a",
+            "Good": "#2563eb",
+            "Marginal": "#d97706",
+            "Degraded": "#dc2626"
+        }
+        status_color = color_map.get(quality_rating, "#475569")
+        phase_noise_mrad = phase_noise_rad * 1000.0
+
+        return f"""    <div class="tu-evm-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #fdfdfd;">
+      <div class="tu-evm-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {status_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: {status_color}; font-size: 13px; text-transform: uppercase;">Analisis Derau Fasa &amp; EVM</span>
+        <span style="font-size: 12px; color: #64748b;">Carrier: {carrier_freq_mhz:.1f} MHz</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Integritas Konstelasi Modulasi Digital</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Jitter Fasa (RMS)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{phase_jitter_ps:.2f} ps</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Phase Error (\u03c6_rms)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{phase_noise_mrad:.2f} mrad</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Kualitas Modulasi</div>
+          <div style="font-size: 14px; font-weight: 700; color: {status_color};">{quality_rating}</div>
+        </div>
+      </div>
+      <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; border-left: 4px solid {status_color}; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 13px; color: #334155; font-weight: 600;">Error Vector Magnitude (EVM):</span>
+        <span style="font-size: 18px; font-weight: 800; color: {status_color};">{evm_percent:.2f}%</span>
+      </div>
+    </div>"""
+
+
 
 
 
