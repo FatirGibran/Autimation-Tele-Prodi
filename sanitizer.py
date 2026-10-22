@@ -1219,6 +1219,39 @@ def sanitize_html5_abbr_dfn_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_accordion_grouping(html: str) -> str:
+    """
+    Sanitizes HTML5.2 <details> elements with 'name' attributes used for exclusive accordion behavior.
+    Neutralizes inline event handlers (ontoggle, onclick) and validates that the grouping 'name'
+    contains only valid alphanumeric, hyphen, and underscore characters.
+    """
+    if not html or "<details" not in html.lower():
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    def fix_details(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize name attribute (HTML exclusive accordion)
+        name_m = re.search(r'\bname=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if name_m:
+            raw_name = name_m.group(1).strip()
+            clean_name = re.sub(r'[^a-zA-Z0-9_\-]', '', raw_name)
+            if clean_name:
+                tag = re.sub(r'\bname=["\'][^"\']*["\']', f'name="{clean_name}"', tag, flags=re.IGNORECASE)
+            else:
+                tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<details\b[^>]*>', fix_details, html, flags=re.IGNORECASE)
+
+
+
 
 
 
