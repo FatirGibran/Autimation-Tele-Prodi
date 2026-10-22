@@ -1293,6 +1293,102 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertTrue(any("tidak standar" in i for i in res_bad["issues"]))
         self.assertTrue(any("anotasi teks aksesibel" in i for i in res_bad["issues"]))
 
+    def test_audit_inp_script_accessibility(self):
+        html_ok = (
+            '<div>'
+            '<script src="https://cdn.example.com/app.js" defer></script>'
+            '<script src="https://cdn.example.com/analytics.js" async></script>'
+            '<button class="btn">Klik</button>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_inp_script_accessibility(html_ok)
+        self.assertTrue(res_ok["is_inp_optimized"])
+        self.assertEqual(res_ok["render_blocking_scripts"], 0)
+        self.assertEqual(res_ok["async_or_deferred_scripts"], 2)
+
+        html_bad = (
+            '<div>'
+            '<script src="https://cdn.example.com/blocking.js"></script>'
+            '<button onclick="doSomething()">Klik</button>'
+            '</div>'
+        )
+        res_bad = YoastSEOValidator.audit_inp_script_accessibility(html_bad)
+        self.assertFalse(res_bad["is_inp_optimized"])
+        self.assertEqual(res_bad["render_blocking_scripts"], 1)
+        self.assertEqual(res_bad["inline_event_handlers"], 1)
+
+    def test_audit_rich_media_opengraph(self):
+        html_ok = (
+            '<head>'
+            '<meta property="og:video" content="https://example.com/video.mp4">'
+            '<meta property="og:video:secure_url" content="https://example.com/video.mp4">'
+            '<meta property="og:video:type" content="video/mp4">'
+            '<meta property="og:video:width" content="1280">'
+            '<meta property="og:video:height" content="720">'
+            '<meta property="og:audio" content="https://example.com/podcast.mp3">'
+            '<meta property="og:audio:type" content="audio/mpeg">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_rich_media_opengraph(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertTrue(res_ok["has_video_og"])
+        self.assertTrue(res_ok["has_audio_og"])
+
+        html_bad = (
+            '<head>'
+            '<meta property="og:video" content="http://insecure.example.com/video.mp4">'
+            '<meta property="og:audio" content="http://insecure.example.com/audio.mp3">'
+            '</head>'
+        )
+        res_bad = YoastSEOValidator.audit_rich_media_opengraph(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("HTTPS" in i for i in res_bad["issues"]))
+        self.assertTrue(any("og:video:type" in i for i in res_bad["issues"]))
+
+    def test_audit_picture_source_fallbacks(self):
+        html_ok = (
+            '<picture>'
+            '<source srcset="/img/opt.avif" type="image/avif">'
+            '<source srcset="/img/opt.webp" type="image/webp">'
+            '<img src="/img/opt.jpg" alt="Optimal diagram">'
+            '</picture>'
+        )
+        res_ok = YoastSEOValidator.audit_picture_source_fallbacks(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["valid_pictures"], 1)
+
+        html_bad = '<picture><source srcset="/img/opt.webp"></picture>'
+        res_bad = YoastSEOValidator.audit_picture_source_fallbacks(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["missing_fallback_img"], 1)
+
+    def test_audit_semantic_landmark_regions(self):
+        html_ok = (
+            '<html>'
+            '<header>Banner</header>'
+            '<nav aria-label="Navigasi Utama">Menu</nav>'
+            '<main><p>Konten Utama</p></main>'
+            '<footer>Hak Cipta</footer>'
+            '</html>'
+        )
+        res_ok = YoastSEOValidator.audit_semantic_landmark_regions(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertTrue(res_ok["has_main"])
+        self.assertEqual(res_ok["main_count"], 1)
+
+        html_bad = (
+            '<html>'
+            '<main>Main 1</main>'
+            '<main>Main 2</main>'
+            '<nav>Nav 1</nav>'
+            '<nav>Nav 2</nav>'
+            '</html>'
+        )
+        res_bad = YoastSEOValidator.audit_semantic_landmark_regions(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("elemen <main>" in i for i in res_bad["issues"]))
+        self.assertTrue(any("tanpa atribut 'aria-label'" in i for i in res_bad["issues"]))
+
 
 
 if __name__ == "__main__":
