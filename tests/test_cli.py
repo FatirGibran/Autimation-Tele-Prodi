@@ -1879,6 +1879,82 @@ class TestCLI(unittest.TestCase):
             self.assertIn("8.0", out)
             self.assertIn("46.0", out)
 
+    def test_cmd_radar(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Surveillance Radar X-Band"
+            power = 50.0
+            gain = 35.0
+            rcs = 2.5
+            freq = 9.4
+            smin = -100.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_radar(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan radar berhasil disimpan", out)
+            self.assertIn("R_max", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_radar(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Surveillance Radar X-Band", out)
+            self.assertIn("9.40", out)
+
+    def test_cmd_wmk(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Budi Santoso"
+            nim = "1201201050"
+            startup = "IoT AgroSense"
+            sector = "Smart Agriculture"
+            mentor = 88.0
+            pitch = 92.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_wmk(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Wirausaha Merdeka berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_wmk(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("IoT AgroSense", out)
+            self.assertIn("1201201050", out)
+            self.assertIn("Smart Agriculture", out)
+
+    def test_cmd_edfa(self):
+        class ArgsAdd:
+            action = "add"
+            name = "EDFA C-Band Booster"
+            pin = -20.0
+            pump = 150.0
+            gain = 25.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_edfa(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan EDFA berhasil disimpan", out)
+            self.assertIn("Gain:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_edfa(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("EDFA C-Band Booster", out)
+            self.assertIn("-20.0", out)
+
 
 
 
