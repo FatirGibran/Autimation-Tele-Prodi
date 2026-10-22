@@ -632,6 +632,44 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("A", msg)
         self.assertIn("https://kampusmerdeka.kemdikbud.go.id", msg)
 
+    def test_format_radar_telemetry_announcement_telegram(self):
+        msg = TelegramFormatter.format_radar_telemetry_announcement_telegram(
+            radar_name="Surveillance Radar X-Band",
+            freq_ghz=9.45,
+            peak_power_kw=60.0,
+            antenna_gain_dbi=36.0,
+            rcs_m2=2.0,
+            max_range_km=48.25,
+            portal_url="https://telemetry.telkomuniversity.ac.id/radar"
+        )
+        self.assertIn("Hasil Audit Telemetri Jangkauan Radar Monostatik", msg)
+        self.assertIn("Surveillance Radar X-Band", msg)
+        self.assertIn("9.45 GHz", msg)
+        self.assertIn("60.0 kW", msg)
+        self.assertIn("36.0 dBi", msg)
+        self.assertIn("48.25 km", msg)
+        self.assertIn("https://telemetry.telkomuniversity.ac.id/radar", msg)
+
+    def test_format_wirausaha_merdeka_telegram(self):
+        msg = TelegramFormatter.format_wirausaha_merdeka_telegram(
+            student_name="Budi Santoso",
+            nim="1201201050",
+            startup_name="IoT AgroSense",
+            business_sector="Smart Agriculture",
+            composite_score=89.6,
+            converted_sks=20,
+            letter_grade="A",
+            portal_url="https://wmk.telkomuniversity.ac.id/showcase"
+        )
+        self.assertIn("Apresiasi Kelulusan MBKM Wirausaha Merdeka (WMK)", msg)
+        self.assertIn("Budi Santoso", msg)
+        self.assertIn("1201201050", msg)
+        self.assertIn("IoT AgroSense", msg)
+        self.assertIn("Smart Agriculture", msg)
+        self.assertIn("89.6 / 100", msg)
+        self.assertIn("20 SKS Diakui", msg)
+        self.assertIn("https://wmk.telkomuniversity.ac.id/showcase", msg)
+
 
 
 
