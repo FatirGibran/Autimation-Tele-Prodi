@@ -4071,6 +4071,57 @@ def parse_kampus_mengajar_evaluation(
     }
 
 
+def calculate_radar_range_equation(
+    peak_power_kw: float,
+    antenna_gain_dbi: float,
+    radar_cross_section_m2: float,
+    freq_ghz: float,
+    min_detectable_signal_dbm: float
+) -> Dict[str, Any]:
+    """
+    Computes maximum monostatic radar detection range using the Radar Range Equation.
+    Calculates wavelength, linear antenna gain, minimum detectable power, and round-trip delay.
+    
+    Formula: R_max = ((Pt * G^2 * lambda^2 * sigma) / ((4 * pi)^3 * S_min))^(1/4)
+    """
+    if peak_power_kw <= 0 or freq_ghz <= 0 or radar_cross_section_m2 <= 0:
+        raise ValueError("Peak power, frequency, and radar cross-section must be strictly positive.")
+
+    c = 299792458.0
+    freq_hz = float(freq_ghz) * 1e9
+    wavelength_m = c / freq_hz
+
+    peak_power_w = float(peak_power_kw) * 1000.0
+    gain_linear = 10.0 ** (float(antenna_gain_dbi) / 10.0)
+    s_min_w = 10.0 ** ((float(min_detectable_signal_dbm) - 30.0) / 10.0)
+
+    numerator = peak_power_w * (gain_linear ** 2) * (wavelength_m ** 2) * float(radar_cross_section_m2)
+    denominator = ((4.0 * math.pi) ** 3) * s_min_w
+
+    r_max_m = (numerator / denominator) ** 0.25
+    r_max_km = r_max_m / 1000.0
+    r_max_nmi = r_max_km / 1.852
+    round_trip_delay_us = (2.0 * r_max_m / c) * 1e6
+
+    return {
+        "peak_power_kw": float(peak_power_kw),
+        "peak_power_watts": round(peak_power_w, 2),
+        "antenna_gain_dbi": float(antenna_gain_dbi),
+        "antenna_gain_linear": round(gain_linear, 2),
+        "radar_cross_section_m2": float(radar_cross_section_m2),
+        "freq_ghz": float(freq_ghz),
+        "wavelength_m": round(wavelength_m, 5),
+        "min_detectable_signal_dbm": float(min_detectable_signal_dbm),
+        "min_detectable_signal_watts": s_min_w,
+        "max_range_m": round(r_max_m, 2),
+        "max_range_km": round(r_max_km, 2),
+        "max_range_nmi": round(r_max_nmi, 2),
+        "round_trip_delay_us": round(round_trip_delay_us, 2),
+        "is_valid": True
+    }
+
+
+
 
 
 
