@@ -1,4 +1,5 @@
 import re
+import math
 from typing import Dict, Any, List, Optional, Tuple
 
 DEFAULT_PLACEHOLDER_IMG = "https://bif-pwt.telkomuniversity.ac.id/wp-content/uploads/placeholder.jpg"

@@ -1403,6 +1403,86 @@ Status: Granted
         self.assertTrue(res["is_eligible"])
         self.assertEqual(len(res["course_equivalencies"]), 5)
 
+    def test_calculate_radar_range_equation(self):
+        from parser import calculate_radar_range_equation
+        res = calculate_radar_range_equation(
+            peak_power_kw=50.0,
+            antenna_gain_dbi=35.0,
+            radar_cross_section_m2=2.0,
+            freq_ghz=9.4,
+            min_detectable_signal_dbm=-100.0
+        )
+        self.assertTrue(res["is_valid"])
+        self.assertGreater(res["max_range_km"], 10.0)
+        self.assertGreater(res["round_trip_delay_us"], 10.0)
+        self.assertEqual(res["peak_power_watts"], 50000.0)
+        with self.assertRaises(ValueError):
+            calculate_radar_range_equation(-10.0, 35.0, 2.0, 9.4, -100.0)
+
+    def test_calculate_phase_noise_and_evm(self):
+        from parser import calculate_phase_noise_and_evm
+        res = calculate_phase_noise_and_evm(
+            carrier_freq_mhz=2400.0,
+            phase_jitter_ps=0.8
+        )
+        self.assertGreater(res["evm_percent"], 0.0)
+        self.assertIn("modulation_support", res)
+        self.assertIn("quality_rating", res)
+
+        res_dbc = calculate_phase_noise_and_evm(
+            carrier_freq_mhz=2400.0,
+            integrated_phase_noise_dbc=-45.0
+        )
+        self.assertGreater(res_dbc["phase_noise_rad"], 0.0)
+        self.assertGreater(res_dbc["phase_jitter_ps"], 0.0)
+        with self.assertRaises(ValueError):
+            calculate_phase_noise_and_evm(0.0, 1.0)
+
+    def test_calculate_edfa_amplifier_gain(self):
+        from parser import calculate_edfa_amplifier_gain
+        res = calculate_edfa_amplifier_gain(
+            input_power_dbm=-20.0,
+            pump_power_mw=150.0,
+            small_signal_gain_db=25.0,
+            saturation_output_power_dbm=17.0
+        )
+        self.assertGreater(res["actual_gain_db"], 15.0)
+        self.assertGreater(res["output_power_dbm"], -20.0)
+        self.assertGreaterEqual(res["noise_figure_db"], 3.0)
+        self.assertIn("operating_regime", res)
+        with self.assertRaises(ValueError):
+            calculate_edfa_amplifier_gain(-20.0, -10.0, 25.0)
+
+    def test_parse_wirausaha_merdeka_evaluation(self):
+        from parser import parse_wirausaha_merdeka_evaluation
+        res = parse_wirausaha_merdeka_evaluation(
+            student_name="Budi Santoso",
+            nim="1201201050",
+            startup_name="IoT AgroSense",
+            business_sector="Smart Agriculture",
+            mentor_score=88.0,
+            pitch_score=92.0,
+            duration_months=5
+        )
+        self.assertEqual(res["letter_grade"], "A")
+        self.assertEqual(res["converted_sks"], 20)
+        self.assertTrue(res["is_eligible"])
+        self.assertEqual(len(res["course_equivalencies"]), 5)
+
+        # Partial scoring test
+        res_partial = parse_wirausaha_merdeka_evaluation(
+            student_name="Dewi Lestari",
+            nim="1201201051",
+            startup_name="EduTech",
+            business_sector="Education",
+            mentor_score=60.0,
+            pitch_score=65.0,
+            duration_months=5
+        )
+        self.assertEqual(res_partial["letter_grade"], "B")
+        self.assertEqual(res_partial["converted_sks"], 16)
+        self.assertEqual(len(res_partial["course_equivalencies"]), 4)
+
 
 
 if __name__ == "__main__":
