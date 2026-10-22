@@ -608,6 +608,38 @@ class TestWordPressClient(unittest.TestCase):
         self.assertIn("Salinan", cloned["title"]["rendered"])
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_post_revisions(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 201, "date": "2026-10-15T10:00:00", "title": {"rendered": "Versi 1"}}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        revisions = self.client.get_post_revisions(post_id=105)
+        self.assertEqual(len(revisions), 1)
+        self.assertEqual(revisions[0]["id"], 201)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/posts/105/revisions", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_restore_post_revision(self, mock_urlopen):
+        mock_rev_resp = MagicMock()
+        mock_rev_resp.read.return_value = b'{"id": 201, "title": {"rendered": "Judul Lama"}, "content": {"rendered": "<p>Isi Lama</p>"}}'
+
+        mock_update_resp = MagicMock()
+        mock_update_resp.read.return_value = b'{"id": 105, "title": {"rendered": "Judul Lama"}, "content": {"rendered": "<p>Isi Lama</p>"}}'
+
+        mock_urlopen.side_effect = [
+            MagicMock(__enter__=MagicMock(return_value=mock_rev_resp)),
+            MagicMock(__enter__=MagicMock(return_value=mock_update_resp))
+        ]
+
+        restored = self.client.restore_post_revision(post_id=105, revision_id=201)
+        self.assertEqual(restored["id"], 105)
+        self.assertEqual(restored["title"]["rendered"], "Judul Lama")
+        self.assertEqual(mock_urlopen.call_count, 2)
+
+
 
 
 if __name__ == "__main__":
