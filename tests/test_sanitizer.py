@@ -12,7 +12,10 @@ from sanitizer import (
     sanitize_html5_output_calculation_elements,
     sanitize_html5_picture_source_elements,
     sanitize_html5_optgroup_elements,
-    sanitize_html5_fieldset_legend_elements
+    sanitize_html5_fieldset_legend_elements,
+    sanitize_html5_video_elements,
+    sanitize_html5_abbr_dfn_elements,
+    sanitize_html5_accordion_grouping
 )
 
 
@@ -767,6 +770,53 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("<script>", cleaned)
         self.assertIn('form="calc-form"', cleaned)
         self.assertIn('<legend>Parameter Link Budget</legend>', cleaned)
+
+    def test_sanitize_html5_video_elements(self):
+        raw = (
+            '<video controls width="640" height="360" poster="https://example.com/poster.jpg" '
+            'autoplay onerror="evil()" style="position:fixed">'
+            '<source src="https://example.com/video.mp4" type="video/mp4; codecs=avc1.42E01E">'
+            '<source src="javascript:alert(1)">'
+            'Your browser does not support HTML5 video.'
+            '</video>'
+        )
+        cleaned = sanitize_html5_video_elements(raw)
+        self.assertNotIn("autoplay", cleaned)
+        self.assertNotIn("onerror", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertIn("controls", cleaned)
+        self.assertIn('src="https://example.com/video.mp4"', cleaned)
+
+    def test_sanitize_html5_abbr_dfn_elements(self):
+        raw = (
+            '<p><dfn id="ofdm-term" onclick="evil()" style="color:blue">'
+            '<abbr title="Orthogonal Frequency Division Multiplexing" onmouseover="bad()">'
+            'OFDM'
+            '</abbr>'
+            '</dfn> adalah modulasi multicarrier.</p>'
+        )
+        cleaned = sanitize_html5_abbr_dfn_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn('id="ofdm-term"', cleaned)
+        self.assertIn('title="Orthogonal Frequency Division Multiplexing"', cleaned)
+        self.assertIn('OFDM', cleaned)
+
+    def test_sanitize_html5_accordion_grouping(self):
+        raw = (
+            '<details name="faq-group<script>alert(1)</script>" ontoggle="evil()" style="margin:10px">'
+            '<summary>Apa itu Link Budget?</summary>'
+            '<p>Perhitungan daya transmisi ke penerima.</p>'
+            '</details>'
+        )
+        cleaned = sanitize_html5_accordion_grouping(raw)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("ontoggle=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn('name="faq-group"', cleaned)
+        self.assertIn('<summary>Apa itu Link Budget?</summary>', cleaned)
 
 
 
