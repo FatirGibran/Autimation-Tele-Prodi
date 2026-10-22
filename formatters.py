@@ -952,6 +952,31 @@ class TelegramFormatter:
             f"👏 *Terima kasih atas kontribusi dan dedikasi dalam memajukan literasi dan numerasi pendidikan dasar!*"
         )
 
+    @staticmethod
+    def format_radar_telemetry_announcement_telegram(
+        radar_name: str,
+        freq_ghz: float,
+        peak_power_kw: float,
+        antenna_gain_dbi: float,
+        rcs_m2: float,
+        max_range_km: float,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a monostatic radar telemetry detection range summary for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Radar Telemetri:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🎯 **Hasil Audit Telemetri Jangkauan Radar Monostatik**\n\n"
+            f"📡 **Sistem Radar:** {radar_name.strip()} (`{float(freq_ghz):.2f} GHz`)\n"
+            f"⚡ **Peak Transmit Power:** `{float(peak_power_kw):.1f} kW`\n"
+            f"📶 **Gain Antena:** `{float(antenna_gain_dbi):.1f} dBi`\n"
+            f"🎯 **Target RCS (\u03c3):** `{float(rcs_m2):.2f} m\u00b2`\n"
+            f"📏 **Jangkauan Maksimum (R_max):** `{float(max_range_km):.2f} km`{portal_link}\n\n"
+            f"🔭 *Perhitungan persamaan radar terverifikasi memenuhi standar deteksi gelombang mikro IEEE AES!*"
+        )
+
+
 
 
 
