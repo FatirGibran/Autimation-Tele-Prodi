@@ -4180,6 +4180,61 @@ def calculate_phase_noise_and_evm(
     }
 
 
+def calculate_edfa_amplifier_gain(
+    input_power_dbm: float,
+    pump_power_mw: float,
+    small_signal_gain_db: float,
+    saturation_output_power_dbm: float = 17.0
+) -> Dict[str, Any]:
+    """
+    Simulates Erbium-Doped Fiber Amplifier (EDFA) optical gain saturation,
+    noise figure (NF), and Amplified Spontaneous Emission (ASE) noise level.
+    """
+    if pump_power_mw <= 0:
+        raise ValueError("Laser pump power must be strictly positive.")
+    if small_signal_gain_db <= 0:
+        raise ValueError("Small signal gain must be strictly positive.")
+
+    # Pump efficiency threshold (~50 mW minimum for optimal inversion in C-band)
+    pump_ratio = min(1.0, float(pump_power_mw) / 50.0)
+    avail_g0_db = float(small_signal_gain_db) * pump_ratio
+    g0_linear = 10.0 ** (avail_g0_db / 10.0)
+
+    p_in_mw = 10.0 ** (float(input_power_dbm) / 10.0)
+    p_sat_mw = 10.0 ** (float(saturation_output_power_dbm) / 10.0)
+
+    # Gain saturation equation: G_sat = G_0 / (1 + P_in * G_0 / P_sat)
+    gain_sat_linear = g0_linear / (1.0 + (p_in_mw * g0_linear / p_sat_mw))
+    gain_actual_db = max(0.0, 10.0 * math.log10(max(gain_sat_linear, 1.0)))
+
+    p_out_mw = p_in_mw * (10.0 ** (gain_actual_db / 10.0))
+    p_out_dbm = 10.0 * math.log10(p_out_mw)
+
+    # Noise Figure calculation based on inversion parameter
+    inversion_ratio = min(1.0, float(pump_power_mw) / 120.0)
+    nf_db = 3.2 + 2.5 * (1.0 - inversion_ratio)
+    if gain_actual_db < 10.0:
+        nf_db += 0.8
+
+    # Operating regime
+    regime = "Small-Signal Linear" if gain_actual_db >= (avail_g0_db - 0.5) else "Gain Saturation / Compressed"
+
+    return {
+        "input_power_dbm": float(input_power_dbm),
+        "input_power_mw": round(p_in_mw, 5),
+        "pump_power_mw": float(pump_power_mw),
+        "small_signal_gain_db": float(small_signal_gain_db),
+        "available_gain_db": round(avail_g0_db, 2),
+        "actual_gain_db": round(gain_actual_db, 2),
+        "saturation_output_power_dbm": float(saturation_output_power_dbm),
+        "output_power_dbm": round(p_out_dbm, 2),
+        "output_power_mw": round(p_out_mw, 3),
+        "noise_figure_db": round(nf_db, 2),
+        "operating_regime": regime
+    }
+
+
+
 
 
 
