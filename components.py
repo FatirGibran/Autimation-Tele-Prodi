@@ -4429,6 +4429,48 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_wirausaha_merdeka_card(
+        cls,
+        student_name: str,
+        nim: str,
+        startup_name: str,
+        sector: str,
+        composite_score: float,
+        converted_sks: int,
+        status: str
+    ) -> str:
+        """
+        Renders a Wirausaha Merdeka (WMK) startup incubation progress card
+        showing entrepreneurship milestones and academic SKS equivalency.
+        """
+        is_full = converted_sks >= 20
+        badge_bg = "#eff6ff" if is_full else "#fff7ed"
+        badge_color = "#1d4ed8" if is_full else "#c2410c"
+
+        return f"""    <div class="tu-wmk-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-wmk-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ea580c; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #ea580c; font-size: 13px; text-transform: uppercase;">MBKM Wirausaha Merdeka</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">{startup_name}</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Sektor: <strong>{sector}</strong> | Mahasiswa: {student_name} ({nim})</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #fff7ed; padding: 10px; border-radius: 6px; border: 1px solid #ffedd5;">
+          <div style="font-size: 11px; color: #9a3412;">Nilai Komposit</div>
+          <div style="font-size: 18px; font-weight: 800; color: #c2410c;">{composite_score:.1f} / 100</div>
+        </div>
+        <div style="background: #eff6ff; padding: 10px; border-radius: 6px; border: 1px solid #dbeafe;">
+          <div style="font-size: 11px; color: #1e40af;">Konversi SKS</div>
+          <div style="font-size: 18px; font-weight: 800; color: #1d4ed8;">{converted_sks} SKS</div>
+        </div>
+      </div>
+      <div style="font-size: 12px; color: #475569; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+        Program akselerasi inkubasi startup teknologi telekomunikasi terakreditasi Kemendikbudristek.
+      </div>
+    </div>"""
+
+
 
 
 
