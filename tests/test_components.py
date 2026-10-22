@@ -1611,6 +1611,80 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("-45.0 dBm", html)
         self.assertIn("<svg", html)
 
+    def test_render_radar_detection_card(self):
+        html = EditorialComponents.render_radar_detection_card(
+            peak_power_kw=50.0,
+            antenna_gain_dbi=35.0,
+            rcs_m2=2.5,
+            freq_ghz=9.4,
+            max_range_km=42.15,
+            round_trip_delay_us=281.2
+        )
+        self.assertIn("tu-radar-card", html)
+        self.assertIn("50.0 kW", html)
+        self.assertIn("35.0 dBi", html)
+        self.assertIn("2.50 m²", html)
+        self.assertIn("42.15 km", html)
+        self.assertIn("281.2 μs", html)
+
+    def test_render_phase_noise_evm_card(self):
+        html = EditorialComponents.render_phase_noise_evm_card(
+            carrier_freq_mhz=2400.0,
+            phase_jitter_ps=0.75,
+            phase_noise_rad=0.0113,
+            evm_percent=1.13,
+            quality_rating="Excellent"
+        )
+        self.assertIn("tu-evm-card", html)
+        self.assertIn("2400.0 MHz", html)
+        self.assertIn("0.75 ps", html)
+        self.assertIn("1.13%", html)
+        self.assertIn("Excellent", html)
+
+    def test_render_edfa_amplifier_card(self):
+        html = EditorialComponents.render_edfa_amplifier_card(
+            input_power_dbm=-20.0,
+            pump_power_mw=150.0,
+            gain_db=23.5,
+            output_power_dbm=3.5,
+            noise_figure_db=3.8,
+            operating_regime="Small-Signal Linear"
+        )
+        self.assertIn("tu-edfa-card", html)
+        self.assertIn("-20.0 dBm", html)
+        self.assertIn("150 mW", html)
+        self.assertIn("+23.50 dB", html)
+        self.assertIn("Small-Signal Linear", html)
+
+    def test_render_wirausaha_merdeka_card(self):
+        html = EditorialComponents.render_wirausaha_merdeka_card(
+            student_name="Budi Santoso",
+            nim="1201201050",
+            startup_name="IoT AgroSense",
+            sector="Smart Agriculture",
+            composite_score=89.6,
+            converted_sks=20,
+            status="Lolos Konversi Penuh (20 SKS)"
+        )
+        self.assertIn("tu-wmk-card", html)
+        self.assertIn("IoT AgroSense", html)
+        self.assertIn("Budi Santoso", html)
+        self.assertIn("20 SKS", html)
+        self.assertIn("89.6 / 100", html)
+
+    def test_render_iq_constellation_diagram_card(self):
+        html = EditorialComponents.render_iq_constellation_diagram_card(
+            modulation_format="16-QAM",
+            num_points=16,
+            evm_pct=2.45,
+            snr_db=28.5
+        )
+        self.assertIn("tu-iq-constellation-card", html)
+        self.assertIn("16-QAM (16-pt)", html)
+        self.assertIn("2.45%", html)
+        self.assertIn("28.5 dB", html)
+        self.assertIn("<svg", html)
+
 
 
 if __name__ == "__main__":
