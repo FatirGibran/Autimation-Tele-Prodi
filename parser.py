@@ -4234,6 +4234,92 @@ def calculate_edfa_amplifier_gain(
     }
 
 
+def parse_wirausaha_merdeka_evaluation(
+    student_name: str,
+    nim: str,
+    startup_name: str,
+    business_sector: str,
+    mentor_score: float,
+    pitch_score: float,
+    duration_months: int = 5
+) -> Dict[str, Any]:
+    """
+    Evaluates MBKM Wirausaha Merdeka (WMK) startup acceleration program
+    for engineering students, computing composite scoring and course SKS conversion.
+    """
+    clean_name = student_name.strip() if student_name else ""
+    clean_nim = nim.strip() if nim else ""
+    is_valid_nim = bool(re.match(r'^\d{8,12}$', clean_nim))
+
+    clean_startup = startup_name.strip() if startup_name else "Inovasi Startup Mandiri"
+    clean_sector = business_sector.strip() if business_sector else "Teknologi Informasi & Komunikasi"
+
+    m_score = max(0.0, min(100.0, float(mentor_score)))
+    p_score = max(0.0, min(100.0, float(pitch_score)))
+    months = max(1, int(duration_months))
+
+    composite_score = round((m_score * 0.60) + (p_score * 0.40), 2)
+
+    if composite_score >= 80.0:
+        letter_grade = "A"
+        grade_point = 4.0
+        converted_sks = 20
+    elif composite_score >= 70.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+        converted_sks = 18
+    elif composite_score >= 60.0:
+        letter_grade = "B"
+        grade_point = 3.0
+        converted_sks = 16
+    elif composite_score >= 50.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+        converted_sks = 12
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+        converted_sks = 10
+
+    status = "Lolos Konversi Penuh (20 SKS)" if converted_sks == 20 else f"Konversi Parsial ({converted_sks} SKS)"
+    is_eligible = bool(is_valid_nim and composite_score >= 60.0 and months >= 4)
+
+    all_courses = [
+        {"code": "TT-4106", "name": "Inovasi Bisnis Teknologi Telekomunikasi", "credits": 4},
+        {"code": "TT-4107", "name": "Validasi Pasar & Traksi Produk Digital", "credits": 4},
+        {"code": "TT-4108", "name": "Pengembangan Prototipe Hardware/IoT", "credits": 4},
+        {"code": "TT-4109", "name": "Manajemen Keuangan & Valuasi Startup", "credits": 4},
+        {"code": "TT-4110", "name": "Pitching & Komunikasi Investor", "credits": 4}
+    ]
+
+    # Select courses matching converted_sks
+    equiv_courses = []
+    accum_credits = 0
+    for c in all_courses:
+        if accum_credits + c["credits"] <= converted_sks:
+            equiv_courses.append(c)
+            accum_credits += c["credits"]
+
+    return {
+        "student_name": clean_name,
+        "nim": clean_nim,
+        "is_valid_nim": is_valid_nim,
+        "startup_name": clean_startup,
+        "business_sector": clean_sector,
+        "mentor_score": m_score,
+        "pitch_score": p_score,
+        "composite_score": composite_score,
+        "duration_months": months,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible,
+        "course_equivalencies": equiv_courses
+    }
+
+
+
 
 
 
