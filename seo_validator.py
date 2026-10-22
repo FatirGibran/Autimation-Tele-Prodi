@@ -3727,6 +3727,57 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_inp_script_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Interaction to Next Paint (INP) bottlenecks caused by render-blocking scripts
+        and legacy inline event handlers that trigger long tasks on the main browser thread.
+        """
+        if not html_content:
+            return {
+                "total_scripts": 0,
+                "render_blocking_scripts": 0,
+                "async_or_deferred_scripts": 0,
+                "inline_event_handlers": 0,
+                "is_inp_optimized": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        scripts = soup.find_all("script")
+        render_blocking = 0
+        async_or_deferred = 0
+        issues: List[str] = []
+
+        for idx, s in enumerate(scripts, start=1):
+            src = s.get("src", "").strip()
+            if src:
+                has_defer = s.has_attr("defer")
+                has_async = s.has_attr("async")
+                if has_defer or has_async:
+                    async_or_deferred += 1
+                else:
+                    render_blocking += 1
+                    issues.append(f"Script eksternal #{idx} ({src}) tidak memiliki atribut 'defer' atau 'async' yang memblokir rendering dan memperburuk skor INP.")
+
+        # Check for inline event handler attributes on all tags
+        inline_handlers = 0
+        for tag in soup.find_all(True):
+            for attr in tag.attrs:
+                if attr.lower().startswith("on") and len(attr) > 2:
+                    inline_handlers += 1
+                    issues.append(f"Elemen <{tag.name}> memiliki inline event handler '{attr}' yang berpotensi memicu long task dan degradasi INP.")
+
+        return {
+            "total_scripts": len(scripts),
+            "render_blocking_scripts": render_blocking,
+            "async_or_deferred_scripts": async_or_deferred,
+            "inline_event_handlers": inline_handlers,
+            "is_inp_optimized": (render_blocking == 0 and inline_handlers == 0),
+            "issues": issues
+        }
+
+
 
 
 
