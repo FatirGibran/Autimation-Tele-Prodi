@@ -4470,6 +4470,58 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_iq_constellation_diagram_card(
+        cls,
+        modulation_format: str,
+        num_points: int,
+        evm_pct: float,
+        snr_db: float
+    ) -> str:
+        """
+        Renders a responsive In-Phase / Quadrature (I/Q) constellation diagram SVG card
+        for visual verification of digital modulation schemes and symbol dispersion.
+        """
+        format_clean = modulation_format.strip() if modulation_format else "QPSK"
+        pts = max(4, min(64, int(num_points)))
+
+        # Generate sample points in IQ space
+        svg_points = []
+        if pts == 4:
+            # QPSK 4 points
+            coords = [(60, 60), (140, 60), (60, 140), (140, 140)]
+        elif pts == 16:
+            # 16-QAM grid
+            coords = [(40 + 40 * x, 40 + 40 * y) for x in range(4) for y in range(4)]
+        else:
+            # Generic 8/64 or fallback
+            coords = [(50 + 33 * (i % 4), 50 + 33 * (i // 4)) for i in range(min(pts, 16))]
+
+        for cx, cy in coords:
+            svg_points.append(f'<circle cx="{cx}" cy="{cy}" r="4" fill="#0284c7" opacity="0.85" />')
+        points_markup = "\n          ".join(svg_points)
+
+        return f"""    <div class="tu-iq-constellation-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase;">Diagram Konstelasi I/Q ({format_clean})</span>
+        <span style="font-size: 12px; color: #94a3b8;">SNR: {snr_db:.1f} dB</span>
+      </div>
+      <div style="display: flex; justify-content: center; margin: 10px 0;">
+        <svg viewBox="0 0 200 200" width="200" height="200" style="background: #1e293b; border-radius: 6px; border: 1px solid #475569;" aria-label="Diagram I/Q">
+          <!-- Crosshair axes -->
+          <line x1="100" y1="10" x2="100" y2="190" stroke="#64748b" stroke-dasharray="2,2" />
+          <line x1="10" y1="100" x2="190" y2="100" stroke="#64748b" stroke-dasharray="2,2" />
+          <!-- Constellation symbol points -->
+          {points_markup}
+        </svg>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px; color: #94a3b8;">
+        <span>Format: <strong>{format_clean} ({pts}-pt)</strong></span>
+        <span>EVM: <strong style="color: #38bdf8;">{evm_pct:.2f}%</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
