@@ -718,6 +718,16 @@ class WordPressClient:
             categories=source_post.get("categories", [])
         )
 
+    def get_post_revisions(self, post_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves historical revisions of a WordPress post by post ID.
+        """
+        endpoint = f"{self.api_url}/posts/{int(post_id)}/revisions"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        res = self._send_request(req)
+        return res if isinstance(res, list) else []
+
+
 
 
 
