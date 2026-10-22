@@ -4380,6 +4380,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_edfa_amplifier_card(
+        cls,
+        input_power_dbm: float,
+        pump_power_mw: float,
+        gain_db: float,
+        output_power_dbm: float,
+        noise_figure_db: float,
+        operating_regime: str
+    ) -> str:
+        """
+        Renders an optical EDFA amplifier gain and noise figure status card.
+        """
+        is_linear = "Linear" in operating_regime
+        regime_badge_bg = "#ecfdf5" if is_linear else "#fef3c7"
+        regime_badge_color = "#047857" if is_linear else "#b45309"
+
+        return f"""    <div class="tu-edfa-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #fafafa;">
+      <div class="tu-edfa-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #059669; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #059669; font-size: 13px; text-transform: uppercase;">Penguat Optik EDFA C-Band</span>
+        <span style="font-size: 11px; background: {regime_badge_bg}; color: {regime_badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{operating_regime}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Karakteristik Penguatan &amp; Derau Spontan (ASE)</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Daya Masukan</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{input_power_dbm:.1f} dBm</div>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Daya Pompa (Pump)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{pump_power_mw:.0f} mW</div>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Noise Figure (NF)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{noise_figure_db:.2f} dB</div>
+        </div>
+      </div>
+      <div style="background: #ecfdf5; padding: 12px; border-radius: 6px; border-left: 4px solid #059669; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: #047857; font-weight: 600;">Net Optical Gain:</span>
+          <div style="font-size: 18px; font-weight: 800; color: #064e3b;">+{gain_db:.2f} dB</div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: #047857;">Daya Keluaran (Output):</span>
+          <div style="font-size: 16px; font-weight: 700; color: #064e3b;">{output_power_dbm:.2f} dBm</div>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
