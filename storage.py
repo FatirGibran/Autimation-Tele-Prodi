@@ -787,6 +787,22 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_wmk_nim ON student_wirausaha_merdeka(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_wmk_startup ON student_wirausaha_merdeka(startup_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS edfa_amplifier_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    device_name TEXT NOT NULL,
+                    input_power_dbm REAL NOT NULL,
+                    pump_power_mw REAL NOT NULL,
+                    small_signal_gain_db REAL NOT NULL,
+                    actual_gain_db REAL NOT NULL,
+                    output_power_dbm REAL NOT NULL,
+                    noise_figure_db REAL NOT NULL,
+                    operating_regime TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_edfa_name ON edfa_amplifier_records(device_name);")
+
 
 
 
@@ -3828,6 +3844,49 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_edfa_amplifier(self, data: Dict[str, Any]) -> int:
+        """
+        Stores an optical EDFA amplifier gain and noise figure calculation record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO edfa_amplifier_records (
+                    device_name, input_power_dbm, pump_power_mw, small_signal_gain_db,
+                    actual_gain_db, output_power_dbm, noise_figure_db, operating_regime
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("device_name", "EDFA Pre-Amplifier C-Band"),
+                float(data.get("input_power_dbm", -20.0)),
+                float(data.get("pump_power_mw", 100.0)),
+                float(data.get("small_signal_gain_db", 25.0)),
+                float(data.get("actual_gain_db", 20.0)),
+                float(data.get("output_power_dbm", 0.0)),
+                float(data.get("noise_figure_db", 4.0)),
+                data.get("operating_regime", "Small-Signal Linear")
+            ))
+            return cursor.lastrowid
+
+    def list_edfa_amplifiers(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical EDFA amplifier records ordered by most recent.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM edfa_amplifier_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_edfa_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical EDFA amplifier calculation record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM edfa_amplifier_records WHERE id = ?", (int(record_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
