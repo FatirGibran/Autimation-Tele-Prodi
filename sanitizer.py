@@ -1189,6 +1189,37 @@ def sanitize_html5_video_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_abbr_dfn_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <abbr> (abbreviation) and <dfn> (definition term) elements used in technical glossaries.
+    Strips inline script tags, scrubs event handler attributes, and cleanses title attributes against XSS payloads.
+    """
+    if not html or ("<abbr" not in html.lower() and "<dfn" not in html.lower()):
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    def fix_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize title attribute
+        title_m = re.search(r'\btitle=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if title_m:
+            raw_title = title_m.group(1).strip()
+            clean_title = re.sub(r'<[^>]+>', '', raw_title).replace('"', '&quot;')
+            tag = re.sub(r'\btitle=["\'][^"\']*["\']', f'title="{clean_title}"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    out = re.sub(r'<abbr\b[^>]*>', fix_tag, html, flags=re.IGNORECASE)
+    out = re.sub(r'<dfn\b[^>]*>', fix_tag, out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
