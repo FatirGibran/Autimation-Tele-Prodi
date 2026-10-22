@@ -3923,6 +3923,57 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_semantic_landmark_regions(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML5 semantic landmark regions (<main>, <nav>, <header>, <footer>, <aside>)
+        and ARIA landmarks according to WCAG 2.1 SC 1.3.1 and SC 2.4.1 for screen reader navigation.
+        """
+        if not html_content:
+            return {
+                "has_main": False,
+                "main_count": 0,
+                "nav_count": 0,
+                "aside_count": 0,
+                "header_count": 0,
+                "footer_count": 0,
+                "is_compliant": False,
+                "issues": ["Dokumen HTML kosong atau tidak memiliki konten landmark."]
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        main_tags = soup.find_all("main")
+        main_roles = soup.find_all(attrs={"role": "main"})
+        total_main = len(main_tags) + len([m for m in main_roles if m.name != "main"])
+
+        nav_tags = soup.find_all("nav")
+        aside_tags = soup.find_all("aside")
+        header_tags = soup.find_all("header")
+        footer_tags = soup.find_all("footer")
+
+        issues: List[str] = []
+        if total_main == 0:
+            issues.append("Halaman tidak memiliki landmark konten utama (<main> atau role='main').")
+        elif total_main > 1:
+            issues.append(f"Halaman memiliki {total_main} elemen <main>; standar WCAG mensyaratkan tepat satu konten utama aktif.")
+
+        if len(nav_tags) > 1:
+            unlabeled_navs = [n for n in nav_tags if not n.get("aria-label") and not n.get("aria-labelledby")]
+            if unlabeled_navs:
+                issues.append(f"Terdapat {len(unlabeled_navs)} elemen <nav> tanpa atribut 'aria-label' atau 'aria-labelledby' untuk membedakan navigasi.")
+
+        return {
+            "has_main": total_main == 1,
+            "main_count": total_main,
+            "nav_count": len(nav_tags),
+            "aside_count": len(aside_tags),
+            "header_count": len(header_tags),
+            "footer_count": len(footer_tags),
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
