@@ -3777,6 +3777,87 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_rich_media_opengraph(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits OpenGraph video and audio rich media tags for social graph interoperability.
+        Validates secure HTTPS endpoints, MIME formats, and player dimensions.
+        """
+        if not html_content:
+            return {
+                "has_video_og": False,
+                "has_audio_og": False,
+                "video_data": {},
+                "audio_data": {},
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        meta_tags = soup.find_all("meta")
+
+        og_dict = {}
+        for m in meta_tags:
+            prop = m.get("property") or m.get("name")
+            if prop and prop.startswith("og:"):
+                og_dict[prop.lower()] = m.get("content", "").strip()
+
+        video_url = og_dict.get("og:video") or og_dict.get("og:video:url", "")
+        video_sec = og_dict.get("og:video:secure_url", "")
+        video_type = og_dict.get("og:video:type", "")
+        video_w = og_dict.get("og:video:width", "")
+        video_h = og_dict.get("og:video:height", "")
+
+        audio_url = og_dict.get("og:audio") or og_dict.get("og:audio:url", "")
+        audio_sec = og_dict.get("og:audio:secure_url", "")
+        audio_type = og_dict.get("og:audio:type", "")
+
+        has_video = bool(video_url or video_sec)
+        has_audio = bool(audio_url or audio_sec)
+        issues: List[str] = []
+
+        video_data = {}
+        if has_video:
+            video_data = {
+                "url": video_url,
+                "secure_url": video_sec,
+                "type": video_type,
+                "width": video_w,
+                "height": video_h
+            }
+            target_url = video_sec or video_url
+            if not target_url.startswith("https://"):
+                issues.append("URL og:video harus menggunakan protokol terenkripsi HTTPS.")
+            if not video_type:
+                issues.append("Tag og:video wajib menyertakan atribut og:video:type (misal video/mp4).")
+            if video_w and not video_w.isdigit():
+                issues.append("Nilai og:video:width harus berupa bilangan bulat piksel positif.")
+            if video_h and not video_h.isdigit():
+                issues.append("Nilai og:video:height harus berupa bilangan bulat piksel positif.")
+
+        audio_data = {}
+        if has_audio:
+            audio_data = {
+                "url": audio_url,
+                "secure_url": audio_sec,
+                "type": audio_type
+            }
+            target_a_url = audio_sec or audio_url
+            if not target_a_url.startswith("https://"):
+                issues.append("URL og:audio harus menggunakan protokol terenkripsi HTTPS.")
+            if not audio_type:
+                issues.append("Tag og:audio wajib menyertakan atribut og:audio:type (misal audio/mpeg).")
+
+        return {
+            "has_video_og": has_video,
+            "has_audio_og": has_audio,
+            "video_data": video_data,
+            "audio_data": audio_data,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
