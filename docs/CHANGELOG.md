@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 630+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 660+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 625 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 652 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -756,6 +756,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 621. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/76_v3_9_feature_expansions.md`)**: Dokumentasi menyeluruh seluruh pembaruan arsitektur v3.9.0.
 622. **Ekspansi Suite Pengujian Unit Terpadu (625 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 625 unit test terverifikasi (100% pass rate).
 623. **Finalisasi Milestone v3.9.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
+---
+
+## 28. Siklus Pengembangan v4.0.0 (Radar Range Equation, RF Phase Noise & EVM, Optical EDFA, Wirausaha Merdeka MBKM, Advanced Web Accessibility & Remix MDX Expansions)
+
+624. **Sanitasi Elemen HTML5 Video & Codec (`sanitizer.py`)**: Sanitasi elemen `<video>` dan `<source>`, eliminasi injeksi skrip, penegakan kontrol pemutar, dan scrubbing skema URI berbahaya.
+625. **Sanitasi Elemen HTML5 Abbr & Dfn (`sanitizer.py`)**: Sanitasi elemen singkatan `<abbr>` dan istilah glosarium `<dfn>` terhadap injeksi event handler dan atribut title berbahaya.
+626. **Sanitasi Pengelompokan Eksklusif Accordion Details (`sanitizer.py`)**: Sanitasi atribut `name` pada `<details>` HTML5.2 untuk accordions eksklusif native browser.
+627. **Kalkulator Persamaan Jangkauan Radar Monostatik (`parser.py`)**: Perhitungan $R_{max}$, panjang gelombang $\lambda$, gain linier, daya minimum $S_{min}$, dan waktu tempuh pulsa round-trip.
+628. **Kalkulator Derau Fasa & Estimasi Degradasi EVM (`parser.py`)**: Konversi jitter fasa RMS ke derau fasa sudut $(\phi_{rad}, \phi_{deg})$ dan estimasi Error Vector Magnitude (EVM) konstelasi sinyal digital.
+629. **Kalkulator Saturasi Penguat Optik EDFA C-Band (`parser.py`)**: Simulasi kompresi penguatan optik, output power saturation, noise figure, dan identifikasi rezim operasi linier vs saturasi.
+630. **Evaluator Rekognisi MBKM Wirausaha Merdeka WMK (`parser.py`)**: Perhitungan skor komposit pendampingan mentor dan pitching bisnis, konversi nilai mutu, dan ekuivalensi hingga 20 SKS kurikulum.
+631. **Auditor Interaksi ke Cat Berikutnya (INP) & Skrip Pemblokir (`seo_validator.py`)**: Deteksi skrip sinkronus eksternal yang memblokir rendering dan pembersihan inline event handler pemicu long task.
+632. **Auditor Metadata Media Kaya OpenGraph Video & Audio (`seo_validator.py`)**: Verifikasi tag `og:video` dan `og:audio` untuk enkripsi HTTPS, MIME type eksplisit, dan dimensi piksel.
+633. **Auditor Kontainer Gambar Responsif Picture Fallback (`seo_validator.py`)**: Audit kelengkapan fallback `<img>` pada `<picture>` dan validasi negosiasi format gambar modern (AVIF/WebP).
+634. **Auditor Wilayah Landmark Semantik Aksesibilitas (`seo_validator.py`)**: Verifikasi integritas WCAG 2.1 SC 1.3.1 terhadap batas tunggal `<main>` aktif dan pelabelan unik kontainer `<nav>`.
+635. **Komponen Telemetri Jangkauan Radar Monostatik (`components.py`)**: Kartu visual Elementor metrik transmit power, gain antena, RCS target, jangkauan maksimum, dan round-trip delay.
+636. **Komponen Analisis Derau Fasa & EVM Modulasi (`components.py`)**: Kartu visual degradasi konstelasi RF dengan indikator jitter fasa, $\phi_{rms}$, dan persentase EVM.
+637. **Komponen Penguat Optik EDFA C-Band (`components.py`)**: Kartu visual penguatan optik, daya pompa laser, net gain, dan estimasi ASE noise figure.
+638. **Komponen Inkubasi Startup Wirausaha Merdeka (`components.py`)**: Kartu visual pencapaian kewirausahaan mahasiswa, skor komposit, dan konversi SKS kurikulum.
+639. **Komponen Diagram Konstelasi I/Q Responsif (`components.py`)**: Kartu visualisasi simbol konstelasi I/Q (QPSK, 16-QAM, 64-QAM) menggunakan grafik vektor SVG terisolasi.
+640. **Formatter Telegram Audit Telemetri Radar (`formatters.py`)**: Format siaran Telegram hasil audit jangkauan deteksi gelombang mikro radar monostatik.
+641. **Formatter Telegram Apresiasi Kelulusan Wirausaha Merdeka (`formatters.py`)**: Format siaran Telegram apresiasi kelulusan program inkubasi startup MBKM.
+642. **Manajer Rekam Audit Radar Monostatik (`storage.py`)**: Skema tabel SQLite `radar_detection_records` dan metode `record_radar_detection`, `list_radar_detections`, `get_radar_detection_by_id`.
+643. **Manajer Rekam Startup Wirausaha Merdeka (`storage.py`)**: Skema tabel `student_wirausaha_merdeka` dan metode `record_wmk_startup`, `list_wmk_startups`, `get_wmk_by_nim`.
+644. **Manajer Rekam Penguat Optik EDFA (`storage.py`)**: Skema tabel `edfa_amplifier_records` dan metode `record_edfa_amplifier`, `list_edfa_amplifiers`, `get_edfa_by_id`.
+645. **Helper WordPress Get Post Revisions By ID (`wordpress_client.py`)**: Metode `get_post_revisions` untuk mengambil riwayat snapshot revisi postingan WordPress via REST API.
+646. **Helper WordPress Restore Post Revision By ID (`wordpress_client.py`)**: Metode `restore_post_revision` untuk memulihkan konten, judul, dan kutipan dari riwayat revisi.
+647. **Generator Schema.org Project Startup Incubation JSON-LD (`exporter.py`)**: Metode `generate_startup_incubation_project_json_ld` untuk standarisasi metadata proyek startup inkubasi mahasiswa.
+648. **Eksportir Markdown Remix Route MDX (`exporter.py`)**: Metode `to_remix_route_mdx` untuk ekspor artikel ke route module Remix dan React Router v7 dengan frontmatter meta dan breadcrumb handle.
+649. **Subcommand CLI `radar` (`cli.py`)**: Perintah konsol `radar` untuk mencatat dan menginventarisasi kalkulasi telemetri persamaan radar.
+650. **Subcommand CLI `wmk` (`cli.py`)**: Perintah konsol `wmk` untuk evaluasi dan pencatatan konversi SKS program Wirausaha Merdeka.
+651. **Subcommand CLI `edfa` (`cli.py`)**: Perintah konsol `edfa` untuk kalkulasi dan audit performa penguat optik EDFA C-band.
+652. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/77_v4_0_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.0.0.
+653. **Ekspansi Suite Pengujian Unit Terpadu (652 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 652 unit test terverifikasi (100% pass rate).
+654. **Finalisasi Milestone v4.0.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
 
 
 
