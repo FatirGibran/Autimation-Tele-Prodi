@@ -976,6 +976,31 @@ class TelegramFormatter:
             f"🔭 *Perhitungan persamaan radar terverifikasi memenuhi standar deteksi gelombang mikro IEEE AES!*"
         )
 
+    @staticmethod
+    def format_wirausaha_merdeka_telegram(
+        student_name: str,
+        nim: str,
+        startup_name: str,
+        business_sector: str,
+        composite_score: float,
+        converted_sks: int,
+        letter_grade: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student Wirausaha Merdeka (WMK) startup incubation completion card for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Wirausaha Merdeka:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🚀 **Apresiasi Kelulusan MBKM Wirausaha Merdeka (WMK)**\n\n"
+            f"👤 **Founder/Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏢 **Startup:** {startup_name.strip()} (`{business_sector.strip()}`)\n"
+            f"📊 **Skor Komposit:** `{float(composite_score):.1f} / 100` (`Mutu: {letter_grade.strip()}`)\n"
+            f"📚 **Konversi Kurikulum:** `{int(converted_sks)} SKS Diakui`{portal_link}\n\n"
+            f"💡 *Selamat atas dedikasi dan inovasi pengembangan startup teknologi telekomunikasi!*"
+        )
+
+
 
 
 
