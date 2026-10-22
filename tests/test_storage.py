@@ -1922,6 +1922,75 @@ class TestStorageManager(unittest.TestCase):
         self.assertIsNotNone(single)
         self.assertEqual(single["linearity_status"], "Acceptable")
 
+    def test_radar_detection_records_storage(self):
+        rec_id = self.storage.record_radar_detection({
+            "radar_name": "Surveillance Radar X-Band",
+            "peak_power_kw": 50.0,
+            "antenna_gain_dbi": 35.0,
+            "rcs_m2": 2.5,
+            "freq_ghz": 9.4,
+            "min_detectable_signal_dbm": -100.0,
+            "max_range_km": 42.15,
+            "round_trip_delay_us": 281.2
+        })
+        self.assertGreater(rec_id, 0)
+
+        all_radars = self.storage.list_radar_detections()
+        self.assertEqual(len(all_radars), 1)
+        self.assertEqual(all_radars[0]["radar_name"], "Surveillance Radar X-Band")
+
+        single = self.storage.get_radar_detection_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["max_range_km"], 42.15)
+        self.assertIsNone(self.storage.get_radar_detection_by_id(99999))
+
+    def test_student_wirausaha_merdeka_storage(self):
+        wmk_id = self.storage.record_wmk_startup({
+            "student_name": "Budi Santoso",
+            "nim": "1201201050",
+            "startup_name": "IoT AgroSense",
+            "business_sector": "Smart Agriculture",
+            "mentor_score": 88.0,
+            "pitch_score": 92.0,
+            "composite_score": 89.6,
+            "converted_sks": 20,
+            "letter_grade": "A",
+            "status": "Lolos Konversi Penuh (20 SKS)"
+        })
+        self.assertGreater(wmk_id, 0)
+
+        all_wmk = self.storage.list_wmk_startups()
+        self.assertEqual(len(all_wmk), 1)
+        self.assertEqual(all_wmk[0]["startup_name"], "IoT AgroSense")
+
+        by_nim = self.storage.get_wmk_by_nim("1201201050")
+        self.assertIsNotNone(by_nim)
+        self.assertEqual(by_nim["converted_sks"], 20)
+        self.assertEqual(by_nim["letter_grade"], "A")
+        self.assertIsNone(self.storage.get_wmk_by_nim("99999999"))
+
+    def test_edfa_amplifier_records_storage(self):
+        edfa_id = self.storage.record_edfa_amplifier({
+            "device_name": "EDFA Pre-Amp C-Band",
+            "input_power_dbm": -20.0,
+            "pump_power_mw": 150.0,
+            "small_signal_gain_db": 25.0,
+            "actual_gain_db": 23.5,
+            "output_power_dbm": 3.5,
+            "noise_figure_db": 3.8,
+            "operating_regime": "Small-Signal Linear"
+        })
+        self.assertGreater(edfa_id, 0)
+
+        all_edfa = self.storage.list_edfa_amplifiers()
+        self.assertEqual(len(all_edfa), 1)
+        self.assertEqual(all_edfa[0]["device_name"], "EDFA Pre-Amp C-Band")
+
+        single = self.storage.get_edfa_by_id(edfa_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["actual_gain_db"], 23.5)
+        self.assertIsNone(self.storage.get_edfa_by_id(99999))
+
 
 
 if __name__ == "__main__":
