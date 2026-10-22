@@ -727,6 +727,26 @@ class WordPressClient:
         res = self._send_request(req)
         return res if isinstance(res, list) else []
 
+    def restore_post_revision(self, post_id: int, revision_id: int) -> Dict[str, Any]:
+        """
+        Restores a specific historical revision to the active post by retrieving the revision snapshot
+        and updating the post title, content, and excerpt.
+        """
+        rev_endpoint = f"{self.api_url}/posts/{int(post_id)}/revisions/{int(revision_id)}"
+        req = urllib.request.Request(rev_endpoint, headers=self._get_headers(), method="GET")
+        rev = self._send_request(req)
+
+        updates: Dict[str, Any] = {}
+        if "title" in rev:
+            updates["title"] = rev["title"].get("rendered", rev["title"]) if isinstance(rev["title"], dict) else rev["title"]
+        if "content" in rev:
+            updates["content"] = rev["content"].get("rendered", rev["content"]) if isinstance(rev["content"], dict) else rev["content"]
+        if "excerpt" in rev:
+            updates["excerpt"] = rev["excerpt"].get("rendered", rev["excerpt"]) if isinstance(rev["excerpt"], dict) else rev["excerpt"]
+
+        return self.update_post(post_id, updates)
+
+
 
 
 
