@@ -1135,6 +1135,61 @@ def sanitize_html5_fieldset_legend_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_video_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <video> elements and nested <source> media tags used in engineering demonstrations.
+    Neutralizes script URI schemes, strips inline event handlers, enforces user controls,
+    disables automatic unmuted autoplay, and validates media container MIME types.
+    """
+    if not html or "<video" not in html.lower():
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    def fix_video(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Remove aggressive unmuted autoplay
+        tag = re.sub(r'\s+autoplay\b', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize src attribute if present directly on video tag
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src_val = src_m.group(1).strip()
+            if re.search(r'(?:javascript:|data:text/html|<|>|;)', src_val, re.IGNORECASE):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Enforce controls
+        if "controls" not in tag.lower():
+            tag = tag.rstrip(">") + ' controls>'
+
+        return tag
+
+    def fix_video_source(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src_val = src_m.group(1).strip()
+            if re.search(r'(?:javascript:|data:text/html|<|>|;)', src_val, re.IGNORECASE):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if type_m:
+            type_val = type_m.group(1).strip().lower()
+            if not type_val.startswith("video/"):
+                tag = re.sub(r'\s+type=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    out = re.sub(r'<video\b[^>]*>', fix_video, html, flags=re.IGNORECASE)
+    out = re.sub(r'<source\b[^>]*>', fix_video_source, out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
