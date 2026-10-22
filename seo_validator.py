@@ -3857,6 +3857,73 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_picture_source_fallbacks(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML5 <picture> responsive image containers to ensure next-gen image format
+        negotiation (AVIF/WebP) and reliable fallback <img> accessibility tags.
+        """
+        if not html_content or "<picture" not in html_content.lower():
+            return {
+                "total_pictures": 0,
+                "valid_pictures": 0,
+                "missing_fallback_img": 0,
+                "missing_alt_img": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        pictures = soup.find_all("picture")
+        if not pictures:
+            return {
+                "total_pictures": 0,
+                "valid_pictures": 0,
+                "missing_fallback_img": 0,
+                "missing_alt_img": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        valid_count = 0
+        missing_fallback = 0
+        missing_alt = 0
+
+        for idx, pic in enumerate(pictures, start=1):
+            pic_issues = []
+            img_tag = pic.find("img")
+            if not img_tag:
+                missing_fallback += 1
+                pic_issues.append(f"Elemen <picture> #{idx} tidak memiliki elemen fallback <img>.")
+            else:
+                alt = img_tag.get("alt", "").strip()
+                if not alt:
+                    missing_alt += 1
+                    pic_issues.append(f"Elemen fallback <img> pada <picture> #{idx} kehilangan atribut 'alt'.")
+                if not img_tag.get("src", "").strip():
+                    pic_issues.append(f"Elemen fallback <img> pada <picture> #{idx} kehilangan atribut 'src'.")
+
+            sources = pic.find_all("source")
+            for s_idx, s in enumerate(sources, start=1):
+                if not s.get("srcset", "").strip():
+                    pic_issues.append(f"Elemen <source> #{s_idx} pada <picture> #{idx} kehilangan atribut 'srcset'.")
+
+            if pic_issues:
+                issues.extend(pic_issues)
+            else:
+                valid_count += 1
+
+        return {
+            "total_pictures": len(pictures),
+            "valid_pictures": valid_count,
+            "missing_fallback_img": missing_fallback,
+            "missing_alt_img": missing_alt,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
