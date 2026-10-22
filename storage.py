@@ -754,6 +754,22 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rf_comp ON rf_intermod_records(component_name);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rf_linear ON rf_intermod_records(is_linear);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS radar_detection_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    radar_name TEXT NOT NULL,
+                    peak_power_kw REAL NOT NULL,
+                    antenna_gain_dbi REAL NOT NULL,
+                    rcs_m2 REAL NOT NULL,
+                    freq_ghz REAL NOT NULL,
+                    min_detectable_signal_dbm REAL NOT NULL,
+                    max_range_km REAL NOT NULL,
+                    round_trip_delay_us REAL NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_radar_name ON radar_detection_records(radar_name);")
+
 
 
 
@@ -3693,6 +3709,49 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM rf_intermod_records WHERE id = ?", (int(record_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_radar_detection(self, data: Dict[str, Any]) -> int:
+        """
+        Stores a calculated radar range equation and target cross section record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO radar_detection_records (
+                    radar_name, peak_power_kw, antenna_gain_dbi, rcs_m2,
+                    freq_ghz, min_detectable_signal_dbm, max_range_km, round_trip_delay_us
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("radar_name", "Primary Surveillance Radar"),
+                float(data.get("peak_power_kw", 0.0)),
+                float(data.get("antenna_gain_dbi", 0.0)),
+                float(data.get("rcs_m2", 1.0)),
+                float(data.get("freq_ghz", 0.0)),
+                float(data.get("min_detectable_signal_dbm", -100.0)),
+                float(data.get("max_range_km", 0.0)),
+                float(data.get("round_trip_delay_us", 0.0))
+            ))
+            return cursor.lastrowid
+
+    def list_radar_detections(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored radar detection calculation records ordered by most recent.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM radar_detection_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_radar_detection_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a radar detection record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM radar_detection_records WHERE id = ?", (int(record_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
