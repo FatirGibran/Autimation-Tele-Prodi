@@ -1075,6 +1075,31 @@ class TelegramFormatter:
             f"✨ *Hasil audit kalkulasi propagasi gelombang elektromagnetik prodi terverifikasi!*"
         )
 
+    @staticmethod
+    def format_proyek_kemanusiaan_telegram(
+        student_name: str,
+        nim: str,
+        partner_org: str,
+        location: str,
+        converted_sks: int,
+        letter_grade: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student MBKM Proyek Kemanusiaan completion announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal MBKM Kemanusiaan:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🤝 **Apresiasi Mahasiswa MBKM Proyek Kemanusiaan**\n\n"
+            f"👤 **Nama Relawan/Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏢 **Mitra Kebencanaan:** {partner_org.strip()}\n"
+            f"📍 **Lokasi Pengabdian:** {location.strip()}\n"
+            f"📊 **Nilai Mutu Akhir:** `{letter_grade.strip()}`\n"
+            f"📚 **Rekognisi Kurikulum:** `{int(converted_sks)} SKS Diakui`{portal_link}\n\n"
+            f"❤️ *Dedikasi nyata mahasiswa teknik telekomunikasi dalam mitigasi kebencanaan dan kepedulian sosial!*"
+        )
+
+
 
 
 
