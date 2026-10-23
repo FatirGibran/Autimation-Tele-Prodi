@@ -865,6 +865,40 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('"antena", "cst", "microwave"', res)
         self.assertIn("<p>Tutorial lengkap simulasi.</p>", res)
 
+    def test_generate_humanitarian_action_json_ld(self):
+        res = ArticleExporter.generate_humanitarian_action_json_ld(
+            action_title="Relawan Komunikasi Tanggap Darurat Bencana Merapi",
+            description="Penyediaan jaringan komunikasi radio ad-hoc darurat di posko pengungsian.",
+            student_name="Reza Kurniawan",
+            partner_org="BPBD Provinsi Jawa Tengah",
+            location="Magelang, Jawa Tengah",
+            start_date="2026-08-15",
+            url="https://kemanusiaan.telkomuniversity.ac.id/merapi"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "Project")
+        self.assertEqual(res["name"], "Relawan Komunikasi Tanggap Darurat Bencana Merapi")
+        self.assertEqual(res["founder"]["name"], "Reza Kurniawan")
+        self.assertEqual(res["funder"]["name"], "BPBD Provinsi Jawa Tengah")
+        self.assertEqual(res["location"]["name"], "Magelang, Jawa Tengah")
+        self.assertEqual(res["url"], "https://kemanusiaan.telkomuniversity.ac.id/merapi")
+
+    def test_to_hugo_academic_markdown(self):
+        meta = {
+            "seo_title": "Simulasi Propagasi Kanal Terahertz",
+            "meta_description": "Analisis redaman atmosfer pada pita frekuensi 300 GHz.",
+            "publish_date": "2026-10-24",
+            "category": "Wireless Communications",
+            "tags": ["6G", "THz", "Propagasi"]
+        }
+        res = ArticleExporter.to_hugo_academic_markdown(meta, "<p>Model kanal transmisi terahertz.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Simulasi Propagasi Kanal Terahertz"', res)
+        self.assertIn('summary: "Analisis redaman atmosfer pada pita frekuensi 300 GHz."', res)
+        self.assertIn('categories: ["Wireless Communications"]', res)
+        self.assertIn('authors: ["admin"]', res)
+        self.assertIn("math: true", res)
+        self.assertIn("<p>Model kanal transmisi terahertz.</p>", res)
 
 
 if __name__ == "__main__":
