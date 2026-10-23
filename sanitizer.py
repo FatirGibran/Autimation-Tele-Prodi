@@ -1404,6 +1404,37 @@ def sanitize_html5_canvas_dimensions(html: str) -> str:
     return re.sub(r'<canvas\b[^>]*>', fix_canvas, html, flags=re.IGNORECASE)
 
 
+def sanitize_mathml_math_elements(html: str) -> str:
+    """
+    Sanitizes MathML <math> markup by removing nested <script> and dangerous <annotation-xml> tags,
+    stripping inline on* event handlers, and neutralizing javascript/data URIs in href and xlink:href.
+    """
+    if not html or "<math" not in html.lower():
+        return html
+
+    cleaned = html
+    # Strip script tags within math blocks
+    cleaned = re.sub(r'<math\b[\s\S]*?</math>', lambda m: re.sub(r'<script\b[\s\S]*?</script>', '', m.group(0), flags=re.IGNORECASE), cleaned, flags=re.IGNORECASE)
+
+    # Strip dangerous annotation-xml text/html
+    cleaned = re.sub(r'<annotation-xml[^>]*encoding=["\'](?:text/html|application/xhtml\+xml)["\'][^>]*>[\s\S]*?</annotation-xml>', '', cleaned, flags=re.IGNORECASE)
+
+    def clean_math_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        for href_attr in ["href", "xlink:href"]:
+            href_m = re.search(rf'\b{href_attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if href_m:
+                val = href_m.group(1).strip().lower()
+                if val.startswith(("javascript:", "data:", "vbscript:")):
+                    tag = re.sub(rf'\s+{href_attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<(?:math|mrow|mi|mo|mn|msup|msub|mfrac|msqrt|mroot|mtext|annotation)\b[^>]*>', clean_math_tag, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+
 
 
 
