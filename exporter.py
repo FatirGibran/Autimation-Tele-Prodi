@@ -1695,6 +1695,38 @@ navigation: true
             payload["url"] = url.strip()
         return payload
 
+    @staticmethod
+    def to_hugo_academic_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial content to Hugo Academic / Wowchemy / Hugo Blox Markdown format
+        with YAML frontmatter (title, summary, authors, tags, categories, math, highlight).
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        date = metadata.get("publish_date", "2026-10-24")
+        category = metadata.get("category", "General")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'summary: "{desc}"',
+            f'date: "{date}"',
+            f'categories: ["{category}"]',
+            f'tags: {json.dumps(tags)}',
+            "authors: [\"admin\"]",
+            "featured: false",
+            "draft: false",
+            "math: true",
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
