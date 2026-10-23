@@ -4478,6 +4478,88 @@ def calculate_lorawan_battery_lifetime(
     }
 
 
+def parse_iisma_evaluation(
+    student_name: str,
+    nim: str,
+    host_university: str,
+    country: str,
+    gpa_host: float,
+    credits_taken: int,
+    duration_semesters: int = 1
+) -> Dict[str, Any]:
+    """
+    Evaluates student participation in the Indonesian International Student Mobility Awards (IISMA)
+    MBKM exchange program, calculating national grade equivalents and curriculum SKS credit recognition.
+    """
+    clean_name = student_name.strip() if student_name else ""
+    clean_nim = nim.strip() if nim else ""
+    is_valid_nim = bool(re.match(r'^\d{8,12}$', clean_nim))
+
+    clean_host = host_university.strip() if host_university else "Partner University Overseas"
+    clean_country = country.strip() if country else "International"
+
+    gpa = max(0.0, min(4.0, float(gpa_host)))
+    semesters = max(1, int(duration_semesters))
+    credits_num = max(0, int(credits_taken))
+
+    if gpa >= 3.67:
+        letter_grade = "A"
+        grade_point = 4.0
+        converted_sks = 20
+    elif gpa >= 3.33:
+        letter_grade = "AB"
+        grade_point = 3.5
+        converted_sks = 18
+    elif gpa >= 3.00:
+        letter_grade = "B"
+        grade_point = 3.0
+        converted_sks = 16
+    elif gpa >= 2.50:
+        letter_grade = "BC"
+        grade_point = 2.5
+        converted_sks = 12
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+        converted_sks = 10
+
+    is_eligible = bool(is_valid_nim and gpa >= 3.0 and credits_num >= 10)
+    status = "Lolos Rekognisi Penuh (20 SKS)" if converted_sks == 20 else f"Rekognisi Parsial ({converted_sks} SKS)"
+
+    all_courses = [
+        {"code": "TT-4201", "name": "Global Telecommunication Engineering Seminar", "credits": 4},
+        {"code": "TT-4202", "name": "Cross-Cultural Technical Communication & Leadership", "credits": 4},
+        {"code": "TT-4203", "name": "International Technology Management & Innovation", "credits": 4},
+        {"code": "TT-4204", "name": "Advanced Topic in Emerging Wireless Systems", "credits": 4},
+        {"code": "TT-4205", "name": "Independent International Engineering Project", "credits": 4}
+    ]
+
+    equiv_courses = []
+    accum_credits = 0
+    for c in all_courses:
+        if accum_credits + c["credits"] <= converted_sks:
+            equiv_courses.append(c)
+            accum_credits += c["credits"]
+
+    return {
+        "student_name": clean_name,
+        "nim": clean_nim,
+        "is_valid_nim": is_valid_nim,
+        "host_university": clean_host,
+        "country": clean_country,
+        "gpa_host": gpa,
+        "credits_taken": credits_num,
+        "duration_semesters": semesters,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible,
+        "course_equivalencies": equiv_courses
+    }
+
+
+
 
 
 
