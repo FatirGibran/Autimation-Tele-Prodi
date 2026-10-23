@@ -802,6 +802,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_edfa_name ON edfa_amplifier_records(device_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS otdr_fiber_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_name TEXT NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    wavelength_nm INTEGER NOT NULL,
+                    total_loss_db REAL NOT NULL,
+                    event_loss_db REAL NOT NULL,
+                    attenuation_db_km REAL NOT NULL,
+                    quality_status TEXT NOT NULL,
+                    is_compliant INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_otdr_link ON otdr_fiber_records(link_name);")
+
 
 
 
@@ -3886,6 +3902,49 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM edfa_amplifier_records WHERE id = ?", (int(record_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_otdr_measurement(self, data: Dict[str, Any]) -> int:
+        """
+        Stores an OTDR fiber reflectometry trace and intrinsic attenuation audit record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO otdr_fiber_records (
+                    link_name, fiber_length_km, wavelength_nm, total_loss_db,
+                    event_loss_db, attenuation_db_km, quality_status, is_compliant
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("link_name", "Ruas Serat Optik").strip(),
+                float(data.get("fiber_length_km", 0.0)),
+                int(data.get("wavelength_nm", 1550)),
+                float(data.get("total_loss_db", 0.0)),
+                float(data.get("event_loss_db", 0.0)),
+                float(data.get("attenuation_db_km", 0.0)),
+                data.get("quality_status", "Optimal").strip(),
+                1 if data.get("is_compliant", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_otdr_measurements(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored OTDR optical fiber records ordered by most recent.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM otdr_fiber_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_otdr_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an OTDR optical fiber trace record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM otdr_fiber_records WHERE id = ?", (int(record_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
