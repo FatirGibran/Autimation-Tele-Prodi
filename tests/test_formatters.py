@@ -670,6 +670,44 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("20 SKS Diakui", msg)
         self.assertIn("https://wmk.telkomuniversity.ac.id/showcase", msg)
 
+    def test_format_otdr_telemetry_telegram(self):
+        msg = TelegramFormatter.format_otdr_telemetry_telegram(
+            link_name="Backbone Purwokerto - Banyumas",
+            fiber_length_km=42.5,
+            wavelength_nm=1550,
+            total_loss_db=8.85,
+            attenuation_db_km=0.1980,
+            quality_status="Optimal / Sesuai Standar ITU-T G.652",
+            portal_url="https://telemetry.telkomuniversity.ac.id/otdr"
+        )
+        self.assertIn("Hasil Audit Redaman Serat Optik OTDR", msg)
+        self.assertIn("Backbone Purwokerto - Banyumas", msg)
+        self.assertIn("42.50 km", msg)
+        self.assertIn("1550 nm", msg)
+        self.assertIn("8.85 dB", msg)
+        self.assertIn("0.1980 dB/km", msg)
+        self.assertIn("ITU-T G.652", msg)
+        self.assertIn("https://telemetry.telkomuniversity.ac.id/otdr", msg)
+
+    def test_format_iisma_exchange_telegram(self):
+        msg = TelegramFormatter.format_iisma_exchange_telegram(
+            student_name="Nadia Putri",
+            nim="1201201088",
+            host_university="National University of Singapore",
+            country="Singapore",
+            gpa_host=3.85,
+            converted_sks=20,
+            letter_grade="A",
+            portal_url="https://iisma.kemdikbud.go.id"
+        )
+        self.assertIn("Apresiasi Prestasi IISMA MBKM Luar Negeri", msg)
+        self.assertIn("Nadia Putri", msg)
+        self.assertIn("1201201088", msg)
+        self.assertIn("National University of Singapore", msg)
+        self.assertIn("IPK 3.85 / 4.00", msg)
+        self.assertIn("20 SKS Diakui", msg)
+        self.assertIn("https://iisma.kemdikbud.go.id", msg)
+
 
 
 
