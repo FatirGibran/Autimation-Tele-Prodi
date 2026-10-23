@@ -3973,6 +3973,60 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_font_display_and_preload(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits webfont loading performance (FOIT/FOUT prevention) and Core Web Vitals LCP optimization.
+        Checks crossorigin on font preloads and enforces font-display swap/optional in @font-face rules.
+        """
+        if not html_content:
+            return {
+                "font_preloads_count": 0,
+                "missing_crossorigin_count": 0,
+                "has_font_face": False,
+                "font_display_optimized": True,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues: List[str] = []
+
+        # Audit font preload link tags
+        links = soup.find_all("link")
+        font_preloads = [l for l in links if "preload" in (l.get("rel") or []) and l.get("as") == "font"]
+        missing_crossorigin = 0
+
+        for idx, l in enumerate(font_preloads, start=1):
+            if not l.has_attr("crossorigin"):
+                missing_crossorigin += 1
+                issues.append(f"Font preload #{idx} ({l.get('href', '')}) tidak memiliki atribut 'crossorigin' yang diwajibkan spesifikasi W3C.")
+            if not l.get("type"):
+                issues.append(f"Font preload #{idx} disarankan menyertakan atribut 'type' (misal type='font/woff2').")
+
+        # Audit @font-face rules in inline style blocks
+        style_tags = soup.find_all("style")
+        combined_css = " ".join(s.get_text() for s in style_tags)
+        has_font_face = "@font-face" in combined_css.lower()
+        font_display_optimized = True
+
+        if has_font_face:
+            font_faces = re.findall(r'@font-face\s*\{([^}]+)\}', combined_css, flags=re.IGNORECASE)
+            for idx, ff in enumerate(font_faces, start=1):
+                if not re.search(r'font-display\s*:\s*(?:swap|optional|fallback)\b', ff, flags=re.IGNORECASE):
+                    font_display_optimized = False
+                    issues.append(f"Deklarasi @font-face #{idx} tidak menggunakan 'font-display: swap' atau 'optional', berisiko memicu FOIT pada LCP.")
+
+        return {
+            "font_preloads_count": len(font_preloads),
+            "missing_crossorigin_count": missing_crossorigin,
+            "has_font_face": has_font_face,
+            "font_display_optimized": font_display_optimized,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
