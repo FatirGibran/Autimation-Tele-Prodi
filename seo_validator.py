@@ -4026,6 +4026,66 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_opengraph_article_metadata(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits OpenGraph article schema tags (article:published_time, modified_time, author, section)
+        for news feeds, social crawlers, and Google Discover indexing compliance.
+        """
+        if not html_content:
+            return {
+                "has_article_og": False,
+                "published_time": "",
+                "modified_time": "",
+                "author": "",
+                "section": "",
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        meta_tags = soup.find_all("meta")
+
+        og_dict = {}
+        for m in meta_tags:
+            prop = m.get("property") or m.get("name")
+            if prop:
+                og_dict[prop.lower()] = m.get("content", "").strip()
+
+        og_type = og_dict.get("og:type", "").lower()
+        pub_time = og_dict.get("article:published_time", "")
+        mod_time = og_dict.get("article:modified_time", "")
+        author = og_dict.get("article:author", "")
+        section = og_dict.get("article:section", "")
+
+        has_article_og = bool(og_type == "article" or pub_time or author)
+        issues: List[str] = []
+
+        if has_article_og:
+            if og_type != "article":
+                issues.append("Tag og:type harus dideklarasikan sebagai 'article' ketika menyertakan metadata artikel.")
+
+            if not pub_time:
+                issues.append("Tag meta 'article:published_time' wajib disediakan untuk pengindeksan artikel temporal.")
+            else:
+                # Basic ISO 8601 validation check
+                if not re.match(r'^\d{4}-\d{2}-\d{2}', pub_time):
+                    issues.append(f"Format 'article:published_time' ({pub_time}) tidak memenuhi format standar ISO 8601.")
+
+            if not author:
+                issues.append("Tag meta 'article:author' wajib disediakan untuk atribusi kredibilitas penulis akademik.")
+
+        return {
+            "has_article_og": has_article_og,
+            "published_time": pub_time,
+            "modified_time": mod_time,
+            "author": author,
+            "section": section,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
