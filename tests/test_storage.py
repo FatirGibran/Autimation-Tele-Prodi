@@ -1991,6 +1991,75 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["actual_gain_db"], 23.5)
         self.assertIsNone(self.storage.get_edfa_by_id(99999))
 
+    def test_otdr_fiber_records_storage(self):
+        rec_id = self.storage.record_otdr_measurement({
+            "link_name": "Backbone Purwokerto - Banyumas",
+            "fiber_length_km": 42.5,
+            "wavelength_nm": 1550,
+            "total_loss_db": 8.85,
+            "event_loss_db": 1.2,
+            "attenuation_db_km": 0.1800,
+            "quality_status": "Optimal / Sesuai Standar ITU-T G.652",
+            "is_compliant": True
+        })
+        self.assertGreater(rec_id, 0)
+
+        all_otdr = self.storage.list_otdr_measurements()
+        self.assertEqual(len(all_otdr), 1)
+        self.assertEqual(all_otdr[0]["link_name"], "Backbone Purwokerto - Banyumas")
+
+        single = self.storage.get_otdr_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["attenuation_db_km"], 0.1800)
+        self.assertIsNone(self.storage.get_otdr_by_id(99999))
+
+    def test_mimo_capacity_records_storage(self):
+        mimo_id = self.storage.record_mimo_capacity({
+            "channel_name": "5G Urban Macro MIMO",
+            "bandwidth_mhz": 100.0,
+            "snr_db": 20.0,
+            "num_tx": 4,
+            "num_rx": 4,
+            "spectral_eff_bps_hz": 19.85,
+            "capacity_gbps": 1.985,
+            "gain_factor": 2.98,
+            "status": "High-Rank Spatial Multiplexing (4x4 MIMO)"
+        })
+        self.assertGreater(mimo_id, 0)
+
+        all_mimo = self.storage.list_mimo_capacities()
+        self.assertEqual(len(all_mimo), 1)
+        self.assertEqual(all_mimo[0]["channel_name"], "5G Urban Macro MIMO")
+
+        single = self.storage.get_mimo_by_id(mimo_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["capacity_gbps"], 1.985)
+        self.assertIsNone(self.storage.get_mimo_by_id(99999))
+
+    def test_student_iisma_exchange_storage(self):
+        iisma_id = self.storage.record_iisma_student({
+            "student_name": "Nadia Putri",
+            "nim": "1201201088",
+            "host_university": "National University of Singapore",
+            "country": "Singapore",
+            "gpa_host": 3.85,
+            "credits_taken": 16,
+            "converted_sks": 20,
+            "letter_grade": "A",
+            "status": "Lolos Rekognisi Penuh (20 SKS)"
+        })
+        self.assertGreater(iisma_id, 0)
+
+        all_iisma = self.storage.list_iisma_students()
+        self.assertEqual(len(all_iisma), 1)
+        self.assertEqual(all_iisma[0]["student_name"], "Nadia Putri")
+
+        by_nim = self.storage.get_iisma_by_nim("1201201088")
+        self.assertIsNotNone(by_nim)
+        self.assertEqual(by_nim["converted_sks"], 20)
+        self.assertEqual(by_nim["host_university"], "National University of Singapore")
+        self.assertIsNone(self.storage.get_iisma_by_nim("99999999"))
+
 
 
 if __name__ == "__main__":
