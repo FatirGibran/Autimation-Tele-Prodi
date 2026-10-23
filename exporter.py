@@ -1659,6 +1659,43 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_humanitarian_action_json_ld(
+        action_title: str,
+        description: str,
+        student_name: str,
+        partner_org: str,
+        location: str,
+        start_date: str = "2026-08-01",
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org Project / VolunteerService JSON-LD for MBKM Proyek Kemanusiaan disaster relief.
+        """
+        payload: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Project",
+            "name": action_title.strip(),
+            "description": description.strip(),
+            "startDate": start_date.strip(),
+            "location": {
+                "@type": "Place",
+                "name": location.strip()
+            },
+            "founder": {
+                "@type": "Person",
+                "name": student_name.strip()
+            },
+            "funder": {
+                "@type": "Organization",
+                "name": partner_org.strip()
+            }
+        }
+        if url:
+            payload["url"] = url.strip()
+        return payload
+
+
 
 
 
