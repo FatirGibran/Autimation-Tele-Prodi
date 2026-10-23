@@ -833,6 +833,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_mimo_channel ON mimo_capacity_records(channel_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS student_iisma_exchange (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL UNIQUE,
+                    host_university TEXT NOT NULL,
+                    country TEXT NOT NULL,
+                    gpa_host REAL NOT NULL,
+                    credits_taken INTEGER NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_iisma_nim ON student_iisma_exchange(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_iisma_host ON student_iisma_exchange(host_university);")
+
 
 
 
@@ -4004,6 +4022,62 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM mimo_capacity_records WHERE id = ?", (int(record_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_iisma_student(self, data: Dict[str, Any]) -> int:
+        """
+        Inserts or updates an IISMA international student exchange awardee record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO student_iisma_exchange (
+                    student_name, nim, host_university, country,
+                    gpa_host, credits_taken, converted_sks, letter_grade, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(nim) DO UPDATE SET
+                    student_name = excluded.student_name,
+                    host_university = excluded.host_university,
+                    country = excluded.country,
+                    gpa_host = excluded.gpa_host,
+                    credits_taken = excluded.credits_taken,
+                    converted_sks = excluded.converted_sks,
+                    letter_grade = excluded.letter_grade,
+                    status = excluded.status
+            """, (
+                data.get("student_name", "").strip(),
+                data.get("nim", "").strip(),
+                data.get("host_university", "").strip(),
+                data.get("country", "").strip(),
+                float(data.get("gpa_host", 0.0)),
+                int(data.get("credits_taken", 0)),
+                int(data.get("converted_sks", 0)),
+                data.get("letter_grade", "C").strip(),
+                data.get("status", "").strip()
+            ))
+            return cursor.lastrowid
+
+    def list_iisma_students(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored IISMA exchange student records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_iisma_exchange ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_iisma_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an IISMA exchange student record by NIM.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_iisma_exchange WHERE nim = ?",
+                (nim.strip(),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
