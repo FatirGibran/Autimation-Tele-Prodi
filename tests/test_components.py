@@ -1685,6 +1685,88 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("28.5 dB", html)
         self.assertIn("<svg", html)
 
+    def test_render_otdr_fiber_loss_card(self):
+        html = EditorialComponents.render_otdr_fiber_loss_card(
+            fiber_length_km=50.0,
+            total_loss_db=11.2,
+            attenuation_db_km=0.2000,
+            event_loss_db=1.2,
+            wavelength_nm=1550,
+            status="Optimal / Sesuai Standar ITU-T G.652"
+        )
+        self.assertIn("tu-otdr-card", html)
+        self.assertIn("50.00 km", html)
+        self.assertIn("11.20 dB", html)
+        self.assertIn("0.2000 dB/km", html)
+        self.assertIn("1550 nm", html)
+        self.assertIn("ITU-T G.652", html)
+
+    def test_render_mimo_capacity_card(self):
+        html = EditorialComponents.render_mimo_capacity_card(
+            bandwidth_mhz=100.0,
+            snr_db=20.0,
+            num_tx=4,
+            num_rx=4,
+            spectral_eff=19.85,
+            capacity_gbps=1.985,
+            gain_factor=2.98,
+            status="High-Rank Spatial Multiplexing (4x4 MIMO)"
+        )
+        self.assertIn("tu-mimo-card", html)
+        self.assertIn("4x4 MIMO", html)
+        self.assertIn("100.0 MHz", html)
+        self.assertIn("19.85 bps/Hz", html)
+        self.assertIn("1.985 Gbps", html)
+
+    def test_render_lorawan_battery_card(self):
+        html = EditorialComponents.render_lorawan_battery_card(
+            battery_mah=2400.0,
+            interval_min=15.0,
+            avg_current_ua=28.5,
+            lifetime_years=9.4,
+            duty_cycle_pct=0.013,
+            is_compliant=True
+        )
+        self.assertIn("tu-lorawan-card", html)
+        self.assertIn("2400 mAh", html)
+        self.assertIn("15 menit", html)
+        self.assertIn("28.5 μA", html)
+        self.assertIn("~9.4 Tahun", html)
+        self.assertIn("ETSI/AS923 Compliant", html)
+
+    def test_render_iisma_exchange_card(self):
+        html = EditorialComponents.render_iisma_exchange_card(
+            student_name="Nadia Putri",
+            nim="1201201088",
+            host_university="National University of Singapore",
+            country="Singapore",
+            gpa_host=3.85,
+            converted_sks=20,
+            status="Lolos Rekognisi Penuh (20 SKS)"
+        )
+        self.assertIn("tu-iisma-card", html)
+        self.assertIn("Nadia Putri", html)
+        self.assertIn("1201201088", html)
+        self.assertIn("National University of Singapore", html)
+        self.assertIn("3.85 / 4.00", html)
+        self.assertIn("20 SKS Diakui", html)
+
+    def test_render_beamforming_pattern_card(self):
+        html = EditorialComponents.render_beamforming_pattern_card(
+            array_elements=16,
+            main_lobe_deg=30.0,
+            half_power_beamwidth_deg=12.5,
+            side_lobe_level_db=-18.5,
+            directivity_dbi=15.2
+        )
+        self.assertIn("tu-beamforming-card", html)
+        self.assertIn("16 Elemen", html)
+        self.assertIn("30.0°", html)
+        self.assertIn("12.5°", html)
+        self.assertIn("-18.5 dB", html)
+        self.assertIn("15.2 dBi", html)
+        self.assertIn("<svg", html)
+
 
 
 if __name__ == "__main__":
