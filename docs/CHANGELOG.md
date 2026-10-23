@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 685+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 715+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 678 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 706 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -828,6 +828,42 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 683. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/78_v4_1_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.1.0.
 684. **Ekspansi Suite Pengujian Unit Terpadu (678 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 678 unit test terverifikasi (100% pass rate).
 685. **Finalisasi Milestone v4.1.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
+---
+
+## 30. Siklus Pengembangan v4.2.0 (Free Space Path Loss, Optical Chromatic Dispersion, Cellular Handover A3, Humanitarian MBKM, Video Accessibility & Hugo Academic Expansions)
+
+686. **Sanitasi Dimensi Canvas HTML5 (`sanitizer.py`)**: Sanitasi elemen `<canvas>`, penegakan dimensi integer positif aman (1..4096 px), dan eliminasi inline scripting handler.
+687. **Sanitasi Elemen MathML Math (`sanitizer.py`)**: Sanitasi blok `<math>`, pembersihan elemen script, penangkalan XML berbahaya, dan netralisasi javascript URI pada href.
+688. **Sanitasi Isolasi Teks Bidi HTML5 (`sanitizer.py`)**: Sanitasi elemen `<bdi>` dan `<bdo>`, penegakan validitas atribut dir (`ltr`, `rtl`, `auto`), dan registrasi tag whitelist.
+689. **Kalkulator FSPL & Link Budget Nirkabel (`parser.py`)**: Perhitungan rugi transmisi ruang bebas FSPL, daya terima sinyal, dan evaluasi fade margin keandalan link nirkabel.
+690. **Kalkulator Dispersi Kromatik Serat Optik (`parser.py`)**: Perhitungan pelebaran pulsa temporal $\Delta t$, rasio pelebaran pulsa bit period, dan batas modulasi laju data $B_{max}$.
+691. **Penganalisis Handover Event A3 Seluler (`parser.py`)**: Evaluasi syarat pemicu handover 3GPP LTE/5G, margin histeresis, dan analisis pencegahan fenomena ping-pong.
+692. **Evaluator Rekognisi MBKM Proyek Kemanusiaan (`parser.py`)**: Evaluasi jam aksi lapangan, penilaian pembimbing dan supervisor, serta konversi hingga 20 SKS kurikulum.
+693. **Auditor Takarir & Transkrip Media AV (`seo_validator.py`)**: Audit takarir tertutup `<track kind="captions">` dan transkrip teks alternatif per standar WCAG 2.1 AA.
+694. **Auditor Tag Kanonisasi Rel Canonical (`seo_validator.py`)**: Verifikasi tag kanonisasi tunggal `<link rel="canonical">`, penegakan protokol HTTPS, dan pembersihan query pelacak.
+695. **Auditor Navigasi Breadcrumb & Skema Microdata (`seo_validator.py`)**: Verifikasi semantik navigasi breadcrumb, atribut aksesibel `aria-current="page"`, dan markup BreadcrumbList.
+696. **Auditor Rasio Aspek Media CLS Core Web Vitals (`seo_validator.py`)**: Verifikasi atribut width/height atau aturan CSS aspect-ratio untuk pencegahan layout shift.
+697. **Komponen Link Budget FSPL Nirkabel (`components.py`)**: Kartu visual Elementor metrik frekuensi gelombang, jarak bentangan, path loss, dan badge margin kelayakan tautan.
+698. **Komponen Dispersi Kromatik Serat Optik (`components.py`)**: Kartu visual parameter dispersi serat optik, pelebaran pulsa picosecond, dan throughput batas transmisi.
+699. **Komponen Handover Seluler A3 (`components.py`)**: Kartu telemetri perbandingan daya sinyal serving vs target seluler, margin histeresis, dan keputusan pemicu handover.
+700. **Komponen Relawan MBKM Proyek Kemanusiaan (`components.py`)**: Kartu pencapaian relawan kemanusiaan mahasiswa, mitra organisasi kebencanaan, dan rekognisi 20 SKS.
+701. **Komponen Diagram Mata Sinyal Optik SVG (`components.py`)**: Kartu visualisasi diagram mata sinyal transmisi optik (eye height, eye width, jitter RMS, Q-factor) berbasis inline SVG responsif.
+702. **Formatter Telegram Audit Link Budget FSPL (`formatters.py`)**: Format siaran buletin Telegram resmi hasil audit propagasi gelombang elektromagnetik dan link budget radio.
+703. **Formatter Telegram Apresiasi Proyek Kemanusiaan (`formatters.py`)**: Format siaran Telegram resmi ucapan selamat dan apresiasi penuntasan MBKM Proyek Kemanusiaan mahasiswa.
+704. **Manajer Rekam Audit Link Budget FSPL (`storage.py`)**: Skema tabel SQLite `fspl_link_budget_records` dan fungsi `record_fspl_link_budget`, `list_fspl_link_budgets`, `get_fspl_link_budget_by_id`.
+705. **Manajer Rekam Dispersi Serat Optik (`storage.py`)**: Skema tabel SQLite `optical_dispersion_records` dan fungsi `record_optical_dispersion`, `list_optical_dispersions`, `get_optical_dispersion_by_id`.
+706. **Manajer Rekam Mahasiswa MBKM Kemanusiaan (`storage.py`)**: Skema tabel SQLite `student_proyek_kemanusiaan` dan fungsi `record_proyek_kemanusiaan`, `list_proyek_kemanusiaan`, `get_proyek_kemanusiaan_by_nim`.
+707. **Helper WordPress Get Post Comments (`wordpress_client.py`)**: Metode `get_post_comments` untuk mengambil daftar komentar artikel WordPress berdasarkan status moderasi.
+708. **Helper WordPress Create Post Comment (`wordpress_client.py`)**: Metode `create_post_comment` untuk membuat komentar baru atau balasan komentar pada artikel via WordPress REST API.
+709. **Generator Schema.org Humanitarian Action JSON-LD (`exporter.py`)**: Metode `generate_humanitarian_action_json_ld` menghasilkan struktur metadata standar Project / VolunteerService mitigasi bencana.
+710. **Eksportir Markdown Hugo Academic Documentation (`exporter.py`)**: Metode `to_hugo_academic_markdown` mengonversi artikel blog ke format dokumentasi Markdown Hugo Academic / Wowchemy / Hugo Blox.
+711. **Subcommand CLI `fspl` (`cli.py`)**: Perintah konsol `fspl` untuk audit dan pencatatan kalkulasi link budget nirkabel.
+712. **Subcommand CLI `dispersion` (`cli.py`)**: Perintah konsol `dispersion` untuk kalkulasi dan inventarisasi dispersi serat optik.
+713. **Subcommand CLI `kemanusiaan` (`cli.py`)**: Perintah konsol `kemanusiaan` untuk evaluasi dan pencatatan rekognisi SKS MBKM Proyek Kemanusiaan.
+714. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/79_v4_2_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.2.0.
+715. **Ekspansi Suite Pengujian Unit Terpadu (706 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 706 unit test terverifikasi (100% pass rate).
+716. **Finalisasi Milestone v4.2.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
 
 
 
