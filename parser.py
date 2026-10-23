@@ -4372,6 +4372,57 @@ def calculate_otdr_fiber_events(
     }
 
 
+def calculate_mimo_channel_capacity(
+    bandwidth_mhz: float,
+    snr_db: float,
+    num_tx_antennas: int = 4,
+    num_rx_antennas: int = 4
+) -> Dict[str, Any]:
+    """
+    Computes Multiple-Input Multiple-Output (MIMO) spatial multiplexing channel capacity
+    and Shannon spectral efficiency over uncorrelated Rayleigh fading wireless channels.
+    """
+    if bandwidth_mhz <= 0 or num_tx_antennas <= 0 or num_rx_antennas <= 0:
+        raise ValueError("Bandwidth and antenna counts must be strictly positive.")
+
+    n_tx = int(num_tx_antennas)
+    n_rx = int(num_rx_antennas)
+    mimo_rank = min(n_tx, n_rx)
+
+    snr_linear = 10.0 ** (float(snr_db) / 10.0)
+
+    # Shannon-Telatar MIMO capacity approximation: C = N_min * B * log2(1 + SNR / N_tx)
+    spectral_eff = mimo_rank * math.log2(1.0 + (snr_linear / float(n_tx)))
+    siso_spectral_eff = math.log2(1.0 + snr_linear)
+
+    capacity_mbps = spectral_eff * float(bandwidth_mhz)
+    capacity_gbps = capacity_mbps / 1000.0
+    gain_factor = spectral_eff / max(siso_spectral_eff, 1e-9)
+
+    if mimo_rank >= 4:
+        multiplexing_status = f"High-Rank Spatial Multiplexing ({n_tx}x{n_rx} MIMO)"
+    elif mimo_rank >= 2:
+        multiplexing_status = f"Dual-Stream Spatial Multiplexing ({n_tx}x{n_rx} MIMO)"
+    else:
+        multiplexing_status = "Single Stream Transmission (SISO/SIMO/MISO)"
+
+    return {
+        "bandwidth_mhz": float(bandwidth_mhz),
+        "snr_db": float(snr_db),
+        "snr_linear": round(snr_linear, 2),
+        "num_tx_antennas": n_tx,
+        "num_rx_antennas": n_rx,
+        "mimo_rank": mimo_rank,
+        "spectral_efficiency_bps_hz": round(spectral_eff, 3),
+        "siso_spectral_efficiency_bps_hz": round(siso_spectral_eff, 3),
+        "capacity_mbps": round(capacity_mbps, 2),
+        "capacity_gbps": round(capacity_gbps, 3),
+        "capacity_gain_factor": round(gain_factor, 2),
+        "spatial_multiplexing_status": multiplexing_status
+    }
+
+
+
 
 
 
