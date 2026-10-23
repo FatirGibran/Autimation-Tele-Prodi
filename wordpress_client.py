@@ -772,6 +772,34 @@ class WordPressClient:
         res = self._send_request(req)
         return res if isinstance(res, list) else []
 
+    def create_post_comment(
+        self,
+        post_id: int,
+        content: str,
+        author_name: str = "",
+        author_email: str = "",
+        parent_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Creates a new comment or threaded reply on a WordPress post via the REST API.
+        """
+        endpoint = f"{self.api_url}/comments"
+        payload: Dict[str, Any] = {
+            "post": int(post_id),
+            "content": content.strip()
+        }
+        if author_name:
+            payload["author_name"] = author_name.strip()
+        if author_email:
+            payload["author_email"] = author_email.strip()
+        if parent_id is not None:
+            payload["parent"] = int(parent_id)
+
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+        return self._send_request(req)
+
+
 
 
 
