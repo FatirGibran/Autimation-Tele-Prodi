@@ -1389,6 +1389,97 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertTrue(any("elemen <main>" in i for i in res_bad["issues"]))
         self.assertTrue(any("tanpa atribut 'aria-label'" in i for i in res_bad["issues"]))
 
+    def test_audit_font_display_and_preload(self):
+        html_ok = (
+            '<head>'
+            '<link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>'
+            '<style>@font-face { font-family: Inter; src: url(/fonts/inter.woff2); font-display: swap; }</style>'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_font_display_and_preload(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["font_preloads_count"], 1)
+        self.assertTrue(res_ok["font_display_optimized"])
+
+        html_bad = (
+            '<head>'
+            '<link rel="preload" href="/fonts/bad.woff2" as="font">'
+            '<style>@font-face { font-family: Bad; src: url(/fonts/bad.woff2); }</style>'
+            '</head>'
+        )
+        res_bad = YoastSEOValidator.audit_font_display_and_preload(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["missing_crossorigin_count"], 1)
+        self.assertFalse(res_bad["font_display_optimized"])
+
+    def test_audit_opengraph_article_metadata(self):
+        html_ok = (
+            '<head>'
+            '<meta property="og:type" content="article">'
+            '<meta property="article:published_time" content="2026-10-23T08:00:00Z">'
+            '<meta property="article:author" content="Dr. Ir. Hendra">'
+            '<meta property="article:section" content="Telekomunikasi">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_opengraph_article_metadata(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertTrue(res_ok["has_article_og"])
+        self.assertEqual(res_ok["author"], "Dr. Ir. Hendra")
+
+        html_bad = (
+            '<head>'
+            '<meta property="og:type" content="website">'
+            '<meta property="article:published_time" content="invalid-date">'
+            '</head>'
+        )
+        res_bad = YoastSEOValidator.audit_opengraph_article_metadata(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(any("og:type" in i for i in res_bad["issues"]))
+        self.assertTrue(any("ISO 8601" in i for i in res_bad["issues"]))
+
+    def test_audit_details_summary_accessibility(self):
+        html_ok = (
+            '<details>'
+            '<summary>Pertanyaan Umum Seputar SKS</summary>'
+            '<p>Penjelasan lengkap konversi SKS.</p>'
+            '</details>'
+        )
+        res_ok = YoastSEOValidator.audit_details_summary_accessibility(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["valid_details"], 1)
+
+        html_bad = (
+            '<details>'
+            '<summary><a href="#">Link di dalam summary</a></summary>'
+            '<p>Konten</p>'
+            '</details>'
+        )
+        res_bad = YoastSEOValidator.audit_details_summary_accessibility(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["nested_interactive_count"], 1)
+
+    def test_audit_touch_target_accessibility(self):
+        html_ok = (
+            '<div>'
+            '<button aria-label="Kirim Formulir" style="padding: 12px 24px;">Kirim</button>'
+            '<a href="/detail" style="display:inline-block; padding: 10px;">Lihat Detail</a>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_touch_target_accessibility(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_targets"], 2)
+
+        html_bad = (
+            '<div>'
+            '<a href="/empty"></a>'
+            '<button style="font-size: 8px;">Kecil</button>'
+            '</div>'
+        )
+        res_bad = YoastSEOValidator.audit_touch_target_accessibility(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["unlabeled_targets"], 1)
+        self.assertEqual(res_bad["cramped_targets"], 1)
+
 
 
 if __name__ == "__main__":
