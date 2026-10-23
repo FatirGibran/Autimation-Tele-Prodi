@@ -4559,6 +4559,66 @@ def parse_iisma_evaluation(
     }
 
 
+def calculate_fspl_and_link_budget(
+    frequency_mhz: float,
+    distance_km: float,
+    tx_power_dbm: float = 20.0,
+    tx_gain_dbi: float = 14.0,
+    rx_gain_dbi: float = 14.0,
+    misc_losses_db: float = 2.0,
+    rx_sensitivity_dbm: float = -85.0
+) -> Dict[str, Any]:
+    """
+    Calculates Free Space Path Loss (FSPL) and RF wireless link budget fade margin.
+    Uses Friis transmission model:
+      FSPL(dB) = 32.44 + 20*log10(d_km) + 20*log10(f_MHz)
+      Prx(dBm) = Ptx + Gtx + Grx - FSPL - L_misc
+      FadeMargin = Prx - Sensitivity
+    """
+    freq = max(0.1, float(frequency_mhz))
+    dist = max(0.001, float(distance_km))
+    p_tx = float(tx_power_dbm)
+    g_tx = float(tx_gain_dbi)
+    g_rx = float(rx_gain_dbi)
+    l_misc = max(0.0, float(misc_losses_db))
+    sens = float(rx_sensitivity_dbm)
+
+    fspl = 32.44 + (20.0 * math.log10(dist)) + (20.0 * math.log10(freq))
+    rx_power = p_tx + g_tx + g_rx - fspl - l_misc
+    fade_margin = rx_power - sens
+    wavelength_m = 300.0 / freq
+
+    if fade_margin >= 15.0:
+        status = "Sangat Andal (Excellent Link Margin)"
+        is_viable = True
+    elif fade_margin >= 10.0:
+        status = "Andal (Good Link Margin)"
+        is_viable = True
+    elif fade_margin >= 0.0:
+        status = "Marjinal (Borderline Fade Margin)"
+        is_viable = True
+    else:
+        status = "Gagal (Link Outage / Infeasible)"
+        is_viable = False
+
+    return {
+        "frequency_mhz": round(freq, 2),
+        "distance_km": round(dist, 3),
+        "wavelength_m": round(wavelength_m, 4),
+        "fspl_db": round(fspl, 2),
+        "tx_power_dbm": round(p_tx, 2),
+        "tx_gain_dbi": round(g_tx, 2),
+        "rx_gain_dbi": round(g_rx, 2),
+        "misc_losses_db": round(l_misc, 2),
+        "rx_power_dbm": round(rx_power, 2),
+        "rx_sensitivity_dbm": round(sens, 2),
+        "fade_margin_db": round(fade_margin, 2),
+        "is_viable": is_viable,
+        "status": status
+    }
+
+
+
 
 
 
