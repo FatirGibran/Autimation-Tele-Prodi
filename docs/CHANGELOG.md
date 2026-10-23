@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 660+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 685+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 652 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 678 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -792,6 +792,42 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 652. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/77_v4_0_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.0.0.
 653. **Ekspansi Suite Pengujian Unit Terpadu (652 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 652 unit test terverifikasi (100% pass rate).
 654. **Finalisasi Milestone v4.0.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
+---
+
+## 29. Siklus Pengembangan v4.1.0 (OTDR Fiber Analysis, MIMO Capacity & Spectral Efficiency, LoRaWAN Battery Life, IISMA MBKM Mobility, Advanced SEO Webfont & VitePress Expansions)
+
+655. **Sanitasi Elemen HTML5 Picture & MIME Type (`sanitizer.py`)**: Sanitasi elemen `<picture>` dan `<source type="...">`, scrubbing MIME eksekusi skrip berbahaya, dan penegakan fallback `<img>`.
+656. **Sanitasi Elemen HTML5 Dialog & Autofocus (`sanitizer.py`)**: Sanitasi atribut `<dialog formmethod="dialog">`, pengamanan atribut `autofocus`, dan eliminasi script handling.
+657. **Sanitasi Elemen HTML5 Audio (`sanitizer.py`)**: Sanitasi elemen `<audio>` dan `<source>`, penegakan `controlslist="nodownload"`, dan penonaktifan preloading agresif.
+658. **Kalkulator Reflektansi & Redaman OTDR Serat Optik (`parser.py`)**: Analisis redaman kabel optik, koefisien $\alpha$ (dB/km), total insertion loss, dan validasi standar ITU-T G.652.
+659. **Kalkulator Kapasitas & Efisiensi Spektral MIMO (`parser.py`)**: Perhitungan kapasitas kanal nirkabel multi-antena $N_T \times N_R$, efisiensi spektral Shannon, dan throughput teoritis.
+660. **Estimator Konsumsi Energi & Masa Pakai Baterai LoRaWAN (`parser.py`)**: Kalkulasi konsumsi energi harian (mWh) mode tidur/transmisi dan estimasi masa pakai baterai node sensor LoRaWAN.
+661. **Evaluator Rekognisi Beasiswa Mahasiswa IISMA (`parser.py`)**: Evaluasi konversi kredit mata kuliah luar negeri, standarisasi IPK, dan rekognisi hingga 20 SKS kurikulum prodi.
+662. **Auditor Optimasi Webfont & Preload (`seo_validator.py`)**: Verifikasi deklarasi `font-display: swap` dan tag `<link rel="preload" as="font">` untuk mereduksi FOIT, CLS, dan LCP.
+663. **Auditor Metadata Artikel OpenGraph (`seo_validator.py`)**: Validasi tag `article:published_time`, `article:modified_time`, `article:author`, dan `article:section` dalam format ISO 8601.
+664. **Auditor Aksesibilitas Accordion Details & Summary (`seo_validator.py`)**: Audit kelengkapan semantik elemen `<details>` dan `<summary>`, teks ringkasan deskriptif, dan pengungkapan informasi.
+665. **Auditor Ukuran Target Sentuh Interaktif Mobile (`seo_validator.py`)**: Verifikasi target sentuh tombol dan hyperlink mobile minimum $48 \times 48\text{ px}$ dan margin spasi minimum 8 px (WCAG 2.5.5).
+666. **Komponen Telemetri Kabel Serat Optik OTDR (`components.py`)**: Kartu visual Elementor metrik panjang link, loss total, sambungan splice, dan status kelulusan standar ITU-T G.652.
+667. **Komponen Kapasitas Antena MIMO Array (`components.py`)**: Kartu visual konfigurasi multi-antena, bandwidth, SNR, efisiensi spektral Shannon, dan throughput kanal.
+668. **Komponen Profil Baterai Node LoRaWAN (`components.py`)**: Kartu ringkasan konsumsi energi harian, kapasitas baterai terpakai, dan estimasi usia pakai operasional IoT.
+669. **Komponen Penghargaan Mobilitas Mahasiswa IISMA (`components.py`)**: Kartu apresiasi prestasi mahasiswa IISMA, universitas mitra global, dan konversi 20 SKS kurikulum.
+670. **Komponen Pola Radiasi Beamforming Responsif SVG (`components.py`)**: Kartu visualisasi diagram polar berkas phased-array (main lobe, sidelobes, steering angle) berbasis vektor SVG inline terisolasi.
+671. **Formatter Telegram Audit OTDR (`formatters.py`)**: Format siaran Telegram resmi buletin telemetri redaman link kabel serat optik OTDR.
+672. **Formatter Telegram Apresiasi Beasiswa IISMA (`formatters.py`)**: Format siaran Telegram ucapan selamat dan pengumuman penerima beasiswa mobilitas internasional mahasiswa IISMA.
+673. **Manajer Rekam Audit Serat Optik OTDR (`storage.py`)**: Skema tabel SQLite `otdr_fiber_records` dan fungsi `record_otdr_fiber`, `list_otdr_fibers`, `get_otdr_fiber_by_id`.
+674. **Manajer Rekam Kapasitas Antena MIMO (`storage.py`)**: Skema tabel SQLite `mimo_capacity_records` dan fungsi `record_mimo_capacity`, `list_mimo_capacities`, `get_mimo_capacity_by_id`.
+675. **Manajer Rekam Beasiswa Mahasiswa IISMA (`storage.py`)**: Skema tabel SQLite `student_iisma_exchange` dan fungsi `record_iisma_exchange`, `list_iisma_exchanges`, `get_iisma_exchange_by_nim`.
+676. **Helper WordPress Get Users by Role (`wordpress_client.py`)**: Metode `get_users_by_role` untuk mengambil daftar kontributor dan staf editorial berdasarkan peran pengguna WordPress.
+677. **Helper WordPress Assign Post Author (`wordpress_client.py`)**: Metode `assign_post_author` untuk menetapkan atribusi ID penulis pada artikel WordPress via REST API.
+678. **Generator Schema.org Academic Exchange Program JSON-LD (`exporter.py`)**: Metode `generate_academic_exchange_program_json_ld` untuk standarisasi skema program pertukaran akademik mahasiswa internasional.
+679. **Eksportir Markdown VitePress Documentation (`exporter.py`)**: Metode `to_vitepress_markdown` untuk konversi artikel menjadi halaman dokumentasi statis VitePress modern.
+680. **Subcommand CLI `otdr` (`cli.py`)**: Perintah konsol `otdr` untuk audit dan pencatatan telemetri kabel serat optik.
+681. **Subcommand CLI `mimo` (`cli.py`)**: Perintah konsol `mimo` untuk kalkulasi dan inventarisasi kapasitas antena MIMO.
+682. **Subcommand CLI `iisma` (`cli.py`)**: Perintah konsol `iisma` untuk verifikasi dan pencatatan penghargaan program mobilitas mahasiswa IISMA.
+683. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/78_v4_1_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.1.0.
+684. **Ekspansi Suite Pengujian Unit Terpadu (678 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 678 unit test terverifikasi (100% pass rate).
+685. **Finalisasi Milestone v4.1.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
 
 
 
