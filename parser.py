@@ -4719,6 +4719,90 @@ def calculate_cellular_handover_hysteresis(
     }
 
 
+def parse_proyek_kemanusiaan_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student participation in MBKM Proyek Kemanusiaan (Disaster Relief / Community Action),
+    calculates composite score from field and mentor assessments, and converts to 20 SKS curriculum credits.
+    """
+    raw_name = str(data.get("student_name", "")).strip()
+    raw_nim = str(data.get("nim", "")).strip()
+    raw_partner = str(data.get("partner_org", "")).strip()
+    raw_location = str(data.get("location", "")).strip()
+
+    clean_name = raw_name if raw_name else "Mahasiswa MBKM"
+    clean_nim = raw_nim if raw_nim else "1201200000"
+    is_valid_nim = bool(re.match(r'^\d{8,12}$', clean_nim))
+    clean_partner = raw_partner if raw_partner else "BPBD / Relawan Kemanusiaan"
+    clean_location = raw_location if raw_location else "Jawa Tengah"
+
+    score_mentor = max(0.0, min(100.0, float(data.get("score_mentor", 0.0))))
+    score_field = max(0.0, min(100.0, float(data.get("score_field", 0.0))))
+    score_impact = max(0.0, min(100.0, float(data.get("score_impact", 0.0))))
+    field_hours = max(0, int(data.get("field_hours", 0)))
+
+    composite = round((0.40 * score_mentor) + (0.40 * score_field) + (0.20 * score_impact), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    if field_hours >= 400 and composite >= 60.0:
+        converted_sks = 20
+        status = "Lulus Rekognisi Penuh (20 SKS)"
+        is_eligible = True
+    elif field_hours >= 200 and composite >= 50.0:
+        converted_sks = 10
+        status = "Lulus Rekognisi Sebagian (10 SKS)"
+        is_eligible = True
+    else:
+        converted_sks = 0
+        status = "Tidak Memenuhi Syarat Minimal SKS Kemanusiaan"
+        is_eligible = False
+
+    equiv_courses = [
+        {"code": "TT4201", "name": "Komunikasi Tanggap Darurat & Kebencanaan", "sks": 4},
+        {"code": "TT4202", "name": "Jaringan Telekomunikasi Nirkabel Ad-Hoc Lapangan", "sks": 4},
+        {"code": "TT4203", "name": "Etika Rekayasa & Pengabdian Masyarakat", "sks": 4},
+        {"code": "TT4204", "name": "Kapita Selekta Mitigasi Bencana Digital", "sks": 4},
+        {"code": "TT4205", "name": "Laporan Aksi Sosial & Dokumentasi Lapangan", "sks": 4}
+    ]
+
+    return {
+        "student_name": clean_name,
+        "nim": clean_nim,
+        "is_valid_nim": is_valid_nim,
+        "partner_org": clean_partner,
+        "location": clean_location,
+        "field_hours": field_hours,
+        "score_mentor": score_mentor,
+        "score_field": score_field,
+        "score_impact": score_impact,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible,
+        "course_equivalencies": equiv_courses
+    }
+
+
+
 
 
 
