@@ -1317,6 +1317,55 @@ def sanitize_html5_dialog_method(html: str) -> str:
     return out
 
 
+def sanitize_html5_audio_controlslist(html: str) -> str:
+    """
+    Sanitizes HTML5 <audio> elements by enforcing user playback controls, scrubbing aggressive autoplay,
+    normalizing preload attributes to conserve mobile bandwidth, and validating controlslist tokens.
+    """
+    if not html or "<audio" not in html.lower():
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    safe_controlslist_tokens = {"nodownload", "nofullscreen", "noremoteplayback"}
+
+    def fix_audio(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+autoplay\b', '', tag, flags=re.IGNORECASE)
+
+        # Enforce controls if missing
+        if "controls" not in tag.lower():
+            tag = tag.rstrip(">") + ' controls>'
+
+        # Normalize preload="auto" to preload="metadata" to prevent aggressive mobile cellular data drain
+        tag = re.sub(r'\bpreload=["\']auto["\']', 'preload="metadata"', tag, flags=re.IGNORECASE)
+
+        # Validate controlslist tokens
+        cl_m = re.search(r'\bcontrolslist=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if cl_m:
+            raw_tokens = cl_m.group(1).strip().lower().split()
+            valid_tokens = [tok for tok in raw_tokens if tok in safe_controlslist_tokens]
+            if valid_tokens:
+                tag = re.sub(r'\bcontrolslist=["\'][^"\']*["\']', f'controlslist="{" ".join(valid_tokens)}"', tag, flags=re.IGNORECASE)
+            else:
+                tag = re.sub(r'\s+controlslist=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Scrub dangerous src schemes
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src_val = src_m.group(1).strip().lower()
+            if src_val.startswith("javascript:") or src_val.startswith("data:"):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<audio\b[^>]*>', fix_audio, html, flags=re.IGNORECASE)
+
+
+
 
 
 
