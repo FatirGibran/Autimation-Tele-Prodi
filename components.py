@@ -4565,6 +4565,54 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_mimo_capacity_card(
+        cls,
+        bandwidth_mhz: float,
+        snr_db: float,
+        num_tx: int,
+        num_rx: int,
+        spectral_eff: float,
+        capacity_gbps: float,
+        gain_factor: float,
+        status: str
+    ) -> str:
+        """
+        Renders a MIMO channel capacity and spatial multiplexing spectral efficiency card.
+        """
+        return f"""    <div class="tu-mimo-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-mimo-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #7c3aed; font-size: 13px; text-transform: uppercase;">Kapasitas Kanal Nirkabel {num_tx}x{num_rx} MIMO</span>
+        <span style="font-size: 11px; background: #f5f3ff; color: #6d28d9; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Efisiensi Spektral Spatial Multiplexing Shannon-Telatar</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Lebar Pita (B)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{bandwidth_mhz:.1f} MHz</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">SNR Kanal</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{snr_db:.1f} dB</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Gain vs SISO</div>
+          <div style="font-size: 14px; font-weight: 700; color: #7c3aed;">{gain_factor:.2f}x Lipat</div>
+        </div>
+      </div>
+      <div style="background: #f5f3ff; padding: 12px; border-radius: 6px; border-left: 4px solid #7c3aed; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: #6d28d9; font-weight: 600;">Efisiensi Spektral (\u03b7):</span>
+          <div style="font-size: 16px; font-weight: 800; color: #4c1d95;">{spectral_eff:.2f} bps/Hz</div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: #6d28d9;">Throughput Maksimum:</span>
+          <div style="font-size: 18px; font-weight: 800; color: #4c1d95;">{capacity_gbps:.3f} Gbps</div>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
