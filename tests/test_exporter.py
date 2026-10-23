@@ -834,6 +834,37 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('og:title', res)
         self.assertIn("<p>Hasil simulasi S-parameter.</p>", res)
 
+    def test_generate_academic_exchange_program_json_ld(self):
+        meta = {
+            "program_name": "IISMA 2026 NUS Cohort",
+            "description": "Program pertukaran sarjana teknik telekomunikasi di NUS.",
+            "host_university": "National University of Singapore",
+            "country": "Singapore",
+            "category": "S1 Teknik Telekomunikasi",
+            "url": "https://iisma.kemdikbud.go.id"
+        }
+        res = ArticleExporter.generate_academic_exchange_program_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "EducationalOccupationalProgram")
+        self.assertEqual(res["name"], "IISMA 2026 NUS Cohort")
+        self.assertEqual(res["hasCourse"]["provider"]["name"], "National University of Singapore")
+        self.assertEqual(res["hasCourse"]["provider"]["address"]["addressCountry"], "Singapore")
+
+    def test_to_vitepress_markdown(self):
+        meta = {
+            "seo_title": "Tutorial Simulasi Antena CST",
+            "meta_description": "Langkah demi langkah merancang antena mikrostrip.",
+            "publish_date": "2026-10-23",
+            "tags": ["antena", "cst", "microwave"]
+        }
+        res = ArticleExporter.to_vitepress_markdown(meta, "<p>Tutorial lengkap simulasi.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Tutorial Simulasi Antena CST"', res)
+        self.assertIn('outline: [2, 3]', res)
+        self.assertIn('editLink: false', res)
+        self.assertIn('"antena", "cst", "microwave"', res)
+        self.assertIn("<p>Tutorial lengkap simulasi.</p>", res)
+
 
 
 if __name__ == "__main__":
