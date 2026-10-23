@@ -1048,6 +1048,34 @@ class TelegramFormatter:
             f"🎉 *Selamat atas keberhasilan menuntaskan studi internasional dan mengharumkan almamater!*"
         )
 
+    @staticmethod
+    def format_fspl_link_budget_telegram(
+        link_name: str,
+        freq_mhz: float,
+        distance_km: float,
+        fspl_db: float,
+        rx_power_dbm: float,
+        fade_margin_db: float,
+        is_viable: bool,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an RF FSPL and wireless link budget audit report for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Pemantauan RF:** {portal_url.strip()}" if portal_url else ""
+        status_text = "LAYAK / STABIL (Viable)" if is_viable else "PUTUS / REDUP (Outage)"
+        return (
+            f"📡 **Laporan Audit Wireless Link Budget & FSPL**\n\n"
+            f"🌐 **Nama Tautan:** {link_name.strip()}\n"
+            f"📶 **Frekuensi Kerja:** `{float(freq_mhz):.1f} MHz`\n"
+            f"📏 **Jarak Transmisi:** `{float(distance_km):.2f} km`\n"
+            f"📉 **Path Loss Bebas (FSPL):** `{float(fspl_db):.2f} dB`\n"
+            f"🎯 **Daya Terima (Prx):** `{float(rx_power_dbm):.2f} dBm`\n"
+            f"🛡️ **Fade Margin:** `{float(fade_margin_db):+.2f} dB` (`{status_text}`){portal_link}\n\n"
+            f"✨ *Hasil audit kalkulasi propagasi gelombang elektromagnetik prodi terverifikasi!*"
+        )
+
+
 
 
 
