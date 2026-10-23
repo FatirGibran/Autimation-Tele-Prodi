@@ -762,6 +762,17 @@ class WordPressClient:
         """
         return self.update_post(post_id=post_id, updates={"author": int(author_id)})
 
+    def get_post_comments(self, post_id: int, status: str = "approve", page: int = 1, per_page: int = 20) -> List[Dict[str, Any]]:
+        """
+        Retrieves comments associated with a specific WordPress post ID, filtered by moderation status.
+        """
+        clean_status = status.strip().lower()
+        endpoint = f"{self.api_url}/comments?post={int(post_id)}&status={clean_status}&page={max(1, int(page))}&per_page={max(1, min(100, int(per_page)))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        res = self._send_request(req)
+        return res if isinstance(res, list) else []
+
+
 
 
 
