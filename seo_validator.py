@@ -4283,6 +4283,68 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_rel_canonical_urls(html_content: str, expected_domain: str = "ittelkom-pwt.ac.id") -> Dict[str, Any]:
+        """
+        Audits <link rel="canonical" href="..."> tags for SEO canonization integrity:
+        - Ensures exactly one canonical tag exists.
+        - Validates absolute HTTPS URL scheme.
+        - Flags tracking parameters (utm_*, fbclid, etc.) or relative paths.
+        - Checks match against expected academic domain.
+        """
+        if not html_content:
+            return {
+                "has_canonical": False,
+                "canonical_url": "",
+                "is_https": False,
+                "has_tracking_params": False,
+                "is_domain_match": False,
+                "is_valid": False,
+                "issues": ["Konten HTML kosong."]
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        canonicals = soup.find_all("link", rel=lambda r: r and "canonical" in [x.lower() for x in (r if isinstance(r, list) else [r])])
+
+        issues = []
+        if len(canonicals) == 0:
+            return {
+                "has_canonical": False,
+                "canonical_url": "",
+                "is_https": False,
+                "has_tracking_params": False,
+                "is_domain_match": False,
+                "is_valid": False,
+                "issues": ["Tag kanonisasi <link rel='canonical'> tidak ditemukan."]
+            }
+
+        if len(canonicals) > 1:
+            issues.append(f"Ditemukan {len(canonicals)} tag canonical ganda. Tag canonical harus bersifat unik.")
+
+        href = canonicals[0].get("href", "").strip()
+        is_https = href.startswith("https://")
+        if not is_https:
+            issues.append(f"URL canonical ('{href}') harus menggunakan protokol aman HTTPS.")
+
+        has_tracking = bool(re.search(r'[?&](?:utm_|fbclid|gclid|ref=)', href, re.IGNORECASE))
+        if has_tracking:
+            issues.append("URL canonical memuat parameter pelacak (tracking query params) yang tidak boleh ada pada link kanonis.")
+
+        is_domain_match = expected_domain.lower() in href.lower()
+        if not is_domain_match:
+            issues.append(f"Domain canonical ('{href}') tidak sesuai dengan domain resmi ('{expected_domain}').")
+
+        return {
+            "has_canonical": True,
+            "canonical_url": href,
+            "is_https": is_https,
+            "has_tracking_params": has_tracking,
+            "is_domain_match": is_domain_match,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
