@@ -4085,6 +4085,72 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_details_summary_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML5 <details> and <summary> disclosure widgets according to WCAG 2.1 SC 4.1.2.
+        Verifies direct summary child, non-empty labels, and prevents nested interactive controls.
+        """
+        if not html_content or "<details" not in html_content.lower():
+            return {
+                "total_details": 0,
+                "valid_details": 0,
+                "missing_summary_count": 0,
+                "nested_interactive_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        details_list = soup.find_all("details")
+        if not details_list:
+            return {
+                "total_details": 0,
+                "valid_details": 0,
+                "missing_summary_count": 0,
+                "nested_interactive_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        valid_count = 0
+        missing_summary = 0
+        nested_interactive = 0
+
+        for idx, det in enumerate(details_list, start=1):
+            det_issues = []
+            summary = det.find("summary", recursive=False)
+            if not summary:
+                missing_summary += 1
+                det_issues.append(f"Elemen <details> #{idx} tidak memiliki elemen anak langsung <summary> sebagai kontrol pembuka.")
+            else:
+                summary_text = summary.get_text().strip()
+                if not summary_text:
+                    det_issues.append(f"Elemen <summary> pada <details> #{idx} kosong tanpa deskripsi aksesibel.")
+
+                # Check for nested interactive tags inside summary
+                interactive_children = summary.find_all(["a", "button", "input", "select", "textarea"])
+                if interactive_children:
+                    nested_interactive += 1
+                    tags_str = ", ".join(f"<{t.name}>" for t in interactive_children)
+                    det_issues.append(f"Elemen <summary> pada <details> #{idx} memuat kontrol interaktif bertingkat ({tags_str}) yang melanggar WCAG 4.1.2.")
+
+            if det_issues:
+                issues.extend(det_issues)
+            else:
+                valid_count += 1
+
+        return {
+            "total_details": len(details_list),
+            "valid_details": valid_count,
+            "missing_summary_count": missing_summary,
+            "nested_interactive_count": nested_interactive,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
