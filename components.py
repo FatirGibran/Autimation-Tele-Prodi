@@ -4739,6 +4739,45 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_fspl_link_budget_card(
+        cls,
+        link_name: str,
+        freq_mhz: float,
+        distance_km: float,
+        fspl_db: float,
+        rx_power_dbm: float,
+        fade_margin_db: float,
+        is_viable: bool
+    ) -> str:
+        """
+        Renders an RF free space path loss (FSPL) and wireless link budget fade margin card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(link_name.strip())
+        status_color = "#10b981" if is_viable else "#ef4444"
+        status_badge = "Link Layak (Viable)" if is_viable else "Link Putus (Outage)"
+
+        return f"""    <div class="tu-fspl-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Link Budget & FSPL</span>
+        <span style="background: {status_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status_badge}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{name_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Frekuensi: <strong>{freq_mhz:.1f} MHz</strong></div>
+        <div>Jarak Bentang: <strong>{distance_km:.2f} km</strong></div>
+        <div>Path Loss (FSPL): <strong style="color: #f59e0b;">{fspl_db:.2f} dB</strong></div>
+        <div>Daya Terima (Prx): <strong style="color: #38bdf8;">{rx_power_dbm:.2f} dBm</strong></div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 10px; font-size: 13px; display: flex; justify-content: space-between;">
+        <span>Fade Margin:</span>
+        <strong style="color: {status_color}; font-size: 15px;">{fade_margin_db:+.2f} dB</strong>
+      </div>
+    </div>"""
+
+
 
 
 
