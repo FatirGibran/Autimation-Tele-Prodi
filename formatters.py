@@ -1024,6 +1024,31 @@ class TelegramFormatter:
             f"✨ *Hasil trace reflectometry terverifikasi memenuhi standar transmisi serat optik ITU-T G.652!*"
         )
 
+    @staticmethod
+    def format_iisma_exchange_telegram(
+        student_name: str,
+        nim: str,
+        host_university: str,
+        country: str,
+        gpa_host: float,
+        converted_sks: int,
+        letter_grade: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an IISMA international student exchange award announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal IISMA Kemdikbud:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🌍 **Apresiasi Prestasi IISMA MBKM Luar Negeri**\n\n"
+            f"👤 **Awardee/Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏛️ **Universitas Tujuan:** {host_university.strip()} ({country.strip()})\n"
+            f"📊 **Capaian Akademik:** `IPK {float(gpa_host):.2f} / 4.00` (`Mutu: {letter_grade.strip()}`)\n"
+            f"📚 **Rekognisi Kurikulum:** `{int(converted_sks)} SKS Diakui`{portal_link}\n\n"
+            f"🎉 *Selamat atas keberhasilan menuntaskan studi internasional dan mengharumkan almamater!*"
+        )
+
+
 
 
 
