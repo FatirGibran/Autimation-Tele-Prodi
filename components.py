@@ -4844,6 +4844,44 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_proyek_kemanusiaan_card(
+        cls,
+        student_name: str,
+        nim: str,
+        partner_org: str,
+        converted_sks: int,
+        composite_score: float,
+        letter_grade: str,
+        status: str
+    ) -> str:
+        """
+        Renders a student MBKM Proyek Kemanusiaan completion and credit recognition card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(student_name.strip())
+        nim_clean = escape(nim.strip())
+        org_clean = escape(partner_org.strip())
+        grade_clean = escape(letter_grade.strip())
+        status_clean = escape(status.strip())
+
+        return f"""    <div class="tu-kemanusiaan-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #f43f5e; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Proyek Kemanusiaan MBKM</span>
+        <span style="background: #0284c7; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{converted_sks} SKS Diakui</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #ffffff;">{name_clean}</h4>
+      <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">
+        NIM: <code style="color: #38bdf8;">{nim_clean}</code> | Mitra: <strong>{org_clean}</strong>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 10px; display: flex; justify-content: space-between; font-size: 13px;">
+        <span>Skor Komposit: <strong>{composite_score:.2f}</strong> (Mutu: <strong style="color: #10b981;">{grade_clean}</strong>)</span>
+        <span style="color: #cbd5e1;">{status_clean}</span>
+      </div>
+    </div>"""
+
+
 
 
 
