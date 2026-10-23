@@ -1767,6 +1767,85 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("15.2 dBi", html)
         self.assertIn("<svg", html)
 
+    def test_render_fspl_link_budget_card(self):
+        html = EditorialComponents.render_fspl_link_budget_card(
+            link_name="Link Microwave Kampus 1 - Kampus 2",
+            freq_mhz=5800.0,
+            distance_km=12.5,
+            fspl_db=129.65,
+            rx_power_dbm=-65.65,
+            fade_margin_db=19.35,
+            is_viable=True
+        )
+        self.assertIn("tu-fspl-card", html)
+        self.assertIn("Link Microwave Kampus 1 - Kampus 2", html)
+        self.assertIn("5800.0 MHz", html)
+        self.assertIn("12.50 km", html)
+        self.assertIn("129.65 dB", html)
+        self.assertIn("Link Layak (Viable)", html)
+
+    def test_render_chromatic_dispersion_card(self):
+        html = EditorialComponents.render_chromatic_dispersion_card(
+            fiber_name="Span Kabel Laut Jawa-Bali",
+            length_km=60.0,
+            dispersion_param=17.0,
+            pulse_broadening_ps=102.0,
+            max_bit_rate_gbps=2.45,
+            severity="Sedang"
+        )
+        self.assertIn("tu-dispersion-card", html)
+        self.assertIn("Span Kabel Laut Jawa-Bali", html)
+        self.assertIn("60.00 km", html)
+        self.assertIn("102.00 ps", html)
+        self.assertIn("2.45 Gbps", html)
+
+    def test_render_cellular_handover_card(self):
+        html = EditorialComponents.render_cellular_handover_card(
+            serving_cell="eNodeB_Purwokerto_Selatan",
+            target_cell="eNodeB_Purwokerto_Utara",
+            rsrp_serving_dbm=-98.0,
+            rsrp_target_dbm=-84.0,
+            hysteresis_db=3.0,
+            decision="TRIGGER_HANDOVER"
+        )
+        self.assertIn("tu-handover-card", html)
+        self.assertIn("eNodeB_Purwokerto_Selatan", html)
+        self.assertIn("eNodeB_Purwokerto_Utara", html)
+        self.assertIn("TRIGGER_HANDOVER", html)
+        self.assertIn("3.0 dB", html)
+
+    def test_render_proyek_kemanusiaan_card(self):
+        html = EditorialComponents.render_proyek_kemanusiaan_card(
+            student_name="Reza Kurniawan",
+            nim="1201201099",
+            partner_org="BPBD Banyumas",
+            converted_sks=20,
+            composite_score=88.5,
+            letter_grade="A",
+            status="Lolos Rekognisi Penuh (20 SKS)"
+        )
+        self.assertIn("tu-kemanusiaan-card", html)
+        self.assertIn("Reza Kurniawan", html)
+        self.assertIn("1201201099", html)
+        self.assertIn("BPBD Banyumas", html)
+        self.assertIn("20 SKS Diakui", html)
+        self.assertIn("88.50", html)
+
+    def test_render_optical_eye_diagram_svg_card(self):
+        html = EditorialComponents.render_optical_eye_diagram_svg_card(
+            title="Sinyal 10G NRZ Serat Single Mode",
+            data_rate_gbps=10.0,
+            eye_height_mv=145.0,
+            eye_width_ps=82.5,
+            jitter_rms_ps=2.15,
+            q_factor=7.8
+        )
+        self.assertIn("tu-eye-diagram-card", html)
+        self.assertIn("Sinyal 10G NRZ Serat Single Mode", html)
+        self.assertIn("10.0 Gbps", html)
+        self.assertIn("145.0 mV", html)
+        self.assertIn("82.5 ps", html)
+        self.assertIn("<svg", html)
 
 
 if __name__ == "__main__":
