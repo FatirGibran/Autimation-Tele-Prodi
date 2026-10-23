@@ -4221,6 +4221,69 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_av_transcripts_and_captions(html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML5 <video> and <audio> media elements for WCAG 2.1 AA captions and transcripts.
+        Checks for:
+          - <track kind="captions"> or kind="subtitles" inside <video>
+          - Text transcript containers (.tu-media-transcript or region with transcript label)
+        """
+        if not html_content:
+            return {
+                "total_media": 0,
+                "video_count": 0,
+                "audio_count": 0,
+                "captioned_videos": 0,
+                "transcripts_found": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        videos = soup.find_all("video")
+        audios = soup.find_all("audio")
+        total_media = len(videos) + len(audios)
+
+        if total_media == 0:
+            return {
+                "total_media": 0,
+                "video_count": 0,
+                "audio_count": 0,
+                "captioned_videos": 0,
+                "transcripts_found": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues = []
+        captioned_videos = 0
+        for idx, vid in enumerate(videos, 1):
+            tracks = vid.find_all("track")
+            has_caption = any(t.get("kind", "").lower() in {"captions", "subtitles"} and t.get("src") for t in tracks)
+            if has_caption:
+                captioned_videos += 1
+            else:
+                issues.append(f"Elemen video #{idx} tidak memiliki track takarir/teks terjemahan (<track kind='captions'>).")
+
+        transcripts = soup.find_all(class_=re.compile(r'\b(?:tu-media-transcript|media-transcript|tu-transcript)\b', re.IGNORECASE))
+        transcript_regions = soup.find_all(attrs={"role": "region", "aria-label": re.compile(r'transkrip|transcript', re.IGNORECASE)})
+        total_transcripts = len(transcripts) + len(transcript_regions)
+
+        if total_media > 0 and total_transcripts == 0:
+            issues.append(f"Ditemukan {total_media} media audio/video tanpa wadah transkrip teks alternatif (.tu-media-transcript).")
+
+        return {
+            "total_media": total_media,
+            "video_count": len(videos),
+            "audio_count": len(audios),
+            "captioned_videos": captioned_videos,
+            "transcripts_found": total_transcripts,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
