@@ -2060,6 +2060,65 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(by_nim["host_university"], "National University of Singapore")
         self.assertIsNone(self.storage.get_iisma_by_nim("99999999"))
 
+    def test_fspl_link_budget_storage(self):
+        rec_id = self.storage.record_fspl_link_budget({
+            "link_name": "Link Backbone Purwokerto",
+            "freq_mhz": 5800.0,
+            "distance_km": 15.0,
+            "fspl_db": 131.22,
+            "rx_power_dbm": -67.22,
+            "fade_margin_db": 17.78,
+            "is_viable": True
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_fspl_link_budgets()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["link_name"], "Link Backbone Purwokerto")
+        single = self.storage.get_fspl_link_budget_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["fspl_db"], 131.22)
+        self.assertIsNone(self.storage.get_fspl_link_budget_by_id(99999))
+
+    def test_optical_dispersion_storage(self):
+        rec_id = self.storage.record_optical_dispersion({
+            "fiber_name": "Link SMF-28 Purwokerto-Cilacap",
+            "length_km": 45.0,
+            "dispersion_param": 17.0,
+            "pulse_broadening_ps": 76.5,
+            "max_bit_rate_gbps": 3.27,
+            "severity": "Sedang",
+            "requires_compensation": False
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_dispersions()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["fiber_name"], "Link SMF-28 Purwokerto-Cilacap")
+        single = self.storage.get_optical_dispersion_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["pulse_broadening_ps"], 76.5)
+        self.assertIsNone(self.storage.get_optical_dispersion_by_id(99999))
+
+    def test_proyek_kemanusiaan_storage(self):
+        rec_id = self.storage.record_proyek_kemanusiaan({
+            "student_name": "Reza Kurniawan",
+            "nim": "1201201099",
+            "partner_org": "BPBD Banyumas",
+            "location": "Banyumas",
+            "field_hours": 420,
+            "composite_score": 89.0,
+            "converted_sks": 20,
+            "letter_grade": "A",
+            "status": "Lolos Rekognisi Penuh (20 SKS)"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_proyek_kemanusiaan()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_name"], "Reza Kurniawan")
+        by_nim = self.storage.get_proyek_kemanusiaan_by_nim("1201201099")
+        self.assertIsNotNone(by_nim)
+        self.assertEqual(by_nim["converted_sks"], 20)
+        self.assertEqual(by_nim["partner_org"], "BPBD Banyumas")
+        self.assertIsNone(self.storage.get_proyek_kemanusiaan_by_nim("99999999"))
 
 
 if __name__ == "__main__":
