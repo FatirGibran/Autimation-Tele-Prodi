@@ -1377,6 +1377,34 @@ def sanitize_html5_audio_controlslist(html: str) -> str:
     return out
 
 
+def sanitize_html5_canvas_dimensions(html: str) -> str:
+    """
+    Sanitizes HTML5 <canvas> elements by removing inline event handlers, style attributes,
+    and enforcing strictly positive integer bounds (1 to 4096 px) on width and height attributes.
+    """
+    if not html or "<canvas" not in html.lower():
+        return html
+
+    def fix_canvas(m):
+        tag = m.group(0)
+        # Strip script event handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Strip style and contenteditable
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        for dim in ["width", "height"]:
+            dim_m = re.search(rf'\b{dim}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if dim_m:
+                val = dim_m.group(1).strip()
+                if not re.match(r'^\d+$', val) or int(val) <= 0 or int(val) > 4096:
+                    tag = re.sub(rf'\s+{dim}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<canvas\b[^>]*>', fix_canvas, html, flags=re.IGNORECASE)
+
+
+
 
 
 
