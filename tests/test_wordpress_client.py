@@ -665,7 +665,35 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "POST")
         self.assertIn("/posts/105", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_post_comments(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 501, "post": 105, "content": {"rendered": "Bagus sekali."}, "status": "approved"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
 
+        comments = self.client.get_post_comments(post_id=105, status="approve", page=1, per_page=10)
+        self.assertEqual(len(comments), 1)
+        self.assertEqual(comments[0]["id"], 501)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/comments?post=105&status=approve&page=1&per_page=10", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_create_post_comment(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 502, "post": 105, "content": {"rendered": "Terima kasih infonya."}}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.create_post_comment(
+            post_id=105,
+            content="Terima kasih infonya.",
+            author_name="Ahmad Mahasiswa",
+            author_email="ahmad@ittelkom-pwt.ac.id"
+        )
+        self.assertEqual(res["id"], 502)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/comments", req.full_url)
 
 
 if __name__ == "__main__":
