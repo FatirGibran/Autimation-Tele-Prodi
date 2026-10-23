@@ -1955,6 +1955,84 @@ class TestCLI(unittest.TestCase):
             self.assertIn("EDFA C-Band Booster", out)
             self.assertIn("-20.0", out)
 
+    def test_cmd_otdr(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Link Backbone Banyumas"
+            length = 42.5
+            loss = 8.85
+            splices = 4
+            conn = 2
+            wl = 1550
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_otdr(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan OTDR berhasil disimpan", out)
+            self.assertIn("Alpha:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_otdr(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Link Backbone Banyumas", out)
+            self.assertIn("42.50", out)
+
+    def test_cmd_mimo(self):
+        class ArgsAdd:
+            action = "add"
+            channel = "5G Campus Small Cell"
+            bw = 100.0
+            snr = 20.0
+            tx = 4
+            rx = 4
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mimo(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan MIMO berhasil disimpan", out)
+            self.assertIn("Kapasitas:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mimo(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("5G Campus Small Cell", out)
+            self.assertIn("100.0", out)
+
+    def test_cmd_iisma(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Nadia Putri"
+            nim = "1201201088"
+            host = "National University of Singapore"
+            country = "Singapore"
+            gpa = 3.85
+            credits = 16
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_iisma(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan IISMA berhasil disimpan", out)
+            self.assertIn("20 SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_iisma(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Nadia Putri", out)
+            self.assertIn("1201201088", out)
+            self.assertIn("National University of Singapore", out)
+
 
 
 
