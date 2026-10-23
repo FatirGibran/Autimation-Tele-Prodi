@@ -4612,6 +4612,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_lorawan_battery_card(
+        cls,
+        battery_mah: float,
+        interval_min: float,
+        avg_current_ua: float,
+        lifetime_years: float,
+        duty_cycle_pct: float,
+        is_compliant: bool
+    ) -> str:
+        """
+        Renders an IoT LoRaWAN edge sensor node battery longevity and energy profiling card.
+        """
+        reg_status = "ETSI/AS923 Compliant" if is_compliant else "Duty Cycle Exceeded"
+        badge_bg = "#ecfdf5" if is_compliant else "#fef2f2"
+        badge_color = "#047857" if is_compliant else "#b91c1c"
+
+        return f"""    <div class="tu-lorawan-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-lora-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #059669; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #059669; font-size: 13px; text-transform: uppercase;">Profil Energi Node Sensor LoRaWAN</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{reg_status}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Estimasi Masa Pakai Baterai Mandiri</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Kapasitas Sel</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{battery_mah:.0f} mAh</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Interval Uplink</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{interval_min:.0f} menit</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Arus Rerata</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{avg_current_ua:.1f} \u03bcA</div>
+        </div>
+      </div>
+      <div style="background: #ecfdf5; padding: 12px; border-radius: 6px; border-left: 4px solid #059669; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: #047857; font-weight: 600;">Estimasi Masa Aktif:</span>
+          <div style="font-size: 18px; font-weight: 800; color: #064e3b;">~{lifetime_years:.1f} Tahun</div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: #047857;">Duty Cycle TX:</span>
+          <div style="font-size: 14px; font-weight: 700; color: #064e3b;">{duty_cycle_pct:.3f}%</div>
+        </div>
+      </div>
+    </div>"""
+
+
 
 
 
