@@ -4777,6 +4777,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_chromatic_dispersion_card(
+        cls,
+        fiber_name: str,
+        length_km: float,
+        dispersion_param: float,
+        pulse_broadening_ps: float,
+        max_bit_rate_gbps: float,
+        severity: str
+    ) -> str:
+        """
+        Renders an optical fiber chromatic dispersion and pulse widening telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(fiber_name.strip())
+        severity_clean = escape(severity.strip())
+
+        return f"""    <div class="tu-dispersion-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #a855f7; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Dispersi Kromatik Serat</span>
+        <span style="background: #334155; color: #cbd5e1; font-size: 11px; padding: 3px 8px; border-radius: 4px;">{severity_clean}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{name_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Panjang Serat: <strong>{length_km:.2f} km</strong></div>
+        <div>Parameter D: <strong>{dispersion_param:.2f} ps/(nm\u00b7km)</strong></div>
+        <div>Pelebaran Pulsa (\u0394t): <strong style="color: #f59e0b;">{pulse_broadening_ps:.2f} ps</strong></div>
+        <div>Batas Laju Bit Maks: <strong style="color: #38bdf8;">{max_bit_rate_gbps:.2f} Gbps</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
