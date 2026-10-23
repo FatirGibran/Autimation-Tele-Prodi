@@ -756,6 +756,13 @@ class WordPressClient:
         res = self._send_request(req)
         return res if isinstance(res, list) else []
 
+    def assign_post_author(self, post_id: int, author_id: int) -> Dict[str, Any]:
+        """
+        Assigns or transfers the designated author ID of an existing WordPress post.
+        """
+        return self.update_post(post_id=post_id, updates={"author": int(author_id)})
+
+
 
 
 
