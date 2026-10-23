@@ -850,6 +850,21 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_iisma_nim ON student_iisma_exchange(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_iisma_host ON student_iisma_exchange(host_university);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS fspl_link_budget_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_name TEXT NOT NULL,
+                    freq_mhz REAL NOT NULL,
+                    distance_km REAL NOT NULL,
+                    fspl_db REAL NOT NULL,
+                    rx_power_dbm REAL NOT NULL,
+                    fade_margin_db REAL NOT NULL,
+                    is_viable INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fspl_link ON fspl_link_budget_records(link_name);")
+
 
 
 
@@ -4077,6 +4092,50 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_fspl_link_budget(self, data: Dict[str, Any]) -> int:
+        """
+        Stores an RF FSPL and wireless link budget audit record into the database.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO fspl_link_budget_records (
+                    link_name, freq_mhz, distance_km, fspl_db, rx_power_dbm, fade_margin_db, is_viable
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("link_name", "Wireless Link").strip(),
+                float(data.get("freq_mhz", 2400.0)),
+                float(data.get("distance_km", 1.0)),
+                float(data.get("fspl_db", 0.0)),
+                float(data.get("rx_power_dbm", -70.0)),
+                float(data.get("fade_margin_db", 15.0)),
+                1 if data.get("is_viable", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_fspl_link_budgets(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored RF link budget audit records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM fspl_link_budget_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_fspl_link_budget_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an RF link budget audit record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM fspl_link_budget_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
