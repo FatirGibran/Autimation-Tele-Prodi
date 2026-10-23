@@ -864,6 +864,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fspl_link ON fspl_link_budget_records(link_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_dispersion_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fiber_name TEXT NOT NULL,
+                    length_km REAL NOT NULL,
+                    dispersion_param REAL NOT NULL,
+                    pulse_broadening_ps REAL NOT NULL,
+                    max_bit_rate_gbps REAL NOT NULL,
+                    severity TEXT NOT NULL,
+                    requires_compensation INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_disp_fiber ON optical_dispersion_records(fiber_name);")
+
 
 
 
@@ -4135,6 +4150,50 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_optical_dispersion(self, data: Dict[str, Any]) -> int:
+        """
+        Stores an optical fiber dispersion and pulse broadening record into the database.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_dispersion_records (
+                    fiber_name, length_km, dispersion_param, pulse_broadening_ps, max_bit_rate_gbps, severity, requires_compensation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("fiber_name", "Fiber Link").strip(),
+                float(data.get("length_km", 10.0)),
+                float(data.get("dispersion_param", 17.0)),
+                float(data.get("pulse_broadening_ps", 0.0)),
+                float(data.get("max_bit_rate_gbps", 10.0)),
+                data.get("severity", "Rendah").strip(),
+                1 if data.get("requires_compensation", False) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_dispersions(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical fiber dispersion records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_dispersion_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_dispersion_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical fiber dispersion record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_dispersion_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
