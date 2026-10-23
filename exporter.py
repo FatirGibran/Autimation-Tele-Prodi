@@ -1591,6 +1591,48 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_academic_exchange_program_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org EducationalOccupationalProgram JSON-LD metadata
+        for international student exchange programs (e.g., IISMA MBKM).
+        """
+        prog_name = metadata.get("program_name", "Indonesian International Student Mobility Awards (IISMA)").strip()
+        desc = metadata.get("description", "Program mobilitas dan pertukaran mahasiswa sarjana luar negeri.").strip()
+        host = metadata.get("host_university", "Global Partner University").strip()
+        country = metadata.get("country", "International").strip()
+        category = metadata.get("category", "S1 Teknik Telekomunikasi").strip()
+        url = metadata.get("url", "https://iisma.kemdikbud.go.id").strip()
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "EducationalOccupationalProgram",
+            "name": prog_name,
+            "description": desc,
+            "url": url,
+            "educationalProgramMode": "Full-time overseas exchange",
+            "occupationalCategory": category,
+            "timeToComplete": "P1S",
+            "provider": {
+                "@type": "EducationalOrganization",
+                "name": "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi"
+            },
+            "educationalCredentialAwarded": "Rekognisi 20 SKS MBKM",
+            "hasCourse": {
+                "@type": "Course",
+                "name": "Studi Akademik Internasional",
+                "provider": {
+                    "@type": "CollegeOrUniversity",
+                    "name": host,
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressCountry": country
+                    }
+                }
+            }
+        }
+
+
 
 
 
