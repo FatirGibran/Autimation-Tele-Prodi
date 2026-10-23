@@ -1362,7 +1362,20 @@ def sanitize_html5_audio_controlslist(html: str) -> str:
 
         return tag
 
-    return re.sub(r'<audio\b[^>]*>', fix_audio, html, flags=re.IGNORECASE)
+    def fix_audio_source(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src_val = src_m.group(1).strip().lower()
+            if src_val.startswith("javascript:") or src_val.startswith("data:"):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<audio\b[^>]*>', fix_audio, html, flags=re.IGNORECASE)
+    out = re.sub(r'<source\b[^>]*>', fix_audio_source, out, flags=re.IGNORECASE)
+    return out
+
 
 
 

@@ -15,7 +15,10 @@ from sanitizer import (
     sanitize_html5_fieldset_legend_elements,
     sanitize_html5_video_elements,
     sanitize_html5_abbr_dfn_elements,
-    sanitize_html5_accordion_grouping
+    sanitize_html5_accordion_grouping,
+    sanitize_html5_picture_mime_types,
+    sanitize_html5_dialog_method,
+    sanitize_html5_audio_controlslist
 )
 
 
@@ -817,6 +820,53 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("style=", cleaned)
         self.assertIn('name="faq-group"', cleaned)
         self.assertIn('<summary>Apa itu Link Budget?</summary>', cleaned)
+
+    def test_sanitize_html5_picture_mime_types(self):
+        raw = (
+            '<picture>'
+            '<source srcset="image.avif" type="image/avif">'
+            '<source srcset="evil.js" type="text/javascript">'
+            '<source srcset="flash.swf" type="application/x-shockwave-flash">'
+            '<img src="image.jpg" alt="Fallback">'
+            '</picture>'
+        )
+        cleaned = sanitize_html5_picture_mime_types(raw)
+        self.assertIn('type="image/avif"', cleaned)
+        self.assertNotIn('type="text/javascript"', cleaned)
+        self.assertNotIn('type="application/x-shockwave-flash"', cleaned)
+
+    def test_sanitize_html5_dialog_method(self):
+        raw = (
+            '<dialog autofocus onclose="alert(1)" style="border:1px solid">'
+            '<form method="dialog" action="javascript:evil()" onsubmit="bad()">'
+            '<button value="cancel">Batal</button>'
+            '</form>'
+            '</dialog>'
+        )
+        cleaned = sanitize_html5_dialog_method(raw)
+        self.assertNotIn("autofocus", cleaned)
+        self.assertNotIn("onclose=", cleaned)
+        self.assertNotIn("onsubmit=", cleaned)
+        self.assertNotIn("javascript:evil()", cleaned)
+        self.assertIn('<form method="dialog"', cleaned)
+
+    def test_sanitize_html5_audio_controlslist(self):
+        raw = (
+            '<audio autoplay preload="auto" controlslist="nodownload invalidtoken evil" onerror="alert(1)">'
+            '<source src="https://example.com/audio.mp3" type="audio/mpeg">'
+            '<source src="javascript:evil()">'
+            '</audio>'
+        )
+        cleaned = sanitize_html5_audio_controlslist(raw)
+        self.assertNotIn("autoplay", cleaned)
+        self.assertNotIn("onerror=", cleaned)
+        self.assertNotIn('preload="auto"', cleaned)
+        self.assertIn('preload="metadata"', cleaned)
+        self.assertIn('controlslist="nodownload"', cleaned)
+        self.assertNotIn("invalidtoken", cleaned)
+        self.assertNotIn("evil", cleaned)
+        self.assertNotIn("javascript:evil()", cleaned)
+        self.assertIn("controls", cleaned)
 
 
 
