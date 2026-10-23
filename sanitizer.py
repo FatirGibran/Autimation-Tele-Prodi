@@ -1251,6 +1251,38 @@ def sanitize_html5_accordion_grouping(html: str) -> str:
     return re.sub(r'<details\b[^>]*>', fix_details, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_picture_mime_types(html: str) -> str:
+    """
+    Sanitizes HTML5 <picture> and nested <source> tags to ensure only safe image MIME types
+    (e.g., image/webp, image/avif, image/jpeg, image/png, image/svg+xml) are declared,
+    stripping executable or script-bearing MIME types (text/javascript, application/xhtml+xml).
+    """
+    if not html or "<picture" not in html.lower():
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    safe_image_mimes = {
+        "image/webp", "image/avif", "image/jpeg", "image/jpg",
+        "image/png", "image/svg+xml", "image/gif", "image/apng"
+    }
+
+    def fix_source(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if type_m:
+            raw_type = type_m.group(1).strip().lower()
+            if raw_type not in safe_image_mimes:
+                # Discard unsafe or script-bearing MIME type to protect browser image parser
+                tag = re.sub(r'\s+type=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    return re.sub(r'<source\b[^>]*>', fix_source, html, flags=re.IGNORECASE)
+
+
+
 
 
 
