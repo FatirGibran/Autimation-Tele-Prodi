@@ -1563,6 +1563,95 @@ Status: Granted
         self.assertEqual(res_partial["converted_sks"], 16)
         self.assertEqual(len(res_partial["course_equivalencies"]), 4)
 
+    def test_calculate_fspl_and_link_budget(self):
+        from parser import calculate_fspl_and_link_budget
+        res = calculate_fspl_and_link_budget(
+            frequency_mhz=2400.0,
+            distance_km=5.0,
+            tx_power_dbm=20.0,
+            tx_gain_dbi=14.0,
+            rx_gain_dbi=14.0,
+            misc_losses_db=2.0,
+            rx_sensitivity_dbm=-85.0
+        )
+        self.assertGreater(res["fspl_db"], 100.0)
+        self.assertGreater(res["fade_margin_db"], 10.0)
+        self.assertTrue(res["is_viable"])
+        self.assertIn("Andal", res["status"])
+
+        # Test extreme distance causing outage
+        outage = calculate_fspl_and_link_budget(
+            frequency_mhz=5800.0,
+            distance_km=150.0,
+            tx_power_dbm=10.0,
+            tx_gain_dbi=0.0,
+            rx_gain_dbi=0.0,
+            misc_losses_db=5.0,
+            rx_sensitivity_dbm=-70.0
+        )
+        self.assertFalse(outage["is_viable"])
+        self.assertIn("Gagal", outage["status"])
+
+    def test_calculate_optical_chromatic_dispersion(self):
+        from parser import calculate_optical_chromatic_dispersion
+        res = calculate_optical_chromatic_dispersion(
+            dispersion_param_ps_nm_km=17.0,
+            spectral_width_nm=0.1,
+            fiber_length_km=50.0,
+            bit_rate_gbps=10.0
+        )
+        self.assertEqual(res["pulse_broadening_ps"], 85.0)
+        self.assertEqual(res["bit_period_ps"], 100.0)
+        self.assertEqual(res["spreading_ratio"], 0.85)
+        self.assertTrue(res["requires_compensation"])
+        self.assertIn("Tinggi", res["severity"])
+
+    def test_calculate_cellular_handover_hysteresis(self):
+        from parser import calculate_cellular_handover_hysteresis
+        ho = calculate_cellular_handover_hysteresis(
+            rsrp_serving_dbm=-95.0,
+            rsrp_target_dbm=-82.0,
+            hysteresis_db=3.0,
+            a3_offset_db=2.0,
+            time_to_trigger_ms=160
+        )
+        self.assertTrue(ho["is_a3_triggered"])
+        self.assertEqual(ho["decision"], "TRIGGER_HANDOVER")
+        self.assertIn("Rendah", ho["ping_pong_risk"])
+
+        no_ho = calculate_cellular_handover_hysteresis(
+            rsrp_serving_dbm=-85.0,
+            rsrp_target_dbm=-90.0
+        )
+        self.assertFalse(no_ho["is_a3_triggered"])
+        self.assertEqual(no_ho["decision"], "MAINTAIN_SERVING")
+
+    def test_parse_proyek_kemanusiaan_evaluation(self):
+        from parser import parse_proyek_kemanusiaan_evaluation
+        res = parse_proyek_kemanusiaan_evaluation({
+            "student_name": "Reza Kurniawan",
+            "nim": "1201201099",
+            "partner_org": "BPBD Kabupaten Banyumas",
+            "location": "Banyumas",
+            "field_hours": 450,
+            "score_mentor": 90.0,
+            "score_field": 88.0,
+            "score_impact": 85.0
+        })
+        self.assertEqual(res["letter_grade"], "A")
+        self.assertEqual(res["converted_sks"], 20)
+        self.assertTrue(res["is_eligible"])
+        self.assertEqual(len(res["course_equivalencies"]), 5)
+
+        # Ineligible test
+        fail = parse_proyek_kemanusiaan_evaluation({
+            "field_hours": 100,
+            "score_mentor": 40.0,
+            "score_field": 45.0,
+            "score_impact": 40.0
+        })
+        self.assertEqual(fail["converted_sks"], 0)
+        self.assertFalse(fail["is_eligible"])
 
 
 if __name__ == "__main__":
