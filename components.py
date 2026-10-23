@@ -4701,6 +4701,45 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_beamforming_pattern_card(
+        cls,
+        array_elements: int,
+        main_lobe_deg: float,
+        half_power_beamwidth_deg: float,
+        side_lobe_level_db: float,
+        directivity_dbi: float
+    ) -> str:
+        """
+        Renders an adaptive antenna array beamforming radiation pattern SVG card
+        showing phased array main lobe steering, half-power beamwidth (HPBW), and sidelobe suppression.
+        """
+        return f"""    <div class="tu-beamforming-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase;">Pola Radiasi Beamforming Phased Array ({array_elements} Elemen)</span>
+        <span style="font-size: 12px; color: #94a3b8;">Direktivitas: {directivity_dbi:.1f} dBi</span>
+      </div>
+      <div style="display: flex; justify-content: center; margin: 10px 0;">
+        <svg viewBox="0 0 240 130" width="240" height="130" style="background: #1e293b; border-radius: 6px; border: 1px solid #475569;" aria-label="Diagram Beamforming">
+          <!-- Concentric angle grid -->
+          <circle cx="120" cy="110" r="90" fill="none" stroke="#334155" stroke-dasharray="2,2" />
+          <circle cx="120" cy="110" r="50" fill="none" stroke="#334155" stroke-dasharray="2,2" />
+          <line x1="30" y1="110" x2="210" y2="110" stroke="#475569" />
+          <!-- Main beam lobe -->
+          <path d="M 120 110 C 95 60, 105 20, 120 15 C 135 20, 145 60, 120 110 Z" fill="#0284c7" opacity="0.8" />
+          <!-- Side lobes -->
+          <path d="M 120 110 C 80 90, 70 80, 80 75 C 90 75, 105 95, 120 110 Z" fill="#38bdf8" opacity="0.4" />
+          <path d="M 120 110 C 135 95, 150 75, 160 75 C 170 80, 160 90, 120 110 Z" fill="#38bdf8" opacity="0.4" />
+        </svg>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px; color: #94a3b8;">
+        <span>Sudut Kemudi (Steering): <strong>{main_lobe_deg:.1f}\u00b0</strong></span>
+        <span>HPBW: <strong>{half_power_beamwidth_deg:.1f}\u00b0</strong></span>
+        <span>SLL: <strong style="color: #38bdf8;">{side_lobe_level_db:.1f} dB</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
