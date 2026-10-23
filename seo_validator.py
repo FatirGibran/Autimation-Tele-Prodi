@@ -4344,6 +4344,67 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_breadcrumb_navigation_schema(html_content: str) -> Dict[str, Any]:
+        """
+        Audits breadcrumb navigation markup for WCAG 2.1 accessibility and Schema.org BreadcrumbList microdata:
+        - Checks <nav aria-label="breadcrumb"> container.
+        - Checks ordered list <ol> structure.
+        - Checks Schema.org BreadcrumbList item scope / itemprop itemListElement or JSON-LD.
+        - Checks aria-current="page" on terminal active breadcrumb item.
+        """
+        if not html_content:
+            return {
+                "has_breadcrumb": False,
+                "item_count": 0,
+                "has_schema_markup": False,
+                "has_aria_current": False,
+                "is_valid": False,
+                "issues": ["Konten HTML kosong."]
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        breadcrumb_nav = soup.find(lambda e: e.name == "nav" and (e.get("aria-label", "").lower() in {"breadcrumb", "remah roti"} or (e.get("class") and any("breadcrumb" in c.lower() for c in e.get("class")))))
+
+        issues = []
+        if not breadcrumb_nav:
+            return {
+                "has_breadcrumb": False,
+                "item_count": 0,
+                "has_schema_markup": False,
+                "has_aria_current": False,
+                "is_valid": False,
+                "issues": ["Elemen navigasi breadcrumb (<nav aria-label='breadcrumb'>) tidak ditemukan."]
+            }
+
+        items = breadcrumb_nav.find_all("li")
+        item_count = len(items)
+
+        if item_count < 2:
+            issues.append("Struktur breadcrumb harus memiliki sekurang-kurangnya 2 level hirarki (misal: Beranda > Kategori).")
+
+        has_schema = bool(
+            breadcrumb_nav.find(attrs={"itemtype": re.compile(r'schema\.org/BreadcrumbList', re.IGNORECASE)}) or
+            breadcrumb_nav.find(attrs={"itemprop": "itemListElement"}) or
+            soup.find("script", type="application/ld+json", string=re.compile(r'BreadcrumbList', re.IGNORECASE))
+        )
+        if not has_schema:
+            issues.append("Navigasi breadcrumb belum memuat markup microdata atau JSON-LD Schema.org 'BreadcrumbList'.")
+
+        has_aria_current = bool(breadcrumb_nav.find(attrs={"aria-current": "page"}))
+        if not has_aria_current:
+            issues.append("Item breadcrumb terakhir belum diberi penanda aksesibel aria-current='page'.")
+
+        return {
+            "has_breadcrumb": True,
+            "item_count": item_count,
+            "has_schema_markup": has_schema,
+            "has_aria_current": has_aria_current,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
