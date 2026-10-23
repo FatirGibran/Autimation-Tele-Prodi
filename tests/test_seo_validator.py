@@ -1480,6 +1480,68 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(res_bad["unlabeled_targets"], 1)
         self.assertEqual(res_bad["cramped_targets"], 1)
 
+    def test_audit_av_transcripts_and_captions(self):
+        html_ok = (
+            '<div>'
+            '<video><track kind="captions" src="/sub.vtt" srclang="id"></video>'
+            '<div class="tu-media-transcript"><p>Teks rekaman webinar.</p></div>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_av_transcripts_and_captions(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["captioned_videos"], 1)
+
+        html_bad = '<div><video><source src="clip.mp4"></video></div>'
+        res_bad = YoastSEOValidator.audit_av_transcripts_and_captions(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["captioned_videos"], 0)
+
+    def test_audit_rel_canonical_urls(self):
+        html_ok = '<head><link rel="canonical" href="https://ittelkom-pwt.ac.id/riset-telekomunikasi"></head>'
+        res_ok = YoastSEOValidator.audit_rel_canonical_urls(html_ok)
+        self.assertTrue(res_ok["is_valid"])
+        self.assertTrue(res_ok["is_https"])
+        self.assertFalse(res_ok["has_tracking_params"])
+
+        html_bad = '<head><link rel="canonical" href="http://ittelkom-pwt.ac.id/riset?utm_source=news"></head>'
+        res_bad = YoastSEOValidator.audit_rel_canonical_urls(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertTrue(res_bad["has_tracking_params"])
+
+    def test_audit_breadcrumb_navigation_schema(self):
+        html_ok = (
+            '<nav aria-label="breadcrumb">'
+            '<ol itemscope itemtype="https://schema.org/BreadcrumbList">'
+            '<li itemprop="itemListElement"><a href="/">Beranda</a></li>'
+            '<li itemprop="itemListElement" aria-current="page">Akademik</li>'
+            '</ol>'
+            '</nav>'
+        )
+        res_ok = YoastSEOValidator.audit_breadcrumb_navigation_schema(html_ok)
+        self.assertTrue(res_ok["is_valid"])
+        self.assertTrue(res_ok["has_schema_markup"])
+        self.assertTrue(res_ok["has_aria_current"])
+
+        html_bad = '<nav><ol><li>Hanya Satu</li></ol></nav>'
+        res_bad = YoastSEOValidator.audit_breadcrumb_navigation_schema(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_cls_media_aspect_ratios(self):
+        html_ok = (
+            '<div>'
+            '<img src="/foto.jpg" width="600" height="400">'
+            '<canvas width="300" height="200"></canvas>'
+            '<iframe src="/embed" style="aspect-ratio: 16/9;"></iframe>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_cls_media_aspect_ratios(html_ok)
+        self.assertTrue(res_ok["is_cls_safe"])
+        self.assertEqual(res_ok["dimensioned_elements"], 3)
+
+        html_bad = '<div><img src="/shift.jpg"></div>'
+        res_bad = YoastSEOValidator.audit_cls_media_aspect_ratios(html_bad)
+        self.assertFalse(res_bad["is_cls_safe"])
+        self.assertEqual(res_bad["missing_dimensions_count"], 1)
 
 
 if __name__ == "__main__":
