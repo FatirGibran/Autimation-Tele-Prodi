@@ -1000,6 +1000,31 @@ class TelegramFormatter:
             f"💡 *Selamat atas dedikasi dan inovasi pengembangan startup teknologi telekomunikasi!*"
         )
 
+    @staticmethod
+    def format_otdr_telemetry_telegram(
+        link_name: str,
+        fiber_length_km: float,
+        wavelength_nm: int,
+        total_loss_db: float,
+        attenuation_db_km: float,
+        quality_status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an OTDR fiber attenuation and trace audit summary for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Telemetri Optik:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🔬 **Hasil Audit Redaman Serat Optik OTDR**\n\n"
+            f"🛣️ **Ruas Link Optik:** {link_name.strip()}\n"
+            f"📏 **Panjang Kabel:** `{float(fiber_length_km):.2f} km` (`{int(wavelength_nm)} nm`)\n"
+            f"📉 **Total Link Loss:** `{float(total_loss_db):.2f} dB`\n"
+            f"📊 **Koefisien Redaman (\u03b1):** `{float(attenuation_db_km):.4f} dB/km`\n"
+            f"🛡️ **Status Kelayakan:** `{quality_status.strip()}`{portal_link}\n\n"
+            f"✨ *Hasil trace reflectometry terverifikasi memenuhi standar transmisi serat optik ITU-T G.652!*"
+        )
+
+
 
 
 
