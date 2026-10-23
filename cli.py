@@ -12,7 +12,10 @@ from parser import (
     calculate_edfa_amplifier_gain,
     calculate_otdr_fiber_events,
     calculate_mimo_channel_capacity,
-    parse_iisma_evaluation
+    parse_iisma_evaluation,
+    calculate_fspl_and_link_budget,
+    calculate_optical_chromatic_dispersion,
+    parse_proyek_kemanusiaan_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -1669,11 +1672,120 @@ def cmd_iisma(args):
             print(f"{s['id']:<4} | {s['nim']:<10} | {s['converted_sks']:<4} | {s['letter_grade']:<5} | {s['student_name'][:18]:<20} | {s['host_university']}")
 
 
+def cmd_fspl(args):
+    if args.action == "add":
+        if not args.name or args.freq is None or args.distance is None:
+            print("Error: Argumen --name, --freq, dan --distance wajib diisi.")
+            sys.exit(1)
+        tx = args.tx if args.tx is not None else 20.0
+        gtx = args.gtx if args.gtx is not None else 14.0
+        grx = args.grx if args.grx is not None else 14.0
+        calc = calculate_fspl_and_link_budget(
+            frequency_mhz=args.freq,
+            distance_km=args.distance,
+            tx_power_dbm=tx,
+            tx_gain_dbi=gtx,
+            rx_gain_dbi=grx
+        )
+        fid = storage.record_fspl_link_budget({
+            "link_name": args.name,
+            "freq_mhz": args.freq,
+            "distance_km": args.distance,
+            "fspl_db": calc["fspl_db"],
+            "rx_power_dbm": calc["rx_power_dbm"],
+            "fade_margin_db": calc["fade_margin_db"],
+            "is_viable": calc["is_viable"]
+        })
+        print(f"Catatan FSPL berhasil disimpan dengan ID: {fid} (Fade Margin: {calc['fade_margin_db']:+.2f} dB)")
+    else:
+        records = storage.list_fspl_link_budgets(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan FSPL link budget yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FREQ (MHZ)':<12} | {'JARAK (KM)':<10} | {'FSPL (DB)':<10} | {'MARGIN (DB)':<12} | {'LINK'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['freq_mhz']:<12.1f} | {r['distance_km']:<10.2f} | {r['fspl_db']:<10.2f} | {r['fade_margin_db']:<+12.2f} | {r['link_name']}")
 
 
+def cmd_dispersion(args):
+    if args.action == "add":
+        if not args.name or args.length is None or args.disp is None:
+            print("Error: Argumen --name, --length, dan --disp wajib diisi.")
+            sys.exit(1)
+        sw = args.sw if args.sw is not None else 0.1
+        rate = args.rate if args.rate is not None else 10.0
+        calc = calculate_optical_chromatic_dispersion(
+            dispersion_param_ps_nm_km=args.disp,
+            spectral_width_nm=sw,
+            fiber_length_km=args.length,
+            bit_rate_gbps=rate
+        )
+        did = storage.record_optical_dispersion({
+            "fiber_name": args.name,
+            "length_km": args.length,
+            "dispersion_param": args.disp,
+            "pulse_broadening_ps": calc["pulse_broadening_ps"],
+            "max_bit_rate_gbps": calc["max_bit_rate_gbps"],
+            "severity": calc["severity"],
+            "requires_compensation": calc["requires_compensation"]
+        })
+        print(f"Catatan dispersi berhasil disimpan dengan ID: {did} (Broadening: {calc['pulse_broadening_ps']:.2f} ps)")
+    else:
+        records = storage.list_optical_dispersions(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan dispersi optik yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'PANJANG':<10} | {'D (PS/NM-KM)':<14} | {'DELTA_T':<10} | {'MAX GBPS':<10} | {'FIBER'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['length_km']:<10.2f} | {r['dispersion_param']:<14.2f} | {r['pulse_broadening_ps']:<10.2f} | {r['max_bit_rate_gbps']:<10.2f} | {r['fiber_name']}")
+
+
+def cmd_kemanusiaan(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.org:
+            print("Error: Argumen --name, --nim, dan --org wajib diisi.")
+            sys.exit(1)
+        loc = args.loc if args.loc else "Jawa Tengah"
+        hours = args.hours if args.hours is not None else 400
+        mentor = args.mentor if args.mentor is not None else 85.0
+        field = args.field if args.field is not None else 85.0
+        eval_res = parse_proyek_kemanusiaan_evaluation({
+            "student_name": args.name,
+            "nim": args.nim,
+            "partner_org": args.org,
+            "location": loc,
+            "field_hours": hours,
+            "score_mentor": mentor,
+            "score_field": field,
+            "score_impact": 85.0
+        })
+        kid = storage.record_proyek_kemanusiaan({
+            "student_name": args.name,
+            "nim": args.nim,
+            "partner_org": args.org,
+            "location": loc,
+            "field_hours": hours,
+            "composite_score": eval_res["composite_score"],
+            "converted_sks": eval_res["converted_sks"],
+            "letter_grade": eval_res["letter_grade"],
+            "status": eval_res["status"]
+        })
+        print(f"Catatan Proyek Kemanusiaan berhasil disimpan dengan ID: {kid} ({eval_res['converted_sks']} SKS Diakui)")
+    else:
+        records = storage.list_proyek_kemanusiaan(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Proyek Kemanusiaan yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'MAHASISWA':<20} | {'MITRA'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['nim']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:18]:<20} | {r['partner_org']}")
 
 
 def main():
+
 
 
 
@@ -2331,7 +2443,44 @@ def main():
     iisma_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     iisma_parser.set_defaults(func=cmd_iisma)
 
+    # FSPL command
+    fspl_parser = subparsers.add_parser("fspl", help="Kelola kalkulasi link budget nirkabel FSPL (list, add)")
+    fspl_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan link budget FSPL")
+    fspl_parser.add_argument("--name", help="Nama link / hop wireless")
+    fspl_parser.add_argument("--freq", type=float, help="Frekuensi operasi gelombang (MHz)")
+    fspl_parser.add_argument("--distance", type=float, help="Jarak lintasan propagasi (km)")
+    fspl_parser.add_argument("--tx", type=float, default=20.0, help="Daya pancar pemancar (dBm)")
+    fspl_parser.add_argument("--gtx", type=float, default=14.0, help="Gain antena pemancar (dBi)")
+    fspl_parser.add_argument("--grx", type=float, default=14.0, help="Gain antena penerima (dBi)")
+    fspl_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    fspl_parser.set_defaults(func=cmd_fspl)
+
+    # Dispersion command
+    disp_parser = subparsers.add_parser("dispersion", help="Kelola kalkulasi dispersi kromatik serat optik (list, add)")
+    disp_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan dispersi serat optik")
+    disp_parser.add_argument("--name", help="Nama link kabel serat optik")
+    disp_parser.add_argument("--length", type=float, help="Panjang ruas serat optik (km)")
+    disp_parser.add_argument("--disp", type=float, help="Parameter dispersi kromatik D (ps/(nm*km))")
+    disp_parser.add_argument("--sw", type=float, default=0.1, help="Lebar spektral sumber optik (nm)")
+    disp_parser.add_argument("--rate", type=float, default=10.0, help="Laju bit sinyal modulasi (Gbps)")
+    disp_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    disp_parser.set_defaults(func=cmd_dispersion)
+
+    # Kemanusiaan command
+    kemanusiaan_parser = subparsers.add_parser("kemanusiaan", help="Kelola evaluasi & rekognisi MBKM Proyek Kemanusiaan (list, add)")
+    kemanusiaan_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan rekognisi Kemanusiaan")
+    kemanusiaan_parser.add_argument("--name", help="Nama lengkap mahasiswa relawan")
+    kemanusiaan_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    kemanusiaan_parser.add_argument("--org", help="Nama organisasi mitra / BPBD")
+    kemanusiaan_parser.add_argument("--loc", help="Lokasi wilayah penugasan kemanusiaan")
+    kemanusiaan_parser.add_argument("--hours", type=int, default=400, help="Total jam aktivitas lapangan")
+    kemanusiaan_parser.add_argument("--mentor", type=float, default=85.0, help="Nilai pembimbing akademik (0-100)")
+    kemanusiaan_parser.add_argument("--field", type=float, default=85.0, help="Nilai supervisor lapangan (0-100)")
+    kemanusiaan_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    kemanusiaan_parser.set_defaults(func=cmd_kemanusiaan)
+
     args = parser.parse_args()
+
 
 
 
