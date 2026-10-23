@@ -1282,6 +1282,42 @@ def sanitize_html5_picture_mime_types(html: str) -> str:
     return re.sub(r'<source\b[^>]*>', fix_source, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_dialog_method(html: str) -> str:
+    """
+    Sanitizes HTML5 <dialog> modal containers and nested <form method="dialog"> elements.
+    Neutralizes inline event handlers (onclose, oncancel, onsubmit), strips aggressive autofocus
+    attributes that violate screen-reader focus flow, and sanitizes form action URIs.
+    """
+    if not html or "<dialog" not in html.lower():
+        return html
+
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<script\b[^>]*>', '', html, flags=re.IGNORECASE)
+
+    def fix_dialog(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Prevent focus-hijacking by stripping autofocus on the dialog container itself
+        tag = re.sub(r'\s+autofocus\b', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    def fix_form(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        action_m = re.search(r'\baction=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if action_m:
+            act_val = action_m.group(1).strip().lower()
+            if act_val.startswith("javascript:") or act_val.startswith("data:"):
+                tag = re.sub(r'\s+action=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<dialog\b[^>]*>', fix_dialog, html, flags=re.IGNORECASE)
+    out = re.sub(r'<form\b[^>]*>', fix_form, out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
