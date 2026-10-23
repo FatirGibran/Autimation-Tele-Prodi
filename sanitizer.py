@@ -10,7 +10,8 @@ ALLOWED_TAGS = {
     "video", "audio", "source", "picture", "track", "canvas",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
     "ruby", "rt", "rp", "rb", "rtc",
-    "meter", "progress", "data", "template"
+    "meter", "progress", "data", "template",
+    "bdi", "bdo"
 }
 
 
@@ -1432,6 +1433,34 @@ def sanitize_mathml_math_elements(html: str) -> str:
 
     cleaned = re.sub(r'<(?:math|mrow|mi|mo|mn|msup|msub|mfrac|msqrt|mroot|mtext|annotation)\b[^>]*>', clean_math_tag, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_bdi_bdo_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <bdi> (Bi-directional Isolation) and <bdo> (Bi-directional Override) elements.
+    Ensures the dir attribute is strictly valid ('ltr', 'rtl', or 'auto'), strips event handlers,
+    and eliminates unsafe inline styling or script injections.
+    """
+    if not html or ("<bdi" not in html.lower() and "<bdo" not in html.lower()):
+        return html
+
+    valid_dirs = {"ltr", "rtl", "auto"}
+
+    def fix_bdi_bdo(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        dir_m = re.search(r'\bdir=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if dir_m:
+            dir_val = dir_m.group(1).strip().lower()
+            if dir_val not in valid_dirs:
+                tag = re.sub(r'\s+dir=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<(?:bdi|bdo)\b[^>]*>', fix_bdi_bdo, html, flags=re.IGNORECASE)
+
 
 
 
