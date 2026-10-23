@@ -639,6 +639,32 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(restored["title"]["rendered"], "Judul Lama")
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_users_by_role(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 12, "name": "Dr. Ir. Budi", "slug": "budi"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        users = self.client.get_users_by_role(role="author", page=1, per_page=10)
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]["id"], 12)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/users?roles=author&page=1&per_page=10", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_assign_post_author(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 105, "author": 12}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.assign_post_author(post_id=105, author_id=12)
+        self.assertEqual(res["id"], 105)
+        self.assertEqual(res["author"], 12)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/posts/105", req.full_url)
+
 
 
 
