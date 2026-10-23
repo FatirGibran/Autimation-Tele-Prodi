@@ -4404,6 +4404,60 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_cls_media_aspect_ratios(html_content: str) -> Dict[str, Any]:
+        """
+        Audits visual media elements (<img>, <video>, <canvas>, <iframe>) for explicit dimensions
+        or CSS aspect-ratio properties to eliminate Cumulative Layout Shift (CLS).
+        """
+        if not html_content:
+            return {
+                "total_media_elements": 0,
+                "dimensioned_elements": 0,
+                "missing_dimensions_count": 0,
+                "is_cls_safe": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        media_tags = soup.find_all(["img", "video", "canvas", "iframe"])
+
+        if not media_tags:
+            return {
+                "total_media_elements": 0,
+                "dimensioned_elements": 0,
+                "missing_dimensions_count": 0,
+                "is_cls_safe": True,
+                "issues": []
+            }
+
+        dimensioned = 0
+        missing = 0
+        issues = []
+
+        for idx, tag in enumerate(media_tags, 1):
+            has_w = bool(tag.get("width"))
+            has_h = bool(tag.get("height"))
+            style_str = tag.get("style", "").lower()
+            has_aspect_ratio = "aspect-ratio" in style_str
+
+            if (has_w and has_h) or has_aspect_ratio:
+                dimensioned += 1
+            else:
+                missing += 1
+                tag_name = tag.name
+                src = tag.get("src", "")[:30]
+                issues.append(f"Elemen <{tag_name}> #{idx} ({src}) tidak memiliki atribut width/height atau CSS aspect-ratio (potensi CLS).")
+
+        return {
+            "total_media_elements": len(media_tags),
+            "dimensioned_elements": dimensioned,
+            "missing_dimensions_count": missing,
+            "is_cls_safe": missing == 0,
+            "issues": issues
+        }
+
+
 
 
 
