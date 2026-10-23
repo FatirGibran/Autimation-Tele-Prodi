@@ -4667,6 +4667,59 @@ def calculate_optical_chromatic_dispersion(
     }
 
 
+def calculate_cellular_handover_hysteresis(
+    rsrp_serving_dbm: float,
+    rsrp_target_dbm: float,
+    hysteresis_db: float = 3.0,
+    a3_offset_db: float = 2.0,
+    time_to_trigger_ms: int = 160
+) -> Dict[str, Any]:
+    """
+    Analyzes 3GPP LTE/5G A3 event handover condition, hysteresis margin, and ping-pong risk.
+    A3 condition:
+      Mn (target) - Hys > Ms (serving) + Off
+      => Mn - Ms > Off + Hys
+    """
+    rsrp_s = float(rsrp_serving_dbm)
+    rsrp_t = float(rsrp_target_dbm)
+    hys = max(0.0, float(hysteresis_db))
+    off = float(a3_offset_db)
+    ttt = max(0, int(time_to_trigger_ms))
+
+    delta_rsrp = rsrp_t - rsrp_s
+    threshold_margin = off + hys
+    margin_diff = delta_rsrp - threshold_margin
+
+    is_a3_triggered = delta_rsrp > threshold_margin
+
+    if delta_rsrp <= 0:
+        ping_pong_risk = "Nol (Target Lebih Lemah)"
+        decision = "MAINTAIN_SERVING"
+    elif delta_rsrp < threshold_margin:
+        ping_pong_risk = "Tinggi jika dipaksa handover (Di bawah Hysteresis)"
+        decision = "MAINTAIN_SERVING"
+    elif margin_diff < 1.5 and ttt < 100:
+        ping_pong_risk = "Tinggi (Margin Tipis & TTT Terlalu Cepat)"
+        decision = "PENDING_TTT_EVALUATION"
+    else:
+        ping_pong_risk = "Rendah (Handover Stabil)"
+        decision = "TRIGGER_HANDOVER"
+
+    return {
+        "rsrp_serving_dbm": round(rsrp_s, 2),
+        "rsrp_target_dbm": round(rsrp_t, 2),
+        "delta_rsrp_db": round(delta_rsrp, 2),
+        "hysteresis_db": round(hys, 2),
+        "a3_offset_db": round(off, 2),
+        "time_to_trigger_ms": ttt,
+        "is_a3_triggered": is_a3_triggered,
+        "margin_diff_db": round(margin_diff, 2),
+        "decision": decision,
+        "ping_pong_risk": ping_pong_risk
+    }
+
+
+
 
 
 
