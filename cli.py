@@ -9,7 +9,10 @@ from parser import (
     parse_llm_response,
     calculate_radar_range_equation,
     parse_wirausaha_merdeka_evaluation,
-    calculate_edfa_amplifier_gain
+    calculate_edfa_amplifier_gain,
+    calculate_otdr_fiber_events,
+    calculate_mimo_channel_capacity,
+    parse_iisma_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -1557,6 +1560,116 @@ def cmd_edfa(args):
             print(f"{r['id']:<4} | {r['input_power_dbm']:<10.1f} | {r['actual_gain_db']:<+10.2f} | {r['output_power_dbm']:<11.2f} | {r['noise_figure_db']:<8.2f} | {r['device_name']}")
 
 
+def cmd_otdr(args):
+    if args.action == "add":
+        if not args.name or args.length is None or args.loss is None:
+            print("Error: Argumen --name, --length, dan --loss wajib diisi.")
+            sys.exit(1)
+        splices = args.splices if args.splices is not None else 4
+        conn = args.conn if args.conn is not None else 2
+        wl = args.wl if args.wl is not None else 1550
+        calc = calculate_otdr_fiber_events(
+            fiber_length_km=args.length,
+            total_loss_db=args.loss,
+            num_splices=splices,
+            num_connectors=conn,
+            wavelength_nm=wl
+        )
+        oid = storage.record_otdr_measurement({
+            "link_name": args.name,
+            "fiber_length_km": args.length,
+            "wavelength_nm": wl,
+            "total_loss_db": args.loss,
+            "event_loss_db": calc["total_event_loss_db"],
+            "attenuation_db_km": calc["attenuation_db_per_km"],
+            "quality_status": calc["quality_status"],
+            "is_compliant": calc["is_compliant"]
+        })
+        print(f"Catatan OTDR berhasil disimpan dengan ID: {oid} (Alpha: {calc['attenuation_db_per_km']:.4f} dB/km)")
+    else:
+        records = storage.list_otdr_measurements(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan telemetri OTDR yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'PANJANG':<10} | {'LOSS (DB)':<10} | {'ALPHA (DB/KM)':<14} | {'STATUS':<20} | {'LINK'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['fiber_length_km']:<10.2f} | {r['total_loss_db']:<10.2f} | {r['attenuation_db_km']:<14.4f} | {r['quality_status'][:18]:<20} | {r['link_name']}")
+
+
+def cmd_mimo(args):
+    if args.action == "add":
+        if not args.channel or args.bw is None or args.snr is None:
+            print("Error: Argumen --channel, --bw, dan --snr wajib diisi.")
+            sys.exit(1)
+        tx = args.tx if args.tx is not None else 4
+        rx = args.rx if args.rx is not None else 4
+        calc = calculate_mimo_channel_capacity(
+            bandwidth_mhz=args.bw,
+            snr_db=args.snr,
+            num_tx_antennas=tx,
+            num_rx_antennas=rx
+        )
+        mid = storage.record_mimo_capacity({
+            "channel_name": args.channel,
+            "bandwidth_mhz": args.bw,
+            "snr_db": args.snr,
+            "num_tx": tx,
+            "num_rx": rx,
+            "spectral_eff_bps_hz": calc["spectral_efficiency_bps_hz"],
+            "capacity_gbps": calc["capacity_gbps"],
+            "gain_factor": calc["capacity_gain_factor"],
+            "status": calc["spatial_multiplexing_status"]
+        })
+        print(f"Catatan MIMO berhasil disimpan dengan ID: {mid} (Kapasitas: {calc['capacity_gbps']:.3f} Gbps)")
+    else:
+        records = storage.list_mimo_capacities(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan kapasitas MIMO yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'MIMO':<6} | {'BW (MHZ)':<10} | {'EFF (BPS/HZ)':<14} | {'GBPS':<8} | {'KANAL'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['num_tx']}x{r['num_rx']:<3} | {r['bandwidth_mhz']:<10.1f} | {r['spectral_eff_bps_hz']:<14.2f} | {r['capacity_gbps']:<8.3f} | {r['channel_name']}")
+
+
+def cmd_iisma(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.host or not args.country or args.gpa is None or args.credits is None:
+            print("Error: Argumen --name, --nim, --host, --country, --gpa, dan --credits wajib diisi.")
+            sys.exit(1)
+        eval_res = parse_iisma_evaluation(
+            student_name=args.name,
+            nim=args.nim,
+            host_university=args.host,
+            country=args.country,
+            gpa_host=args.gpa,
+            credits_taken=args.credits
+        )
+        iid = storage.record_iisma_student({
+            "student_name": args.name,
+            "nim": args.nim,
+            "host_university": args.host,
+            "country": args.country,
+            "gpa_host": args.gpa,
+            "credits_taken": args.credits,
+            "converted_sks": eval_res["converted_sks"],
+            "letter_grade": eval_res["letter_grade"],
+            "status": eval_res["status"]
+        })
+        print(f"Catatan IISMA berhasil disimpan dengan ID: {iid} ({eval_res['converted_sks']} SKS Diakui)")
+    else:
+        students = storage.list_iisma_students(limit=args.limit or 50)
+        if not students:
+            print("Tidak ada catatan awardee IISMA yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'MAHASISWA':<20} | {'UNIVERSITAS'}")
+        print("-" * 80)
+        for s in students:
+            print(f"{s['id']:<4} | {s['nim']:<10} | {s['converted_sks']:<4} | {s['letter_grade']:<5} | {s['student_name'][:18]:<20} | {s['host_university']}")
+
+
+
 
 
 
@@ -2183,7 +2296,43 @@ def main():
     edfa_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     edfa_parser.set_defaults(func=cmd_edfa)
 
+    # OTDR command
+    otdr_parser = subparsers.add_parser("otdr", help="Kelola kalkulasi redaman & trace serat optik OTDR (list, add)")
+    otdr_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi OTDR")
+    otdr_parser.add_argument("--name", help="Nama ruas kabel serat optik")
+    otdr_parser.add_argument("--length", type=float, help="Panjang bentang kabel optik (km)")
+    otdr_parser.add_argument("--loss", type=float, help="Total rugi redaman link optik (dB)")
+    otdr_parser.add_argument("--splices", type=int, default=4, help="Jumlah sambungan fusion splice")
+    otdr_parser.add_argument("--conn", type=int, default=2, help="Jumlah konektor optik")
+    otdr_parser.add_argument("--wl", type=int, default=1550, help="Panjang gelombang uji (nm)")
+    otdr_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    otdr_parser.set_defaults(func=cmd_otdr)
+
+    # MIMO command
+    mimo_parser = subparsers.add_parser("mimo", help="Kelola kalkulasi kapasitas kanal antena MIMO (list, add)")
+    mimo_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan kapasitas MIMO")
+    mimo_parser.add_argument("--channel", help="Nama kanal / link wireless MIMO")
+    mimo_parser.add_argument("--bw", type=float, help="Lebar pita frekuensi (MHz)")
+    mimo_parser.add_argument("--snr", type=float, help="Signal-to-Noise Ratio kanal (dB)")
+    mimo_parser.add_argument("--tx", type=int, default=4, help="Jumlah antena pemancar (Tx)")
+    mimo_parser.add_argument("--rx", type=int, default=4, help="Jumlah antena penerima (Rx)")
+    mimo_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    mimo_parser.set_defaults(func=cmd_mimo)
+
+    # IISMA command
+    iisma_parser = subparsers.add_parser("iisma", help="Kelola evaluasi & rekognisi SKS program IISMA MBKM (list, add)")
+    iisma_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan rekognisi IISMA")
+    iisma_parser.add_argument("--name", help="Nama lengkap mahasiswa awardee")
+    iisma_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    iisma_parser.add_argument("--host", help="Nama universitas mitra luar negeri")
+    iisma_parser.add_argument("--country", help="Negara universitas tujuan")
+    iisma_parser.add_argument("--gpa", type=float, help="IPK kumulatif host university (skala 4.0)")
+    iisma_parser.add_argument("--credits", type=int, help="Jumlah kredit / ECTS yang diselesaikan")
+    iisma_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    iisma_parser.set_defaults(func=cmd_iisma)
+
     args = parser.parse_args()
+
 
 
 
