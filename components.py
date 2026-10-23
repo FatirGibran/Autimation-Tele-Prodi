@@ -4661,6 +4661,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_iisma_exchange_card(
+        cls,
+        student_name: str,
+        nim: str,
+        host_university: str,
+        country: str,
+        gpa_host: float,
+        converted_sks: int,
+        status: str
+    ) -> str:
+        """
+        Renders an IISMA international student exchange recognition card.
+        """
+        is_full = converted_sks >= 20
+        badge_bg = "#eff6ff" if is_full else "#fff7ed"
+        badge_color = "#1d4ed8" if is_full else "#c2410c"
+
+        return f"""    <div class="tu-iisma-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-iisma-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #2563eb; font-size: 13px; text-transform: uppercase;">MBKM Indonesian International Student Mobility Awards (IISMA)</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">{host_university} ({country})</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Mahasiswa Awardee: <strong>{student_name}</strong> (`{nim}`)</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #eff6ff; padding: 10px; border-radius: 6px; border: 1px solid #dbeafe;">
+          <div style="font-size: 11px; color: #1e40af;">IPK Luar Negeri</div>
+          <div style="font-size: 18px; font-weight: 800; color: #1d4ed8;">{gpa_host:.2f} / 4.00</div>
+        </div>
+        <div style="background: #f0fdf4; padding: 10px; border-radius: 6px; border: 1px solid #dcfce7;">
+          <div style="font-size: 11px; color: #166534;">Rekognisi SKS</div>
+          <div style="font-size: 18px; font-weight: 800; color: #15803d;">{converted_sks} SKS Diakui</div>
+        </div>
+      </div>
+      <div style="font-size: 12px; color: #475569; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+        Program mobilitas internasional bereputasi global Kemendikbudristek untuk penguatan kompetensi telekomunikasi global.
+      </div>
+    </div>"""
+
+
 
 
 
