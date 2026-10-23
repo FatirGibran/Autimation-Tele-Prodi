@@ -4422,6 +4422,63 @@ def calculate_mimo_channel_capacity(
     }
 
 
+def calculate_lorawan_battery_lifetime(
+    battery_capacity_mah: float,
+    tx_current_ma: float,
+    rx_current_ma: float,
+    sleep_current_ua: float,
+    uplink_interval_min: float,
+    time_on_air_ms: float = 120.0,
+    rx_window_ms: float = 50.0,
+    battery_self_discharge_pct_year: float = 2.0
+) -> Dict[str, Any]:
+    """
+    Estimates IoT LoRaWAN edge node operational battery longevity and hourly current profile
+    considering transmit Time-on-Air (ToA), receive windows, deep-sleep current, and battery self-discharge.
+    """
+    if battery_capacity_mah <= 0 or uplink_interval_min <= 0:
+        raise ValueError("Battery capacity and uplink interval must be strictly positive.")
+
+    n_tx_per_hour = 60.0 / float(uplink_interval_min)
+    t_tx_s = n_tx_per_hour * (float(time_on_air_ms) / 1000.0)
+    t_rx_s = n_tx_per_hour * (float(rx_window_ms) / 1000.0)
+    t_sleep_s = max(0.0, 3600.0 - t_tx_s - t_rx_s)
+
+    q_tx_mah = (t_tx_s * float(tx_current_ma)) / 3600.0
+    q_rx_mah = (t_rx_s * float(rx_current_ma)) / 3600.0
+    q_sleep_mah = (t_sleep_s * (float(sleep_current_ua) / 1000.0)) / 3600.0
+    q_total_per_hour = q_tx_mah + q_rx_mah + q_sleep_mah
+    avg_current_ma = q_total_per_hour
+
+    nominal_hours = float(battery_capacity_mah) / max(avg_current_ma, 1e-9)
+    nominal_days = nominal_hours / 24.0
+    nominal_years = nominal_days / 365.25
+
+    # Self-discharge degradation adjustment
+    discharge_factor = 1.0 + (max(0.0, float(battery_self_discharge_pct_year)) / 100.0)
+    adjusted_years = nominal_years / discharge_factor
+    adjusted_days = adjusted_years * 365.25
+
+    duty_cycle_pct = (t_tx_s / 3600.0) * 100.0
+    is_etsi_compliant = duty_cycle_pct <= 1.0
+
+    return {
+        "battery_capacity_mah": float(battery_capacity_mah),
+        "uplink_interval_min": float(uplink_interval_min),
+        "uplinks_per_day": round(n_tx_per_hour * 24.0, 1),
+        "time_on_air_ms": float(time_on_air_ms),
+        "duty_cycle_percent": round(duty_cycle_pct, 4),
+        "is_etsi_compliant": is_etsi_compliant,
+        "avg_current_ma": round(avg_current_ma, 4),
+        "avg_current_ua": round(avg_current_ma * 1000.0, 2),
+        "nominal_lifetime_days": round(nominal_days, 1),
+        "nominal_lifetime_years": round(nominal_years, 2),
+        "adjusted_lifetime_years": round(adjusted_years, 2),
+        "adjusted_lifetime_days": round(adjusted_days, 1)
+    }
+
+
+
 
 
 
