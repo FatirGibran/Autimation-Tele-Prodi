@@ -1483,6 +1483,86 @@ Status: Granted
         self.assertEqual(res_partial["converted_sks"], 16)
         self.assertEqual(len(res_partial["course_equivalencies"]), 4)
 
+    def test_calculate_otdr_fiber_events(self):
+        from parser import calculate_otdr_fiber_events
+        res = calculate_otdr_fiber_events(
+            fiber_length_km=50.0,
+            total_loss_db=11.2,
+            splice_loss_db=0.05,
+            num_splices=4,
+            connector_loss_db=0.5,
+            num_connectors=2,
+            wavelength_nm=1550
+        )
+        self.assertEqual(res["total_event_loss_db"], 1.2)
+        self.assertEqual(res["intrinsic_loss_db"], 10.0)
+        self.assertEqual(res["attenuation_db_per_km"], 0.20)
+        self.assertTrue(res["is_compliant"])
+        self.assertIn("ITU-T G.652", res["quality_status"])
+        with self.assertRaises(ValueError):
+            calculate_otdr_fiber_events(0.0, 10.0)
+
+    def test_calculate_mimo_channel_capacity(self):
+        from parser import calculate_mimo_channel_capacity
+        res = calculate_mimo_channel_capacity(
+            bandwidth_mhz=100.0,
+            snr_db=20.0,
+            num_tx_antennas=4,
+            num_rx_antennas=4
+        )
+        self.assertEqual(res["mimo_rank"], 4)
+        self.assertGreater(res["spectral_efficiency_bps_hz"], 5.0)
+        self.assertGreater(res["capacity_mbps"], 500.0)
+        self.assertGreater(res["capacity_gain_factor"], 1.5)
+        self.assertIn("4x4 MIMO", res["spatial_multiplexing_status"])
+        with self.assertRaises(ValueError):
+            calculate_mimo_channel_capacity(-10.0, 20.0)
+
+    def test_calculate_lorawan_battery_lifetime(self):
+        from parser import calculate_lorawan_battery_lifetime
+        res = calculate_lorawan_battery_lifetime(
+            battery_capacity_mah=2400.0,
+            tx_current_ma=40.0,
+            rx_current_ma=12.0,
+            sleep_current_ua=2.5,
+            uplink_interval_min=15.0
+        )
+        self.assertGreater(res["nominal_lifetime_days"], 300.0)
+        self.assertGreater(res["adjusted_lifetime_years"], 1.0)
+        self.assertTrue(res["is_etsi_compliant"])
+        self.assertGreater(res["avg_current_ma"], 0.0)
+        with self.assertRaises(ValueError):
+            calculate_lorawan_battery_lifetime(0.0, 40.0, 12.0, 2.5, 15.0)
+
+    def test_parse_iisma_evaluation(self):
+        from parser import parse_iisma_evaluation
+        res = parse_iisma_evaluation(
+            student_name="Nadia Putri",
+            nim="1201201088",
+            host_university="National University of Singapore",
+            country="Singapore",
+            gpa_host=3.85,
+            credits_taken=16,
+            duration_semesters=1
+        )
+        self.assertEqual(res["letter_grade"], "A")
+        self.assertEqual(res["converted_sks"], 20)
+        self.assertTrue(res["is_eligible"])
+        self.assertEqual(len(res["course_equivalencies"]), 5)
+
+        # Partial evaluation
+        res_partial = parse_iisma_evaluation(
+            student_name="Farhan Rizky",
+            nim="1201201089",
+            host_university="University of Leeds",
+            country="United Kingdom",
+            gpa_host=3.15,
+            credits_taken=12
+        )
+        self.assertEqual(res_partial["letter_grade"], "B")
+        self.assertEqual(res_partial["converted_sks"], 16)
+        self.assertEqual(len(res_partial["course_equivalencies"]), 4)
+
 
 
 if __name__ == "__main__":
