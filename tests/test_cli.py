@@ -2033,7 +2033,84 @@ class TestCLI(unittest.TestCase):
             self.assertIn("1201201088", out)
             self.assertIn("National University of Singapore", out)
 
+    def test_cmd_fspl(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Link Backbone Purwokerto"
+            freq = 5800.0
+            distance = 15.0
+            tx = 20.0
+            gtx = 14.0
+            grx = 14.0
 
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fspl(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan FSPL berhasil disimpan", out)
+            self.assertIn("Fade Margin:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fspl(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Link Backbone Purwokerto", out)
+            self.assertIn("5800.0", out)
+
+    def test_cmd_dispersion(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Link SMF-28 Purwokerto"
+            length = 45.0
+            disp = 17.0
+            sw = 0.1
+            rate = 10.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_dispersion(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan dispersi berhasil disimpan", out)
+            self.assertIn("Broadening:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_dispersion(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Link SMF-28 Purwokerto", out)
+            self.assertIn("45.00", out)
+
+    def test_cmd_kemanusiaan(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Reza Kurniawan"
+            nim = "1201201099"
+            org = "BPBD Banyumas"
+            loc = "Banyumas"
+            hours = 420
+            mentor = 90.0
+            field = 88.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_kemanusiaan(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Proyek Kemanusiaan berhasil disimpan", out)
+            self.assertIn("20 SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_kemanusiaan(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Reza Kurniawan", out)
+            self.assertIn("1201201099", out)
+            self.assertIn("BPBD Banyumas", out)
 
 
 if __name__ == "__main__":
