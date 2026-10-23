@@ -18,7 +18,10 @@ from sanitizer import (
     sanitize_html5_accordion_grouping,
     sanitize_html5_picture_mime_types,
     sanitize_html5_dialog_method,
-    sanitize_html5_audio_controlslist
+    sanitize_html5_audio_controlslist,
+    sanitize_html5_canvas_dimensions,
+    sanitize_mathml_math_elements,
+    sanitize_html5_bdi_bdo_elements
 )
 
 
@@ -868,6 +871,53 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("javascript:evil()", cleaned)
         self.assertIn("controls", cleaned)
 
+    def test_sanitize_html5_canvas_dimensions(self):
+        raw = '<canvas width="800" height="600" onclick="alert(1)" style="border:1px solid"></canvas>'
+        cleaned = sanitize_html5_canvas_dimensions(raw)
+        self.assertIn('width="800"', cleaned)
+        self.assertIn('height="600"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+
+        # Invalid dimensions test
+        invalid_raw = '<canvas width="invalid" height="-50"></canvas>'
+        cleaned_invalid = sanitize_html5_canvas_dimensions(invalid_raw)
+        self.assertNotIn("width=", cleaned_invalid)
+        self.assertNotIn("height=", cleaned_invalid)
+
+    def test_sanitize_mathml_math_elements(self):
+        raw = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML" onclick="evil()">'
+            '<mrow>'
+            '<mi href="javascript:alert(1)">x</mi>'
+            '<mo>+</mo>'
+            '<mn>2</mn>'
+            '</mrow>'
+            '<script>alert(2)</script>'
+            '<annotation-xml encoding="text/html"><iframe src="x"></iframe></annotation-xml>'
+            '</math>'
+        )
+        cleaned = sanitize_mathml_math_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("annotation-xml", cleaned)
+        self.assertNotIn("<iframe", cleaned)
+        self.assertIn("<mi", cleaned)
+        self.assertIn("<mn>2</mn>", cleaned)
+
+    def test_sanitize_html5_bdi_bdo_elements(self):
+        raw = (
+            '<p>User: <bdi dir="rtl" onmouseover="steal()" style="color:red">مرحبا</bdi> '
+            '<bdo dir="evil" onclick="run()">test</bdo></p>'
+        )
+        cleaned = sanitize_html5_bdi_bdo_elements(raw)
+        self.assertIn('<bdi dir="rtl"', cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn('dir="evil"', cleaned)
+        self.assertIn("<bdo", cleaned)
 
 
 if __name__ == "__main__":
