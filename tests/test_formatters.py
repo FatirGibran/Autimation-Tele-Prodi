@@ -708,6 +708,47 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("20 SKS Diakui", msg)
         self.assertIn("https://iisma.kemdikbud.go.id", msg)
 
+    def test_format_fspl_link_budget_telegram(self):
+        msg = TelegramFormatter.format_fspl_link_budget_telegram(
+            link_name="Link Microwave Banyumas-Purbalingga",
+            freq_mhz=5800.0,
+            distance_km=14.2,
+            fspl_db=130.75,
+            rx_power_dbm=-66.75,
+            fade_margin_db=18.25,
+            is_viable=True,
+            portal_url="https://rf.telkomuniversity.ac.id/link/banyumas"
+        )
+        self.assertIn("Laporan Audit Wireless Link Budget & FSPL", msg)
+        self.assertIn("Link Microwave Banyumas-Purbalingga", msg)
+        self.assertIn("5800.0 MHz", msg)
+        self.assertIn("14.20 km", msg)
+        self.assertIn("130.75 dB", msg)
+        self.assertIn("-66.75 dBm", msg)
+        self.assertIn("+18.25 dB", msg)
+        self.assertIn("LAYAK / STABIL (Viable)", msg)
+        self.assertIn("https://rf.telkomuniversity.ac.id/link/banyumas", msg)
+
+    def test_format_proyek_kemanusiaan_telegram(self):
+        msg = TelegramFormatter.format_proyek_kemanusiaan_telegram(
+            student_name="Reza Kurniawan",
+            nim="1201201099",
+            partner_org="BPBD Banyumas",
+            location="Banyumas",
+            converted_sks=20,
+            letter_grade="A",
+            portal_url="https://kemanusiaan.telkomuniversity.ac.id"
+        )
+        self.assertIn("Apresiasi Mahasiswa MBKM Proyek Kemanusiaan", msg)
+        self.assertIn("Reza Kurniawan", msg)
+        self.assertIn("1201201099", msg)
+        self.assertIn("BPBD Banyumas", msg)
+        self.assertIn("Banyumas", msg)
+        self.assertIn("20 SKS Diakui", msg)
+        self.assertIn("A", msg)
+        self.assertIn("https://kemanusiaan.telkomuniversity.ac.id", msg)
+
+
 
 
 
