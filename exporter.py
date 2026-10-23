@@ -1632,6 +1632,34 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_vitepress_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial content to VitePress documentation Markdown format
+        with outline control, lastUpdated timestamps, and clean YAML frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        date = metadata.get("publish_date", "2026-10-23")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            "outline: [2, 3]",
+            f'lastUpdated: "{date}"',
+            f'tags: {json.dumps(tags)}',
+            "editLink: false",
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
