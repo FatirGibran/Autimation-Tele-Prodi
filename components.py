@@ -4809,6 +4809,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_cellular_handover_card(
+        cls,
+        serving_cell: str,
+        target_cell: str,
+        rsrp_serving_dbm: float,
+        rsrp_target_dbm: float,
+        hysteresis_db: float,
+        decision: str
+    ) -> str:
+        """
+        Renders a cellular LTE/5G A3 handover telemetry and decision status card.
+        """
+        from xml.sax.saxutils import escape
+
+        s_clean = escape(serving_cell.strip())
+        t_clean = escape(target_cell.strip())
+        dec_clean = escape(decision.strip())
+        dec_color = "#10b981" if "TRIGGER" in decision else ("#f59e0b" if "PENDING" in decision else "#64748b")
+
+        return f"""    <div class="tu-handover-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Cellular Handover A3</span>
+        <span style="background: {dec_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{dec_clean}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div>Serving: <strong>{s_clean}</strong> ({rsrp_serving_dbm:.1f} dBm)</div>
+        <div style="color: #64748b;">\u27a1</div>
+        <div>Target: <strong>{t_clean}</strong> ({rsrp_target_dbm:.1f} dBm)</div>
+      </div>
+      <div style="font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 8px;">
+        <span>Margin Histeresis: <strong>{hysteresis_db:.1f} dB</strong> | Delta RSRP: <strong>{(rsrp_target_dbm - rsrp_serving_dbm):+.1f} dB</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
