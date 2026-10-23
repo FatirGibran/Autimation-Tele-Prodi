@@ -746,6 +746,17 @@ class WordPressClient:
 
         return self.update_post(post_id, updates)
 
+    def get_users_by_role(self, role: str = "author", page: int = 1, per_page: int = 10) -> List[Dict[str, Any]]:
+        """
+        Retrieves users from WordPress filtered by user role (e.g. author, editor, administrator).
+        """
+        clean_role = role.strip().lower()
+        endpoint = f"{self.api_url}/users?roles={clean_role}&page={max(1, int(page))}&per_page={max(1, min(100, int(per_page)))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        res = self._send_request(req)
+        return res if isinstance(res, list) else []
+
+
 
 
 
