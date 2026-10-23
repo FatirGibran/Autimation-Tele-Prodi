@@ -4320,6 +4320,59 @@ def parse_wirausaha_merdeka_evaluation(
     }
 
 
+def calculate_otdr_fiber_events(
+    fiber_length_km: float,
+    total_loss_db: float,
+    splice_loss_db: float = 0.05,
+    num_splices: int = 4,
+    connector_loss_db: float = 0.5,
+    num_connectors: int = 2,
+    wavelength_nm: int = 1550
+) -> Dict[str, Any]:
+    """
+    Analyzes Optical Time Domain Reflectometer (OTDR) fiber trace events,
+    deducting discrete passive event losses (fusion splices and optical connectors)
+    to calculate the intrinsic fiber attenuation coefficient against ITU-T G.652 standards.
+    """
+    if fiber_length_km <= 0 or total_loss_db < 0:
+        raise ValueError("Fiber length must be strictly positive and total loss cannot be negative.")
+
+    total_splice_loss = max(0, int(num_splices)) * max(0.0, float(splice_loss_db))
+    total_conn_loss = max(0, int(num_connectors)) * max(0.0, float(connector_loss_db))
+    total_event_loss = total_splice_loss + total_conn_loss
+
+    intrinsic_loss = max(0.0, float(total_loss_db) - total_event_loss)
+    attenuation_per_km = intrinsic_loss / float(fiber_length_km)
+
+    # Standard attenuation thresholds according to ITU-T G.652 standard
+    itu_limit = 0.22 if wavelength_nm >= 1500 else 0.35
+    is_compliant = attenuation_per_km <= itu_limit
+
+    if attenuation_per_km <= itu_limit:
+        quality_status = "Optimal / Sesuai Standar ITU-T G.652"
+    elif attenuation_per_km <= (itu_limit * 1.25):
+        quality_status = "Marginal / Perlu Pembersihan Konektor"
+    else:
+        quality_status = "Degradasi Berat / Indikasi Bending atau Micro-crack"
+
+    return {
+        "fiber_length_km": float(fiber_length_km),
+        "total_loss_db": float(total_loss_db),
+        "num_splices": int(num_splices),
+        "splice_loss_db": float(splice_loss_db),
+        "num_connectors": int(num_connectors),
+        "connector_loss_db": float(connector_loss_db),
+        "total_event_loss_db": round(total_event_loss, 3),
+        "intrinsic_loss_db": round(intrinsic_loss, 3),
+        "attenuation_db_per_km": round(attenuation_per_km, 4),
+        "wavelength_nm": int(wavelength_nm),
+        "itu_standard_limit_db_km": itu_limit,
+        "is_compliant": is_compliant,
+        "quality_status": quality_status
+    }
+
+
+
 
 
 
