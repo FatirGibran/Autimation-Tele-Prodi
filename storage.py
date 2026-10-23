@@ -817,6 +817,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_otdr_link ON otdr_fiber_records(link_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS mimo_capacity_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    channel_name TEXT NOT NULL,
+                    bandwidth_mhz REAL NOT NULL,
+                    snr_db REAL NOT NULL,
+                    num_tx INTEGER NOT NULL,
+                    num_rx INTEGER NOT NULL,
+                    spectral_eff_bps_hz REAL NOT NULL,
+                    capacity_gbps REAL NOT NULL,
+                    gain_factor REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_mimo_channel ON mimo_capacity_records(channel_name);")
+
 
 
 
@@ -3944,6 +3961,50 @@ class StorageManager:
             cursor = conn.execute("SELECT * FROM otdr_fiber_records WHERE id = ?", (int(record_id),))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_mimo_capacity(self, data: Dict[str, Any]) -> int:
+        """
+        Stores a MIMO antenna channel capacity and spatial multiplexing calculation record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO mimo_capacity_records (
+                    channel_name, bandwidth_mhz, snr_db, num_tx, num_rx,
+                    spectral_eff_bps_hz, capacity_gbps, gain_factor, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("channel_name", "5G NR MIMO Channel").strip(),
+                float(data.get("bandwidth_mhz", 100.0)),
+                float(data.get("snr_db", 20.0)),
+                int(data.get("num_tx", 4)),
+                int(data.get("num_rx", 4)),
+                float(data.get("spectral_eff_bps_hz", 0.0)),
+                float(data.get("capacity_gbps", 0.0)),
+                float(data.get("gain_factor", 1.0)),
+                data.get("status", "High-Rank MIMO").strip()
+            ))
+            return cursor.lastrowid
+
+    def list_mimo_capacities(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored MIMO capacity records ordered by most recent.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM mimo_capacity_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_mimo_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a MIMO capacity record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM mimo_capacity_records WHERE id = ?", (int(record_id),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
