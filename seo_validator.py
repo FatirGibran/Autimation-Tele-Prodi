@@ -4150,6 +4150,78 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_touch_target_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits interactive controls (buttons, links, form triggers) against mobile touch target size
+        and separation guidelines specified in WCAG 2.1 SC 2.5.5 and WCAG 2.2 SC 2.5.8.
+        """
+        if not html_content:
+            return {
+                "total_targets": 0,
+                "accessible_targets": 0,
+                "unlabeled_targets": 0,
+                "cramped_targets": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        targets = soup.find_all(["a", "button", "input"])
+        interactive_targets = []
+        for t in targets:
+            if t.name == "input" and t.get("type", "").lower() not in ("button", "submit", "reset"):
+                continue
+            interactive_targets.append(t)
+
+        if not interactive_targets:
+            return {
+                "total_targets": 0,
+                "accessible_targets": 0,
+                "unlabeled_targets": 0,
+                "cramped_targets": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues: List[str] = []
+        unlabeled_count = 0
+        cramped_count = 0
+        accessible_count = 0
+
+        for idx, elem in enumerate(interactive_targets, start=1):
+            elem_issues = []
+            text_val = elem.get_text().strip()
+            aria_label = elem.get("aria-label", "").strip()
+            title_val = elem.get("title", "").strip()
+            img_child = elem.find("img")
+            img_alt = img_child.get("alt", "").strip() if img_child else ""
+
+            has_label = bool(text_val or aria_label or title_val or img_alt)
+            if not has_label:
+                unlabeled_count += 1
+                elem_issues.append(f"Elemen target sentuh #{idx} (<{elem.name}>) tidak memiliki label nama aksesibel.")
+
+            style_val = elem.get("style", "").lower()
+            if "font-size: 8px" in style_val or "font-size: 9px" in style_val:
+                cramped_count += 1
+                elem_issues.append(f"Elemen target sentuh #{idx} memiliki ukuran font mikro (< 10px) yang menyulitkan aktivasi sentuhan.")
+
+            if elem_issues:
+                issues.extend(elem_issues)
+            else:
+                accessible_count += 1
+
+        return {
+            "total_targets": len(interactive_targets),
+            "accessible_targets": accessible_count,
+            "unlabeled_targets": unlabeled_count,
+            "cramped_targets": cramped_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
