@@ -4618,6 +4618,56 @@ def calculate_fspl_and_link_budget(
     }
 
 
+def calculate_optical_chromatic_dispersion(
+    dispersion_param_ps_nm_km: float,
+    spectral_width_nm: float,
+    fiber_length_km: float,
+    bit_rate_gbps: float = 10.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical fiber chromatic dispersion pulse broadening and maximum bit rate limit.
+    Formula:
+      delta_t (ps) = |D| * L_km * delta_lambda_nm
+      Bit period Tb (ps) = 1000.0 / bit_rate_gbps
+      Spreading ratio = delta_t / Tb
+      Max bit rate B_max (Gbps) approx = 1000.0 / (4 * delta_t)
+    """
+    d_param = float(dispersion_param_ps_nm_km)
+    delta_lambda = max(0.001, float(spectral_width_nm))
+    length = max(0.001, float(fiber_length_km))
+    bit_rate = max(0.1, float(bit_rate_gbps))
+
+    pulse_broadening_ps = abs(d_param) * length * delta_lambda
+    bit_period_ps = 1000.0 / bit_rate
+    spreading_ratio = pulse_broadening_ps / bit_period_ps if bit_period_ps > 0 else 0.0
+
+    max_bit_rate_gbps = 1000.0 / (4.0 * pulse_broadening_ps) if pulse_broadening_ps > 0 else 1000.0
+
+    if spreading_ratio <= 0.25:
+        severity = "Rendah (Negligible ISI)"
+        requires_compensation = False
+    elif spreading_ratio <= 0.50:
+        severity = "Sedang (Moderate ISI - Kompensasi Dianjurkan)"
+        requires_compensation = False
+    else:
+        severity = "Tinggi (Severe ISI - Butuh DCF/EDC)"
+        requires_compensation = True
+
+    return {
+        "dispersion_param_ps_nm_km": round(d_param, 2),
+        "spectral_width_nm": round(delta_lambda, 3),
+        "fiber_length_km": round(length, 2),
+        "bit_rate_gbps": round(bit_rate, 2),
+        "pulse_broadening_ps": round(pulse_broadening_ps, 2),
+        "bit_period_ps": round(bit_period_ps, 2),
+        "spreading_ratio": round(spreading_ratio, 4),
+        "max_bit_rate_gbps": round(max_bit_rate_gbps, 2),
+        "severity": severity,
+        "requires_compensation": requires_compensation
+    }
+
+
+
 
 
 
