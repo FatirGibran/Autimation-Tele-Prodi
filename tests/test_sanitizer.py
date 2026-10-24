@@ -21,7 +21,10 @@ from sanitizer import (
     sanitize_html5_audio_controlslist,
     sanitize_html5_canvas_dimensions,
     sanitize_mathml_math_elements,
-    sanitize_html5_bdi_bdo_elements
+    sanitize_html5_bdi_bdo_elements,
+    sanitize_html5_time_datetime_attributes,
+    sanitize_svg_use_symbol_elements,
+    sanitize_html5_wbr_and_zero_width_spaces
 )
 
 
@@ -918,6 +921,43 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("onclick=", cleaned)
         self.assertNotIn('dir="evil"', cleaned)
         self.assertIn("<bdo", cleaned)
+
+    def test_sanitize_html5_time_datetime_attributes(self):
+        raw = '<time datetime="2026-10-25T08:00:00Z" onclick="alert(1)" style="font-weight:bold;">25 Okt 2026</time>'
+        cleaned = sanitize_html5_time_datetime_attributes(raw)
+        self.assertIn('datetime="2026-10-25T08:00:00Z"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+
+        # Injected datetime value
+        bad_raw = '<time datetime="javascript:alert(1)">Waktu</time>'
+        bad_cleaned = sanitize_html5_time_datetime_attributes(bad_raw)
+        self.assertNotIn("datetime=", bad_cleaned)
+
+    def test_sanitize_svg_use_symbol_elements(self):
+        raw = (
+            '<svg viewBox="0 0 100 100">'
+            '<symbol id="sym1" onclick="evil()"><circle r="10"/></symbol>'
+            '<use href="#sym1" onmouseover="bad()"/>'
+            '<use xlink:href="https://evil.com/xss.svg#bad"/>'
+            '<use href="javascript:alert(1)"/>'
+            '</svg>'
+        )
+        cleaned = sanitize_svg_use_symbol_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertIn('href="#sym1"', cleaned)
+        self.assertNotIn("https://evil.com", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+
+    def test_sanitize_html5_wbr_and_zero_width_spaces(self):
+        raw = '<p>Tele\u200Bkomu\u200Cnikasi<wbr onclick="alert(1)" style="color:red">Terapan</p>'
+        cleaned = sanitize_html5_wbr_and_zero_width_spaces(raw)
+        self.assertNotIn("\u200B", cleaned)
+        self.assertNotIn("\u200C", cleaned)
+        self.assertIn("<wbr>", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
 
 
 if __name__ == "__main__":
