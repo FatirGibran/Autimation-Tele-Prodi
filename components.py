@@ -4960,6 +4960,40 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_cost231_hata_card(
+        cls,
+        area_name: str,
+        freq_mhz: float,
+        distance_km: float,
+        path_loss_db: float,
+        coverage_quality: str,
+        is_metro: bool = False
+    ) -> str:
+        """
+        Renders a cellular radio COST 231 Hata urban/suburban propagation telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        area_clean = escape(area_name.strip())
+        quality_clean = escape(coverage_quality.strip())
+        env_badge = "Metropolitan / Kota Besar" if is_metro else "Urban / Suburban"
+
+        return f"""    <div class="tu-cost231-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Propagasi COST 231 Hata</span>
+        <span style="background: #334155; color: #cbd5e1; font-size: 11px; padding: 3px 8px; border-radius: 4px;">{env_badge}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{area_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Frekuensi: <strong>{freq_mhz:.1f} MHz</strong></div>
+        <div>Jarak Sel: <strong>{distance_km:.2f} km</strong></div>
+        <div>Path Loss: <strong style="color: #f59e0b;">{path_loss_db:.2f} dB</strong></div>
+        <div>Kualitas Sinyal: <strong style="color: #10b981;">{quality_clean}</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
