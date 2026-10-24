@@ -4457,6 +4457,74 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_hreflang_localization_tags(html_content: str, current_lang: str = "id") -> Dict[str, Any]:
+        """
+        Audits multi-language hreflang alternate links (<link rel="alternate" hreflang="..." href="...">):
+        - Checks for valid BCP 47 language codes.
+        - Verifies self-referential hreflang match with current_lang.
+        - Ensures presence of 'x-default' fallback link.
+        - Enforces absolute HTTPS alternate URLs.
+        """
+        if not html_content:
+            return {
+                "has_hreflang": False,
+                "total_hreflang_tags": 0,
+                "has_self_ref": False,
+                "has_x_default": False,
+                "is_compliant": False,
+                "issues": ["Konten HTML kosong."]
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        links = soup.find_all("link", rel=lambda r: r and "alternate" in [x.lower() for x in (r if isinstance(r, list) else [r])])
+        hreflang_links = [l for l in links if l.get("hreflang")]
+
+        if not hreflang_links:
+            return {
+                "has_hreflang": False,
+                "total_hreflang_tags": 0,
+                "has_self_ref": False,
+                "has_x_default": False,
+                "is_compliant": False,
+                "issues": ["Tag alternatif bahasa (<link rel='alternate' hreflang='...'>) tidak ditemukan."]
+            }
+
+        issues = []
+        has_self_ref = False
+        has_x_default = False
+        valid_bcp47 = re.compile(r'^(?:x-default|[a-z]{2}(?:-[A-Za-z0-9]{2,8})?)$', re.IGNORECASE)
+
+        for l in hreflang_links:
+            hl = l["hreflang"].strip()
+            href = l.get("href", "").strip()
+
+            if not valid_bcp47.match(hl):
+                issues.append(f"Format kode bahasa hreflang '{hl}' tidak valid standar BCP 47.")
+
+            if hl.lower() == "x-default":
+                has_x_default = True
+            elif hl.lower() == current_lang.lower():
+                has_self_ref = True
+
+            if not href.startswith("https://"):
+                issues.append(f"URL alternatif hreflang ('{href}') harus berupa URL absolut HTTPS.")
+
+        if not has_self_ref:
+            issues.append(f"Tidak ditemukan tag hreflang self-referential untuk bahasa aktif saat ini ('{current_lang}').")
+        if not has_x_default:
+            issues.append("Tidak ditemukan fallback hreflang='x-default' untuk penanganan wilayah global.")
+
+        return {
+            "has_hreflang": True,
+            "total_hreflang_tags": len(hreflang_links),
+            "has_self_ref": has_self_ref,
+            "has_x_default": has_x_default,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
