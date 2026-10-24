@@ -4993,6 +4993,40 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_rain_attenuation_card(
+        cls,
+        link_name: str,
+        freq_ghz: float,
+        rain_rate: float,
+        rain_attenuation_db: float,
+        excess_margin_db: float,
+        status: str
+    ) -> str:
+        """
+        Renders a microwave terrestrial link ITU-R rain attenuation and fade margin card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(link_name.strip())
+        status_clean = escape(status.strip())
+        status_color = "#10b981" if excess_margin_db >= 10.0 else ("#f59e0b" if excess_margin_db >= 0.0 else "#ef4444")
+
+        return f"""    <div class="tu-rain-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #0284c7; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Redaman Hujan ITU-R P.838</span>
+        <span style="background: {status_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status_clean}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{name_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Frekuensi: <strong>{freq_ghz:.2f} GHz</strong></div>
+        <div>Curah Hujan (R0.01): <strong>{rain_rate:.1f} mm/jam</strong></div>
+        <div>Redaman Hujan Total: <strong style="color: #f59e0b;">{rain_attenuation_db:.2f} dB</strong></div>
+        <div>Margin Tersisa (Excess): <strong style="color: {status_color};">{excess_margin_db:+.2f} dB</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
