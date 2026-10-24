@@ -4802,6 +4802,56 @@ def parse_proyek_kemanusiaan_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_polarization_mode_dispersion(
+    pmd_coeff_ps_sqrt_km: float,
+    fiber_length_km: float,
+    bit_rate_gbps: float = 10.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical fiber Polarization Mode Dispersion (PMD), mean Differential Group Delay (DGD),
+    and transmission outage risk according to ITU-T G.650.2 Maxwellian statistics.
+    Formula:
+      <DGD> (ps) = D_pmd * sqrt(L_km)
+      Bit period Tb (ps) = 1000.0 / bit_rate_gbps
+      Allowable DGD threshold approx 0.10 * Tb
+      Max bit rate B_max (Gbps) approx = 100.0 / <DGD>
+    """
+    pmd_coeff = max(0.01, float(pmd_coeff_ps_sqrt_km))
+    length = max(0.001, float(fiber_length_km))
+    bit_rate = max(0.1, float(bit_rate_gbps))
+
+    mean_dgd_ps = pmd_coeff * math.sqrt(length)
+    bit_period_ps = 1000.0 / bit_rate
+    dgd_ratio = mean_dgd_ps / bit_period_ps
+    max_allowable_dgd_ps = 0.10 * bit_period_ps
+
+    max_bit_rate_gbps = 100.0 / mean_dgd_ps if mean_dgd_ps > 0 else 1000.0
+
+    if mean_dgd_ps <= max_allowable_dgd_ps:
+        outage_risk = "Sangat Rendah (Aman/Robust)"
+        is_compliant = True
+    elif mean_dgd_ps <= 1.5 * max_allowable_dgd_ps:
+        outage_risk = "Moderat (Kompensator PMD Dianjurkan)"
+        is_compliant = True
+    else:
+        outage_risk = "Tinggi (Kritis / Butuh Adaptive Optical PMDC)"
+        is_compliant = False
+
+    return {
+        "pmd_coeff_ps_sqrt_km": round(pmd_coeff, 3),
+        "fiber_length_km": round(length, 2),
+        "bit_rate_gbps": round(bit_rate, 2),
+        "mean_dgd_ps": round(mean_dgd_ps, 3),
+        "bit_period_ps": round(bit_period_ps, 2),
+        "dgd_ratio": round(dgd_ratio, 4),
+        "max_allowable_dgd_ps": round(max_allowable_dgd_ps, 2),
+        "max_bit_rate_gbps": round(max_bit_rate_gbps, 2),
+        "outage_risk": outage_risk,
+        "is_compliant": is_compliant
+    }
+
+
+
 
 
 
