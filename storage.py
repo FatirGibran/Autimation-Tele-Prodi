@@ -909,6 +909,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pmd_fiber ON optical_pmd_records(fiber_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS cost231_propagation_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    area_name TEXT NOT NULL,
+                    freq_mhz REAL NOT NULL,
+                    distance_km REAL NOT NULL,
+                    base_station_height_m REAL NOT NULL,
+                    mobile_height_m REAL NOT NULL,
+                    path_loss_db REAL NOT NULL,
+                    coverage_quality TEXT NOT NULL,
+                    is_metro INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_cost231_area ON cost231_propagation_records(area_name);")
 
 
 
@@ -4317,6 +4332,51 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_pmd_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_cost231_propagation(self, data: Dict[str, Any]) -> int:
+        """
+        Stores a cellular radio COST 231 Hata propagation loss telemetry record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO cost231_propagation_records (
+                    area_name, freq_mhz, distance_km, base_station_height_m, mobile_height_m,
+                    path_loss_db, coverage_quality, is_metro
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("area_name", "Area Urban").strip(),
+                float(data.get("freq_mhz", 1800.0)),
+                float(data.get("distance_km", 1.0)),
+                float(data.get("base_station_height_m", 30.0)),
+                float(data.get("mobile_height_m", 1.5)),
+                float(data.get("path_loss_db", 0.0)),
+                data.get("coverage_quality", "Baik").strip(),
+                1 if data.get("is_metro", False) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_cost231_propagations(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored COST 231 Hata propagation records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM cost231_propagation_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_cost231_propagation_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a COST 231 Hata propagation record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM cost231_propagation_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
