@@ -11,7 +11,7 @@ ALLOWED_TAGS = {
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
     "ruby", "rt", "rp", "rb", "rtc",
     "meter", "progress", "data", "template",
-    "bdi", "bdo"
+    "bdi", "bdo", "wbr"
 }
 
 
@@ -1521,6 +1521,24 @@ def sanitize_svg_use_symbol_elements(html: str) -> str:
     out = re.sub(r'<use\b[^>]*>', fix_use, html, flags=re.IGNORECASE)
     out = re.sub(r'<symbol\b[^>]*>', fix_symbol, out, flags=re.IGNORECASE)
     return out
+
+
+def sanitize_html5_wbr_and_zero_width_spaces(html: str) -> str:
+    """
+    Sanitizes HTML5 <wbr> word break opportunity elements by stripping event handlers and attributes,
+    and strips dangerous zero-width whitespace characters (\\u200B, \\u200C, \\u200D, \\uFEFF)
+    that can be utilized for homoglyph token splitting or invisible evasion.
+    """
+    if not html:
+        return html
+
+    cleaned = re.sub(r'[\u200B\u200C\u200D\uFEFF]', '', html)
+
+    def fix_wbr(m):
+        return "<wbr>"
+
+    return re.sub(r'<wbr\b[^>]*>', fix_wbr, cleaned, flags=re.IGNORECASE)
+
 
 
 
