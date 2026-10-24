@@ -1653,6 +1653,87 @@ Status: Granted
         self.assertEqual(fail["converted_sks"], 0)
         self.assertFalse(fail["is_eligible"])
 
+    def test_calculate_polarization_mode_dispersion(self):
+        from parser import calculate_polarization_mode_dispersion
+        res = calculate_polarization_mode_dispersion(
+            pmd_coeff_ps_sqrt_km=0.05,
+            fiber_length_km=100.0,
+            bit_rate_gbps=10.0
+        )
+        self.assertEqual(res["mean_dgd_ps"], 0.5)
+        self.assertEqual(res["bit_period_ps"], 100.0)
+        self.assertTrue(res["is_compliant"])
+        self.assertIn("Sangat Rendah", res["outage_risk"])
+
+        # High PMD test
+        high_res = calculate_polarization_mode_dispersion(
+            pmd_coeff_ps_sqrt_km=1.5,
+            fiber_length_km=400.0,
+            bit_rate_gbps=40.0
+        )
+        self.assertFalse(high_res["is_compliant"])
+        self.assertIn("Tinggi", high_res["outage_risk"])
+
+    def test_calculate_cost231_hata_path_loss(self):
+        from parser import calculate_cost231_hata_path_loss
+        res = calculate_cost231_hata_path_loss(
+            frequency_mhz=1800.0,
+            base_station_height_m=50.0,
+            mobile_height_m=1.5,
+            distance_km=5.0,
+            is_metropolitan=False
+        )
+        self.assertGreater(res["path_loss_db"], 120.0)
+        self.assertLess(res["path_loss_db"], 160.0)
+        self.assertEqual(res["clutter_constant_cm"], 0.0)
+
+        metro = calculate_cost231_hata_path_loss(
+            frequency_mhz=1800.0,
+            base_station_height_m=50.0,
+            mobile_height_m=1.5,
+            distance_km=5.0,
+            is_metropolitan=True
+        )
+        self.assertEqual(round(metro["path_loss_db"] - res["path_loss_db"], 1), 3.0)
+
+    def test_calculate_rain_attenuation_itu_r(self):
+        from parser import calculate_rain_attenuation_itu_r
+        res = calculate_rain_attenuation_itu_r(
+            frequency_ghz=15.0,
+            path_length_km=8.0,
+            rain_rate_mm_hr=42.0,
+            fade_margin_db=35.0,
+            polarization="horizontal"
+        )
+        self.assertGreater(res["specific_attenuation_db_km"], 0.0)
+        self.assertGreater(res["total_rain_attenuation_db"], 0.0)
+        self.assertTrue(res["is_reliable"])
+        self.assertGreater(res["excess_margin_db"], 0.0)
+
+    def test_parse_studi_independen_evaluation(self):
+        from parser import parse_studi_independen_evaluation
+        res = parse_studi_independen_evaluation({
+            "student_name": "Dian Sasmita",
+            "nim": "1201201077",
+            "partner_name": "Bangkit Academy by Google, GoTo, Traveloka",
+            "track_name": "Cloud Computing",
+            "score_mentor": 92.0,
+            "score_project": 90.0,
+            "score_defense": 88.0
+        })
+        self.assertEqual(res["letter_grade"], "A")
+        self.assertEqual(res["converted_sks"], 20)
+        self.assertTrue(res["is_eligible"])
+        self.assertEqual(len(res["course_equivalencies"]), 5)
+
+        fail = parse_studi_independen_evaluation({
+            "score_mentor": 40.0,
+            "score_project": 45.0,
+            "score_defense": 40.0
+        })
+        self.assertEqual(fail["converted_sks"], 0)
+        self.assertFalse(fail["is_eligible"])
+
 
 if __name__ == "__main__":
     unittest.main()
