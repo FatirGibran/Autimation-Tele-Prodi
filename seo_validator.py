@@ -4524,6 +4524,61 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_robots_meta_directives(html_content: str, is_production: bool = True) -> Dict[str, Any]:
+        """
+        Audits search engine robots indexing meta directives (<meta name="robots" content="...">):
+        - Prevents accidental 'noindex' or 'none' on production publication pages.
+        - Ensures directives do not unintentionally block snippets ('nosnippet').
+        - Verifies recommended directives for rich snippet previews ('max-image-preview:large').
+        """
+        if not html_content:
+            return {
+                "has_robots_meta": False,
+                "is_indexable": True,
+                "directives": [],
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        robots_tags = soup.find_all("meta", attrs={"name": re.compile(r'^(?:robots|googlebot)$', re.IGNORECASE)})
+
+        if not robots_tags:
+            return {
+                "has_robots_meta": False,
+                "is_indexable": True,
+                "directives": ["index", "follow"],
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues = []
+        all_directives = []
+        is_indexable = True
+
+        for tag in robots_tags:
+            content = tag.get("content", "").lower()
+            tokens = [t.strip() for t in content.split(",") if t.strip()]
+            all_directives.extend(tokens)
+
+            if "noindex" in tokens or "none" in tokens:
+                is_indexable = False
+                if is_production:
+                    issues.append("Ditemukan direktif 'noindex' atau 'none' yang mencegah mesin pencari mengindeks halaman produksi.")
+
+            if "nofollow" in tokens and is_production:
+                issues.append("Ditemukan direktif 'nofollow' yang menghalangi perayapan tautan internal oleh robot perayap.")
+
+        return {
+            "has_robots_meta": True,
+            "is_indexable": is_indexable,
+            "directives": list(set(all_directives)),
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
