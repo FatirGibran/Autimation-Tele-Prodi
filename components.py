@@ -4926,6 +4926,41 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pmd_dispersion_card(
+        cls,
+        fiber_name: str,
+        length_km: float,
+        pmd_coeff: float,
+        mean_dgd_ps: float,
+        max_bit_rate_gbps: float,
+        outage_risk: str
+    ) -> str:
+        """
+        Renders an optical fiber Polarization Mode Dispersion (PMD) and DGD telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(fiber_name.strip())
+        risk_clean = escape(outage_risk.strip())
+        is_safe = "Sangat Rendah" in outage_risk or "Moderat" in outage_risk
+        risk_color = "#10b981" if "Sangat Rendah" in outage_risk else ("#f59e0b" if "Moderat" in outage_risk else "#ef4444")
+
+        return f"""    <div class="tu-pmd-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Polarization Mode Dispersion (PMD)</span>
+        <span style="background: {risk_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{risk_clean}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{name_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Panjang Ruas: <strong>{length_km:.2f} km</strong></div>
+        <div>Koefisien PMD: <strong>{pmd_coeff:.3f} ps/\u221akm</strong></div>
+        <div>Mean DGD (\u27e8\u0394\u03c4\u27e9): <strong style="color: #f59e0b;">{mean_dgd_ps:.3f} ps</strong></div>
+        <div>Kapasitas Laju Bit: <strong style="color: #38bdf8;">{max_bit_rate_gbps:.2f} Gbps</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
