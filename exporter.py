@@ -1726,6 +1726,34 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_faq_page_json_ld(faq_items: List[Dict[str, str]], title: str = "") -> Dict[str, Any]:
+        """
+        Generates schema.org compliant FAQPage JSON-LD structured data dictionary.
+        """
+        entities = []
+        for item in faq_items:
+            q = item.get("question", item.get("q", "")).strip()
+            a = item.get("answer", item.get("a", "")).strip()
+            if q and a:
+                entities.append({
+                    "@type": "Question",
+                    "name": q,
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": a
+                    }
+                })
+
+        doc: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": entities
+        }
+        if title.strip():
+            doc["name"] = title.strip()
+        return doc
+
 
 
 
