@@ -1126,6 +1126,30 @@ class TelegramFormatter:
             f"✨ *Hasil audit transmisi gelombang mikro dan mitigasi cuaca prodi terverifikasi!*"
         )
 
+    @staticmethod
+    def format_studi_independen_telegram(
+        student_name: str,
+        nim: str,
+        partner_name: str,
+        track_name: str,
+        converted_sks: int,
+        letter_grade: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student MBKM Studi Independen Bersertifikat (SIB) completion announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal MBKM Kampus Merdeka:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🎓 **Apresiasi Kelulusan Studi Independen Bersertifikat (SIB)**\n\n"
+            f"👤 **Nama Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏢 **Mitra Industri:** {partner_name.strip()}\n"
+            f"🎯 **Trek Kompetensi:** {track_name.strip()}\n"
+            f"📊 **Nilai Mutu Akhir:** `{letter_grade.strip()}`\n"
+            f"📚 **Rekognisi Kurikulum:** `{int(converted_sks)} SKS Diakui`{portal_link}\n\n"
+            f"✨ *Selamat atas keberhasilan menuntaskan program sertifikasi kompetensi industri MBKM!*"
+        )
+
 
 
 
