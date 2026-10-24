@@ -895,6 +895,20 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_kemanusiaan_nim ON student_proyek_kemanusiaan(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_kemanusiaan_org ON student_proyek_kemanusiaan(partner_org);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_pmd_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fiber_name TEXT NOT NULL,
+                    length_km REAL NOT NULL,
+                    pmd_coeff REAL NOT NULL,
+                    mean_dgd_ps REAL NOT NULL,
+                    max_bit_rate_gbps REAL NOT NULL,
+                    outage_risk TEXT NOT NULL,
+                    is_safe INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pmd_fiber ON optical_pmd_records(fiber_name);")
 
 
 
@@ -4261,6 +4275,49 @@ class StorageManager:
             cursor = conn.execute(
                 "SELECT * FROM student_proyek_kemanusiaan WHERE nim = ?",
                 (nim.strip(),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_pmd(self, data: Dict[str, Any]) -> int:
+        """
+        Stores an optical fiber PMD (Polarization Mode Dispersion) audit telemetry record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_pmd_records (
+                    fiber_name, length_km, pmd_coeff, mean_dgd_ps, max_bit_rate_gbps, outage_risk, is_safe
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("fiber_name", "Ruas Serat Optik").strip(),
+                float(data.get("length_km", 0.0)),
+                float(data.get("pmd_coeff", 0.0)),
+                float(data.get("mean_dgd_ps", 0.0)),
+                float(data.get("max_bit_rate_gbps", 0.0)),
+                data.get("outage_risk", "Sangat Rendah").strip(),
+                1 if data.get("is_safe", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_pmd(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical fiber PMD audit records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_pmd_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_pmd_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical fiber PMD audit record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_pmd_records WHERE id = ?",
+                (int(record_id),)
             )
             row = cursor.fetchone()
             return dict(row) if row else None
