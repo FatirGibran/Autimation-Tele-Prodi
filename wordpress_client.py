@@ -464,6 +464,20 @@ class WordPressClient:
             return results[0]
         return None
 
+    def get_tag_by_id(self, tag_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a WordPress tag by its numeric tag ID.
+        """
+        endpoint = f"{self.api_url}/tags/{int(tag_id)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            if isinstance(res, dict) and "id" in res:
+                return res
+            return None
+        except Exception:
+            return None
+
     def get_categories_by_parent(self, parent_id: int) -> List[Dict[str, Any]]:
         """
         Retrieves all child categories belonging to a parent category ID.
