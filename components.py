@@ -5066,6 +5066,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_dispersion_compensation_svg_card(
+        cls,
+        title: str,
+        smf_dispersion_ps: float,
+        dcf_compensation_ps: float,
+        net_dispersion_ps: float
+    ) -> str:
+        """
+        Renders an optical dispersion compensation (DCF) scheme visualization card with responsive inline SVG.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(title.strip())
+
+        return f"""    <div class="tu-dcf-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Kompensasi Dispersi Serat (DCF)</span>
+        <span style="font-size: 12px; color: #94a3b8;">Net: {net_dispersion_ps:+.2f} ps</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{title_clean}</h4>
+      <div style="display: flex; justify-content: center; margin: 12px 0;">
+        <svg viewBox="0 0 280 100" width="280" height="100" style="background: #020617; border-radius: 6px; border: 1px solid #334155;" aria-label="Diagram Kompensasi Dispersi">
+          <!-- SMF block (positive dispersion) -->
+          <rect x="20" y="30" width="100" height="40" rx="4" fill="#0284c7" opacity="0.8" />
+          <text x="70" y="54" fill="#ffffff" font-size="11" text-anchor="middle" font-weight="bold">SMF-28 (+D)</text>
+          <!-- DCF block (negative dispersion) -->
+          <rect x="160" y="30" width="100" height="40" rx="4" fill="#a855f7" opacity="0.8" />
+          <text x="210" y="54" fill="#ffffff" font-size="11" text-anchor="middle" font-weight="bold">DCF (-D)</text>
+          <!-- Connector arrow -->
+          <line x1="120" y1="50" x2="160" y2="50" stroke="#38bdf8" stroke-width="2" />
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Dispersi SMF: <strong style="color: #38bdf8;">{smf_dispersion_ps:+.1f} ps</strong></div>
+        <div>Kompensasi DCF: <strong style="color: #c084fc;">{dcf_compensation_ps:+.1f} ps</strong></div>
+        <div>Residu Sisa: <strong style="color: #10b981;">{net_dispersion_ps:+.1f} ps</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
