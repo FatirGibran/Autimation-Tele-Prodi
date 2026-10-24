@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 715+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 745+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 706 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 735 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -864,6 +864,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 714. **Pembaruan Berkas Perubahan Arsitektur (`docs/changes/79_v4_2_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.2.0.
 715. **Ekspansi Suite Pengujian Unit Terpadu (706 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 706 unit test terverifikasi (100% pass rate).
 716. **Finalisasi Milestone v4.2.0 & Sinkronisasi Repositori**: Verifikasi konsistensi kode dan sinkronisasi git commit upstream remote `origin/main`.
+
+---
+
+## 31. Ekspansi Arsitektur v4.3.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+717. **Sanitasi Atribut Datetime Elemen HTML5 Time (`sanitizer.py`)**: Validasi nilai waktu standar ISO-8601, pembersihan pseudo-protokol JavaScript, dan stripping event handler inline.
+718. **Sanitasi Elemen SVG Use, Symbol, dan Atribut Xlink Href (`sanitizer.py`)**: Penegakan referensi ID lokal `#id` aman dan pencegahan injeksi URL eksternal pada elemen `<use>`.
+719. **Sanitasi Elemen WBR dan Karakter Zero-Width Word-Break (`sanitizer.py`)**: Sanitasi tag `<wbr>` dan pembersihan karakter zero-width space `\u200B`, `\u200C`, `\u200D`, `\uFEFF`.
+720. **Kalkulator Dispersi Mode Polarisasi (PMD) & DGD Serat Optik (`parser.py`)**: Kalkulasi mean Differential Group Delay $\langle\Delta\tau\rangle$, rasio degradasi bit period, dan kapasitas laju bit $B_{max}$.
+721. **Kalkulator Model Rugi Propagasi Seluler COST 231 Hata (`parser.py`)**: Perhitungan rugi transmisi seluler perkotaan/pinggiran kota pada rentang 1500-2000 MHz dengan koreksi metropolitan.
+722. **Kalkulator Redaman Hujan Gelombang Mikro Terestrial ITU-R P.838 (`parser.py`)**: Perhitungan redaman spesifik hujan, faktor reduksi lintasan, redaman total, dan margin toleransi cuaca ITU-R P.530.
+723. **Evaluator Rekognisi MBKM Studi/Riset Independen Bersertifikat SIB (`parser.py`)**: Evaluasi penilaian mentor, milestone proyek, dan capstone defense dengan rekognisi hingga 20 SKS.
+724. **Auditor Lokalisasi Tag Hreflang dan Alternatif Bahasa (`seo_validator.py`)**: Verifikasi tag `<link rel="alternate" hreflang="...">`, format ISO 639-1, dan fallback default internasional `x-default`.
+725. **Auditor Pengindeksan Sitemap XML & Direktif Robot Meta (`seo_validator.py`)**: Validasi direktif robots meta (`index, follow`), pencegahan tagging kontradiktif, dan verifikasi deklarasi sitemap XML.
+726. **Auditor Data Terstruktur Skema FAQPage Schema.org (`seo_validator.py`)**: Pemeriksaan kelengkapan pasangan pertanyaan-jawaban skema FAQPage JSON-LD / Microdata Google Rich Results.
+727. **Auditor Aksesibilitas Elemen Tabel, Caption, dan Summary (`seo_validator.py`)**: Audit ketersediaan caption deskriptif dan atribut `scope="col"` / `scope="row"` pada header tabel per standar WCAG 2.1 AA.
+728. **Komponen Telemetri Dispersi PMD & DGD Serat Optik (`components.py`)**: Kartu visual Elementor panjang ruas optik, koefisien PMD, mean DGD, dan badge toleransi laju bit.
+729. **Komponen Telemetri Propagasi Seluler COST 231 Hata (`components.py`)**: Kartu visual Elementor frekuensi radio, jarak jangkauan sel, path loss empiris, dan badge kualitas sinyal.
+730. **Komponen Telemetri Redaman Hujan Gelombang Mikro ITU-R (`components.py`)**: Kartu visual Elementor frekuensi microwave, curah hujan R0.01, redaman total, dan margin keandalan link.
+731. **Komponen Sertifikasi Kelulusan MBKM Studi Independen (`components.py`)**: Kartu rekognisi kelulusan program SIB mahasiswa, mitra industri, skor komposit, dan 20 SKS diakui.
+732. **Komponen Visualisasi Skema Kompensasi Dispersi Serat DCF SVG (`components.py`)**: Kartu visualisasi diagram skema kompensasi dispersi SMF-28 + DCF berbasis inline SVG interaktif responsif.
+733. **Formatter Telegram Laporan Redaman Hujan Gelombang Mikro (`formatters.py`)**: Format buletin Telegram resmi hasil audit redaman hujan gelombang mikro dan mitigasi cuaca.
+734. **Formatter Telegram Apresiasi Kelulusan Studi Independen Bersertifikat (`formatters.py`)**: Format buletin Telegram resmi ucapan selamat penuntasan sertifikasi kompetensi industri MBKM.
+735. **Manajer Rekam Audit PMD Serat Optik (`storage.py`)**: Skema tabel SQLite `optical_pmd_records` dan fungsi `record_optical_pmd`, `list_optical_pmd`, `get_optical_pmd_by_id`.
+736. **Manajer Rekam Propagasi Seluler COST 231 Hata (`storage.py`)**: Skema tabel SQLite `cost231_propagation_records` dan fungsi `record_cost231_propagation`, `list_cost231_propagations`, `get_cost231_propagation_by_id`.
+737. **Manajer Rekam Mahasiswa MBKM Studi Independen (`storage.py`)**: Skema tabel SQLite `student_studi_independen` dan fungsi `record_studi_independen`, `list_studi_independen`, `get_studi_independen_by_nim`.
+738. **Helper WordPress Get Tag by ID (`wordpress_client.py`)**: Metode `get_tag_by_id` untuk mengambil metadata tag WordPress berdasarkan ID numerik.
+739. **Helper WordPress Get Category by ID (`wordpress_client.py`)**: Metode `get_category_by_id` untuk mengambil metadata kategori WordPress berdasarkan ID numerik.
+740. **Generator Schema.org FAQPage JSON-LD (`exporter.py`)**: Metode `generate_faq_page_json_ld` menghasilkan struktur metadata standar Google FAQPage rich search snippet.
+741. **Eksportir Dokumentasi Markdown MkDocs Material (`exporter.py`)**: Metode `to_mkdocs_material_markdown` mengonversi artikel ke format dokumentasi Markdown MkDocs Material.
+742. **Subcommand CLI `pmd` (`cli.py`)**: Perintah konsol `pmd` untuk audit dan kalkulasi dispersi mode polarisasi serat optik.
+743. **Subcommand CLI `cost231` (`cli.py`)**: Perintah konsol `cost231` untuk evaluasi dan kalkulasi rugi propagasi seluler.
+744. **Subcommand CLI `independen` (`cli.py`)**: Perintah konsol `independen` untuk evaluasi dan pencatatan rekognisi SKS MBKM Studi Independen.
+745. **Dokumentasi Perubahan Arsitektur v4.3.0 (`docs/changes/80_v4_3_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.3.0.
+746. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 31, dan pembaruan metrik proyek.
+747. **Ekspansi Suite Pengujian Unit Terpadu (735 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 735 unit test terverifikasi (100% pass rate).
+748. **Finalisasi Milestone v4.3.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
 
 
 
