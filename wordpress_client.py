@@ -489,6 +489,20 @@ class WordPressClient:
             return results
         return []
 
+    def get_category_by_id(self, category_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a WordPress category by its numeric category ID.
+        """
+        endpoint = f"{self.api_url}/categories/{int(category_id)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            if isinstance(res, dict) and "id" in res:
+                return res
+            return None
+        except Exception:
+            return None
+
     def ping_api(self) -> Dict[str, Any]:
         """
         Pings WordPress REST API endpoint to verify connectivity and authentication status.
