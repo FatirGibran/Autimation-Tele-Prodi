@@ -4851,6 +4851,58 @@ def calculate_polarization_mode_dispersion(
     }
 
 
+def calculate_cost231_hata_path_loss(
+    frequency_mhz: float,
+    base_station_height_m: float,
+    mobile_height_m: float,
+    distance_km: float,
+    is_metropolitan: bool = False
+) -> Dict[str, Any]:
+    """
+    Calculates cellular radio frequency path loss using the COST 231 Hata empirical propagation model
+    for urban and suburban environments (1500 - 2000 MHz).
+    Formula:
+      PL (dB) = 46.3 + 33.9*log10(f) - 13.82*log10(hb) - a(hm) + (44.9 - 6.55*log10(hb))*log10(d) + Cm
+      a(hm) = (1.1*log10(f) - 0.7)*hm - (1.56*log10(f) - 0.8)
+      Cm = 3.0 dB if metropolitan center else 0.0 dB
+    """
+    f = max(150.0, float(frequency_mhz))
+    hb = max(10.0, float(base_station_height_m))
+    hm = max(1.0, float(mobile_height_m))
+    d = max(0.1, float(distance_km))
+
+    log_f = math.log10(f)
+    log_hb = math.log10(hb)
+    log_d = math.log10(d)
+
+    a_hm = ((1.1 * log_f) - 0.7) * hm - ((1.56 * log_f) - 0.8)
+    cm = 3.0 if is_metropolitan else 0.0
+
+    path_loss_db = 46.3 + (33.9 * log_f) - (13.82 * log_hb) - a_hm + ((44.9 - (6.55 * log_hb)) * log_d) + cm
+
+    if path_loss_db <= 120.0:
+        coverage_quality = "Sangat Baik (Dense Urban Coverage)"
+    elif path_loss_db <= 140.0:
+        coverage_quality = "Baik (Standard Urban/Suburban Coverage)"
+    elif path_loss_db <= 155.0:
+        coverage_quality = "Marjinal (Cell Edge / Weak Signal)"
+    else:
+        coverage_quality = "Di Luar Jangkauan (Out of Cell Coverage)"
+
+    return {
+        "frequency_mhz": round(f, 2),
+        "base_station_height_m": round(hb, 2),
+        "mobile_height_m": round(hm, 2),
+        "distance_km": round(d, 3),
+        "is_metropolitan": is_metropolitan,
+        "correction_factor_a_hm": round(a_hm, 3),
+        "clutter_constant_cm": cm,
+        "path_loss_db": round(path_loss_db, 2),
+        "coverage_quality": coverage_quality
+    }
+
+
+
 
 
 
