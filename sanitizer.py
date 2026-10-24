@@ -1462,6 +1462,34 @@ def sanitize_html5_bdi_bdo_elements(html: str) -> str:
     return re.sub(r'<(?:bdi|bdo)\b[^>]*>', fix_bdi_bdo, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_time_datetime_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <time> elements by stripping event handlers, style attributes,
+    and validating that the datetime attribute contains valid date/time tokens (e.g. YYYY-MM-DD,
+    ISO 8601 timestamps, or duration strings), stripping script or non-standard characters.
+    """
+    if not html or "<time" not in html.lower():
+        return html
+
+    valid_datetime_regex = r'^[0-9T:\-\.\+Z\s/P\dYMWDHS]+$'
+
+    def fix_time(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        dt_m = re.search(r'\bdatetime=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if dt_m:
+            dt_val = dt_m.group(1).strip()
+            if not re.match(valid_datetime_regex, dt_val, re.IGNORECASE) or any(c in dt_val for c in '<>"\'`'):
+                tag = re.sub(r'\s+datetime=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<time\b[^>]*>', fix_time, html, flags=re.IGNORECASE)
+
+
+
 
 
 
