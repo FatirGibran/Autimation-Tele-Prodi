@@ -2112,6 +2112,85 @@ class TestCLI(unittest.TestCase):
             self.assertIn("1201201099", out)
             self.assertIn("BPBD Banyumas", out)
 
+    def test_cmd_pmd(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Link Backbone Purwokerto-Yogya"
+            length = 145.0
+            coeff = 0.08
+            rate = 10.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pmd(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan PMD berhasil disimpan", out)
+            self.assertIn("Mean DGD:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pmd(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Link Backbone Purwokerto-Yogya", out)
+            self.assertIn("145.00", out)
+
+    def test_cmd_cost231(self):
+        class ArgsAdd:
+            action = "add"
+            area = "Kawasan Telkom University Purwokerto"
+            freq = 1800.0
+            distance = 2.4
+            hb = 35.0
+            hm = 1.5
+            metro = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_cost231(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan COST231 berhasil disimpan", out)
+            self.assertIn("Path Loss:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_cost231(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Kawasan Telkom University Purwokerto", out)
+            self.assertIn("1800.0", out)
+
+    def test_cmd_independen(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Dimas Pratama"
+            nim = "1201201111"
+            partner = "PT Telkom Indonesia"
+            track = "Cloud & Network Architect"
+            hours = 480
+            mentor = 90.0
+            project = 92.0
+            defense = 88.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_independen(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Studi Independen berhasil disimpan", out)
+            self.assertIn("20 SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_independen(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Dimas Pratama", out)
+            self.assertIn("1201201111", out)
+            self.assertIn("PT Telkom Indonesia", out)
+
 
 if __name__ == "__main__":
     unittest.main()
