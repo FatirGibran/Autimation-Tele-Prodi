@@ -900,6 +900,36 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("math: true", res)
         self.assertIn("<p>Model kanal transmisi terahertz.</p>", res)
 
+    def test_generate_faq_page_json_ld(self):
+        faq_items = [
+            {"question": "Berapa SKS syarat lulus Teknik Telekomunikasi?", "answer": "Mahasiswa wajib menyelesaikan minimal 144 SKS."},
+            {"question": "Apakah tersedia peminatan Cyber Security?", "answer": "Ya, terdapat peminatan Jaringan dan Keamanan Siber."}
+        ]
+        res = ArticleExporter.generate_faq_page_json_ld(faq_items, title="FAQ Prodi S1 Teknik Telekomunikasi")
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "FAQPage")
+        self.assertEqual(res["name"], "FAQ Prodi S1 Teknik Telekomunikasi")
+        self.assertEqual(len(res["mainEntity"]), 2)
+        self.assertEqual(res["mainEntity"][0]["@type"], "Question")
+        self.assertEqual(res["mainEntity"][0]["name"], "Berapa SKS syarat lulus Teknik Telekomunikasi?")
+        self.assertEqual(res["mainEntity"][0]["acceptedAnswer"]["@type"], "Answer")
+        self.assertEqual(res["mainEntity"][0]["acceptedAnswer"]["text"], "Mahasiswa wajib menyelesaikan minimal 144 SKS.")
+
+    def test_to_mkdocs_material_markdown(self):
+        meta = {
+            "seo_title": "Panduan Praktikum Fiber Optik",
+            "meta_description": "Dokumentasi prosedur splicing kabel fiber optik core tunggal.",
+            "icon": "material/lan",
+            "tags": ["fiber-optics", "splicing", "praktikum"]
+        }
+        res = ArticleExporter.to_mkdocs_material_markdown(meta, "<p>Persiapkan alat fusion splicer dan cleaver.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Praktikum Fiber Optik"', res)
+        self.assertIn('description: "Dokumentasi prosedur splicing kabel fiber optik core tunggal."', res)
+        self.assertIn('icon: "material/lan"', res)
+        self.assertIn('"fiber-optics", "splicing", "praktikum"', res)
+        self.assertIn("<p>Persiapkan alat fusion splicer dan cleaver.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
