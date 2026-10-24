@@ -4966,6 +4966,89 @@ def calculate_rain_attenuation_itu_r(
     }
 
 
+def parse_studi_independen_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student participation in MBKM Studi / Riset Independen Bersertifikat (SIB),
+    calculates composite score based on mentor assessment, technical milestone, and final capstone defense,
+    and converts to 20 SKS curriculum credits.
+    """
+    raw_name = str(data.get("student_name", "")).strip()
+    raw_nim = str(data.get("nim", "")).strip()
+    raw_partner = str(data.get("partner_name", "")).strip()
+    raw_track = str(data.get("track_name", "")).strip()
+
+    clean_name = raw_name if raw_name else "Mahasiswa MBKM"
+    clean_nim = raw_nim if raw_nim else "1201200000"
+    is_valid_nim = bool(re.match(r'^\d{8,12}$', clean_nim))
+    clean_partner = raw_partner if raw_partner else "Mitra Industri Teknologi"
+    clean_track = raw_track if raw_track else "AI & Cloud Engineering"
+
+    score_mentor = max(0.0, min(100.0, float(data.get("score_mentor", 0.0))))
+    score_project = max(0.0, min(100.0, float(data.get("score_project", 0.0))))
+    score_defense = max(0.0, min(100.0, float(data.get("score_defense", 0.0))))
+
+    composite = round((0.35 * score_mentor) + (0.40 * score_project) + (0.25 * score_defense), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    if composite >= 60.0:
+        converted_sks = 20
+        status = "Lulus Rekognisi Penuh SIB (20 SKS)"
+        is_eligible = True
+    elif composite >= 50.0:
+        converted_sks = 10
+        status = "Lulus Rekognisi Sebagian SIB (10 SKS)"
+        is_eligible = True
+    else:
+        converted_sks = 0
+        status = "Tidak Memenuhi Ambang Batas Kelulusan SIB"
+        is_eligible = False
+
+    equiv_courses = [
+        {"code": "TT4301", "name": "Riset Mandiri Teknologi Telekomunikasi", "sks": 4},
+        {"code": "TT4302", "name": "Arsitektur Solusi Cloud & Platform Cerdas", "sks": 4},
+        {"code": "TT4303", "name": "Proyek Rekayasa Sistem Lanjut", "sks": 4},
+        {"code": "TT4304", "name": "Manajemen Produk & Inovasi Teknologi", "sks": 4},
+        {"code": "TT4305", "name": "Diseminasi & Publikasi Ilmiah", "sks": 4}
+    ]
+
+    return {
+        "student_name": clean_name,
+        "nim": clean_nim,
+        "is_valid_nim": is_valid_nim,
+        "partner_name": clean_partner,
+        "track_name": clean_track,
+        "score_mentor": score_mentor,
+        "score_project": score_project,
+        "score_defense": score_defense,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible,
+        "course_equivalencies": equiv_courses
+    }
+
+
+
 
 
 
