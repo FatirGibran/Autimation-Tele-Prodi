@@ -748,6 +748,46 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("A", msg)
         self.assertIn("https://kemanusiaan.telkomuniversity.ac.id", msg)
 
+    def test_format_rain_attenuation_telegram(self):
+        msg = TelegramFormatter.format_rain_attenuation_telegram(
+            link_name="MW Link Kampus - Gunung Slamet",
+            freq_ghz=15.0,
+            distance_km=14.5,
+            rain_rate_mm_hr=95.0,
+            rain_attenuation_db=18.42,
+            excess_margin_db=11.58,
+            status="Margin Mencukupi (Toleran Hujan)",
+            portal_url="https://rf.telkomuniversity.ac.id/microwave/slamet"
+        )
+        self.assertIn("Laporan Redaman Hujan Microwave Terestrial (ITU-R P.838)", msg)
+        self.assertIn("MW Link Kampus - Gunung Slamet", msg)
+        self.assertIn("15.00 GHz", msg)
+        self.assertIn("14.50 km", msg)
+        self.assertIn("95.0 mm/jam", msg)
+        self.assertIn("18.42 dB", msg)
+        self.assertIn("+11.58 dB", msg)
+        self.assertIn("Margin Mencukupi (Toleran Hujan)", msg)
+        self.assertIn("https://rf.telkomuniversity.ac.id/microwave/slamet", msg)
+
+    def test_format_studi_independen_telegram(self):
+        msg = TelegramFormatter.format_studi_independen_telegram(
+            student_name="Dimas Pratama",
+            nim="1201201111",
+            partner_name="PT Telkom Indonesia",
+            track_name="Cloud & Network Architect",
+            converted_sks=20,
+            letter_grade="A",
+            portal_url="https://kampusmerdeka.kemdikbud.go.id/studi/1201201111"
+        )
+        self.assertIn("Apresiasi Kelulusan Studi Independen Bersertifikat (SIB)", msg)
+        self.assertIn("Dimas Pratama", msg)
+        self.assertIn("1201201111", msg)
+        self.assertIn("PT Telkom Indonesia", msg)
+        self.assertIn("Cloud & Network Architect", msg)
+        self.assertIn("20 SKS Diakui", msg)
+        self.assertIn("A", msg)
+        self.assertIn("https://kampusmerdeka.kemdikbud.go.id/studi/1201201111", msg)
+
 
 
 
