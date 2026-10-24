@@ -4630,6 +4630,69 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_table_caption_and_headers(html_content: str) -> Dict[str, Any]:
+        """
+        Audits <table> elements for WCAG 2.1 AA tabular data accessibility (SC 1.3.1):
+        - Enforces semantic <caption> describing the dataset purpose.
+        - Verifies that <th> header cells define explicit scope attributes ('col' or 'row').
+        """
+        if not html_content:
+            return {
+                "total_tables": 0,
+                "captioned_tables": 0,
+                "total_headers": 0,
+                "scoped_headers": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+
+        if not tables:
+            return {
+                "total_tables": 0,
+                "captioned_tables": 0,
+                "total_headers": 0,
+                "scoped_headers": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        issues = []
+        captioned_count = 0
+        scoped_headers = 0
+        total_headers = 0
+
+        for idx, tbl in enumerate(tables, 1):
+            caption = tbl.find("caption")
+            if caption and caption.get_text().strip():
+                captioned_count += 1
+            else:
+                issues.append(f"Tabel #{idx} tidak memiliki elemen <caption> deskriptif.")
+
+            ths = tbl.find_all("th")
+            total_headers += len(ths)
+            for th in ths:
+                scope = th.get("scope", "").strip().lower()
+                if scope in {"col", "row", "colgroup", "rowgroup"}:
+                    scoped_headers += 1
+
+        if total_headers > 0 and scoped_headers < total_headers:
+            unscoped = total_headers - scoped_headers
+            issues.append(f"Ditemukan {unscoped} sel header <th> tanpa atribut 'scope' ('col' atau 'row').")
+
+        return {
+            "total_tables": len(tables),
+            "captioned_tables": captioned_count,
+            "total_headers": total_headers,
+            "scoped_headers": scoped_headers,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
