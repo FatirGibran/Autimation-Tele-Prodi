@@ -1,4 +1,5 @@
 import re
+import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
 from bs4 import BeautifulSoup
@@ -4603,7 +4604,8 @@ class YoastSEOValidator:
         json_ld_scripts = soup.find_all("script", type="application/ld+json")
         for s in json_ld_scripts:
             try:
-                data = json.loads(s.string or "{}")
+                raw_text = s.get_text().strip()
+                data = json.loads(raw_text or "{}")
                 if isinstance(data, dict):
                     if data.get("@type") == "FAQPage":
                         has_schema = True

@@ -1543,6 +1543,76 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_cls_safe"])
         self.assertEqual(res_bad["missing_dimensions_count"], 1)
 
+    def test_audit_hreflang_localization_tags(self):
+        html_ok = (
+            '<head>'
+            '<link rel="alternate" hreflang="id" href="https://ittelkom-pwt.ac.id/riset">'
+            '<link rel="alternate" hreflang="en" href="https://ittelkom-pwt.ac.id/en/research">'
+            '<link rel="alternate" hreflang="x-default" href="https://ittelkom-pwt.ac.id/riset">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_hreflang_localization_tags(html_ok, current_lang="id")
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertTrue(res_ok["has_self_ref"])
+        self.assertTrue(res_ok["has_x_default"])
+
+        html_bad = '<head><link rel="alternate" hreflang="invalid_code" href="http://unencrypted.com"></head>'
+        res_bad = YoastSEOValidator.audit_hreflang_localization_tags(html_bad, current_lang="id")
+        self.assertFalse(res_bad["is_compliant"])
+
+    def test_audit_robots_meta_directives(self):
+        html_ok = '<head><meta name="robots" content="index, follow, max-image-preview:large"></head>'
+        res_ok = YoastSEOValidator.audit_robots_meta_directives(html_ok, is_production=True)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertTrue(res_ok["is_indexable"])
+
+        html_bad = '<head><meta name="robots" content="noindex, follow"></head>'
+        res_bad = YoastSEOValidator.audit_robots_meta_directives(html_bad, is_production=True)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertFalse(res_bad["is_indexable"])
+
+    def test_audit_faqpage_schema_markup(self):
+        html_ok = (
+            '<div>'
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Berapa SKS?"}]}'
+            '</script>'
+            '<details><summary>Berapa SKS?</summary><p>20 SKS.</p></details>'
+            '<details><summary>Syarat IPK?</summary><p>Min 3.00.</p></details>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_faqpage_schema_markup(html_ok)
+        self.assertTrue(res_ok["has_faqpage_schema"])
+        self.assertTrue(res_ok["is_compliant"])
+
+        html_bad = (
+            '<div>'
+            '<details><summary>Tanya 1</summary><p>Jawab 1</p></details>'
+            '<details><summary>Tanya 2</summary><p>Jawab 2</p></details>'
+            '</div>'
+        )
+        res_bad = YoastSEOValidator.audit_faqpage_schema_markup(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertFalse(res_bad["has_faqpage_schema"])
+
+    def test_audit_table_caption_and_headers(self):
+        html_ok = (
+            '<table>'
+            '<caption>Tabel Distribusi Spektrum Frekuensi</caption>'
+            '<tr><th scope="col">Kanal</th><th scope="col">Frekuensi</th></tr>'
+            '<tr><td>CH 1</td><td>2412 MHz</td></tr>'
+            '</table>'
+        )
+        res_ok = YoastSEOValidator.audit_table_caption_and_headers(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["captioned_tables"], 1)
+        self.assertEqual(res_ok["scoped_headers"], 2)
+
+        html_bad = '<table><tr><th>Kanal</th></tr></table>'
+        res_bad = YoastSEOValidator.audit_table_caption_and_headers(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["captioned_tables"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
