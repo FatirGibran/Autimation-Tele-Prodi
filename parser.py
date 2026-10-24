@@ -4902,6 +4902,71 @@ def calculate_cost231_hata_path_loss(
     }
 
 
+def calculate_rain_attenuation_itu_r(
+    frequency_ghz: float,
+    path_length_km: float,
+    rain_rate_mm_hr: float = 42.0,
+    fade_margin_db: float = 30.0,
+    polarization: str = "horizontal"
+) -> Dict[str, Any]:
+    """
+    Calculates microwave terrestrial link rain attenuation and link availability
+    according to ITU-R P.838 and ITU-R P.530 recommendations.
+    Formula:
+      gamma_R = k * (R ** alpha)  (dB/km)
+      r = 1.0 / (1.0 + 0.045 * d_km) (path reduction factor)
+      A_rain = gamma_R * d_km * r
+      excess_margin = fade_margin_db - A_rain
+    """
+    freq = max(1.0, float(frequency_ghz))
+    d = max(0.1, float(path_length_km))
+    rain_rate = max(0.1, float(rain_rate_mm_hr))
+    margin = float(fade_margin_db)
+    pol = polarization.strip().lower()
+
+    if pol == "vertical":
+        k = 0.0000387 * (freq ** 2.4)
+        alpha = 0.95 + (0.01 * freq)
+    else:
+        k = 0.000042 * (freq ** 2.45)
+        alpha = 0.98 + (0.01 * freq)
+
+    specific_attenuation_db_km = k * (rain_rate ** alpha)
+    path_reduction_factor = 1.0 / (1.0 + (0.045 * d))
+    effective_distance_km = d * path_reduction_factor
+    total_rain_attenuation_db = specific_attenuation_db_km * effective_distance_km
+
+    excess_margin_db = margin - total_rain_attenuation_db
+
+    if excess_margin_db >= 10.0:
+        availability_status = "Tinggi (Ketersediaan Link >= 99.999% Bebas Outage)"
+        is_reliable = True
+    elif excess_margin_db >= 0.0:
+        availability_status = "Cukup (Ketersediaan Link >= 99.99% Standar)"
+        is_reliable = True
+    else:
+        availability_status = "Rentan Putus (Rain Fade Outage / Margin Defisit)"
+        is_reliable = False
+
+    return {
+        "frequency_ghz": round(freq, 2),
+        "path_length_km": round(d, 2),
+        "rain_rate_mm_hr": round(rain_rate, 1),
+        "polarization": pol,
+        "fade_margin_db": round(margin, 2),
+        "k_coeff": round(k, 6),
+        "alpha_coeff": round(alpha, 4),
+        "specific_attenuation_db_km": round(specific_attenuation_db_km, 3),
+        "path_reduction_factor": round(path_reduction_factor, 4),
+        "effective_distance_km": round(effective_distance_km, 3),
+        "total_rain_attenuation_db": round(total_rain_attenuation_db, 2),
+        "excess_margin_db": round(excess_margin_db, 2),
+        "availability_status": availability_status,
+        "is_reliable": is_reliable
+    }
+
+
+
 
 
 
