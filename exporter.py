@@ -1754,6 +1754,31 @@ navigation: true
             doc["name"] = title.strip()
         return doc
 
+    @staticmethod
+    def to_mkdocs_material_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial content to MkDocs Material Markdown documentation format
+        with YAML frontmatter (title, description, icon, status, tags).
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        icon = metadata.get("icon", "material/book-open-page-variant")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'icon: "{icon}"',
+            f'tags: {json.dumps(tags)}',
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
