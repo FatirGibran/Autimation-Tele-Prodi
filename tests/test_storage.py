@@ -2120,6 +2120,67 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(by_nim["partner_org"], "BPBD Banyumas")
         self.assertIsNone(self.storage.get_proyek_kemanusiaan_by_nim("99999999"))
 
+    def test_optical_pmd_storage(self):
+        rec_id = self.storage.record_optical_pmd({
+            "fiber_name": "Link Backbone Purwokerto-Yogya",
+            "length_km": 145.0,
+            "pmd_coeff": 0.08,
+            "mean_dgd_ps": 0.963,
+            "max_bit_rate_gbps": 103.8,
+            "outage_risk": "Sangat Rendah (Aman untuk 40G/100G)",
+            "is_safe": True
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_pmd()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["fiber_name"], "Link Backbone Purwokerto-Yogya")
+        single = self.storage.get_optical_pmd_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["pmd_coeff"], 0.08)
+        self.assertIsNone(self.storage.get_optical_pmd_by_id(99999))
+
+    def test_cost231_propagation_storage(self):
+        rec_id = self.storage.record_cost231_propagation({
+            "area_name": "Kawasan Telkom University Purwokerto",
+            "freq_mhz": 1800.0,
+            "distance_km": 2.4,
+            "base_station_height_m": 35.0,
+            "mobile_height_m": 1.5,
+            "path_loss_db": 131.45,
+            "coverage_quality": "Optimal Coverage",
+            "is_metro": False
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_cost231_propagations()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["area_name"], "Kawasan Telkom University Purwokerto")
+        single = self.storage.get_cost231_propagation_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["path_loss_db"], 131.45)
+        self.assertIsNone(self.storage.get_cost231_propagation_by_id(99999))
+
+    def test_studi_independen_storage(self):
+        rec_id = self.storage.record_studi_independen({
+            "student_name": "Dimas Pratama",
+            "nim": "1201201111",
+            "partner_name": "PT Telkom Indonesia",
+            "track_name": "Cloud & Network Architect",
+            "learning_hours": 480,
+            "composite_score": 89.75,
+            "converted_sks": 20,
+            "letter_grade": "A",
+            "status": "Lolos Rekognisi Penuh (20 SKS)"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_studi_independen()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_name"], "Dimas Pratama")
+        by_nim = self.storage.get_studi_independen_by_nim("1201201111")
+        self.assertIsNotNone(by_nim)
+        self.assertEqual(by_nim["converted_sks"], 20)
+        self.assertEqual(by_nim["partner_name"], "PT Telkom Indonesia")
+        self.assertIsNone(self.storage.get_studi_independen_by_nim("99999999"))
+
 
 if __name__ == "__main__":
     unittest.main()
