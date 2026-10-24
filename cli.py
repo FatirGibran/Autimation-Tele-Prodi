@@ -15,7 +15,10 @@ from parser import (
     parse_iisma_evaluation,
     calculate_fspl_and_link_budget,
     calculate_optical_chromatic_dispersion,
-    parse_proyek_kemanusiaan_evaluation
+    parse_proyek_kemanusiaan_evaluation,
+    calculate_polarization_mode_dispersion,
+    calculate_cost231_hata_path_loss,
+    parse_studi_independen_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -1784,6 +1787,118 @@ def cmd_kemanusiaan(args):
             print(f"{r['id']:<4} | {r['nim']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:18]:<20} | {r['partner_org']}")
 
 
+def cmd_pmd(args):
+    if args.action == "add":
+        if not args.name or args.length is None or args.coeff is None:
+            print("Error: Argumen --name, --length, dan --coeff wajib diisi.")
+            sys.exit(1)
+        rate = args.rate if args.rate is not None else 10.0
+        calc = calculate_polarization_mode_dispersion(
+            pmd_coeff_ps_sqrt_km=args.coeff,
+            fiber_length_km=args.length,
+            bit_rate_gbps=rate
+        )
+        pid = storage.record_optical_pmd({
+            "fiber_name": args.name,
+            "length_km": args.length,
+            "pmd_coeff": args.coeff,
+            "mean_dgd_ps": calc["mean_dgd_ps"],
+            "max_bit_rate_gbps": calc["max_bit_rate_gbps"],
+            "outage_risk": calc["outage_risk"],
+            "is_safe": calc["is_compliant"]
+        })
+        print(f"Catatan PMD berhasil disimpan dengan ID: {pid} (Mean DGD: {calc['mean_dgd_ps']:.3f} ps)")
+    else:
+        records = storage.list_optical_pmd(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan PMD serat optik yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'PANJANG':<10} | {'COEFF':<10} | {'DGD (PS)':<10} | {'GBPS':<10} | {'FIBER'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['length_km']:<10.2f} | {r['pmd_coeff']:<10.3f} | {r['mean_dgd_ps']:<10.3f} | {r['max_bit_rate_gbps']:<10.2f} | {r['fiber_name']}")
+
+
+def cmd_cost231(args):
+    if args.action == "add":
+        if not args.area or args.freq is None or args.distance is None:
+            print("Error: Argumen --area, --freq, dan --distance wajib diisi.")
+            sys.exit(1)
+        hb = args.hb if args.hb is not None else 30.0
+        hm = args.hm if args.hm is not None else 1.5
+        is_metro = getattr(args, "metro", False)
+        calc = calculate_cost231_hata_path_loss(
+            frequency_mhz=args.freq,
+            base_station_height_m=hb,
+            mobile_height_m=hm,
+            distance_km=args.distance,
+            is_metropolitan=is_metro
+        )
+        cid = storage.record_cost231_propagation({
+            "area_name": args.area,
+            "freq_mhz": args.freq,
+            "distance_km": args.distance,
+            "base_station_height_m": hb,
+            "mobile_height_m": hm,
+            "path_loss_db": calc["path_loss_db"],
+            "coverage_quality": calc["coverage_quality"],
+            "is_metro": is_metro
+        })
+        print(f"Catatan COST231 berhasil disimpan dengan ID: {cid} (Path Loss: {calc['path_loss_db']:.2f} dB)")
+    else:
+        records = storage.list_cost231_propagations(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan propagasi COST231 yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FREQ (MHZ)':<12} | {'JARAK (KM)':<10} | {'LOSS (DB)':<10} | {'AREA'}")
+        print("-" * 65)
+        for r in records:
+            print(f"{r['id']:<4} | {r['freq_mhz']:<12.1f} | {r['distance_km']:<10.2f} | {r['path_loss_db']:<10.2f} | {r['area_name']}")
+
+
+def cmd_independen(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.partner:
+            print("Error: Argumen --name, --nim, dan --partner wajib diisi.")
+            sys.exit(1)
+        track = args.track if args.track else "AI & Cloud Engineering"
+        hours = args.hours if args.hours is not None else 400
+        mentor = args.mentor if args.mentor is not None else 85.0
+        project = args.project if args.project is not None else 85.0
+        defense = args.defense if args.defense is not None else 85.0
+        eval_res = parse_studi_independen_evaluation({
+            "student_name": args.name,
+            "nim": args.nim,
+            "partner_name": args.partner,
+            "track_name": track,
+            "learning_hours": hours,
+            "score_mentor": mentor,
+            "score_project": project,
+            "score_defense": defense
+        })
+        sid = storage.record_studi_independen({
+            "student_name": args.name,
+            "nim": args.nim,
+            "partner_name": args.partner,
+            "track_name": track,
+            "learning_hours": hours,
+            "composite_score": eval_res["composite_score"],
+            "converted_sks": eval_res["converted_sks"],
+            "letter_grade": eval_res["letter_grade"],
+            "status": eval_res["status"]
+        })
+        print(f"Catatan Studi Independen berhasil disimpan dengan ID: {sid} ({eval_res['converted_sks']} SKS Diakui)")
+    else:
+        records = storage.list_studi_independen(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Studi Independen yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'MAHASISWA':<20} | {'MITRA'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['nim']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:18]:<20} | {r['partner_name']}")
+
+
 def main():
 
 
@@ -2478,6 +2593,42 @@ def main():
     kemanusiaan_parser.add_argument("--field", type=float, default=85.0, help="Nilai supervisor lapangan (0-100)")
     kemanusiaan_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     kemanusiaan_parser.set_defaults(func=cmd_kemanusiaan)
+
+    # PMD command
+    pmd_parser = subparsers.add_parser("pmd", help="Kelola kalkulasi dispersi mode polarisasi PMD serat optik (list, add)")
+    pmd_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PMD")
+    pmd_parser.add_argument("--name", help="Nama link kabel serat optik")
+    pmd_parser.add_argument("--length", type=float, help="Panjang bentang kabel optik (km)")
+    pmd_parser.add_argument("--coeff", type=float, help="Koefisien PMD serat optik (ps/sqrt(km))")
+    pmd_parser.add_argument("--rate", type=float, default=10.0, help="Laju bit transmisi sinyal (Gbps)")
+    pmd_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pmd_parser.set_defaults(func=cmd_pmd)
+
+    # COST231 command
+    cost231_parser = subparsers.add_parser("cost231", help="Kelola kalkulasi rugi propagasi seluler COST 231 Hata (list, add)")
+    cost231_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan propagasi COST231")
+    cost231_parser.add_argument("--area", help="Nama area jangkauan seluler")
+    cost231_parser.add_argument("--freq", type=float, help="Frekuensi radio seluler (MHz)")
+    cost231_parser.add_argument("--distance", type=float, help="Jarak ponsel dari BTS (km)")
+    cost231_parser.add_argument("--hb", type=float, default=30.0, help="Tinggi efektif antena pemancar BTS (m)")
+    cost231_parser.add_argument("--hm", type=float, default=1.5, help="Tinggi antena perangkat mobile penerima (m)")
+    cost231_parser.add_argument("--metro", action="store_true", help="Set true jika lingkungan metropolitan kota besar")
+    cost231_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    cost231_parser.set_defaults(func=cmd_cost231)
+
+    # Independen command
+    indep_parser = subparsers.add_parser("independen", help="Kelola evaluasi & rekognisi MBKM Studi Independen (list, add)")
+    indep_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan rekognisi SIB")
+    indep_parser.add_argument("--name", help="Nama lengkap mahasiswa peserta SIB")
+    indep_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    indep_parser.add_argument("--partner", help="Nama mitra industri / penyelenggara SIB")
+    indep_parser.add_argument("--track", default="AI & Cloud Engineering", help="Jalur kompetensi program SIB")
+    indep_parser.add_argument("--hours", type=int, default=400, help="Total jam aktivitas pembelajaran")
+    indep_parser.add_argument("--mentor", type=float, default=85.0, help="Nilai evaluasi mentor industri (0-100)")
+    indep_parser.add_argument("--project", type=float, default=85.0, help="Nilai proyek teknis milestone (0-100)")
+    indep_parser.add_argument("--defense", type=float, default=85.0, help="Nilai sidang capstone defense (0-100)")
+    indep_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    indep_parser.set_defaults(func=cmd_independen)
 
     args = parser.parse_args()
 
