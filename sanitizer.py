@@ -6,7 +6,7 @@ ALLOWED_TAGS = {
     "footer", "h1", "h2", "h3", "h4", "p", "a", "img", "ul", "ol", "li",
     "span", "strong", "em", "code", "pre", "blockquote", "details", "summary", "dialog",
     "table", "thead", "tbody", "tr", "th", "td", "abbr", "dfn", "mark", "kbd", "samp", "sub", "sup",
-    "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline",
+    "svg", "path", "g", "circle", "rect", "line", "polygon", "polyline", "use", "symbol",
     "video", "audio", "source", "picture", "track", "canvas",
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
     "ruby", "rt", "rp", "rb", "rtc",
@@ -1487,6 +1487,41 @@ def sanitize_html5_time_datetime_attributes(html: str) -> str:
         return tag
 
     return re.sub(r'<time\b[^>]*>', fix_time, html, flags=re.IGNORECASE)
+
+
+def sanitize_svg_use_symbol_elements(html: str) -> str:
+    """
+    Sanitizes SVG <use> and <symbol> elements by stripping inline event handlers,
+    and restricting href and xlink:href attributes strictly to internal fragment identifiers
+    (e.g., '#icon-id') to prevent cross-origin SVG inclusion and external script injection.
+    """
+    if not html or ("<use" not in html.lower() and "<symbol" not in html.lower()):
+        return html
+
+    def fix_use(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        for href_attr in ["href", "xlink:href"]:
+            h_m = re.search(rf'\b{href_attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if h_m:
+                val = h_m.group(1).strip()
+                if not re.match(r'^#[a-zA-Z0-9_\-]+$', val):
+                    tag = re.sub(rf'\s+{href_attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_symbol(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<use\b[^>]*>', fix_use, html, flags=re.IGNORECASE)
+    out = re.sub(r'<symbol\b[^>]*>', fix_symbol, out, flags=re.IGNORECASE)
+    return out
+
 
 
 
