@@ -695,6 +695,46 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "POST")
         self.assertIn("/comments", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_tag_by_id(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 42, "name": "5G NR", "slug": "5g-nr"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        tag = self.client.get_tag_by_id(42)
+        self.assertIsNotNone(tag)
+        self.assertEqual(tag["id"], 42)
+        self.assertEqual(tag["name"], "5G NR")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/tags/42", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_tag_by_id_error(self, mock_urlopen):
+        mock_urlopen.side_effect = Exception("HTTP 404")
+        tag = self.client.get_tag_by_id(99999)
+        self.assertIsNone(tag)
+
+    @patch("urllib.request.urlopen")
+    def test_get_category_by_id(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 15, "name": "Akademik", "slug": "akademik"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        cat = self.client.get_category_by_id(15)
+        self.assertIsNotNone(cat)
+        self.assertEqual(cat["id"], 15)
+        self.assertEqual(cat["name"], "Akademik")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/categories/15", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_category_by_id_error(self, mock_urlopen):
+        mock_urlopen.side_effect = Exception("HTTP 404")
+        cat = self.client.get_category_by_id(99999)
+        self.assertIsNone(cat)
+
 
 if __name__ == "__main__":
     unittest.main()
