@@ -1099,6 +1099,33 @@ class TelegramFormatter:
             f"❤️ *Dedikasi nyata mahasiswa teknik telekomunikasi dalam mitigasi kebencanaan dan kepedulian sosial!*"
         )
 
+    @staticmethod
+    def format_rain_attenuation_telegram(
+        link_name: str,
+        freq_ghz: float,
+        distance_km: float,
+        rain_rate_mm_hr: float,
+        rain_attenuation_db: float,
+        excess_margin_db: float,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a microwave terrestrial link ITU-R rain attenuation and outage report for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Pemantauan Microwave:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🌧️ **Laporan Redaman Hujan Microwave Terestrial (ITU-R P.838)**\n\n"
+            f"🌐 **Nama Tautan:** {link_name.strip()}\n"
+            f"📶 **Frekuensi Kerja:** `{float(freq_ghz):.2f} GHz`\n"
+            f"📏 **Jarak Lintasan:** `{float(distance_km):.2f} km`\n"
+            f"🌧️ **Intensitas Hujan (R0.01):** `{float(rain_rate_mm_hr):.1f} mm/jam`\n"
+            f"📉 **Redaman Hujan Total:** `{float(rain_attenuation_db):.2f} dB`\n"
+            f"🛡️ **Margin Tersisa (Excess):** `{float(excess_margin_db):+.2f} dB`\n"
+            f"📊 **Status Keandalan:** `{status.strip()}`{portal_link}\n\n"
+            f"✨ *Hasil audit transmisi gelombang mikro dan mitigasi cuaca prodi terverifikasi!*"
+        )
+
 
 
 
