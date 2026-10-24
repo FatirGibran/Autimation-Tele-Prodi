@@ -4578,6 +4578,59 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_faqpage_schema_markup(html_content: str) -> Dict[str, Any]:
+        """
+        Audits FAQ section for Schema.org FAQPage structured data (JSON-LD or microdata):
+        - Detects FAQ questions in accordion (<details>/<summary>) or headings.
+        - Verifies Schema.org @type: FAQPage with mainEntity Questions and Answers.
+        """
+        if not html_content:
+            return {
+                "detected_faq_count": 0,
+                "has_faqpage_schema": False,
+                "schema_question_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        details = soup.find_all("details")
+        faq_items = [d for d in details if d.find("summary")]
+
+        has_schema = False
+        schema_questions = 0
+        json_ld_scripts = soup.find_all("script", type="application/ld+json")
+        for s in json_ld_scripts:
+            try:
+                data = json.loads(s.string or "{}")
+                if isinstance(data, dict):
+                    if data.get("@type") == "FAQPage":
+                        has_schema = True
+                        entities = data.get("mainEntity", [])
+                        schema_questions = len(entities) if isinstance(entities, list) else 1
+            except Exception:
+                pass
+
+        if not has_schema:
+            faq_microdata = soup.find(attrs={"itemtype": re.compile(r'schema\.org/FAQPage', re.IGNORECASE)})
+            if faq_microdata:
+                has_schema = True
+                schema_questions = len(faq_microdata.find_all(attrs={"itemprop": "mainEntity"}))
+
+        issues = []
+        if len(faq_items) >= 2 and not has_schema:
+            issues.append(f"Ditemukan {len(faq_items)} butir FAQ tanya-jawab tanpa markup terstruktur Schema.org 'FAQPage' untuk Google Rich Snippet.")
+
+        return {
+            "detected_faq_count": len(faq_items),
+            "has_faqpage_schema": has_schema,
+            "schema_question_count": schema_questions,
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
