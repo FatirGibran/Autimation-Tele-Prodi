@@ -1847,6 +1847,86 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("82.5 ps", html)
         self.assertIn("<svg", html)
 
+    def test_render_pmd_dispersion_card(self):
+        html = EditorialComponents.render_pmd_dispersion_card(
+            fiber_name="Link Backbone Purwokerto - Yogyakarta",
+            length_km=145.0,
+            pmd_coeff=0.08,
+            mean_dgd_ps=0.963,
+            max_bit_rate_gbps=103.8,
+            outage_risk="Sangat Rendah (Aman untuk 40G/100G)"
+        )
+        self.assertIn("tu-pmd-card", html)
+        self.assertIn("Link Backbone Purwokerto - Yogyakarta", html)
+        self.assertIn("145.00 km", html)
+        self.assertIn("0.080 ps/√km", html)
+        self.assertIn("0.963 ps", html)
+        self.assertIn("103.80 Gbps", html)
+
+    def test_render_cost231_hata_card(self):
+        html = EditorialComponents.render_cost231_hata_card(
+            area_name="Kawasan Kampus Telkom University Purwokerto",
+            freq_mhz=1800.0,
+            distance_km=2.4,
+            path_loss_db=131.45,
+            coverage_quality="Optimal Coverage",
+            is_metro=False
+        )
+        self.assertIn("tu-cost231-card", html)
+        self.assertIn("Kawasan Kampus Telkom University Purwokerto", html)
+        self.assertIn("1800.0 MHz", html)
+        self.assertIn("2.40 km", html)
+        self.assertIn("131.45 dB", html)
+        self.assertIn("Urban / Suburban", html)
+
+    def test_render_rain_attenuation_card(self):
+        html = EditorialComponents.render_rain_attenuation_card(
+            link_name="MW Link Kampus - Gunung Slamet",
+            freq_ghz=15.0,
+            rain_rate=95.0,
+            rain_attenuation_db=18.42,
+            excess_margin_db=11.58,
+            status="Margin Mencukupi (Toleran Hujan)"
+        )
+        self.assertIn("tu-rain-card", html)
+        self.assertIn("MW Link Kampus - Gunung Slamet", html)
+        self.assertIn("15.00 GHz", html)
+        self.assertIn("95.0 mm/jam", html)
+        self.assertIn("18.42 dB", html)
+        self.assertIn("+11.58 dB", html)
+
+    def test_render_studi_independen_card(self):
+        html = EditorialComponents.render_studi_independen_card(
+            student_name="Dimas Pratama",
+            nim="1201201111",
+            partner_name="PT Telkom Indonesia",
+            track_name="Cloud & Network Architect",
+            converted_sks=20,
+            composite_score=89.75,
+            letter_grade="A"
+        )
+        self.assertIn("tu-sib-card", html)
+        self.assertIn("Dimas Pratama", html)
+        self.assertIn("1201201111", html)
+        self.assertIn("PT Telkom Indonesia", html)
+        self.assertIn("Cloud &amp; Network Architect", html)
+        self.assertIn("20 SKS Diakui", html)
+        self.assertIn("89.75", html)
+
+    def test_render_dispersion_compensation_svg_card(self):
+        html = EditorialComponents.render_dispersion_compensation_svg_card(
+            title="Kompensasi Dispersi Serat SMF-28 + DCF",
+            smf_dispersion_ps=1700.0,
+            dcf_compensation_ps=-1680.0,
+            net_dispersion_ps=20.0
+        )
+        self.assertIn("tu-dcf-card", html)
+        self.assertIn("Kompensasi Dispersi Serat SMF-28 + DCF", html)
+        self.assertIn("+1700.0 ps", html)
+        self.assertIn("-1680.0 ps", html)
+        self.assertIn("+20.0 ps", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
