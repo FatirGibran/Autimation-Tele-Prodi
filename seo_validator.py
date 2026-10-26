@@ -4694,6 +4694,55 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_web_app_manifest_and_pwa(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits progressive web app (PWA) manifest link declarations, theme color meta tags,
+        and touch icon references to ensure mobile browser discoverability.
+        """
+        if not html_content:
+            return {
+                "has_manifest": False,
+                "manifest_url": "",
+                "has_theme_color": False,
+                "theme_color": "",
+                "has_apple_touch_icon": False,
+                "is_pwa_ready": False,
+                "issues": ["Konten HTML kosong."]
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+
+        manifest_tag = soup.find("link", rel=lambda r: r and "manifest" in r.lower().split())
+        manifest_url = manifest_tag["href"].strip() if manifest_tag and manifest_tag.get("href") else ""
+        has_manifest = bool(manifest_url)
+        if not has_manifest:
+            issues.append("Tag <link rel='manifest'> tidak ditemukan.")
+
+        theme_tag = soup.find("meta", attrs={"name": lambda n: n and n.lower() == "theme-color"})
+        theme_color = theme_tag["content"].strip() if theme_tag and theme_tag.get("content") else ""
+        has_theme_color = bool(theme_color)
+        if not has_theme_color:
+            issues.append("Tag <meta name='theme-color'> tidak ditemukan.")
+
+        icon_tag = soup.find("link", rel=lambda r: r and "apple-touch-icon" in r.lower().split())
+        has_apple_icon = bool(icon_tag and icon_tag.get("href"))
+        if not has_apple_icon:
+            issues.append("Tag <link rel='apple-touch-icon'> tidak ditemukan.")
+
+        is_pwa_ready = has_manifest and has_theme_color
+
+        return {
+            "has_manifest": has_manifest,
+            "manifest_url": manifest_url,
+            "has_theme_color": has_theme_color,
+            "theme_color": theme_color,
+            "has_apple_touch_icon": has_apple_icon,
+            "is_pwa_ready": is_pwa_ready,
+            "issues": issues
+        }
+
 
 
 
