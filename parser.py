@@ -5128,6 +5128,61 @@ def calculate_optical_four_wave_mixing(
     }
 
 
+def calculate_erlang_traffic_capacity(
+    offered_traffic_erlangs: float,
+    num_channels: int,
+    avg_holding_time_sec: float = 120.0
+) -> Dict[str, Any]:
+    """
+    Calculates cellular radio and telephone network trunking traffic metrics
+    using Erlang-B (blocked calls cleared) and Erlang-C (blocked calls queued) models.
+    """
+    a = max(0.001, float(offered_traffic_erlangs))
+    c = max(1, int(num_channels))
+    h_sec = max(1.0, float(avg_holding_time_sec))
+
+    # Erlang-B iterative computation (avoids factorial overflow)
+    b = 1.0
+    for k in range(1, c + 1):
+        b = (a * b) / (k + (a * b))
+
+    carried_traffic = a * (1.0 - b)
+    blocking_pct = b * 100.0
+
+    # Erlang-C queuing probability (valid when a < c)
+    if a < c:
+        erlang_c = (c * b) / (c - a + (a * b))
+        erlang_c = max(0.0, min(1.0, erlang_c))
+        avg_wait_sec = (erlang_c * h_sec) / (c - a)
+    else:
+        erlang_c = 1.0
+        avg_wait_sec = float('inf')
+
+    # Grade of Service evaluation (industry standard: GOS <= 2% or 0.02)
+    if b <= 0.02:
+        gos_status = "Sangat Baik (GoS <= 2%, Kapasitas Memadai)"
+        is_acceptable = True
+    elif b <= 0.05:
+        gos_status = "Cukup (GoS <= 5%, Beban Sibuk Moderat)"
+        is_acceptable = True
+    else:
+        gos_status = "Kelebihan Beban (GoS > 5%, Terjadi Kongesti Kanal)"
+        is_acceptable = False
+
+    return {
+        "offered_traffic_erlangs": round(a, 3),
+        "num_channels": c,
+        "avg_holding_time_sec": round(h_sec, 1),
+        "blocking_probability_erlang_b": round(b, 6),
+        "blocking_pct": round(blocking_pct, 3),
+        "carried_traffic_erlangs": round(carried_traffic, 3),
+        "queuing_probability_erlang_c": round(erlang_c, 6) if erlang_c <= 1.0 else 1.0,
+        "avg_queue_delay_sec": round(avg_wait_sec, 2) if avg_wait_sec != float('inf') else 99999.0,
+        "grade_of_service_status": gos_status,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
