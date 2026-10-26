@@ -5106,6 +5106,43 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_fwm_crosstalk_card(
+        cls,
+        channel_spacing_ghz: float,
+        fiber_length_km: float,
+        dispersion_ps_nm_km: float,
+        fwm_efficiency_pct: float,
+        crosstalk_suppression_dbc: float,
+        risk_status: str
+    ) -> str:
+        """
+        Renders an optical fiber DWDM Four-Wave Mixing (FWM) nonlinear crosstalk telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        status_clean = escape(risk_status.strip())
+        is_safe = "Sangat Rendah" in risk_status or "Aman" in risk_status
+        risk_color = "#10b981" if is_safe else ("#f59e0b" if "Moderat" in risk_status else "#ef4444")
+
+        return f"""    <div class="tu-fwm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Four-Wave Mixing (FWM) DWDM</span>
+        <span style="background: {risk_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status_clean}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">Telemetri Crosstalk Nirlinier FWM</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Spasi Kanal: <strong>{channel_spacing_ghz:.1f} GHz</strong></div>
+        <div>Panjang Ruas: <strong>{fiber_length_km:.2f} km</strong></div>
+        <div>Dispersi Kromatik D: <strong>{dispersion_ps_nm_km:.2f} ps/(nm·km)</strong></div>
+        <div>Efisiensi FWM (\u03b7): <strong style="color: #38bdf8;">{fwm_efficiency_pct:.3f}%</strong></div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 10px; font-size: 13px; display: flex; justify-content: space-between;">
+        <span>Supresi Crosstalk: <strong style="color: #10b981;">{crosstalk_suppression_dbc:.2f} dBc</strong></span>
+        <span>Status: <strong style="color: {risk_color};">{status_clean}</strong></span>
+      </div>
+    </div>"""
+
 
 
 
