@@ -1734,6 +1734,93 @@ Status: Granted
         self.assertEqual(fail["converted_sks"], 0)
         self.assertFalse(fail["is_eligible"])
 
+    def test_calculate_optical_four_wave_mixing(self):
+        from parser import calculate_optical_four_wave_mixing
+        res = calculate_optical_four_wave_mixing(
+            channel_spacing_ghz=100.0,
+            fiber_length_km=50.0,
+            chromatic_dispersion_ps_nm_km=17.0,
+            channel_power_dbm=0.0
+        )
+        self.assertGreater(abs(res["delta_beta_rad_km"]), 0.0)
+        self.assertGreater(res["effective_length_km"], 0.0)
+        self.assertLessEqual(res["fwm_efficiency"], 1.0)
+        self.assertTrue(res["is_compliant"])
+        self.assertIn("Aman", res["fwm_risk"])
+
+        # Test zero-dispersion high risk case
+        res_zero = calculate_optical_four_wave_mixing(
+            channel_spacing_ghz=25.0,
+            fiber_length_km=80.0,
+            chromatic_dispersion_ps_nm_km=0.01,
+            channel_power_dbm=10.0
+        )
+        self.assertFalse(res_zero["is_compliant"])
+        self.assertIn("Kritis", res_zero["fwm_risk"])
+
+    def test_calculate_erlang_traffic_capacity(self):
+        from parser import calculate_erlang_traffic_capacity
+        # Standard trunking: 10 Erlangs on 15 channels
+        res = calculate_erlang_traffic_capacity(
+            offered_traffic_erlangs=10.0,
+            num_channels=15,
+            avg_holding_time_sec=120.0
+        )
+        self.assertGreater(res["carried_traffic_erlangs"], 0.0)
+        self.assertLessEqual(res["blocking_probability_erlang_b"], 0.05)
+        self.assertTrue(res["is_acceptable"])
+        self.assertIn("GoS", res["grade_of_service_status"])
+
+        # Severe congestion: 20 Erlangs on 5 channels
+        overload = calculate_erlang_traffic_capacity(
+            offered_traffic_erlangs=20.0,
+            num_channels=5
+        )
+        self.assertFalse(overload["is_acceptable"])
+        self.assertGreater(overload["blocking_probability_erlang_b"], 0.20)
+
+    def test_calculate_satellite_atmospheric_attenuation_itu_r(self):
+        from parser import calculate_satellite_atmospheric_attenuation_itu_r
+        # Ku-band link at 14 GHz, 30 deg elevation
+        res = calculate_satellite_atmospheric_attenuation_itu_r(
+            frequency_ghz=14.0,
+            elevation_angle_deg=30.0,
+            water_vapor_density_g_m3=7.5
+        )
+        self.assertGreater(res["oxygen_attenuation_db_km"], 0.0)
+        self.assertGreater(res["water_vapor_attenuation_db_km"], 0.0)
+        self.assertGreater(res["slant_path_attenuation_db"], 0.0)
+        self.assertTrue(res["is_viable"])
+
+    def test_parse_pkm_mbkm_evaluation(self):
+        from parser import parse_pkm_mbkm_evaluation
+        # PIMNAS medal winner
+        res_pimnas = parse_pkm_mbkm_evaluation({
+            "student_name": "Arif Rahman",
+            "nim": "1201201044",
+            "scheme": "PKM-KC (Karsa Cipta)",
+            "proposal_title": "Drone Pemantau Sinyal Maritim 4G/5G",
+            "qualified_pimnas": True,
+            "medal": "Medali Emas Kategori Presentasi",
+            "score_proposal": 92.0,
+            "score_progress": 95.0,
+            "score_presentation": 96.0
+        })
+        self.assertEqual(res_pimnas["letter_grade"], "A")
+        self.assertEqual(res_pimnas["converted_sks"], 20)
+        self.assertTrue(res_pimnas["is_eligible"])
+        self.assertEqual(len(res_pimnas["course_equivalencies"]), 5)
+
+        # Non-passing
+        res_fail = parse_pkm_mbkm_evaluation({
+            "student_name": "Bayu",
+            "score_proposal": 45.0,
+            "score_progress": 40.0,
+            "score_presentation": 42.0
+        })
+        self.assertEqual(res_fail["converted_sks"], 0)
+        self.assertFalse(res_fail["is_eligible"])
+
 
 if __name__ == "__main__":
     unittest.main()
