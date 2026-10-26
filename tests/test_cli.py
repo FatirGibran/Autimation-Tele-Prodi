@@ -2191,6 +2191,86 @@ class TestCLI(unittest.TestCase):
             self.assertIn("1201201111", out)
             self.assertIn("PT Telkom Indonesia", out)
 
+    def test_cmd_fwm(self):
+        class ArgsAdd:
+            action = "add"
+            spacing = 100.0
+            length = 50.0
+            disp = 17.0
+            slope = 0.08
+            att = 0.2
+            pwr = 0.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fwm(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan FWM berhasil disimpan", out)
+            self.assertIn("Efisiensi:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fwm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("100.0", out)
+            self.assertIn("50.00", out)
+            self.assertIn("17.000", out)
+
+    def test_cmd_erlang(self):
+        class ArgsAdd:
+            action = "add"
+            traffic = 10.0
+            channels = 15
+            holding = 120.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_erlang(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Erlang berhasil disimpan", out)
+            self.assertIn("Blocking:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_erlang(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("10.00", out)
+            self.assertIn("15", out)
+
+    def test_cmd_pimnas(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Aris Wicaksono"
+            nim = "1201202222"
+            scheme = "PKM-KC"
+            title = "Smart IoT Antenna Array"
+            pimnas = True
+            medal = "Emas"
+            proposal = 95.0
+            progress = 92.0
+            presentation = 94.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pimnas(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan PKM/PIMNAS berhasil disimpan", out)
+            self.assertIn("20 SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pimnas(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Aris Wicaksono", out)
+            self.assertIn("1201202222", out)
+            self.assertIn("PKM-KC", out)
+
 
 if __name__ == "__main__":
     unittest.main()
