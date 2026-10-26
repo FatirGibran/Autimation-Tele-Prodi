@@ -18,7 +18,10 @@ from parser import (
     parse_proyek_kemanusiaan_evaluation,
     calculate_polarization_mode_dispersion,
     calculate_cost231_hata_path_loss,
-    parse_studi_independen_evaluation
+    parse_studi_independen_evaluation,
+    calculate_optical_four_wave_mixing,
+    calculate_erlang_traffic_capacity,
+    parse_pkm_mbkm_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -1899,6 +1902,121 @@ def cmd_independen(args):
             print(f"{r['id']:<4} | {r['nim']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:18]:<20} | {r['partner_name']}")
 
 
+def cmd_fwm(args):
+    if args.action == "add":
+        if args.spacing is None or args.length is None or args.disp is None:
+            print("Error: Argumen --spacing, --length, dan --disp wajib diisi.")
+            sys.exit(1)
+        slope = args.slope if args.slope is not None else 0.08
+        att = args.att if args.att is not None else 0.2
+        pwr = args.pwr if args.pwr is not None else 0.0
+        calc = calculate_optical_four_wave_mixing(
+            channel_spacing_ghz=args.spacing,
+            fiber_length_km=args.length,
+            chromatic_dispersion_ps_nm_km=args.disp,
+            dispersion_slope_ps_nm2_km=slope,
+            attenuation_db_km=att,
+            channel_power_dbm=pwr
+        )
+        fid = storage.record_optical_fwm({
+            "channel_spacing_ghz": args.spacing,
+            "fiber_length_km": args.length,
+            "dispersion_ps_nm_km": args.disp,
+            "fwm_efficiency_pct": calc["fwm_efficiency_pct"],
+            "crosstalk_suppression_dbc": calc["crosstalk_suppression_dbc"],
+            "fwm_risk": calc["fwm_risk"],
+            "is_compliant": calc["is_compliant"]
+        })
+        print(f"Catatan FWM berhasil disimpan dengan ID: {fid} (Efisiensi: {calc['fwm_efficiency_pct']:.3f}%)")
+    else:
+        records = storage.list_optical_fwm(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan FWM serat optik yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'SPACING (GHZ)':<14} | {'PANJANG':<10} | {'D (PS/NM*KM)':<14} | {'EFISIENSI (%)':<14} | {'RISIKO'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['channel_spacing_ghz']:<14.1f} | {r['fiber_length_km']:<10.2f} | {r['dispersion_ps_nm_km']:<14.3f} | {r['fwm_efficiency_pct']:<14.3f} | {r['fwm_risk']}")
+
+
+def cmd_erlang(args):
+    if args.action == "add":
+        if args.traffic is None or args.channels is None:
+            print("Error: Argumen --traffic dan --channels wajib diisi.")
+            sys.exit(1)
+        holding = args.holding if args.holding is not None else 120.0
+        calc = calculate_erlang_traffic_capacity(
+            offered_traffic_erlangs=args.traffic,
+            num_channels=args.channels,
+            avg_holding_time_sec=holding
+        )
+        eid = storage.record_erlang_traffic({
+            "offered_traffic_erlangs": args.traffic,
+            "num_channels": args.channels,
+            "blocking_pct": calc["blocking_pct"],
+            "carried_traffic_erlangs": calc["carried_traffic_erlangs"],
+            "grade_of_service_status": calc["grade_of_service_status"],
+            "is_acceptable": calc["is_acceptable"]
+        })
+        print(f"Catatan Erlang berhasil disimpan dengan ID: {eid} (Blocking: {calc['blocking_pct']:.2f}%)")
+    else:
+        records = storage.list_erlang_traffics(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan trafik Erlang yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'TRAFIK (ERL)':<14} | {'KANAL':<8} | {'BLOCKING (%)':<14} | {'CARRIED':<10} | {'STATUS GOS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['offered_traffic_erlangs']:<14.2f} | {r['num_channels']:<8} | {r['blocking_pct']:<14.2f} | {r['carried_traffic_erlangs']:<10.2f} | {r['grade_of_service_status']}")
+
+
+def cmd_pimnas(args):
+    if args.action == "add":
+        if not args.name or not args.nim:
+            print("Error: Argumen --name dan --nim wajib diisi.")
+            sys.exit(1)
+        scheme = args.scheme if args.scheme else "PKM-KC"
+        title = args.title if args.title else "Inovasi Perangkat Nirkabel Cerdas"
+        is_pimnas = getattr(args, "pimnas", False)
+        medal = args.medal if args.medal else ""
+        proposal = args.proposal if args.proposal is not None else 85.0
+        progress = args.progress if args.progress is not None else 85.0
+        presentation = args.presentation if args.presentation is not None else 85.0
+        eval_res = parse_pkm_mbkm_evaluation({
+            "student_name": args.name,
+            "nim": args.nim,
+            "scheme": scheme,
+            "proposal_title": title,
+            "qualified_pimnas": is_pimnas,
+            "medal": medal,
+            "score_proposal": proposal,
+            "score_progress": progress,
+            "score_presentation": presentation
+        })
+        pid = storage.record_pkm_achievement({
+            "student_name": args.name,
+            "nim": args.nim,
+            "scheme": scheme,
+            "proposal_title": title,
+            "qualified_pimnas": is_pimnas,
+            "medal": medal,
+            "composite_score": eval_res["composite_score"],
+            "converted_sks": eval_res["converted_sks"],
+            "letter_grade": eval_res["letter_grade"],
+            "status": eval_res["status"]
+        })
+        print(f"Catatan PKM/PIMNAS berhasil disimpan dengan ID: {pid} ({eval_res['converted_sks']} SKS Diakui)")
+    else:
+        records = storage.list_pkm_achievements(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan prestasi PKM/PIMNAS yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKEMA':<10} | {'SKS':<4} | {'NILAI':<5} | {'MAHASISWA':<20} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['nim']:<10} | {r['scheme']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:18]:<20} | {r['status']}")
+
+
 def main():
 
 
@@ -2629,6 +2747,42 @@ def main():
     indep_parser.add_argument("--defense", type=float, default=85.0, help="Nilai sidang capstone defense (0-100)")
     indep_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     indep_parser.set_defaults(func=cmd_independen)
+
+    # FWM command
+    fwm_parser = subparsers.add_parser("fwm", help="Kelola kalkulasi efisiensi FWM dan nonlinear optics DWDM (list, add)")
+    fwm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi FWM")
+    fwm_parser.add_argument("--spacing", type=float, help="Spasi frekuensi antarkanal DWDM (GHz)")
+    fwm_parser.add_argument("--length", type=float, help="Panjang bentang serat optik (km)")
+    fwm_parser.add_argument("--disp", type=float, help="Dispersi kromatik D (ps/(nm*km))")
+    fwm_parser.add_argument("--slope", type=float, default=0.08, help="Kemiringan dispersi slope S (ps/(nm^2*km))")
+    fwm_parser.add_argument("--att", type=float, default=0.2, help="Koefisien redaman serat optik (dB/km)")
+    fwm_parser.add_argument("--pwr", type=float, default=0.0, help="Daya optik kanal masuk (dBm)")
+    fwm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    fwm_parser.set_defaults(func=cmd_fwm)
+
+    # Erlang command
+    erlang_parser = subparsers.add_parser("erlang", help="Kelola kalkulasi trafik seluler Erlang-B/C trunking (list, add)")
+    erlang_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan trafik Erlang")
+    erlang_parser.add_argument("--traffic", type=float, help="Intensitas trafik panggilan ditawarkan (Erlang)")
+    erlang_parser.add_argument("--channels", type=int, help="Jumlah kanal trafik trunking (c)")
+    erlang_parser.add_argument("--holding", type=float, default=120.0, help="Rata-rata waktu holding panggilan (detik)")
+    erlang_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    erlang_parser.set_defaults(func=cmd_erlang)
+
+    # PIMNAS / PKM command
+    pimnas_parser = subparsers.add_parser("pimnas", help="Kelola evaluasi & rekognisi MBKM PKM dan PIMNAS (list, add)")
+    pimnas_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan rekognisi PKM/PIMNAS")
+    pimnas_parser.add_argument("--name", help="Nama lengkap mahasiswa peserta PKM")
+    pimnas_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    pimnas_parser.add_argument("--scheme", default="PKM-KC", help="Skema PKM (PKM-KC, PKM-RE, dll)")
+    pimnas_parser.add_argument("--title", default="Inovasi Perangkat Nirkabel Cerdas", help="Judul proposal PKM")
+    pimnas_parser.add_argument("--pimnas", action="store_true", help="Set true jika lolos ke tahap PIMNAS nasional")
+    pimnas_parser.add_argument("--medal", default="", help="Medali yang diraih di PIMNAS (Emas/Perak/Perunggu)")
+    pimnas_parser.add_argument("--proposal", type=float, default=85.0, help="Nilai proposal (0-100)")
+    pimnas_parser.add_argument("--progress", type=float, default=85.0, help="Nilai kemajuan PKP2 (0-100)")
+    pimnas_parser.add_argument("--presentation", type=float, default=85.0, help="Nilai presentasi akhir (0-100)")
+    pimnas_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pimnas_parser.set_defaults(func=cmd_pimnas)
 
     args = parser.parse_args()
 
