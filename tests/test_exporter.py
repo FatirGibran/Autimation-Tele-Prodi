@@ -930,6 +930,42 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('"fiber-optics", "splicing", "praktikum"', res)
         self.assertIn("<p>Persiapkan alat fusion splicer dan cleaver.</p>", res)
 
+    def test_generate_how_to_json_ld(self):
+        steps = [
+            {"name": "Kupas Kabel", "text": "Gunakan stripper untuk mengupas jaket luar kabel."},
+            {"name": "Potong Fiber", "text": "Gunakan precision cleaver untuk memotong flat 90 derajat."}
+        ]
+        res = ArticleExporter.generate_how_to_json_ld(
+            name="Prosedur Fusion Splicing Serat Optik",
+            steps=steps,
+            description="Panduan standar penyambungan serat optik.",
+            total_time="PT15M",
+            tools=["Fusion Splicer", "Fiber Cleaver"]
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "HowTo")
+        self.assertEqual(res["name"], "Prosedur Fusion Splicing Serat Optik")
+        self.assertEqual(len(res["step"]), 2)
+        self.assertEqual(res["totalTime"], "PT15M")
+        self.assertEqual(res["tool"][0]["name"], "Fusion Splicer")
+
+    def test_to_docusaurus_mdx(self):
+        meta = {
+            "slug": "docusaurus-dwdm",
+            "seo_title": "Panduan Sistem DWDM",
+            "meta_description": "Dokumentasi teknis multiplexing optik rapat.",
+            "sidebar_position": 3,
+            "tags": ["dwdm", "optik", "telekomunikasi"]
+        }
+        res = ArticleExporter.to_docusaurus_mdx(meta, "<p>Penjelasan multiplexing kanal optik.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn("id: docusaurus-dwdm", res)
+        self.assertIn('title: "Panduan Sistem DWDM"', res)
+        self.assertIn("slug: /docusaurus-dwdm", res)
+        self.assertIn("sidebar_position: 3", res)
+        self.assertIn('"dwdm", "optik", "telekomunikasi"', res)
+        self.assertIn("<p>Penjelasan multiplexing kanal optik.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
