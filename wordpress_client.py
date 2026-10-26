@@ -503,6 +503,20 @@ class WordPressClient:
         except Exception:
             return None
 
+    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves user/author profile details from /users/{id} endpoint by numeric user ID.
+        """
+        endpoint = f"{self.api_url}/users/{int(user_id)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            if isinstance(res, dict) and "id" in res:
+                return res
+            return None
+        except Exception:
+            return None
+
     def ping_api(self) -> Dict[str, Any]:
         """
         Pings WordPress REST API endpoint to verify connectivity and authentication status.
