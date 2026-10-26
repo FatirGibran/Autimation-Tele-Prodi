@@ -5183,6 +5183,63 @@ def calculate_erlang_traffic_capacity(
     }
 
 
+def calculate_satellite_atmospheric_attenuation_itu_r(
+    frequency_ghz: float,
+    elevation_angle_deg: float,
+    water_vapor_density_g_m3: float = 7.5
+) -> Dict[str, Any]:
+    """
+    Calculates Earth-space satellite link gaseous atmospheric absorption (oxygen and water vapor)
+    according to ITU-R P.676 recommendations for frequencies up to 55 GHz and elevation angles >= 5 deg.
+    """
+    f = max(1.0, min(55.0, float(frequency_ghz)))
+    theta = max(5.0, min(90.0, float(elevation_angle_deg)))
+    rho = max(0.1, min(30.0, float(water_vapor_density_g_m3)))
+
+    # Oxygen specific attenuation gamma_o (dB/km)
+    gamma_o = ((7.2 / ((f ** 2) + 0.36)) + (0.34 / (((f - 57.0) ** 2) + 2.1))) * (f ** 2) * 1e-3
+    gamma_o = max(0.001, gamma_o)
+
+    # Water vapor specific attenuation gamma_w (dB/km) with 22.235 GHz peak
+    wv_resonance = 3.6 / (((f - 22.2) ** 2) + 8.5)
+    gamma_w = (0.05 + (0.0021 * rho) + wv_resonance) * (f ** 2) * rho * 1e-4
+    gamma_w = max(0.001, gamma_w)
+
+    # Scale heights
+    h_o = 6.0  # km for dry air
+    h_w = 2.0  # km for water vapor
+
+    zenith_o = gamma_o * h_o
+    zenith_w = gamma_w * h_w
+    zenith_total = zenith_o + zenith_w
+
+    # Slant path cosecant mapping
+    sin_theta = math.sin(math.radians(theta))
+    slant_attenuation_db = zenith_total / sin_theta
+
+    if slant_attenuation_db <= 0.5:
+        band_status = "Sangat Rendah (Transmisi Satelit Sangat Jernih)"
+        is_viable = True
+    elif slant_attenuation_db <= 2.0:
+        band_status = "Moderat (Standar Link Budget Ku/Ka-Band)"
+        is_viable = True
+    else:
+        band_status = "Tinggi (Memerlukan Margin Daya Tambahan Uplink/Downlink)"
+        is_viable = False
+
+    return {
+        "frequency_ghz": round(f, 2),
+        "elevation_angle_deg": round(theta, 1),
+        "water_vapor_density_g_m3": round(rho, 2),
+        "oxygen_attenuation_db_km": round(gamma_o, 4),
+        "water_vapor_attenuation_db_km": round(gamma_w, 4),
+        "zenith_attenuation_db": round(zenith_total, 3),
+        "slant_path_attenuation_db": round(slant_attenuation_db, 2),
+        "transmission_band_status": band_status,
+        "is_viable": is_viable
+    }
+
+
 
 
 
