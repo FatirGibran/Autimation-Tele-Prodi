@@ -5143,6 +5143,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_erlang_traffic_card(
+        cls,
+        offered_traffic_erlangs: float,
+        num_channels: int,
+        blocking_pct: float,
+        carried_traffic: float,
+        gos_status: str
+    ) -> str:
+        """
+        Renders a cellular radio and trunked network Erlang traffic and GoS performance card.
+        """
+        from xml.sax.saxutils import escape
+
+        status_clean = escape(gos_status.strip())
+        is_safe = blocking_pct <= 2.0
+        status_color = "#10b981" if is_safe else ("#f59e0b" if blocking_pct <= 5.0 else "#ef4444")
+
+        return f"""    <div class="tu-erlang-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Kapasitas Trafik Erlang-B/C</span>
+        <span style="background: {status_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Blocking: {blocking_pct:.2f}%</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">Analisis Trunking & Grade of Service</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Trafik Ditawarkan: <strong>{offered_traffic_erlangs:.2f} Erlang</strong></div>
+        <div>Jumlah Kanal Server: <strong>{num_channels} Kanal</strong></div>
+        <div>Trafik Terlayani: <strong style="color: #38bdf8;">{carried_traffic:.2f} Erlang</strong></div>
+        <div>Peluang Blocking: <strong style="color: {status_color};">{blocking_pct:.3f}%</strong></div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 10px; font-size: 13px; display: flex; justify-content: space-between;">
+        <span>Status GoS: <strong style="color: {status_color};">{status_clean}</strong></span>
+        <span>Standar: <strong>GoS &le; 2%</strong></span>
+      </div>
+    </div>"""
+
 
 
 
