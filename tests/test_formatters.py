@@ -788,6 +788,43 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("A", msg)
         self.assertIn("https://kampusmerdeka.kemdikbud.go.id/studi/1201201111", msg)
 
+    def test_format_satellite_gas_attenuation_telegram(self):
+        msg = TelegramFormatter.format_satellite_gas_attenuation_telegram(
+            frequency_ghz=14.25,
+            elevation_angle_deg=28.5,
+            slant_attenuation_db=0.35,
+            oxygen_att_db_km=0.0152,
+            water_vapor_att_db_km=0.0210,
+            status="Sangat Rendah (Transmisi Satelit Sangat Jernih)",
+            portal_url="https://sat.telkomuniversity.ac.id/link/earth-station"
+        )
+        self.assertIn("Laporan Redaman Gas Atmosfer Tautan Satelit (ITU-R P.676)", msg)
+        self.assertIn("14.25 GHz", msg)
+        self.assertIn("28.5°", msg)
+        self.assertIn("0.35 dB", msg)
+        self.assertIn("Sangat Rendah (Transmisi Satelit Sangat Jernih)", msg)
+        self.assertIn("https://sat.telkomuniversity.ac.id/link/earth-station", msg)
+
+    def test_format_pkm_pimnas_telegram(self):
+        msg = TelegramFormatter.format_pkm_pimnas_telegram(
+            student_name="Arif Rahman",
+            nim="1201201044",
+            scheme="PKM-KC (Karsa Cipta)",
+            proposal_title="Drone Pemantau Sinyal Maritim 4G/5G",
+            converted_sks=20,
+            status="Lolos PIMNAS (Medali Emas)",
+            medal="Medali Emas PIMNAS",
+            portal_url="https://kemahasiswaan.telkomuniversity.ac.id/pkm/2026-001"
+        )
+        self.assertIn("Prestasi Gemilang Mahasiswa PKM & PIMNAS Belmawa", msg)
+        self.assertIn("Arif Rahman", msg)
+        self.assertIn("1201201044", msg)
+        self.assertIn("PKM-KC (Karsa Cipta)", msg)
+        self.assertIn("Medali Emas PIMNAS", msg)
+        self.assertIn("Drone Pemantau Sinyal Maritim 4G/5G", msg)
+        self.assertIn("20 SKS Diakui", msg)
+        self.assertIn("https://kemahasiswaan.telkomuniversity.ac.id/pkm/2026-001", msg)
+
 
 
 
