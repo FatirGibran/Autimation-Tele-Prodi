@@ -1779,6 +1779,49 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_how_to_json_ld(
+        name: str,
+        steps: List[Dict[str, str]],
+        description: str = "",
+        total_time: str = "",
+        supplies: Optional[List[str]] = None,
+        tools: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Generates schema.org compliant HowTo JSON-LD structured data for technical walkthroughs.
+        """
+        step_items = []
+        for idx, s in enumerate(steps, 1):
+            s_name = s.get("name", f"Langkah {idx}").strip()
+            s_text = s.get("text", s.get("instruction", "")).strip()
+            item: Dict[str, Any] = {
+                "@type": "HowToStep",
+                "position": idx,
+                "name": s_name,
+                "text": s_text or s_name
+            }
+            if s.get("url"):
+                item["url"] = s["url"].strip()
+            step_items.append(item)
+
+        doc: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "name": name.strip(),
+            "step": step_items
+        }
+        if description.strip():
+            doc["description"] = description.strip()
+        if total_time.strip():
+            doc["totalTime"] = total_time.strip()
+        if supplies:
+            doc["supply"] = [{"@type": "HowToSupply", "name": sup.strip()} for sup in supplies if sup.strip()]
+        if tools:
+            doc["tool"] = [{"@type": "HowToTool", "name": tol.strip()} for tol in tools if tol.strip()]
+
+        return doc
+
 
 
 
