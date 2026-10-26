@@ -955,6 +955,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fwm_spacing ON optical_fwm_records(channel_spacing_ghz);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS erlang_traffic_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    offered_traffic_erlangs REAL NOT NULL,
+                    num_channels INTEGER NOT NULL,
+                    blocking_pct REAL NOT NULL,
+                    carried_traffic_erlangs REAL NOT NULL,
+                    grade_of_service_status TEXT NOT NULL,
+                    is_acceptable INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_erlang_traffic ON erlang_traffic_records(offered_traffic_erlangs);")
 
 
 
@@ -4506,6 +4519,49 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_fwm_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_erlang_traffic(self, data: Dict[str, Any]) -> int:
+        """
+        Stores a cellular radio Erlang trunking traffic and GoS performance record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO erlang_traffic_records (
+                    offered_traffic_erlangs, num_channels, blocking_pct,
+                    carried_traffic_erlangs, grade_of_service_status, is_acceptable
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                float(data.get("offered_traffic_erlangs", 10.0)),
+                int(data.get("num_channels", 15)),
+                float(data.get("blocking_pct", 0.0)),
+                float(data.get("carried_traffic_erlangs", 10.0)),
+                data.get("grade_of_service_status", "Sangat Baik").strip(),
+                1 if data.get("is_acceptable", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_erlang_traffics(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored Erlang traffic capacity records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM erlang_traffic_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_erlang_traffic_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an Erlang traffic capacity record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM erlang_traffic_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
