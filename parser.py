@@ -5048,6 +5048,86 @@ def parse_studi_independen_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_four_wave_mixing(
+    channel_spacing_ghz: float,
+    fiber_length_km: float,
+    chromatic_dispersion_ps_nm_km: float,
+    dispersion_slope_ps_nm2_km: float = 0.08,
+    attenuation_db_km: float = 0.2,
+    channel_power_dbm: float = 0.0
+) -> Dict[str, Any]:
+    """
+    Calculates DWDM optical fiber Four-Wave Mixing (FWM) nonlinear phase mismatch,
+    mixing efficiency eta, and generated crosstalk power according to ITU-T G.692 / Agrawal nonlinear optics.
+    """
+    spacing_ghz = max(12.5, float(channel_spacing_ghz))
+    length_km = max(0.1, float(fiber_length_km))
+    d_param = float(chromatic_dispersion_ps_nm_km)
+    s_slope = float(dispersion_slope_ps_nm2_km)
+    alpha_db = max(0.1, float(attenuation_db_km))
+    p_in_dbm = float(channel_power_dbm)
+
+    c_speed = 2.99792458e8  # m/s
+    lambda_0 = 1550e-9      # m
+    delta_f = spacing_ghz * 1e9  # Hz
+
+    # Phase mismatch delta_beta in rad/m:
+    # delta_beta = -(2 * pi * lambda_0^2 / c) * (delta_f)^2 * (D * 1e-6 + (lambda_0^2 / c) * delta_f * S * 1e-3)
+    d_si = d_param * 1e-6  # s/m^2
+    s_si = s_slope * 1e-3  # s/m^3
+    beta_factor = (2.0 * math.pi * (lambda_0 ** 2)) / c_speed
+    delta_beta_m = -beta_factor * (delta_f ** 2) * (d_si + ((lambda_0 ** 2) / c_speed) * delta_f * s_si)
+    delta_beta_km = delta_beta_m * 1000.0  # rad/km
+
+    # Attenuation coefficient alpha in 1/km:
+    alpha_km = alpha_db / 4.3429448
+
+    # Effective length:
+    l_eff_km = (1.0 - math.exp(-alpha_km * length_km)) / alpha_km
+
+    # FWM efficiency eta:
+    denom = (alpha_km ** 2) + (delta_beta_km ** 2)
+    phase_sin = math.sin(delta_beta_km * length_km / 2.0)
+    numerator_ratio = 4.0 * math.exp(-alpha_km * length_km) * (phase_sin ** 2)
+    denom_ratio = (1.0 - math.exp(-alpha_km * length_km)) ** 2
+    fwm_efficiency = ((alpha_km ** 2) / denom) * (1.0 + (numerator_ratio / denom_ratio)) if denom > 0 and denom_ratio > 0 else 0.0
+    fwm_efficiency = max(0.0, min(1.0, fwm_efficiency))
+
+    # FWM crosstalk power estimation (relative to input power):
+    gamma_nl = 1.3  # W^-1 * km^-1 typical SMF
+    p_linear_w = (10.0 ** (p_in_dbm / 10.0)) * 1e-3
+    p_fwm_linear_w = fwm_efficiency * (gamma_nl ** 2) * (p_linear_w ** 3) * (l_eff_km ** 2)
+    p_fwm_dbm = 10.0 * math.log10(p_fwm_linear_w / 1e-3) if p_fwm_linear_w > 0 else -120.0
+    crosstalk_suppression_dbc = p_in_dbm - p_fwm_dbm
+
+    if fwm_efficiency < 0.05 and abs(d_param) >= 2.0:
+        fwm_risk = "Sangat Rendah (Aman / Non-Zero Dispersion)"
+        is_compliant = True
+    elif fwm_efficiency < 0.25:
+        fwm_risk = "Moderat (Waspada Kanal DWDM Rapat)"
+        is_compliant = True
+    else:
+        fwm_risk = "Tinggi (Kritis / Jebakan Zero Dispersion)"
+        is_compliant = False
+
+    return {
+        "channel_spacing_ghz": round(spacing_ghz, 2),
+        "fiber_length_km": round(length_km, 2),
+        "dispersion_ps_nm_km": round(d_param, 3),
+        "dispersion_slope_ps_nm2_km": round(s_slope, 4),
+        "attenuation_db_km": round(alpha_db, 3),
+        "input_power_dbm": round(p_in_dbm, 2),
+        "delta_beta_rad_km": round(delta_beta_km, 4),
+        "effective_length_km": round(l_eff_km, 3),
+        "fwm_efficiency": round(fwm_efficiency, 6),
+        "fwm_efficiency_pct": round(fwm_efficiency * 100.0, 3),
+        "fwm_power_dbm": round(p_fwm_dbm, 2),
+        "crosstalk_suppression_dbc": round(crosstalk_suppression_dbc, 2),
+        "fwm_risk": fwm_risk,
+        "is_compliant": is_compliant
+    }
+
+
 
 
 
