@@ -1613,6 +1613,86 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertEqual(res_bad["captioned_tables"], 0)
 
+    def test_audit_web_app_manifest_and_pwa(self):
+        html_ok = (
+            '<head>'
+            '<link rel="manifest" href="/manifest.webmanifest">'
+            '<meta name="theme-color" content="#0284c7">'
+            '<link rel="apple-touch-icon" href="/icons/apple-icon-180.png">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_web_app_manifest_and_pwa(html_ok)
+        self.assertTrue(res_ok["has_manifest"])
+        self.assertTrue(res_ok["has_theme_color"])
+        self.assertTrue(res_ok["has_apple_touch_icon"])
+        self.assertTrue(res_ok["is_pwa_ready"])
+
+        html_bad = '<head><title>No PWA</title></head>'
+        res_bad = YoastSEOValidator.audit_web_app_manifest_and_pwa(html_bad)
+        self.assertFalse(res_bad["is_pwa_ready"])
+        self.assertFalse(res_bad["has_manifest"])
+
+    def test_audit_pagination_rel_links(self):
+        html_ok = (
+            '<head>'
+            '<link rel="prev" href="https://example.com/page/1/">'
+            '<link rel="next" href="https://example.com/page/3/">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_pagination_rel_links(html_ok, current_url="https://example.com/page/2/")
+        self.assertTrue(res_ok["has_pagination"])
+        self.assertTrue(res_ok["has_prev"])
+        self.assertTrue(res_ok["has_next"])
+        self.assertTrue(res_ok["is_valid"])
+
+        # Identical URLs error
+        html_bad = (
+            '<head>'
+            '<link rel="prev" href="https://example.com/loop/">'
+            '<link rel="next" href="https://example.com/loop/">'
+            '</head>'
+        )
+        res_bad = YoastSEOValidator.audit_pagination_rel_links(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertTrue(any("identik" in i for i in res_bad["issues"]))
+
+    def test_audit_howto_schema_markup(self):
+        html_ok = (
+            '<div>'
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "HowTo", "name": "Cara Splicing Fiber Optic", "step": [{"@type": "HowToStep", "name": "Kupas jaket", "text": "Gunakan stripper"}]}'
+            '</script>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_howto_schema_markup(html_ok)
+        self.assertTrue(res_ok["has_howto_schema"])
+        self.assertTrue(res_ok["has_name"])
+        self.assertEqual(res_ok["step_count"], 1)
+        self.assertTrue(res_ok["is_compliant"])
+
+        html_bad = '<div><p>Tanpa HowTo Schema</p></div>'
+        res_bad = YoastSEOValidator.audit_howto_schema_markup(html_bad)
+        self.assertFalse(res_bad["has_howto_schema"])
+        self.assertFalse(res_bad["is_compliant"])
+
+    def test_audit_multimedia_audio_descriptions(self):
+        html_ok = (
+            '<div>'
+            '<video src="lecture.mp4">'
+            '<track kind="descriptions" src="desc.vtt" srclang="id" label="Audio Deskripsi">'
+            '</video>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_multimedia_audio_descriptions(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["total_videos"], 1)
+        self.assertEqual(res_ok["described_videos"], 1)
+
+        html_bad = '<video src="undescribed.mp4"></video>'
+        res_bad = YoastSEOValidator.audit_multimedia_audio_descriptions(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["described_videos"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
