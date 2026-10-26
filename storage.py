@@ -941,6 +941,20 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sib_nim ON student_studi_independen(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sib_partner ON student_studi_independen(partner_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_fwm_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    channel_spacing_ghz REAL NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    dispersion_ps_nm_km REAL NOT NULL,
+                    fwm_efficiency_pct REAL NOT NULL,
+                    crosstalk_suppression_dbc REAL NOT NULL,
+                    fwm_risk TEXT NOT NULL,
+                    is_compliant INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fwm_spacing ON optical_fwm_records(channel_spacing_ghz);")
 
 
 
@@ -4449,6 +4463,50 @@ class StorageManager:
             cursor = conn.execute(
                 "SELECT * FROM student_studi_independen WHERE nim = ?",
                 (nim.strip(),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_fwm(self, data: Dict[str, Any]) -> int:
+        """
+        Stores an optical fiber DWDM Four-Wave Mixing (FWM) nonlinear crosstalk record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_fwm_records (
+                    channel_spacing_ghz, fiber_length_km, dispersion_ps_nm_km,
+                    fwm_efficiency_pct, crosstalk_suppression_dbc, fwm_risk, is_compliant
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(data.get("channel_spacing_ghz", 100.0)),
+                float(data.get("fiber_length_km", 50.0)),
+                float(data.get("dispersion_ps_nm_km", 17.0)),
+                float(data.get("fwm_efficiency_pct", 0.0)),
+                float(data.get("crosstalk_suppression_dbc", 40.0)),
+                data.get("fwm_risk", "Aman").strip(),
+                1 if data.get("is_compliant", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_fwm(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical fiber FWM crosstalk records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_fwm_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_fwm_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical fiber FWM crosstalk record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_fwm_records WHERE id = ?",
+                (int(record_id),)
             )
             row = cursor.fetchone()
             return dict(row) if row else None
