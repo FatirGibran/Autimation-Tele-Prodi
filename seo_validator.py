@@ -4743,6 +4743,57 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_pagination_rel_links(cls, html_content: str, current_url: str = "") -> Dict[str, Any]:
+        """
+        Audits relational pagination links (rel="prev" and rel="next") in link elements or anchors
+        to ensure proper crawler sequence traversal without circular loops or self-referential traps.
+        """
+        if not html_content:
+            return {
+                "has_pagination": False,
+                "has_prev": False,
+                "has_next": False,
+                "prev_url": None,
+                "next_url": None,
+                "is_valid": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+
+        # Find in <link rel="..."> or <a rel="...">
+        prev_tag = soup.find(lambda t: t.name in ("link", "a") and t.get("rel") and any(r.lower() == "prev" for r in (t["rel"] if isinstance(t["rel"], list) else t["rel"].split())))
+        next_tag = soup.find(lambda t: t.name in ("link", "a") and t.get("rel") and any(r.lower() == "next" for r in (t["rel"] if isinstance(t["rel"], list) else t["rel"].split())))
+
+        prev_url = prev_tag["href"].strip() if prev_tag and prev_tag.get("href") else None
+        next_url = next_tag["href"].strip() if next_tag and next_tag.get("href") else None
+
+        has_prev = prev_url is not None
+        has_next = next_url is not None
+        has_pagination = has_prev or has_next
+
+        if has_prev and has_next and prev_url == next_url:
+            issues.append(f"Tautan rel='prev' dan rel='next' merujuk ke URL yang identik: '{prev_url}'.")
+
+        if current_url:
+            c_clean = current_url.strip()
+            if prev_url and prev_url == c_clean:
+                issues.append("Tautan rel='prev' merujuk ke halaman saat ini (self-referential).")
+            if next_url and next_url == c_clean:
+                issues.append("Tautan rel='next' merujuk ke halaman saat ini (self-referential).")
+
+        return {
+            "has_pagination": has_pagination,
+            "has_prev": has_prev,
+            "has_next": has_next,
+            "prev_url": prev_url,
+            "next_url": next_url,
+            "is_valid": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
