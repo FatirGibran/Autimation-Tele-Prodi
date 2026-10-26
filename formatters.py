@@ -1150,6 +1150,31 @@ class TelegramFormatter:
             f"✨ *Selamat atas keberhasilan menuntaskan program sertifikasi kompetensi industri MBKM!*"
         )
 
+    @staticmethod
+    def format_satellite_gas_attenuation_telegram(
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        slant_attenuation_db: float,
+        oxygen_att_db_km: float,
+        water_vapor_att_db_km: float,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an Earth-space satellite link gaseous atmospheric absorption report for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Pemantauan Satelit:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🛰️ **Laporan Redaman Gas Atmosfer Tautan Satelit (ITU-R P.676)**\n\n"
+            f"📶 **Frekuensi Kerja:** `{float(frequency_ghz):.2f} GHz`\n"
+            f"📐 **Sudut Elevasi Stasiun Bumi:** `{float(elevation_angle_deg):.1f}°`\n"
+            f"💨 **Redaman Oksigen (γ_o):** `{float(oxygen_att_db_km):.4f} dB/km`\n"
+            f"💧 **Redaman Uap Air (γ_w):** `{float(water_vapor_att_db_km):.4f} dB/km`\n"
+            f"📉 **Total Redaman Slant Path:** `{float(slant_attenuation_db):.2f} dB`\n"
+            f"📊 **Kondisi Kanal Propagasi:** `{status.strip()}`{portal_link}\n\n"
+            f"✨ *Hasil audit transmisi satelit bumi-angkasa prodi terverifikasi!*"
+        )
+
 
 
 
