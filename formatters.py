@@ -1175,6 +1175,32 @@ class TelegramFormatter:
             f"✨ *Hasil audit transmisi satelit bumi-angkasa prodi terverifikasi!*"
         )
 
+    @staticmethod
+    def format_pkm_pimnas_telegram(
+        student_name: str,
+        nim: str,
+        scheme: str,
+        proposal_title: str,
+        converted_sks: int,
+        status: str,
+        medal: str = "",
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student PKM / PIMNAS championship and MBKM credit recognition announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Kemahasiswaan & PKM:** {portal_url.strip()}" if portal_url else ""
+        medal_text = f"\n🏅 **Gelar / Penghargaan:** `{medal.strip()}`" if medal else ""
+        return (
+            f"🏆 **Prestasi Gemilang Mahasiswa PKM & PIMNAS Belmawa**\n\n"
+            f"👤 **Ketua / Pengusul:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🎯 **Skema PKM:** {scheme.strip()}{medal_text}\n"
+            f"📖 **Judul Karya:** \"{proposal_title.strip()}\"\n"
+            f"📊 **Status Rekognisi:** `{status.strip()}`\n"
+            f"📚 **Ekuivalensi Kurikulum:** `{int(converted_sks)} SKS Diakui`{portal_link}\n\n"
+            f"✨ *Selamat dan sukses atas inovasi sains-teknologi membanggakan almamater!*"
+        )
+
 
 
 
