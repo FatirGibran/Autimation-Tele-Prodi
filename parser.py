@@ -5240,6 +5240,95 @@ def calculate_satellite_atmospheric_attenuation_itu_r(
     }
 
 
+def parse_pkm_mbkm_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student participation and achievement in Program Kreativitas Mahasiswa (PKM)
+    and PIMNAS (Pekan Ilmiah Mahasiswa Nasional) for MBKM curriculum credit recognition.
+    """
+    raw_name = str(data.get("student_name", "")).strip()
+    raw_nim = str(data.get("nim", "")).strip()
+    raw_scheme = str(data.get("scheme", "")).strip()
+    raw_title = str(data.get("proposal_title", "")).strip()
+    qualified_pimnas = bool(data.get("qualified_pimnas", False))
+    medal = str(data.get("medal", "")).strip()
+
+    clean_name = raw_name if raw_name else "Mahasiswa Pengusul PKM"
+    clean_nim = raw_nim if raw_nim else "1201200000"
+    is_valid_nim = bool(re.match(r'^\d{8,12}$', clean_nim))
+    clean_scheme = raw_scheme if raw_scheme else "PKM-KC (Karsa Cipta)"
+    clean_title = raw_title if raw_title else "Inovasi Perangkat Nirkabel Cerdas"
+
+    score_proposal = max(0.0, min(100.0, float(data.get("score_proposal", 0.0))))
+    score_progress = max(0.0, min(100.0, float(data.get("score_progress", 0.0))))
+    score_presentation = max(0.0, min(100.0, float(data.get("score_presentation", 0.0))))
+
+    composite = round((0.30 * score_proposal) + (0.40 * score_progress) + (0.30 * score_presentation), 2)
+
+    if qualified_pimnas or composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 78.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 68.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    if qualified_pimnas:
+        converted_sks = 20
+        status = f"Lolos PIMNAS - Rekognisi Penuh 20 SKS ({medal or 'Finalis Nasional'})"
+        is_eligible = True
+    elif composite >= 75.0:
+        converted_sks = 15
+        status = "Didanai Kemdikbud Belmawa - Rekognisi 15 SKS"
+        is_eligible = True
+    elif composite >= 60.0:
+        converted_sks = 10
+        status = "Tingkat Universitas/Fakultas - Rekognisi 10 SKS"
+        is_eligible = True
+    else:
+        converted_sks = 0
+        status = "Tidak Memenuhi Ambang Batas Rekognisi PKM"
+        is_eligible = False
+
+    equiv_courses = [
+        {"code": "TT4401", "name": "Riset dan Inovasi Kreatif Mahasiswa", "sks": 4},
+        {"code": "TT4402", "name": "Pengembangan Prototipe Rekayasa Telekomunikasi", "sks": 4},
+        {"code": "TT4403", "name": "Kewirausahaan dan Alih Teknologi", "sks": 4},
+        {"code": "TT4404", "name": "Komunikasi Ilmiah dan Presentasi Produk", "sks": 4},
+        {"code": "TT4405", "name": "Karya Cipta Teknologi Tepat Guna", "sks": 4}
+    ]
+
+    return {
+        "student_name": clean_name,
+        "nim": clean_nim,
+        "is_valid_nim": is_valid_nim,
+        "scheme": clean_scheme,
+        "proposal_title": clean_title,
+        "qualified_pimnas": qualified_pimnas,
+        "medal": medal,
+        "score_proposal": score_proposal,
+        "score_progress": score_progress,
+        "score_presentation": score_presentation,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible,
+        "course_equivalencies": equiv_courses
+    }
+
+
 
 
 
