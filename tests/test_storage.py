@@ -2181,6 +2181,66 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(by_nim["partner_name"], "PT Telkom Indonesia")
         self.assertIsNone(self.storage.get_studi_independen_by_nim("99999999"))
 
+    def test_optical_fwm_storage(self):
+        rec_id = self.storage.record_optical_fwm({
+            "channel_spacing_ghz": 100.0,
+            "fiber_length_km": 50.0,
+            "dispersion_ps_nm_km": 17.0,
+            "fwm_efficiency_pct": 0.012,
+            "crosstalk_suppression_dbc": 38.5,
+            "fwm_risk": "Sangat Rendah (Aman)",
+            "is_compliant": True
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_fwm()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["channel_spacing_ghz"], 100.0)
+        single = self.storage.get_optical_fwm_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["dispersion_ps_nm_km"], 17.0)
+        self.assertIsNone(self.storage.get_optical_fwm_by_id(99999))
+
+    def test_erlang_traffic_storage(self):
+        rec_id = self.storage.record_erlang_traffic({
+            "offered_traffic_erlangs": 12.5,
+            "num_channels": 18,
+            "blocking_pct": 1.45,
+            "carried_traffic_erlangs": 12.32,
+            "grade_of_service_status": "Sangat Baik (GoS <= 2%)",
+            "is_acceptable": True
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_erlang_traffics()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["num_channels"], 18)
+        single = self.storage.get_erlang_traffic_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["blocking_pct"], 1.45)
+        self.assertIsNone(self.storage.get_erlang_traffic_by_id(99999))
+
+    def test_pkm_achievement_storage(self):
+        rec_id = self.storage.record_pkm_achievement({
+            "student_name": "Arif Rahman",
+            "nim": "1201201044",
+            "scheme": "PKM-KC",
+            "proposal_title": "Drone Pemantau Sinyal Maritim 4G/5G",
+            "qualified_pimnas": True,
+            "medal": "Medali Emas PIMNAS",
+            "composite_score": 94.5,
+            "converted_sks": 20,
+            "letter_grade": "A",
+            "status": "Lolos PIMNAS (Medali Emas)"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_achievements()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_name"], "Arif Rahman")
+        by_nim = self.storage.get_pkm_by_nim("1201201044")
+        self.assertIsNotNone(by_nim)
+        self.assertEqual(by_nim["converted_sks"], 20)
+        self.assertEqual(by_nim["medal"], "Medali Emas PIMNAS")
+        self.assertIsNone(self.storage.get_pkm_by_nim("99999999"))
+
 
 if __name__ == "__main__":
     unittest.main()
