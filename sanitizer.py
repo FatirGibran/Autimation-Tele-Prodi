@@ -1591,6 +1591,25 @@ def sanitize_html5_picture_source_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_kbd_samp_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <kbd> keyboard input and <samp> sample output elements
+    by stripping inline event handlers, style attributes, and contenteditable flags,
+    ensuring clean terminal/code typography without malicious execution.
+    """
+    if not html or ("<kbd" not in html.lower() and "<samp" not in html.lower()):
+        return html
+
+    def fix_kbd_samp(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<(?:kbd|samp)\b[^>]*>', fix_kbd_samp, html, flags=re.IGNORECASE)
+    return out
+
+
 
 
 
