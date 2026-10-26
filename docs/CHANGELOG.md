@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 745+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 775+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 735 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 763 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -901,6 +901,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 746. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 31, dan pembaruan metrik proyek.
 747. **Ekspansi Suite Pengujian Unit Terpadu (735 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 735 unit test terverifikasi (100% pass rate).
 748. **Finalisasi Milestone v4.3.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
+---
+
+## 32. Ekspansi Arsitektur v4.4.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+749. **Sanitasi Elemen HTML5 Picture & Source Media Query (`sanitizer.py`)**: Sanitasi elemen `<picture>` dan `<source>`, validasi atribut `srcset`, `media`, `type`, pencegahan skema URL berbahaya, dan netralisasi event handler inline.
+750. **Sanitasi Elemen HTML5 KBD & SAMP Terminal Keyboard (`sanitizer.py`)**: Sanitasi elemen input keyboard `<kbd>` dan output terminal `<samp>`, stripping atribut asing non-standar dan pembersihan skrip injeksi.
+751. **Sanitasi Elemen HTML5 Meter & Progress Gauge Bar (`sanitizer.py`)**: Sanitasi elemen pengukur `<meter>` dan batang kemajuan `<progress>`, validasi atribut numerik `value`, `min`, `max`, `low`, `high`, `optimum`.
+752. **Kalkulator Efisiensi Four-Wave Mixing (FWM) DWDM Serat Optik (`parser.py`)**: Kalkulasi ketidakcocokan fase $\Delta\beta$, efisiensi pencampuran $\eta_{\text{fwm}}$, redaman daya crosstalk nonlinier ITU-T G.692 / Agrawal, dan analisis risiko zero dispersion.
+753. **Kalkulator Kapasitas Trafik Seluler Erlang B & C Trunking (`parser.py`)**: Perhitungan probabilitas blocking Erlang-B, probabilitas antrean Erlang-C, carried traffic, dan evaluasi Grade of Service (GoS) sistem seluler.
+754. **Kalkulator Redaman Gas Atmosfer & Uap Air ITU-R P.676 Satelit (`parser.py`)**: Perhitungan redaman spesifik oksigen $\gamma_o$ dan uap air $\gamma_w$, pemetaan slant path cosecant sudut elevasi stasiun bumi, dan estimasi link margin downlink Ku/Ka-band.
+755. **Evaluator Rekognisi MBKM Program Kreativitas Mahasiswa PKM & PIMNAS (`parser.py`)**: Evaluasi penilaian proposal, kemajuan pelaksanaan PKP2, presentasi, kualifikasi PIMNAS, konversi nilai mutu, dan pengakuan hingga 20 SKS mata kuliah prodi.
+756. **Auditor Web App Manifest & Meta PWA Mobile (`seo_validator.py`)**: Verifikasi tag `<link rel="manifest">`, meta viewport responsif mobile, theme-color, dan konfigurasi Progressive Web App.
+757. **Auditor Penomoran Halaman Rel Next & Prev (`seo_validator.py`)**: Audit konsistensi link navigasi kanonikal serial pagination `<link rel="next">` dan `<link rel="prev">` guna mencegah duplikasi konten indeks Google.
+758. **Auditor Data Terstruktur Skema HowTo Schema.org (`seo_validator.py`)**: Pemeriksaan kelengkapan langkah instruksional HowToStep, estimasi waktu totalTime, dan atribut HowToSupply/HowToTool untuk optimasi tutorial Google Rich Results.
+759. **Auditor Deskripsi Audio & Aksesibilitas Media (`seo_validator.py`)**: Validasi elemen multimedia `<audio>` dan `<video>`, ketersediaan trek subtitle/deskripsi `<track kind="descriptions">` atau `kind="captions"`, serta kepatuhan WCAG 2.1 AA.
+760. **Komponen Telemetri FWM Nonlinear Crosstalk Serat Optik (`components.py`)**: Kartu visual Elementor spasi kanal DWDM, efisiensi pencampuran gelombang, supresi crosstalk dBc, dan badge evaluasi risiko dispersi.
+761. **Komponen Telemetri Kapasitas Trafik Seluler Erlang Trunking (`components.py`)**: Kartu visual Elementor intensitas trafik Erlang, alokasi kanal trunking, persentase blocking Erlang-B, dan status Grade of Service.
+762. **Komponen Telemetri Redaman Gas Atmosfer ITU-R P.676 Satelit (`components.py`)**: Kartu visual Elementor frekuensi satelit, sudut elevasi antenna, redaman total slant path lintasan atmosfer, dan indikator kelayakan band.
+763. **Komponen Rekognisi Prestasi Mahasiswa PKM & PIMNAS (`components.py`)**: Kartu penghargaan kejuaraan dan capaian proposal PKM/PIMNAS, raihan medali, konversi nilai A, dan 20 SKS MBKM diakui.
+764. **Komponen Diagram Alokasi Spektrum DWDM Inline SVG (`components.py`)**: Kartu visualisasi diagram alokasi spektrum grid ITU kanal DWDM berbasis inline SVG responsif dengan visualisasi pita C-Band.
+765. **Formatter Telegram Laporan Redaman Gas Atmosfer Satelit (`formatters.py`)**: Format buletin Telegram resmi telemetri redaman atmosfer lintasan satelit menurut standar ITU-R P.676.
+766. **Formatter Telegram Apresiasi Prestasi PKM & PIMNAS Mahasiswa (`formatters.py`)**: Format buletin Telegram resmi ucapan selamat atas pendanaan PKM Belmawa dan kualifikasi kontingen PIMNAS nasional.
+767. **Manajer Rekam Audit FWM Serat Optik (`storage.py`)**: Skema tabel SQLite `optical_fwm_records` dan fungsi `record_optical_fwm`, `list_optical_fwm`, `get_optical_fwm_by_id`.
+768. **Manajer Rekam Kapasitas Trafik Seluler Erlang (`storage.py`)**: Skema tabel SQLite `erlang_traffic_records` dan fungsi `record_erlang_traffic`, `list_erlang_traffics`, `get_erlang_traffic_by_id`.
+769. **Manajer Rekam Prestasi Mahasiswa PKM/PIMNAS (`storage.py`)**: Skema tabel SQLite `student_pkm_records` dan fungsi `record_pkm_achievement`, `list_pkm_achievements`, `get_pkm_by_nim`.
+770. **Helper WordPress Get User by ID (`wordpress_client.py`)**: Metode `get_user_by_id` untuk mengambil metadata profil kontributor/penulis WordPress berdasarkan ID numerik.
+771. **Helper WordPress Get Media Item by Slug (`wordpress_client.py`)**: Metode `get_media_by_slug` untuk mengidentifikasi item pustaka media berdasarkan slug URL aset gambar.
+772. **Generator Schema.org HowTo JSON-LD (`exporter.py`)**: Metode `generate_how_to_json_ld` menghasilkan struktur metadata standar Google HowTo rich snippet tutorial rekayasa.
+773. **Eksportir Dokumentasi MDX Docusaurus (`exporter.py`)**: Metode `to_docusaurus_mdx` mengonversi artikel blog ke format dokumentasi MDX Docusaurus dengan frontmatter YAML dan komponen tag khusus.
+774. **Subcommand CLI `fwm` (`cli.py`)**: Perintah konsol `fwm` untuk kalkulasi efisiensi pencampuran empat gelombang dan nonlinear optics DWDM.
+775. **Subcommand CLI `erlang` (`cli.py`)**: Perintah konsol `erlang` untuk analisis kapasitas trafik trunking seluler Erlang-B dan Erlang-C.
+776. **Subcommand CLI `pimnas` (`cli.py`)**: Perintah konsol `pimnas` untuk evaluasi dan pencatatan rekognisi SKS capaian proposal PKM dan kontingen PIMNAS.
+777. **Dokumentasi Perubahan Arsitektur v4.4.0 (`docs/changes/81_v4_4_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.4.0.
+778. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 32, dan pembaruan metrik proyek.
+779. **Ekspansi Suite Pengujian Unit Terpadu (763 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 763 unit test terverifikasi (100% pass rate).
+780. **Finalisasi Milestone v4.4.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
 
 
 
