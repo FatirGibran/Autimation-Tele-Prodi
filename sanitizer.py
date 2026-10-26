@@ -1610,6 +1610,39 @@ def sanitize_html5_kbd_samp_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_meter_progress_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <meter> scalar measurement and <progress> task completion elements
+    by stripping inline event handlers, style attributes, and validating that numeric attributes
+    (value, min, max, low, high, optimum) are valid finite floats.
+    """
+    if not html or ("<meter" not in html.lower() and "<progress" not in html.lower()):
+        return html
+
+    num_attrs = ("value", "min", "max", "low", "high", "optimum")
+
+    def fix_meter_progress(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        for attr in num_attrs:
+            attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if attr_m:
+                val_str = attr_m.group(1).strip()
+                try:
+                    val_num = float(val_str)
+                    if not (-1e9 <= val_num <= 1e9) or val_num != val_num:
+                        tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', f' {attr}="0"', tag, flags=re.IGNORECASE)
+                except ValueError:
+                    tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', f' {attr}="0"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    out = re.sub(r'<(?:meter|progress)\b[^>]*>', fix_meter_progress, html, flags=re.IGNORECASE)
+    return out
+
+
 
 
 
