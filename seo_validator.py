@@ -4860,6 +4860,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_multimedia_audio_descriptions(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits video elements for audio description tracks (<track kind="descriptions">)
+        or accessible companion descriptions per WCAG 2.1 AAA Success Criterion 1.2.5.
+        """
+        if not html_content:
+            return {
+                "total_videos": 0,
+                "described_videos": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        videos = soup.find_all("video")
+        if not videos:
+            return {
+                "total_videos": 0,
+                "described_videos": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        described_count = 0
+        for idx, video in enumerate(videos, 1):
+            has_desc_track = bool(video.find("track", kind=lambda k: k and k.lower() == "descriptions"))
+            has_aria_desc = bool(video.get("aria-describedby") and soup.find(id=video["aria-describedby"].strip()))
+            has_companion_desc = bool(
+                video.find_next_sibling(class_=lambda c: c and any(cls_name in c for cls_name in ("tu-audio-description", "tu-media-transcript", "tu-transcript")))
+            )
+
+            if has_desc_track or has_aria_desc or has_companion_desc:
+                described_count += 1
+            else:
+                issues.append(f"Elemen <video> #{idx} tidak memiliki track audio description atau teks deskripsi pendamping.")
+
+        is_compliant = described_count == len(videos)
+
+        return {
+            "total_videos": len(videos),
+            "described_videos": described_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
