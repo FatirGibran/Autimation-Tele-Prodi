@@ -968,6 +968,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_erlang_traffic ON erlang_traffic_records(offered_traffic_erlangs);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS student_pkm_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL UNIQUE,
+                    scheme TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    qualified_pimnas INTEGER NOT NULL DEFAULT 0,
+                    medal TEXT,
+                    composite_score REAL NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_nim ON student_pkm_records(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_scheme ON student_pkm_records(scheme);")
 
 
 
@@ -4563,6 +4581,62 @@ class StorageManager:
             cursor = conn.execute(
                 "SELECT * FROM erlang_traffic_records WHERE id = ?",
                 (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_pkm_achievement(self, data: Dict[str, Any]) -> int:
+        """
+        Stores a student PKM / PIMNAS achievement and MBKM credit recognition record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO student_pkm_records (
+                    student_name, nim, scheme, proposal_title, qualified_pimnas,
+                    medal, composite_score, converted_sks, letter_grade, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(nim) DO UPDATE SET
+                    scheme = excluded.scheme,
+                    proposal_title = excluded.proposal_title,
+                    qualified_pimnas = excluded.qualified_pimnas,
+                    medal = excluded.medal,
+                    composite_score = excluded.composite_score,
+                    converted_sks = excluded.converted_sks,
+                    letter_grade = excluded.letter_grade,
+                    status = excluded.status;
+            """, (
+                data.get("student_name", "Mahasiswa").strip(),
+                data.get("nim", "1201200000").strip(),
+                data.get("scheme", "PKM-KC").strip(),
+                data.get("proposal_title", "").strip(),
+                1 if data.get("qualified_pimnas", False) else 0,
+                data.get("medal", "").strip(),
+                float(data.get("composite_score", 0.0)),
+                int(data.get("converted_sks", 0)),
+                data.get("letter_grade", "C").strip(),
+                data.get("status", "").strip()
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_achievements(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored PKM/PIMNAS student records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_pkm_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a PKM/PIMNAS student achievement record by NIM.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_pkm_records WHERE nim = ?",
+                (nim.strip(),)
             )
             row = cursor.fetchone()
             return dict(row) if row else None
