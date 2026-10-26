@@ -1822,6 +1822,36 @@ navigation: true
 
         return doc
 
+    @staticmethod
+    def to_docusaurus_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial content to Docusaurus v3 MDX documentation format
+        with YAML frontmatter (id, title, description, slug, sidebar_position, tags).
+        """
+        doc_id = metadata.get("slug", metadata.get("id", "doc-1"))
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        pos = metadata.get("sidebar_position", 1)
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        slug_val = f'/{slug}' if slug else '/'
+        frontmatter = [
+            "---",
+            f'id: {doc_id}',
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'slug: {slug_val}',
+            f'sidebar_position: {int(pos)}',
+            f'tags: {json.dumps(tags)}',
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
