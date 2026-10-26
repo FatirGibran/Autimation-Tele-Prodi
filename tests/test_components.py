@@ -1927,6 +1927,82 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("+20.0 ps", html)
         self.assertIn("<svg", html)
 
+    def test_render_fwm_crosstalk_card(self):
+        html = EditorialComponents.render_fwm_crosstalk_card(
+            channel_spacing_ghz=100.0,
+            fiber_length_km=50.0,
+            dispersion_ps_nm_km=17.0,
+            fwm_efficiency_pct=0.012,
+            crosstalk_suppression_dbc=38.5,
+            risk_status="Sangat Rendah (Aman / Non-Zero Dispersion)"
+        )
+        self.assertIn("tu-fwm-card", html)
+        self.assertIn("100.0 GHz", html)
+        self.assertIn("50.00 km", html)
+        self.assertIn("17.00 ps/(nm·km)", html)
+        self.assertIn("0.012%", html)
+        self.assertIn("38.50 dBc", html)
+
+    def test_render_erlang_traffic_card(self):
+        html = EditorialComponents.render_erlang_traffic_card(
+            offered_traffic_erlangs=12.5,
+            num_channels=18,
+            blocking_pct=1.45,
+            carried_traffic=12.32,
+            gos_status="Sangat Baik (GoS <= 2%)"
+        )
+        self.assertIn("tu-erlang-card", html)
+        self.assertIn("12.50 Erlang", html)
+        self.assertIn("18 Kanal", html)
+        self.assertIn("1.45%", html)
+        self.assertIn("12.32 Erlang", html)
+
+    def test_render_satellite_gas_attenuation_card(self):
+        html = EditorialComponents.render_satellite_gas_attenuation_card(
+            frequency_ghz=14.25,
+            elevation_angle_deg=28.5,
+            oxygen_att_db_km=0.0152,
+            water_vapor_att_db_km=0.0210,
+            slant_attenuation_db=0.35,
+            status="Sangat Rendah (Transmisi Satelit Sangat Jernih)"
+        )
+        self.assertIn("tu-satgas-card", html)
+        self.assertIn("14.25 GHz", html)
+        self.assertIn("28.5&deg;", html)
+        self.assertIn("0.0152 dB/km", html)
+        self.assertIn("0.35 dB", html)
+
+    def test_render_pkm_achievement_card(self):
+        html = EditorialComponents.render_pkm_achievement_card(
+            student_name="Arif Rahman",
+            nim="1201201044",
+            scheme="PKM-KC (Karsa Cipta)",
+            proposal_title="Drone Pemantau Sinyal Maritim 4G/5G",
+            converted_sks=20,
+            status="Lolos PIMNAS (Medali Emas)",
+            medal="Medali Emas PIMNAS"
+        )
+        self.assertIn("tu-pkm-card", html)
+        self.assertIn("Arif Rahman", html)
+        self.assertIn("1201201044", html)
+        self.assertIn("PKM-KC (Karsa Cipta)", html)
+        self.assertIn("Drone Pemantau Sinyal Maritim 4G/5G", html)
+        self.assertIn("20 SKS Diakui", html)
+        self.assertIn("Medali Emas PIMNAS", html)
+
+    def test_render_dwdm_spectrum_svg_card(self):
+        html = EditorialComponents.render_dwdm_spectrum_svg_card(
+            title="Alokasi Kanal DWDM C-Band 100 GHz Grid",
+            center_wavelength_nm=1550.12,
+            channel_count=40,
+            channel_spacing_ghz=100.0
+        )
+        self.assertIn("tu-dwdm-svg-card", html)
+        self.assertIn("Alokasi Kanal DWDM C-Band 100 GHz Grid", html)
+        self.assertIn("40 Ch", html)
+        self.assertIn("100.0 GHz", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
