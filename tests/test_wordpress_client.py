@@ -735,6 +735,46 @@ class TestWordPressClient(unittest.TestCase):
         cat = self.client.get_category_by_id(99999)
         self.assertIsNone(cat)
 
+    @patch("urllib.request.urlopen")
+    def test_get_user_by_id(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 7, "name": "Prof. Budi", "slug": "prof-budi"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        user = self.client.get_user_by_id(7)
+        self.assertIsNotNone(user)
+        self.assertEqual(user["id"], 7)
+        self.assertEqual(user["name"], "Prof. Budi")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/users/7", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_user_by_id_error(self, mock_urlopen):
+        mock_urlopen.side_effect = Exception("HTTP 404")
+        user = self.client.get_user_by_id(99999)
+        self.assertIsNone(user)
+
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_slug(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 401, "slug": "diagram-dwdm", "source_url": "https://example.com/diagram.png"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        media = self.client.get_media_by_slug("diagram-dwdm")
+        self.assertIsNotNone(media)
+        self.assertEqual(media["id"], 401)
+        self.assertEqual(media["slug"], "diagram-dwdm")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/media?slug=diagram-dwdm", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_slug_error(self, mock_urlopen):
+        mock_urlopen.side_effect = Exception("HTTP 500")
+        media = self.client.get_media_by_slug("non-existent")
+        self.assertIsNone(media)
+
 
 if __name__ == "__main__":
     unittest.main()
