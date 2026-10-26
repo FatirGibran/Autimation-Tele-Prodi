@@ -5216,6 +5216,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_achievement_card(
+        cls,
+        student_name: str,
+        nim: str,
+        scheme: str,
+        proposal_title: str,
+        converted_sks: int,
+        status: str,
+        medal: str = ""
+    ) -> str:
+        """
+        Renders a student Program Kreativitas Mahasiswa (PKM) and PIMNAS achievement card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(student_name.strip())
+        nim_clean = escape(nim.strip())
+        scheme_clean = escape(scheme.strip())
+        title_clean = escape(proposal_title.strip())
+        status_clean = escape(status.strip())
+        medal_badge = f"""<span style="background: #f59e0b; color: #000000; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 6px;">{escape(medal.strip())}</span>""" if medal else ""
+
+        return f"""    <div class="tu-pkm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">{scheme_clean}</span>
+        <span style="background: #0284c7; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{converted_sks} SKS Diakui</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #ffffff;">{name_clean} {medal_badge}</h4>
+      <div style="font-size: 13px; color: #94a3b8; margin-bottom: 10px;">
+        NIM: <code style="color: #38bdf8;">{nim_clean}</code> | Skema: <strong>{scheme_clean}</strong>
+      </div>
+      <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; background: #1e293b; padding: 8px; border-radius: 4px;">
+        Judul: &ldquo;{title_clean}&rdquo;
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 10px; font-size: 13px; display: flex; justify-content: space-between;">
+        <span>Status Rekognisi: <strong style="color: #10b981;">{status_clean}</strong></span>
+        <span>Rekognisi: <strong>{converted_sks} SKS</strong></span>
+      </div>
+    </div>"""
+
 
 
 
