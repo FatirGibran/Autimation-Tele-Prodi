@@ -24,7 +24,10 @@ from sanitizer import (
     sanitize_html5_bdi_bdo_elements,
     sanitize_html5_time_datetime_attributes,
     sanitize_svg_use_symbol_elements,
-    sanitize_html5_wbr_and_zero_width_spaces
+    sanitize_html5_wbr_and_zero_width_spaces,
+    sanitize_html5_picture_source_elements,
+    sanitize_html5_kbd_samp_elements,
+    sanitize_html5_meter_progress_elements
 )
 
 
@@ -958,6 +961,46 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("<wbr>", cleaned)
         self.assertNotIn("onclick=", cleaned)
         self.assertNotIn("style=", cleaned)
+
+    def test_sanitize_html5_picture_source_elements(self):
+        raw = (
+            '<picture onclick="evil()">'
+            '<source media="(min-width: 800px)" srcset="image-800.webp" type="image/webp" onerror="bad()">'
+            '<source media="screen and (script:injected)" srcset="javascript:alert(1)" type="application/x-bad">'
+            '<img src="image.jpg" alt="Test">'
+            '</picture>'
+        )
+        cleaned = sanitize_html5_picture_source_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onerror=", cleaned)
+        self.assertIn('media="(min-width: 800px)"', cleaned)
+        self.assertIn('srcset="image-800.webp"', cleaned)
+        self.assertIn('type="image/webp"', cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertNotIn("application/x-bad", cleaned)
+
+    def test_sanitize_html5_kbd_samp_elements(self):
+        raw = '<p>Ketik <kbd onclick="steal()" style="color:red">Ctrl+C</kbd> untuk hasil <samp onmouseover="evil()">Output</samp></p>'
+        cleaned = sanitize_html5_kbd_samp_elements(raw)
+        self.assertIn("<kbd>Ctrl+C</kbd>", cleaned)
+        self.assertIn("<samp>Output</samp>", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+
+    def test_sanitize_html5_meter_progress_elements(self):
+        raw = (
+            '<meter value="75" min="0" max="100" onclick="alert(1)" style="width:100px">75%</meter>'
+            '<progress value="invalid" max="100" onchange="evil()"></progress>'
+        )
+        cleaned = sanitize_html5_meter_progress_elements(raw)
+        self.assertIn('value="75"', cleaned)
+        self.assertIn('min="0"', cleaned)
+        self.assertIn('max="100"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("onchange=", cleaned)
+        self.assertIn('value="0"', cleaned)
 
 
 if __name__ == "__main__":
