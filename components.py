@@ -5179,6 +5179,43 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_gas_attenuation_card(
+        cls,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        oxygen_att_db_km: float,
+        water_vapor_att_db_km: float,
+        slant_attenuation_db: float,
+        status: str
+    ) -> str:
+        """
+        Renders an Earth-space satellite link gaseous absorption (ITU-R P.676) telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        status_clean = escape(status.strip())
+        is_safe = slant_attenuation_db <= 1.0
+        status_color = "#10b981" if is_safe else ("#f59e0b" if slant_attenuation_db <= 3.0 else "#ef4444")
+
+        return f"""    <div class="tu-satgas-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #0284c7; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Redaman Gas Atmosfer ITU-R P.676</span>
+        <span style="background: {status_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Total: {slant_attenuation_db:.2f} dB</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">Serapan Oksigen & Uap Air Tautan Satelit</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; font-size: 13px;">
+        <div>Frekuensi Kerja: <strong>{frequency_ghz:.2f} GHz</strong></div>
+        <div>Sudut Elevasi: <strong>{elevation_angle_deg:.1f}&deg;</strong></div>
+        <div>Redaman O2 (\u03b3_o): <strong>{oxygen_att_db_km:.4f} dB/km</strong></div>
+        <div>Redaman H2O (\u03b3_w): <strong>{water_vapor_att_db_km:.4f} dB/km</strong></div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 10px; font-size: 13px; display: flex; justify-content: space-between;">
+        <span>Redaman Slant Path: <strong style="color: {status_color};">{slant_attenuation_db:.2f} dB</strong></span>
+        <span>Kondisi: <strong style="color: {status_color};">{status_clean}</strong></span>
+      </div>
+    </div>"""
+
 
 
 
