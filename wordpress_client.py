@@ -554,6 +554,21 @@ class WordPressClient:
         except Exception:
             return None
 
+    def get_media_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single WordPress media attachment by its slug, or None if not found.
+        """
+        clean_slug = urllib.parse.quote(slug.strip().lower())
+        endpoint = f"{self.api_url}/media?slug={clean_slug}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            results = self._send_request(req)
+            if isinstance(results, list) and len(results) > 0:
+                return results[0]
+            return None
+        except Exception:
+            return None
+
     def get_site_settings(self) -> Dict[str, Any]:
         """
         Retrieves global WordPress site settings including title, description, timezone, and language.
