@@ -5257,6 +5257,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_dwdm_spectrum_svg_card(
+        cls,
+        title: str,
+        center_wavelength_nm: float,
+        channel_count: int,
+        channel_spacing_ghz: float
+    ) -> str:
+        """
+        Renders a DWDM optical channel allocation and power spectrum visualization card with inline SVG.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(title.strip())
+
+        return f"""    <div class="tu-dwdm-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Spektrum Kanal DWDM C-Band</span>
+        <span style="font-size: 12px; color: #94a3b8;">{channel_count} Kanal | \u0394f: {channel_spacing_ghz:.1f} GHz</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{title_clean}</h4>
+      <div style="display: flex; justify-content: center; margin: 12px 0;">
+        <svg viewBox="0 0 320 100" width="320" height="100" style="background: #020617; border-radius: 6px; border: 1px solid #334155;" aria-label="Alokasi Spektrum DWDM">
+          <!-- Optical spectrum channel peaks -->
+          <path d="M 30,80 Q 50,15 70,80" fill="none" stroke="#38bdf8" stroke-width="2.5" />
+          <path d="M 80,80 Q 100,15 120,80" fill="none" stroke="#0284c7" stroke-width="2.5" />
+          <path d="M 130,80 Q 150,15 170,80" fill="none" stroke="#a855f7" stroke-width="2.5" />
+          <path d="M 180,80 Q 200,15 220,80" fill="none" stroke="#c084fc" stroke-width="2.5" />
+          <path d="M 230,80 Q 250,15 270,80" fill="none" stroke="#10b981" stroke-width="2.5" />
+          <!-- Baseline and labels -->
+          <line x1="20" y1="80" x2="300" y2="80" stroke="#475569" stroke-width="1.5" />
+          <text x="160" y="94" fill="#94a3b8" font-size="10" text-anchor="middle">\u03bb_center \u2248 {center_wavelength_nm:.2f} nm</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Grid: <strong style="color: #38bdf8;">ITU-T G.694.1</strong></div>
+        <div>Jumlah Kanal: <strong style="color: #ffffff;">{channel_count} Ch</strong></div>
+        <div>Spasi Kanal: <strong style="color: #10b981;">{channel_spacing_ghz:.1f} GHz</strong></div>
+      </div>
+    </div>"""
+
 
 
 
