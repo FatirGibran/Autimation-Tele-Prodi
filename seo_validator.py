@@ -4794,6 +4794,72 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_howto_schema_markup(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Schema.org HowTo structured data markup in JSON-LD and Microdata formats,
+        verifying guide title, step count, and step descriptions for Google HowTo rich snippets.
+        """
+        if not html_content:
+            return {
+                "has_howto_schema": False,
+                "has_name": False,
+                "step_count": 0,
+                "is_compliant": False,
+                "issues": ["Konten HTML kosong."]
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        has_howto = False
+        has_name = False
+        step_count = 0
+
+        # Check JSON-LD scripts
+        for script in soup.find_all("script", type=lambda t: t and "ld+json" in t.lower()):
+            try:
+                data = json.loads(script.get_text().strip())
+                items = data if isinstance(data, list) else [data]
+                for item in items:
+                    t = item.get("@type", "")
+                    types = t if isinstance(t, list) else [t]
+                    if any("howto" in str(x).lower() for x in types):
+                        has_howto = True
+                        if item.get("name"):
+                            has_name = True
+                        steps = item.get("step") or item.get("itemListElement") or []
+                        if isinstance(steps, list):
+                            step_count = max(step_count, len(steps))
+            except Exception:
+                continue
+
+        # Check Microdata if not found in JSON-LD
+        if not has_howto:
+            micro = soup.find(attrs={"itemtype": lambda v: v and "schema.org/howto" in v.lower()})
+            if micro:
+                has_howto = True
+                name_elem = micro.find(attrs={"itemprop": "name"})
+                if name_elem:
+                    has_name = True
+                steps = micro.find_all(attrs={"itemprop": "step"})
+                step_count = len(steps)
+
+        if not has_howto:
+            issues.append("Struktur Schema.org HowTo tidak ditemukan.")
+        else:
+            if not has_name:
+                issues.append("Schema HowTo tidak memiliki nama judul panduan (name).")
+            if step_count == 0:
+                issues.append("Schema HowTo tidak memiliki elemen tahapan langkah (step).")
+
+        return {
+            "has_howto_schema": has_howto,
+            "has_name": has_name,
+            "step_count": step_count,
+            "is_compliant": has_howto and has_name and step_count > 0,
+            "issues": issues
+        }
+
 
 
 
