@@ -4967,6 +4967,58 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_rss_atom_autodiscovery_links(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits presence and validity of RSS 2.0 and Atom autodiscovery feed link elements
+        (<link rel="alternate" type="application/rss+xml" ...>) for syndication and SEO crawler discovery.
+        """
+        if not html_content:
+            return {"has_feed_links": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        found_feeds = []
+
+        links = soup.find_all("link", rel=lambda r: r and "alternate" in (r if isinstance(r, list) else [r]))
+        for link in links:
+            feed_type = (link.get("type") or "").strip().lower()
+            if feed_type in ("application/rss+xml", "application/atom+xml"):
+                href = (link.get("href") or "").strip()
+                title = (link.get("title") or "").strip()
+                found_feeds.append({
+                    "type": feed_type,
+                    "href": href,
+                    "title": title
+                })
+
+        if not found_feeds:
+            return {
+                "has_feed_links": False,
+                "total_feeds": 0,
+                "is_valid": False,
+                "issues": ["Tidak ditemukan link autodiscovery feed RSS atau Atom (<link rel='alternate' type='application/rss+xml'>)."]
+            }
+
+        valid_count = 0
+        for idx, feed in enumerate(found_feeds, 1):
+            if not feed["href"]:
+                issues.append(f"Feed autodiscovery #{idx} tidak memiliki atribut 'href'.")
+            elif not (feed["href"].startswith("http://") or feed["href"].startswith("https://") or feed["href"].startswith("/")):
+                issues.append(f"Feed autodiscovery #{idx} memiliki URL href yang tidak valid: {feed['href']}")
+            else:
+                valid_count += 1
+
+        return {
+            "has_feed_links": True,
+            "total_feeds": len(found_feeds),
+            "valid_feeds": valid_count,
+            "feed_types": [f["type"] for f in found_feeds],
+            "is_valid": len(issues) == 0 and valid_count > 0,
+            "issues": issues
+        }
+
+
 
 
 
