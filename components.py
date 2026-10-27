@@ -5298,6 +5298,57 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_xpm_card(
+        cls,
+        title: str,
+        pump_power_mw: float,
+        probe_power_mw: float,
+        fiber_length_km: float,
+        phi_xpm_deg: float,
+        xpm_risk: str,
+        is_acceptable: bool
+    ) -> str:
+        """
+        Renders a DWDM Cross-Phase Modulation (XPM) nonlinear phase shift telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(title.strip())
+        risk_clean = escape(xpm_risk.strip())
+        badge_color = "#10b981" if is_acceptable else "#ef4444"
+
+        return f"""    <div class="tu-xpm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Cross-Phase Modulation (XPM)</span>
+        <span style="background: {badge_color}22; color: {badge_color}; border: 1px solid {badge_color}55; font-size: 12px; padding: 2px 8px; border-radius: 9999px; font-weight: 600;">{risk_clean}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; font-size: 16px; color: #ffffff;">{title_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Daya Pompa (Pump Power):</span>
+          <strong style="color: #38bdf8; font-size: 15px;">{pump_power_mw:.2f} mW</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Daya Probe:</span>
+          <strong style="color: #a855f7; font-size: 15px;">{probe_power_mw:.2f} mW</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Panjang Ruas Serat:</span>
+          <strong style="color: #f1f5f9; font-size: 15px;">{fiber_length_km:.2f} km</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Pergeseran Fase XPM:</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{phi_xpm_deg:.1f}&deg;</strong>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 8px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;">
+        <span>Standar Optik: <strong>Agrawal NL-Optics</strong></span>
+        <span>Status Transmisi: <strong style="color: {badge_color};">{'Layak' if is_acceptable else 'Kritis'}</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
