@@ -1011,6 +1011,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_mu ON nr_numerology_records(numerology_mu);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS student_pmm_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL UNIQUE,
+                    host_university TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pmm_nim ON student_pmm_records(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pmm_host ON student_pmm_records(host_university);")
+
 
 
 
@@ -4752,6 +4768,58 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_pmm_evaluation(self, data: Dict[str, Any]) -> int:
+        """
+        Stores a student Pertukaran Mahasiswa Merdeka (PMM) MBKM evaluation and credit recognition record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO student_pmm_records (
+                    student_name, nim, host_university,
+                    composite_score, letter_grade, converted_sks, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(nim) DO UPDATE SET
+                    student_name = excluded.student_name,
+                    host_university = excluded.host_university,
+                    composite_score = excluded.composite_score,
+                    letter_grade = excluded.letter_grade,
+                    converted_sks = excluded.converted_sks,
+                    status = excluded.status;
+            """, (
+                data.get("student_name", "Mahasiswa").strip(),
+                data.get("nim", "1201200000").strip(),
+                data.get("host_university", "").strip(),
+                float(data.get("composite_score", 0.0)),
+                data.get("letter_grade", "C").strip(),
+                int(data.get("converted_sks", 0)),
+                data.get("status", "").strip()
+            ))
+            return cursor.lastrowid
+
+    def list_pmm_evaluations(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored PMM MBKM student evaluation records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_pmm_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pmm_by_nim(self, nim: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a student PMM evaluation record by NIM.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM student_pmm_records WHERE nim = ?",
+                (nim.strip(),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
