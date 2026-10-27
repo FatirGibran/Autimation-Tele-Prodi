@@ -5348,6 +5348,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_numerology_card(
+        cls,
+        band_name: str,
+        numerology_mu: int,
+        scs_khz: int,
+        slot_duration_ms: float,
+        symbols_per_subframe: int,
+        frequency_range: str
+    ) -> str:
+        """
+        Renders a 3GPP 5G NR physical layer numerology and slot timing telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        band_clean = escape(band_name.strip())
+        fr_clean = escape(frequency_range.strip())
+
+        return f"""    <div class="tu-5g-numerology-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #10b981; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">5G NR 3GPP TS 38.211</span>
+        <span style="background: #0284c722; color: #38bdf8; border: 1px solid #0284c755; font-size: 12px; padding: 2px 8px; border-radius: 9999px; font-weight: 600;">\u03bc = {numerology_mu} ({scs_khz} kHz)</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; font-size: 16px; color: #ffffff;">Pita Kanal: {band_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Subcarrier Spacing (\u0394f):</span>
+          <strong style="color: #38bdf8; font-size: 15px;">{scs_khz} kHz</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Durasi Slot:</span>
+          <strong style="color: #10b981; font-size: 15px;">{slot_duration_ms:.4f} ms</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Simbol per Subframe (1 ms):</span>
+          <strong style="color: #f1f5f9; font-size: 15px;">{symbols_per_subframe} Simbol</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Klasifikasi Frekuensi:</span>
+          <strong style="color: #c084fc; font-size: 15px;">{fr_clean}</strong>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 8px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;">
+        <span>Radio Frame: <strong>10 ms (10 Subframe)</strong></span>
+        <span>Siklus CP: <strong>Normal Cyclic Prefix</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
