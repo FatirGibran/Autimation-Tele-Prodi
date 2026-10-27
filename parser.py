@@ -5397,6 +5397,71 @@ def calculate_optical_cross_phase_modulation(
     }
 
 
+def calculate_5g_nr_numerology_timing(
+    numerology_mu: int,
+    num_resource_blocks: int = 100,
+    is_extended_cp: bool = False
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP TS 38.211 5G NR physical layer numerology parameters,
+    slot timing, symbol durations, and frame structures across FR1 and FR2 bands.
+    """
+    mu = max(0, min(4, int(numerology_mu)))
+    n_rb = max(1, min(275, int(num_resource_blocks)))
+
+    # Subcarrier spacing in kHz: 15 * 2^mu
+    scs_khz = 15 * (2 ** mu)
+
+    # Slot timing: 1 radio frame = 10 ms, 1 subframe = 1 ms
+    slots_per_subframe = 2 ** mu
+    slots_per_frame = 10 * slots_per_subframe
+    slot_duration_ms = 1.0 / (2 ** mu)
+
+    # Symbols per slot (extended CP is only standardized for mu=2 / 60 kHz)
+    if is_extended_cp and mu == 2:
+        symbols_per_slot = 12
+        cp_type = "Extended Cyclic Prefix"
+    else:
+        symbols_per_slot = 14
+        cp_type = "Normal Cyclic Prefix"
+
+    total_symbols_per_subframe = symbols_per_slot * slots_per_subframe
+    symbol_duration_us = (slot_duration_ms * 1000.0) / symbols_per_slot
+
+    # Useful OFDM symbol duration Tu in microseconds: 1 / scs
+    tu_us = 1000.0 / scs_khz
+    cp_duration_us = symbol_duration_us - tu_us
+
+    # Bandwidth occupied: N_RB * 12 subcarriers * SCS
+    occupied_bw_mhz = (n_rb * 12 * scs_khz) / 1000.0
+
+    if mu <= 2:
+        frequency_range = "FR1 (Sub-6 GHz / Mid-band)"
+        typical_deployment = "Macro / Micro Cellular Coverage (e.g. n78, n1, n3)"
+    else:
+        frequency_range = "FR2 (mmWave High-Band)"
+        typical_deployment = "High Capacity Hotspot / FWA (e.g. n257, n258)"
+
+    return {
+        "numerology_mu": mu,
+        "subcarrier_spacing_khz": scs_khz,
+        "slots_per_subframe": slots_per_subframe,
+        "slots_per_frame": slots_per_frame,
+        "slot_duration_ms": round(slot_duration_ms, 4),
+        "symbols_per_slot": symbols_per_slot,
+        "total_symbols_per_subframe": total_symbols_per_subframe,
+        "symbol_duration_us": round(symbol_duration_us, 3),
+        "useful_symbol_duration_us": round(tu_us, 3),
+        "cyclic_prefix_duration_us": round(cp_duration_us, 3),
+        "cp_type": cp_type,
+        "num_resource_blocks": n_rb,
+        "occupied_bandwidth_mhz": round(occupied_bw_mhz, 2),
+        "frequency_range": frequency_range,
+        "typical_deployment": typical_deployment
+    }
+
+
+
 
 
 
