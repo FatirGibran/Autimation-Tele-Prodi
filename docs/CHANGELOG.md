@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 775+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 805+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 763 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 791 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -938,6 +938,44 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 778. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 32, dan pembaruan metrik proyek.
 779. **Ekspansi Suite Pengujian Unit Terpadu (763 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 763 unit test terverifikasi (100% pass rate).
 780. **Finalisasi Milestone v4.4.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
+---
+
+## 33. Ekspansi Arsitektur v4.5.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+781. **Sanitasi Nilai Atribut Data Machine-Readable (`sanitizer.py`)**: Pembersihan tag `<data>`, validasi atribut numerik dan token semantik, netralisasi skema pseudo-protokol JavaScript, serta eliminasi event handler inline.
+782. **Sanitasi Nama Atribut Slot Web Component (`sanitizer.py`)**: Sanitasi elemen `<slot>` pada Web Components, penegakan token identifikasi alfanumerik yang aman, dan pencegahan injeksi event.
+783. **Sanitasi Anotasi Fonetik Tipografi Ruby (`sanitizer.py`)**: Pembersihan hierarki elemen tipografi `<ruby>`, `<rt>`, `<rp>`, `<rb>`, `<rtc>` dari sematan skrip dan event handler berbahaya.
+784. **Kalkulator Pergeseran Fase Nonlinier Cross-Phase Modulation (XPM) (`parser.py`)**: Kalkulasi pergeseran fase XPM $\Phi_{\text{XPM}} = 2\gamma P_{\text{pump}} L_{\text{eff}}$ dan SPM $\Phi_{\text{SPM}}$ pada multiplexing serat optik DWDM menurut kaidah optika nonlinier Agrawal.
+785. **Kalkulator Numerologi & Slot Timing 5G NR 3GPP TS 38.211 (`parser.py`)**: Perhitungan alokasi subcarrier spacing $\Delta f = 15 \times 2^\mu\text{ kHz}$, durasi slot, jumlah simbol per subframe, dan pemetaan pita FR1/FR2.
+786. **Kalkulator Sintilasi Troposfer Satelit ITU-R P.618 (`parser.py`)**: Estimasi radio refractivity wet term $N_{\text{wet}}$, simpangan baku sinyal $\sigma$, faktor averaging aperture antena $g(x)$, dan kedalaman fading $A(p)$ untuk link bumi-angkasa Ku/Ka-band.
+787. **Evaluator Rekognisi MBKM Pertukaran Mahasiswa Merdeka (PMM) (`parser.py`)**: Evaluasi penilaian Modul Nusantara, nilai akademik perguruan tinggi mitra (host), evaluasi mentor, dan konversi hingga 20 SKS kurikulum prodi.
+788. **Auditor Penanda Data Terstruktur Skema Course Schema.org (`seo_validator.py`)**: Pemeriksaan kelengkapan metadata kurikulum dan silabus mata kuliah (JSON-LD atau Microdata) untuk optimasi pencarian pendidikan Google.
+789. **Auditor Autodiscovery Feed RSS 2.0 & Atom (`seo_validator.py`)**: Verifikasi tag `<link rel="alternate" type="application/rss+xml">` dan `<link rel="alternate" type="application/atom+xml">` untuk sindikasi konten dan perayapan mesin pencari.
+790. **Auditor Direktif Header Content-Security-Policy (CSP) Meta (`seo_validator.py`)**: Validasi kekuatan kebijakan CSP, pembatasan default-src/script-src, pencegahan unsafe-inline tanpa nonce, dan mitigasi serangan injeksi XSS.
+791. **Auditor Resource Hints Preconnect & DNS-Prefetch (`seo_validator.py`)**: Audit tag `<link rel="preconnect">` dan `<link rel="dns-prefetch">` guna mempercepat resolusi koneksi CDN/Font eksternal untuk optimasi Core Web Vitals (LCP/FCP).
+792. **Komponen Telemetri Pergeseran Fase XPM Serat Optik (`components.py`)**: Kartu visual Elementor daya pompa, daya probe, panjang ruas kabel, pergeseran fase derajat, dan evaluasi risiko modulasi lintas fase.
+793. **Komponen Telemetri Numerologi & Timing 5G NR (`components.py`)**: Kartu visual Elementor subcarrier spacing, durasi slot, jumlah simbol per subframe, dan badge klasifikasi pita FR1/FR2.
+794. **Komponen Telemetri Sintilasi Troposfer ITU-R P.618 Satelit (`components.py`)**: Kartu visual Elementor frekuensi uplink/downlink, sudut elevasi antena stasiun bumi, diameter dish, dan fade depth dB.
+795. **Komponen Rekognisi Prestasi PMM MBKM Mahasiswa (`components.py`)**: Kartu rekognisi kelulusan program Pertukaran Mahasiswa Merdeka, mitra perguruan tinggi host, skor komposit, nilai mutu huruf, dan 20 SKS diakui.
+796. **Komponen Diagram Struktur Radio Frame 5G NR Inline SVG (`components.py`)**: Kartu visualisasi diagram struktur 10 subframe (10 ms) dan grid alokasi slot 5G NR berbasis inline SVG responsif.
+797. **Formatter Telegram Laporan Sintilasi Troposfer Satelit (`formatters.py`)**: Format buletin Telegram resmi audit sintilasi troposfer lintasan satelit menurut standar ITU-R P.618.
+798. **Formatter Telegram Apresiasi Kelulusan PMM Mahasiswa (`formatters.py`)**: Format buletin Telegram resmi ucapan selamat atas penuntasan program Pertukaran Mahasiswa Merdeka di perguruan tinggi mitra.
+799. **Manajer Rekam Audit XPM Serat Optik (`storage.py`)**: Skema tabel SQLite `optical_xpm_records` dan fungsi `record_optical_xpm`, `list_optical_xpm`, `get_optical_xpm_by_id`.
+800. **Manajer Rekam Konfigurasi Numerologi 5G NR (`storage.py`)**: Skema tabel SQLite `nr_numerology_records` dan fungsi `record_nr_numerology`, `list_nr_numerologies`, `get_nr_numerology_by_id`.
+801. **Manajer Rekam Evaluasi Mahasiswa PMM MBKM (`storage.py`)**: Skema tabel SQLite `student_pmm_records` dan fungsi `record_pmm_evaluation`, `list_pmm_evaluations`, `get_pmm_by_nim`.
+802. **Helper WordPress Get Page by Slug (`wordpress_client.py`)**: Metode `get_page_by_slug` untuk mengambil metadata halaman statis WordPress secara presisi berdasarkan slug URL.
+803. **Helper WordPress Get Page by ID (`wordpress_client.py`)**: Metode `get_page_by_id` untuk mengambil metadata halaman statis WordPress berdasarkan identifier numerik.
+804. **Generator Schema.org LearningResource JSON-LD (`exporter.py`)**: Metode `generate_learning_resource_json_ld` menghasilkan struktur metadata standar Google LearningResource untuk modul praktikum dan panduan laboratorium.
+805. **Eksportir Dokumentasi MDX Fumadocs (`exporter.py`)**: Metode `to_fumadocs_mdx` mengonversi artikel ke format dokumentasi Next.js App Router Fumadocs dengan frontmatter YAML dan komponen tag MDX.
+806. **Subcommand CLI `xpm` (`cli.py`)**: Perintah konsol `xpm` untuk audit dan kalkulasi pergeseran fase nonlinier Cross-Phase Modulation serat optik.
+807. **Subcommand CLI `numerology` (`cli.py`)**: Perintah konsol `numerology` untuk evaluasi dan konfigurasi timing numerologi 5G NR.
+808. **Subcommand CLI `pmm` (`cli.py`)**: Perintah konsol `pmm` untuk evaluasi dan pencatatan rekognisi SKS Pertukaran Mahasiswa Merdeka.
+809. **Dokumentasi Perubahan Arsitektur v4.5.0 (`docs/changes/82_v4_5_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.5.0.
+810. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 33, dan pembaruan metrik proyek.
+811. **Ekspansi Suite Pengujian Unit Terpadu (791 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 791 unit test terverifikasi (100% pass rate).
+812. **Finalisasi Milestone v4.5.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
 
 
 
