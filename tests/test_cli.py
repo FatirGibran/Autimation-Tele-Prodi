@@ -2271,6 +2271,81 @@ class TestCLI(unittest.TestCase):
             self.assertIn("1201202222", out)
             self.assertIn("PKM-KC", out)
 
+    def test_cmd_xpm(self):
+        class ArgsAdd:
+            action = "add"
+            pump = 8.5
+            probe = 1.2
+            length = 50.0
+            att = 0.2
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_xpm(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan XPM berhasil disimpan", out)
+            self.assertIn("Pergeseran:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_xpm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("8.50", out)
+            self.assertIn("1.20", out)
+            self.assertIn("50.00", out)
+
+    def test_cmd_numerology(self):
+        class ArgsAdd:
+            action = "add"
+            mu = 1
+            band = "n78 Mid-Band"
+            rb = 100
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_numerology(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Numerologi 5G NR berhasil disimpan", out)
+            self.assertIn("SCS: 30 kHz", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_numerology(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("30", out)
+            self.assertIn("n78 Mid-Band", out)
+
+    def test_cmd_pmm(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Nabila Putri"
+            nim = "1201201088"
+            host = "Universitas Gadjah Mada"
+            nusantara = 90.0
+            academic = 88.0
+            mentor = 92.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pmm(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan PMM berhasil disimpan", out)
+            self.assertIn("20 SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pmm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Nabila Putri", out)
+            self.assertIn("1201201088", out)
+            self.assertIn("Universitas Gadjah Mada", out)
+
 
 if __name__ == "__main__":
     unittest.main()
