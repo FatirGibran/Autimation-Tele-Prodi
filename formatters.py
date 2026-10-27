@@ -1226,6 +1226,33 @@ class TelegramFormatter:
             f"✨ *Evaluasi stabilitas link satelit bumi-angkasa terverifikasi!*"
         )
 
+    @staticmethod
+    def format_pmm_mbkm_telegram(
+        student_name: str,
+        nim: str,
+        host_university: str,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student Pertukaran Mahasiswa Merdeka (PMM) recognition bulletin for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal MBKM Prodi:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🎓 **Apresiasi Penuntasan Pertukaran Mahasiswa Merdeka (PMM)**\n\n"
+            f"👤 **Nama Mahasiswa:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏫 **Perguruan Tinggi Mitra (Host):** {host_university.strip()}\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.2f}`\n"
+            f"🎖️ **Nilai Mutu:** `{letter_grade.strip()}`\n"
+            f"📚 **Rekognisi SKS Kurikulum:** `{int(converted_sks)} SKS Diakui`\n"
+            f"📊 **Status Kelulusan:** `{status.strip()}`{portal_link}\n\n"
+            f"✨ *Selamat atas keberhasilan menimba ilmu dan memperkuat wawasan kebangsaan!*"
+        )
+
+
 
 
 
