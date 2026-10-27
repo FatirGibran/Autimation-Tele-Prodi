@@ -1693,6 +1693,60 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertEqual(res_bad["described_videos"], 0)
 
+    def test_audit_course_schema_markup(self):
+        html_ok = (
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "Course", "name": "Sistem Komunikasi Nirkabel", "description": "Mata kuliah teknik nirkabel modern."}'
+            '</script>'
+        )
+        res_ok = YoastSEOValidator.audit_course_schema_markup(html_ok)
+        self.assertTrue(res_ok["has_course_schema"])
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["valid_courses"], 1)
+
+        html_bad = '<div><p>Hanya silabus biasa</p></div>'
+        res_bad = YoastSEOValidator.audit_course_schema_markup(html_bad)
+        self.assertFalse(res_bad["has_course_schema"])
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_rss_atom_autodiscovery_links(self):
+        html_ok = (
+            '<head>'
+            '<link rel="alternate" type="application/rss+xml" title="RSS Feed Prodi" href="https://example.com/feed.xml">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_rss_atom_autodiscovery_links(html_ok)
+        self.assertTrue(res_ok["has_feed_links"])
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["total_feeds"], 1)
+
+        html_bad = '<head><title>No Feeds</title></head>'
+        res_bad = YoastSEOValidator.audit_rss_atom_autodiscovery_links(html_bad)
+        self.assertFalse(res_bad["has_feed_links"])
+
+    def test_audit_csp_meta_directive(self):
+        html_ok = '<head><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' https://trusted.cdn.com; object-src \'none\';"></head>'
+        res_ok = YoastSEOValidator.audit_csp_meta_directive(html_ok)
+        self.assertTrue(res_ok["has_csp"])
+        self.assertTrue(res_ok["is_secure"])
+
+        html_bad = '<head><meta http-equiv="Content-Security-Policy" content="script-src \'unsafe-inline\';"></head>'
+        res_bad = YoastSEOValidator.audit_csp_meta_directive(html_bad)
+        self.assertTrue(res_bad["has_csp"])
+        self.assertFalse(res_bad["is_secure"])
+
+    def test_audit_resource_hints_prefetch_preconnect(self):
+        html_ok = (
+            '<head>'
+            '<link rel="preconnect" href="https://fonts.googleapis.com">'
+            '<link rel="dns-prefetch" href="https://analytics.google.com">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_resource_hints_prefetch_preconnect(html_ok)
+        self.assertTrue(res_ok["has_resource_hints"])
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["total_hints"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
