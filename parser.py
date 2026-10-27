@@ -5547,6 +5547,89 @@ def calculate_satellite_scintillation_itu_r(
     }
 
 
+def parse_pmm_mbkm_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student participation, learning achievements, and credit conversions
+    in the Pertukaran Mahasiswa Merdeka (PMM) Kemendikbudristek student exchange program.
+    """
+    raw_name = str(data.get("student_name", "")).strip()
+    raw_nim = str(data.get("nim", "")).strip()
+    raw_host = str(data.get("host_university", "")).strip()
+    raw_home = str(data.get("home_university", "")).strip()
+
+    clean_name = raw_name if raw_name else "Mahasiswa Peserta PMM"
+    clean_nim = raw_nim if raw_nim else "1201200000"
+    is_valid_nim = bool(re.match(r'^\d{8,12}$', clean_nim))
+    clean_host = raw_host if raw_host else "Universitas Mitra Dalam Negeri"
+    clean_home = raw_home if raw_home else "Telkom University Purwokerto"
+
+    score_nusantara = max(0.0, min(100.0, float(data.get("nusantara_module_score", 85.0))))
+    score_academic = max(0.0, min(100.0, float(data.get("academic_courses_score", 85.0))))
+    score_mentor = max(0.0, min(100.0, float(data.get("host_mentor_score", 85.0))))
+
+    # Composite: 30% Modul Nusantara, 50% Mata Kuliah Akademik Host, 20% Evaluasi Mentor Host
+    composite = round((0.30 * score_nusantara) + (0.50 * score_academic) + (0.20 * score_mentor), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 78.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 68.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    if composite >= 70.0:
+        converted_sks = 20
+        status = f"Lulus Penuh Program PMM - Rekognisi 20 SKS ({clean_host})"
+        is_eligible = True
+    elif composite >= 60.0:
+        converted_sks = 15
+        status = f"Lulus Bersyarat Program PMM - Rekognisi 15 SKS ({clean_host})"
+        is_eligible = True
+    else:
+        converted_sks = 0
+        status = "Tidak Memenuhi Ambang Batas Kelulusan PMM"
+        is_eligible = False
+
+    equiv_courses = [
+        {"code": "TT4501", "name": "Modul Nusantara: Kebinekaan, Inspirasi, & Refleksi", "sks": 4},
+        {"code": "TT4502", "name": "Rekayasa Jaringan Telekomunikasi Lanjut", "sks": 4},
+        {"code": "TT4503", "name": "Pemrosesan Sinyal Digital Terapan", "sks": 4},
+        {"code": "TT4504", "name": "Sistem Komunikasi Nirkabel Modern", "sks": 4},
+        {"code": "TT4505", "name": "Komunikasi Lintas Budaya & Kepemimpinan", "sks": 4}
+    ]
+
+    return {
+        "student_name": clean_name,
+        "nim": clean_nim,
+        "is_valid_nim": is_valid_nim,
+        "host_university": clean_host,
+        "home_university": clean_home,
+        "nusantara_module_score": score_nusantara,
+        "academic_courses_score": score_academic,
+        "host_mentor_score": score_mentor,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible,
+        "course_equivalencies": equiv_courses
+    }
+
+
+
 
 
 
