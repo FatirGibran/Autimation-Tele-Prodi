@@ -966,6 +966,40 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('"dwdm", "optik", "telekomunikasi"', res)
         self.assertIn("<p>Penjelasan multiplexing kanal optik.</p>", res)
 
+    def test_generate_learning_resource_json_ld(self):
+        meta = {
+            "name": "Praktikum Sistem Nirkabel 5G",
+            "description": "Modul praktikum numerologi dan beamforming 5G NR.",
+            "learning_resource_type": "Laboratorium",
+            "educational_level": "Sarjana (S1)",
+            "teaches": "Alokasi Resource Block 5G",
+            "competency_required": "Dasar Telekomunikasi",
+            "url": "https://bif-pwt.telkomuniversity.ac.id/lab/5g"
+        }
+        res = ArticleExporter.generate_learning_resource_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "LearningResource")
+        self.assertEqual(res["name"], "Praktikum Sistem Nirkabel 5G")
+        self.assertEqual(res["learningResourceType"], "Laboratorium")
+        self.assertEqual(res["provider"]["name"], "Telkom University Purwokerto")
+
+    def test_to_fumadocs_mdx(self):
+        meta = {
+            "seo_title": "Panduan Arsitektur Fumadocs",
+            "meta_description": "Dokumentasi modern berbasis Next.js App Router.",
+            "icon": "Layers",
+            "authors": ["Tim Lab Telekomunikasi"],
+            "tags": ["nextjs", "fumadocs", "telekomunikasi"]
+        }
+        res = ArticleExporter.to_fumadocs_mdx(meta, "<p>Struktur routing dan konten Fumadocs.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Arsitektur Fumadocs"', res)
+        self.assertIn('icon: "Layers"', res)
+        self.assertIn("full: true", res)
+        self.assertIn('"Tim Lab Telekomunikasi"', res)
+        self.assertIn('"nextjs", "fumadocs", "telekomunikasi"', res)
+        self.assertIn("<p>Struktur routing dan konten Fumadocs.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
