@@ -1852,6 +1852,43 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_learning_resource_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org LearningResource structured data JSON-LD metadata
+        for laboratory practicum modules, technical guides, and open educational resources.
+        """
+        name = metadata.get("name", metadata.get("title", "Modul Praktikum Telekomunikasi")).strip()
+        desc = metadata.get("description", "Panduan praktikum laboratorium sistem telekomunikasi.").strip()
+        res_type = metadata.get("learning_resource_type", "Lab Practical Guide").strip()
+        edu_level = metadata.get("educational_level", "Undergraduate (S1)").strip()
+        teaches = metadata.get("teaches", "Rekayasa Telekomunikasi & Pemrosesan Sinyal").strip()
+        comp = metadata.get("competency_required", "Dasar Sistem Telekomunikasi").strip()
+        url = metadata.get("url", "https://bif-pwt.telkomuniversity.ac.id/lab").strip()
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "LearningResource",
+            "name": name,
+            "description": desc,
+            "url": url,
+            "learningResourceType": res_type,
+            "educationalLevel": edu_level,
+            "teaches": teaches,
+            "competencyRequired": comp,
+            "provider": {
+                "@type": "CollegeOrUniversity",
+                "name": "Telkom University Purwokerto",
+                "sameAs": "https://bif-pwt.telkomuniversity.ac.id"
+            },
+            "educationalAlignment": {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "targetName": "Telecommunications Engineering"
+            }
+        }
+
+
 
 
 
