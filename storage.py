@@ -999,6 +999,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_xpm_length ON optical_xpm_records(fiber_length_km);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_numerology_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    band_name TEXT NOT NULL,
+                    numerology_mu INTEGER NOT NULL,
+                    scs_khz INTEGER NOT NULL,
+                    slot_duration_ms REAL NOT NULL,
+                    frequency_range TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_mu ON nr_numerology_records(numerology_mu);")
+
 
 
 
@@ -4697,6 +4710,49 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_nr_numerology(self, data: Dict[str, Any]) -> int:
+        """
+        Stores a 5G NR physical layer numerology configuration record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_numerology_records (
+                    band_name, numerology_mu, scs_khz,
+                    slot_duration_ms, frequency_range
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (
+                data.get("band_name", "n78").strip(),
+                int(data.get("numerology_mu", 1)),
+                int(data.get("scs_khz", 30)),
+                float(data.get("slot_duration_ms", 0.5)),
+                data.get("frequency_range", "FR1").strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_numerologies(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored 5G NR numerology configuration records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_numerology_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_numerology_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR numerology record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_numerology_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
