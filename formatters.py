@@ -1201,6 +1201,32 @@ class TelegramFormatter:
             f"✨ *Selamat dan sukses atas inovasi sains-teknologi membanggakan almamater!*"
         )
 
+    @staticmethod
+    def format_satellite_scintillation_telegram(
+        satellite_name: str,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        antenna_diameter_m: float,
+        fade_depth_db: float,
+        fading_risk: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an ITU-R P.618 satellite tropospheric scintillation bulletin announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Telemetri Satelit:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🛰️ **Laporan Audit Sintilasi Troposfer Satelit (ITU-R P.618)**\n\n"
+            f"📡 **Tautan Satelit:** {satellite_name.strip()}\n"
+            f"📶 **Frekuensi Carrier:** `{float(frequency_ghz):.2f} GHz`\n"
+            f"📐 **Sudut Elevasi Stasiun Bumi:** `{float(elevation_angle_deg):.1f}°`\n"
+            f"🔘 **Diameter Antena Dish:** `{float(antenna_diameter_m):.2f} meter`\n"
+            f"📉 **Scintillation Fade Depth (p=0.01%):** `{float(fade_depth_db):.2f} dB`\n"
+            f"📊 **Kondisi Margis Kanal:** `{fading_risk.strip()}`{portal_link}\n\n"
+            f"✨ *Evaluasi stabilitas link satelit bumi-angkasa terverifikasi!*"
+        )
+
+
 
 
 
