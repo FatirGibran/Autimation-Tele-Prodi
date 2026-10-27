@@ -5018,6 +5018,64 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_csp_meta_directive(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits presence and security strength of Content-Security-Policy (CSP) meta directives
+        (<meta http-equiv="Content-Security-Policy" content="...">) for XSS prevention and HTTPS hardening.
+        """
+        if not html_content:
+            return {"has_csp": False, "is_secure": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        csp_meta = soup.find("meta", attrs={"http-equiv": lambda h: h and h.lower() == "content-security-policy"})
+        if not csp_meta or not csp_meta.get("content"):
+            return {
+                "has_csp": False,
+                "is_secure": False,
+                "issues": ["Tidak ditemukan tag meta Content-Security-Policy (<meta http-equiv='Content-Security-Policy'>)."],
+                "warnings": warnings
+            }
+
+        content = csp_meta["content"].strip()
+        directives = {}
+        for part in content.split(";"):
+            part = part.strip()
+            if not part:
+                continue
+            tokens = part.split()
+            dir_name = tokens[0].lower()
+            dir_values = tokens[1:] if len(tokens) > 1 else []
+            directives[dir_name] = dir_values
+
+        if "default-src" not in directives and "script-src" not in directives:
+            issues.append("CSP tidak mendefinisikan direktif 'default-src' atau 'script-src'.")
+
+        script_sources = directives.get("script-src", directives.get("default-src", []))
+        if "'unsafe-inline'" in script_sources and not any(s.startswith("'nonce-") or s.startswith("'sha256-") for s in script_sources):
+            issues.append("Direktif script-src mengizinkan 'unsafe-inline' tanpa nonce atau sha256 hash (rentan XSS).")
+
+        if "object-src" not in directives or "'none'" not in directives["object-src"]:
+            warnings.append("Direktif 'object-src' disarankan disetel ke 'none' untuk menonaktifkan Flash/Java plugins.")
+
+        if "*" in script_sources:
+            issues.append("Direktif script-src tidak boleh menggunakan wildcard '*' tanpa batas.")
+
+        is_secure = len(issues) == 0
+
+        return {
+            "has_csp": True,
+            "directives_count": len(directives),
+            "directives": list(directives.keys()),
+            "is_secure": is_secure,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
