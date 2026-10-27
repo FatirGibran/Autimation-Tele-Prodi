@@ -21,7 +21,10 @@ from parser import (
     parse_studi_independen_evaluation,
     calculate_optical_four_wave_mixing,
     calculate_erlang_traffic_capacity,
-    parse_pkm_mbkm_evaluation
+    parse_pkm_mbkm_evaluation,
+    calculate_optical_cross_phase_modulation,
+    calculate_5g_nr_numerology_timing,
+    parse_pmm_mbkm_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2017,6 +2020,103 @@ def cmd_pimnas(args):
             print(f"{r['id']:<4} | {r['nim']:<10} | {r['scheme']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:18]:<20} | {r['status']}")
 
 
+def cmd_xpm(args):
+    if args.action == "add":
+        if args.pump is None or args.probe is None or args.length is None:
+            print("Error: Argumen --pump, --probe, dan --length wajib diisi.")
+            sys.exit(1)
+        att = args.att if args.att is not None else 0.2
+        calc = calculate_optical_cross_phase_modulation(
+            pump_power_mw=args.pump,
+            probe_power_mw=args.probe,
+            fiber_length_km=args.length,
+            attenuation_db_km=att
+        )
+        xid = storage.record_optical_xpm({
+            "pump_power_mw": args.pump,
+            "probe_power_mw": args.probe,
+            "fiber_length_km": args.length,
+            "phi_xpm_deg": calc["phi_xpm_deg"],
+            "xpm_risk": calc["xpm_risk"],
+            "is_acceptable": calc["is_acceptable"]
+        })
+        print(f"Catatan XPM berhasil disimpan dengan ID: {xid} (Pergeseran: {calc['phi_xpm_deg']:.1f}°)")
+    else:
+        records = storage.list_optical_xpm(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan XPM serat optik yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'PUMP (MW)':<12} | {'PROBE (MW)':<12} | {'PANJANG':<10} | {'XPM (DEG)':<12} | {'RISIKO'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['pump_power_mw']:<12.2f} | {r['probe_power_mw']:<12.2f} | {r['fiber_length_km']:<10.2f} | {r['phi_xpm_deg']:<12.1f} | {r['xpm_risk']}")
+
+
+def cmd_numerology(args):
+    if args.action == "add":
+        if args.mu is None:
+            print("Error: Argumen --mu wajib diisi.")
+            sys.exit(1)
+        band = args.band if args.band else "n78 Mid-Band"
+        rb = args.rb if args.rb is not None else 100
+        calc = calculate_5g_nr_numerology_timing(numerology_mu=args.mu, num_resource_blocks=rb)
+        nid = storage.record_nr_numerology({
+            "band_name": band,
+            "numerology_mu": args.mu,
+            "scs_khz": calc["subcarrier_spacing_khz"],
+            "slot_duration_ms": calc["slot_duration_ms"],
+            "frequency_range": calc["frequency_range"]
+        })
+        print(f"Catatan Numerologi 5G NR berhasil disimpan dengan ID: {nid} (SCS: {calc['subcarrier_spacing_khz']} kHz)")
+    else:
+        records = storage.list_nr_numerologies(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan numerologi 5G NR yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'MU':<4} | {'SCS (KHZ)':<12} | {'DURASI SLOT':<14} | {'BAND':<18} | {'RANGE'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['numerology_mu']:<4} | {r['scs_khz']:<12} | {r['slot_duration_ms']:<14.4f} | {r['band_name'][:16]:<18} | {r['frequency_range']}")
+
+
+def cmd_pmm(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.host:
+            print("Error: Argumen --name, --nim, dan --host wajib diisi.")
+            sys.exit(1)
+        nusantara = args.nusantara if args.nusantara is not None else 85.0
+        academic = args.academic if args.academic is not None else 85.0
+        mentor = args.mentor if args.mentor is not None else 85.0
+        eval_res = parse_pmm_mbkm_evaluation({
+            "student_name": args.name,
+            "nim": args.nim,
+            "host_university": args.host,
+            "nusantara_module_score": nusantara,
+            "academic_courses_score": academic,
+            "host_mentor_score": mentor
+        })
+        pid = storage.record_pmm_evaluation({
+            "student_name": args.name,
+            "nim": args.nim,
+            "host_university": args.host,
+            "composite_score": eval_res["composite_score"],
+            "letter_grade": eval_res["letter_grade"],
+            "converted_sks": eval_res["converted_sks"],
+            "status": eval_res["status"]
+        })
+        print(f"Catatan PMM berhasil disimpan dengan ID: {pid} ({eval_res['converted_sks']} SKS Diakui)")
+    else:
+        records = storage.list_pmm_evaluations(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan evaluasi PMM yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKS':<4} | {'NILAI':<5} | {'MAHASISWA':<18} | {'HOST UNIVERSITY'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['nim']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:16]:<18} | {r['host_university']}")
+
+
+
 def main():
 
 
@@ -2783,6 +2883,38 @@ def main():
     pimnas_parser.add_argument("--presentation", type=float, default=85.0, help="Nilai presentasi akhir (0-100)")
     pimnas_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pimnas_parser.set_defaults(func=cmd_pimnas)
+
+    # XPM command
+    xpm_parser = subparsers.add_parser("xpm", help="Kelola kalkulasi pergeseran fase nonlinier XPM serat optik (list, add)")
+    xpm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi XPM")
+    xpm_parser.add_argument("--pump", type=float, help="Daya optik kanal pompa (mW)")
+    xpm_parser.add_argument("--probe", type=float, help="Daya optik kanal probe (mW)")
+    xpm_parser.add_argument("--length", type=float, help="Panjang bentang serat optik (km)")
+    xpm_parser.add_argument("--att", type=float, default=0.2, help="Koefisien redaman serat optik (dB/km)")
+    xpm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    xpm_parser.set_defaults(func=cmd_xpm)
+
+    # Numerology command
+    num_parser = subparsers.add_parser("numerology", help="Kelola konfigurasi numerologi dan timing 5G NR 3GPP (list, add)")
+    num_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan numerologi 5G")
+    num_parser.add_argument("--mu", type=int, choices=[0, 1, 2, 3, 4], help="Indeks numerologi mu (0-4)")
+    num_parser.add_argument("--band", default="n78 Mid-Band", help="Nama pita kanal frekuensi 5G NR")
+    num_parser.add_argument("--rb", type=int, default=100, help="Jumlah alokasi Resource Block (RB)")
+    num_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    num_parser.set_defaults(func=cmd_numerology)
+
+    # PMM command
+    pmm_parser = subparsers.add_parser("pmm", help="Kelola evaluasi & rekognisi MBKM Pertukaran Mahasiswa Merdeka (list, add)")
+    pmm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan rekognisi PMM")
+    pmm_parser.add_argument("--name", help="Nama lengkap mahasiswa peserta PMM")
+    pmm_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    pmm_parser.add_argument("--host", help="Nama perguruan tinggi mitra (host)")
+    pmm_parser.add_argument("--nusantara", type=float, default=85.0, help="Nilai modul nusantara (0-100)")
+    pmm_parser.add_argument("--academic", type=float, default=85.0, help="Nilai mata kuliah akademik host (0-100)")
+    pmm_parser.add_argument("--mentor", type=float, default=85.0, help="Nilai mentor host (0-100)")
+    pmm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pmm_parser.set_defaults(func=cmd_pmm)
+
 
     args = parser.parse_args()
 
