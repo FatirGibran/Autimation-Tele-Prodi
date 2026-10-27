@@ -4907,6 +4907,67 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_course_schema_markup(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits presence and completeness of Schema.org Course structured data markup (JSON-LD or Microdata)
+        for academic curriculum modules and syllabus accreditation.
+        """
+        if not html_content:
+            return {"has_course_schema": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        found_courses = []
+
+        # Check JSON-LD
+        for script in soup.find_all("script", type=lambda t: t and "ld+json" in t.lower()):
+            try:
+                data = json.loads(script.string or "{}")
+                items = data if isinstance(data, list) else [data]
+                for item in items:
+                    t = item.get("@type", "")
+                    if (isinstance(t, str) and t.lower() == "course") or (isinstance(t, list) and any(x.lower() == "course" for x in t)):
+                        found_courses.append(item)
+            except Exception:
+                continue
+
+        # Check Microdata
+        for el in soup.find_all(attrs={"itemtype": re.compile(r'schema\.org/Course', re.IGNORECASE)}):
+            name_el = el.find(attrs={"itemprop": "name"})
+            desc_el = el.find(attrs={"itemprop": "description"})
+            found_courses.append({
+                "name": name_el.get_text().strip() if name_el else "",
+                "description": desc_el.get_text().strip() if desc_el else ""
+            })
+
+        if not found_courses:
+            return {
+                "has_course_schema": False,
+                "is_valid": False,
+                "issues": ["Tidak ditemukan penanda data terstruktur Schema.org Course (JSON-LD atau Microdata)."]
+            }
+
+        valid_count = 0
+        for idx, course in enumerate(found_courses, 1):
+            name = course.get("name")
+            desc = course.get("description")
+            if not name:
+                issues.append(f"Skema Course #{idx} tidak memiliki properti wajib 'name'.")
+            if not desc:
+                issues.append(f"Skema Course #{idx} tidak memiliki properti wajib 'description'.")
+            if name and desc:
+                valid_count += 1
+
+        return {
+            "has_course_schema": True,
+            "total_courses": len(found_courses),
+            "valid_courses": valid_count,
+            "is_valid": len(issues) == 0 and valid_count > 0,
+            "issues": issues
+        }
+
+
 
 
 
