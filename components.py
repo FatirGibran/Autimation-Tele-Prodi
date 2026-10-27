@@ -5396,6 +5396,57 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_scintillation_card(
+        cls,
+        satellite_name: str,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        antenna_diameter_m: float,
+        fade_depth_db: float,
+        fading_risk: str
+    ) -> str:
+        """
+        Renders an ITU-R P.618 satellite Earth-space tropospheric scintillation telemetry card.
+        """
+        from xml.sax.saxutils import escape
+
+        sat_clean = escape(satellite_name.strip())
+        risk_clean = escape(fading_risk.strip())
+        is_safe = fade_depth_db <= 2.5
+        badge_color = "#10b981" if is_safe else "#f59e0b" if fade_depth_db <= 4.0 else "#ef4444"
+
+        return f"""    <div class="tu-sat-scintillation-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #38bdf8; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Sintilasi Troposfer ITU-R P.618</span>
+        <span style="background: {badge_color}22; color: {badge_color}; border: 1px solid {badge_color}55; font-size: 12px; padding: 2px 8px; border-radius: 9999px; font-weight: 600;">{risk_clean}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; font-size: 16px; color: #ffffff;">Tautan Satelit: {sat_clean}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Frekuensi Downlink:</span>
+          <strong style="color: #38bdf8; font-size: 15px;">{frequency_ghz:.2f} GHz</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Sudut Elevasi (\u03b8):</span>
+          <strong style="color: #f1f5f9; font-size: 15px;">{elevation_angle_deg:.1f}&deg;</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Diameter Antena Bumi:</span>
+          <strong style="color: #c084fc; font-size: 15px;">{antenna_diameter_m:.2f} m</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Scintillation Fade Depth:</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{fade_depth_db:.2f} dB</strong>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 8px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;">
+        <span>Standar Rekomendasi: <strong>ITU-R P.618-13</strong></span>
+        <span>Persentil Waktu: <strong>p = 0.01%</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
