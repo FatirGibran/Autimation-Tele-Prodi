@@ -5495,6 +5495,72 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_frame_svg_card(
+        cls,
+        title: str,
+        numerology_mu: int,
+        scs_khz: int,
+        slots_per_frame: int
+    ) -> str:
+        """
+        Renders a 3GPP 5G NR 10ms radio frame and subframe grid structure card with inline responsive SVG.
+        """
+        from xml.sax.saxutils import escape
+
+        title_clean = escape(title.strip())
+
+        return f"""    <div class="tu-5g-frame-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #10b981; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">Struktur Radio Frame 5G NR</span>
+        <span style="font-size: 12px; color: #94a3b8;">10 Subframe (10 ms) | {slots_per_frame} Slot</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; font-size: 16px; color: #ffffff;">{title_clean}</h4>
+      <div style="display: flex; justify-content: center; margin: 12px 0;">
+        <svg viewBox="0 0 340 90" width="340" height="90" style="background: #020617; border-radius: 6px; border: 1px solid #334155;" aria-label="5G NR Frame Structure">
+          <!-- 10 Subframe boxes -->
+          <rect x="10" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="25" y="44" fill="#38bdf8" font-size="10" text-anchor="middle" font-weight="bold">SF0</text>
+
+          <rect x="42" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="57" y="44" fill="#38bdf8" font-size="10" text-anchor="middle" font-weight="bold">SF1</text>
+
+          <rect x="74" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#0284c7" stroke-width="1.5" />
+          <text x="89" y="44" fill="#0284c7" font-size="10" text-anchor="middle" font-weight="bold">SF2</text>
+
+          <rect x="106" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#0284c7" stroke-width="1.5" />
+          <text x="121" y="44" fill="#0284c7" font-size="10" text-anchor="middle" font-weight="bold">SF3</text>
+
+          <rect x="138" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+          <text x="153" y="44" fill="#10b981" font-size="10" text-anchor="middle" font-weight="bold">SF4</text>
+
+          <rect x="170" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+          <text x="185" y="44" fill="#10b981" font-size="10" text-anchor="middle" font-weight="bold">SF5</text>
+
+          <rect x="202" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+          <text x="217" y="44" fill="#f59e0b" font-size="10" text-anchor="middle" font-weight="bold">SF6</text>
+
+          <rect x="234" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+          <text x="249" y="44" fill="#f59e0b" font-size="10" text-anchor="middle" font-weight="bold">SF7</text>
+
+          <rect x="266" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#c084fc" stroke-width="1.5" />
+          <text x="281" y="44" fill="#c084fc" font-size="10" text-anchor="middle" font-weight="bold">SF8</text>
+
+          <rect x="298" y="20" width="30" height="40" rx="3" fill="#1e293b" stroke="#c084fc" stroke-width="1.5" />
+          <text x="313" y="44" fill="#c084fc" font-size="10" text-anchor="middle" font-weight="bold">SF9</text>
+
+          <!-- Timeline labels -->
+          <text x="170" y="76" fill="#94a3b8" font-size="10" text-anchor="middle">Durasi Total Radio Frame: 10 ms (T_f)</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Numerologi: <strong style="color: #10b981;">\u03bc = {numerology_mu}</strong></div>
+        <div>SCS: <strong style="color: #38bdf8;">{scs_khz} kHz</strong></div>
+        <div>Total Slot: <strong style="color: #ffffff;">{slots_per_frame} Slot</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
