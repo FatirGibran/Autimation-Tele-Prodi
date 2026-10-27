@@ -2003,6 +2003,88 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("100.0 GHz", html)
         self.assertIn("<svg", html)
 
+    def test_render_optical_xpm_card(self):
+        html = EditorialComponents.render_optical_xpm_card(
+            title="Uji Cross-Phase Modulation Link DWDM",
+            pump_power_mw=8.5,
+            probe_power_mw=1.2,
+            fiber_length_km=50.0,
+            phi_xpm_deg=24.5,
+            xpm_risk="Rendah (Aman untuk Transmisi DWDM Standar)",
+            is_acceptable=True
+        )
+        self.assertIn("tu-xpm-card", html)
+        self.assertIn("Uji Cross-Phase Modulation Link DWDM", html)
+        self.assertIn("8.50 mW", html)
+        self.assertIn("1.20 mW", html)
+        self.assertIn("50.00 km", html)
+        self.assertIn("24.5&deg;", html)
+        self.assertIn("Layak", html)
+
+    def test_render_5g_nr_numerology_card(self):
+        html = EditorialComponents.render_5g_nr_numerology_card(
+            band_name="n78 Mid-Band 3.5 GHz",
+            numerology_mu=1,
+            scs_khz=30,
+            slot_duration_ms=0.5,
+            symbols_per_subframe=28,
+            frequency_range="FR1 (Sub-6 GHz)"
+        )
+        self.assertIn("tu-5g-numerology-card", html)
+        self.assertIn("n78 Mid-Band 3.5 GHz", html)
+        self.assertIn("30 kHz", html)
+        self.assertIn("0.5000 ms", html)
+        self.assertIn("28 Simbol", html)
+        self.assertIn("FR1 (Sub-6 GHz)", html)
+
+    def test_render_satellite_scintillation_card(self):
+        html = EditorialComponents.render_satellite_scintillation_card(
+            satellite_name="Telkom-4 (Merah Putih)",
+            frequency_ghz=12.25,
+            elevation_angle_deg=35.0,
+            antenna_diameter_m=1.8,
+            fade_depth_db=0.85,
+            fading_risk="Sangat Rendah (Scintillation Margin Aman)"
+        )
+        self.assertIn("tu-sat-scintillation-card", html)
+        self.assertIn("Telkom-4 (Merah Putih)", html)
+        self.assertIn("12.25 GHz", html)
+        self.assertIn("35.0&deg;", html)
+        self.assertIn("1.80 m", html)
+        self.assertIn("0.85 dB", html)
+
+    def test_render_pmm_mbkm_card(self):
+        html = EditorialComponents.render_pmm_mbkm_card(
+            student_name="Nabila Putri",
+            nim="1201201088",
+            host_university="Universitas Gadjah Mada",
+            composite_score=89.5,
+            letter_grade="A",
+            converted_sks=20,
+            status="Lulus Penuh Program PMM - Rekognisi 20 SKS"
+        )
+        self.assertIn("tu-pmm-mbkm-card", html)
+        self.assertIn("Nabila Putri", html)
+        self.assertIn("1201201088", html)
+        self.assertIn("Universitas Gadjah Mada", html)
+        self.assertIn("89.50", html)
+        self.assertIn("Nilai Mutu: A", html)
+        self.assertIn(">A</strong>", html)
+        self.assertIn("20 SKS", html)
+
+    def test_render_5g_nr_frame_svg_card(self):
+        html = EditorialComponents.render_5g_nr_frame_svg_card(
+            title="Struktur Frame 5G NR Numerologi \u03bc=1",
+            numerology_mu=1,
+            scs_khz=30,
+            slots_per_frame=20
+        )
+        self.assertIn("tu-5g-frame-svg-card", html)
+        self.assertIn("Struktur Frame 5G NR Numerologi \u03bc=1", html)
+        self.assertIn("30 kHz", html)
+        self.assertIn("20 Slot", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
