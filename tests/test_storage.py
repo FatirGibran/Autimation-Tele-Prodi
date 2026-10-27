@@ -2241,6 +2241,61 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(by_nim["medal"], "Medali Emas PIMNAS")
         self.assertIsNone(self.storage.get_pkm_by_nim("99999999"))
 
+    def test_optical_xpm_storage(self):
+        rec_id = self.storage.record_optical_xpm({
+            "pump_power_mw": 8.5,
+            "probe_power_mw": 1.2,
+            "fiber_length_km": 50.0,
+            "phi_xpm_deg": 24.5,
+            "xpm_risk": "Rendah (Aman untuk Transmisi DWDM Standar)",
+            "is_acceptable": True
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_xpm()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["pump_power_mw"], 8.5)
+        single = self.storage.get_optical_xpm_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["phi_xpm_deg"], 24.5)
+        self.assertIsNone(self.storage.get_optical_xpm_by_id(99999))
+
+    def test_nr_numerology_storage(self):
+        rec_id = self.storage.record_nr_numerology({
+            "band_name": "n78 Mid-Band",
+            "numerology_mu": 1,
+            "scs_khz": 30,
+            "slot_duration_ms": 0.5,
+            "frequency_range": "FR1"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_numerologies()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["scs_khz"], 30)
+        single = self.storage.get_nr_numerology_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["band_name"], "n78 Mid-Band")
+        self.assertIsNone(self.storage.get_nr_numerology_by_id(99999))
+
+    def test_pmm_evaluation_storage(self):
+        rec_id = self.storage.record_pmm_evaluation({
+            "student_name": "Nabila Putri",
+            "nim": "1201201088",
+            "host_university": "Universitas Gadjah Mada",
+            "composite_score": 89.5,
+            "letter_grade": "A",
+            "converted_sks": 20,
+            "status": "Lulus Penuh Program PMM - Rekognisi 20 SKS"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pmm_evaluations()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_name"], "Nabila Putri")
+        by_nim = self.storage.get_pmm_by_nim("1201201088")
+        self.assertIsNotNone(by_nim)
+        self.assertEqual(by_nim["host_university"], "Universitas Gadjah Mada")
+        self.assertEqual(by_nim["converted_sks"], 20)
+        self.assertIsNone(self.storage.get_pmm_by_nim("99999999"))
+
 
 if __name__ == "__main__":
     unittest.main()
