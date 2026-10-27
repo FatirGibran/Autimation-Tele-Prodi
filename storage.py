@@ -986,6 +986,20 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_nim ON student_pkm_records(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_scheme ON student_pkm_records(scheme);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_xpm_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    pump_power_mw REAL NOT NULL,
+                    probe_power_mw REAL NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    phi_xpm_deg REAL NOT NULL,
+                    xpm_risk TEXT NOT NULL,
+                    is_acceptable INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_xpm_length ON optical_xpm_records(fiber_length_km);")
+
 
 
 
@@ -4640,6 +4654,50 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_optical_xpm(self, data: Dict[str, Any]) -> int:
+        """
+        Stores an optical fiber DWDM Cross-Phase Modulation (XPM) nonlinear phase shift record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_xpm_records (
+                    pump_power_mw, probe_power_mw, fiber_length_km,
+                    phi_xpm_deg, xpm_risk, is_acceptable
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                float(data.get("pump_power_mw", 5.0)),
+                float(data.get("probe_power_mw", 1.0)),
+                float(data.get("fiber_length_km", 40.0)),
+                float(data.get("phi_xpm_deg", 0.0)),
+                data.get("xpm_risk", "Rendah").strip(),
+                1 if data.get("is_acceptable", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_xpm(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical fiber XPM records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_xpm_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_xpm_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical fiber XPM record by primary key ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_xpm_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
