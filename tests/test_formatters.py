@@ -825,8 +825,43 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("20 SKS Diakui", msg)
         self.assertIn("https://kemahasiswaan.telkomuniversity.ac.id/pkm/2026-001", msg)
 
+    def test_format_satellite_scintillation_telegram(self):
+        msg = TelegramFormatter.format_satellite_scintillation_telegram(
+            satellite_name="Telkom-4 (Merah Putih)",
+            frequency_ghz=12.25,
+            elevation_angle_deg=35.0,
+            antenna_diameter_m=1.8,
+            fade_depth_db=0.85,
+            fading_risk="Sangat Rendah (Scintillation Margin Aman)",
+            portal_url="https://sat.telkomuniversity.ac.id/scintillation"
+        )
+        self.assertIn("Laporan Audit Sintilasi Troposfer Satelit (ITU-R P.618)", msg)
+        self.assertIn("Telkom-4 (Merah Putih)", msg)
+        self.assertIn("12.25 GHz", msg)
+        self.assertIn("35.0°", msg)
+        self.assertIn("1.80 meter", msg)
+        self.assertIn("0.85 dB", msg)
+        self.assertIn("https://sat.telkomuniversity.ac.id/scintillation", msg)
 
-
+    def test_format_pmm_mbkm_telegram(self):
+        msg = TelegramFormatter.format_pmm_mbkm_telegram(
+            student_name="Nabila Putri",
+            nim="1201201088",
+            host_university="Universitas Gadjah Mada",
+            composite_score=89.5,
+            letter_grade="A",
+            converted_sks=20,
+            status="Lulus Penuh Program PMM - Rekognisi 20 SKS",
+            portal_url="https://mbkm.telkomuniversity.ac.id/pmm/2026-088"
+        )
+        self.assertIn("Apresiasi Penuntasan Pertukaran Mahasiswa Merdeka (PMM)", msg)
+        self.assertIn("Nabila Putri", msg)
+        self.assertIn("1201201088", msg)
+        self.assertIn("Universitas Gadjah Mada", msg)
+        self.assertIn("89.50", msg)
+        self.assertIn("Nilai Mutu:** `A`", msg)
+        self.assertIn("20 SKS Diakui", msg)
+        self.assertIn("https://mbkm.telkomuniversity.ac.id/pmm/2026-088", msg)
 
 
 class TestCommandRateLimiter(unittest.TestCase):
