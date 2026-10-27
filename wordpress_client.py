@@ -868,6 +868,21 @@ class WordPressClient:
             return results[0]
         return None
 
+    def get_page_by_id(self, page_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a static WordPress page by its unique numeric page ID.
+        """
+        endpoint = f"{self.api_url}/pages/{int(page_id)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            if isinstance(res, dict) and "id" in res:
+                return res
+            return None
+        except Exception:
+            return None
+
+
 
 
 
