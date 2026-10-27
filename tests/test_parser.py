@@ -1821,6 +1821,87 @@ Status: Granted
         self.assertEqual(res_fail["converted_sks"], 0)
         self.assertFalse(res_fail["is_eligible"])
 
+    def test_calculate_optical_cross_phase_modulation(self):
+        from parser import calculate_optical_cross_phase_modulation
+        # Safe transmission: 5 mW pump, 1 mW probe over 40 km
+        res = calculate_optical_cross_phase_modulation(
+            pump_power_mw=5.0,
+            probe_power_mw=1.0,
+            fiber_length_km=40.0
+        )
+        self.assertGreater(res["effective_length_km"], 0.0)
+        self.assertGreater(res["phi_xpm_rad"], 0.0)
+        self.assertGreater(res["phi_spm_rad"], 0.0)
+        self.assertTrue(res["is_acceptable"])
+
+        # Severe nonlinear case: 100 mW pump over 100 km
+        res_high = calculate_optical_cross_phase_modulation(
+            pump_power_mw=100.0,
+            probe_power_mw=20.0,
+            fiber_length_km=100.0
+        )
+        self.assertFalse(res_high["is_acceptable"])
+        self.assertIn("Tinggi", res_high["xpm_risk"])
+
+    def test_calculate_5g_nr_numerology_timing(self):
+        from parser import calculate_5g_nr_numerology_timing
+        # Sub-6 GHz mid-band mu=1 (30 kHz SCS)
+        res_mu1 = calculate_5g_nr_numerology_timing(numerology_mu=1, num_resource_blocks=100)
+        self.assertEqual(res_mu1["subcarrier_spacing_khz"], 30)
+        self.assertEqual(res_mu1["slots_per_subframe"], 2)
+        self.assertEqual(res_mu1["slots_per_frame"], 20)
+        self.assertEqual(res_mu1["slot_duration_ms"], 0.5)
+        self.assertEqual(res_mu1["symbols_per_slot"], 14)
+        self.assertEqual(res_mu1["total_symbols_per_subframe"], 28)
+        self.assertIn("FR1", res_mu1["frequency_range"])
+
+        # mmWave mu=3 (120 kHz SCS)
+        res_mu3 = calculate_5g_nr_numerology_timing(numerology_mu=3, num_resource_blocks=66)
+        self.assertEqual(res_mu3["subcarrier_spacing_khz"], 120)
+        self.assertEqual(res_mu3["slots_per_frame"], 80)
+        self.assertEqual(res_mu3["slot_duration_ms"], 0.125)
+        self.assertIn("FR2", res_mu3["frequency_range"])
+
+    def test_calculate_satellite_scintillation_itu_r(self):
+        from parser import calculate_satellite_scintillation_itu_r
+        # Ku-band link at 12 GHz, 20 deg elevation, 1.2m dish
+        res = calculate_satellite_scintillation_itu_r(
+            frequency_ghz=12.0,
+            elevation_angle_deg=20.0,
+            antenna_diameter_m=1.2,
+            percentage_p=0.01
+        )
+        self.assertGreater(res["n_wet"], 0.0)
+        self.assertGreater(res["sigma_db"], 0.0)
+        self.assertGreater(res["scintillation_fade_depth_db"], 0.0)
+        self.assertTrue(res["is_viable"])
+
+    def test_parse_pmm_mbkm_evaluation(self):
+        from parser import parse_pmm_mbkm_evaluation
+        # Successful student exchange
+        res_pass = parse_pmm_mbkm_evaluation({
+            "student_name": "Rizky Ramadhan",
+            "nim": "1201201099",
+            "host_university": "Universitas Hasanuddin",
+            "nusantara_module_score": 90.0,
+            "academic_courses_score": 88.0,
+            "host_mentor_score": 92.0
+        })
+        self.assertEqual(res_pass["letter_grade"], "A")
+        self.assertEqual(res_pass["converted_sks"], 20)
+        self.assertTrue(res_pass["is_eligible"])
+        self.assertEqual(len(res_pass["course_equivalencies"]), 5)
+
+        # Ineligible score
+        res_fail = parse_pmm_mbkm_evaluation({
+            "student_name": "Doni",
+            "nusantara_module_score": 40.0,
+            "academic_courses_score": 45.0,
+            "host_mentor_score": 50.0
+        })
+        self.assertEqual(res_fail["converted_sks"], 0)
+        self.assertFalse(res_fail["is_eligible"])
+
 
 if __name__ == "__main__":
     unittest.main()
