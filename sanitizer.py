@@ -1643,6 +1643,29 @@ def sanitize_html5_meter_progress_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_data_value_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <data> machine-readable elements by removing inline event handlers,
+    style attributes, and stripping unsafe or executable payloads from the value attribute.
+    """
+    if not html or "<data" not in html.lower():
+        return html
+
+    def fix_data(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        val_m = re.search(r'\bvalue=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if val_m:
+            val = val_m.group(1).strip()
+            if val.lower().startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', val):
+                tag = re.sub(r'\s+value=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    return re.sub(r'<data\b[^>]*>', fix_data, html, flags=re.IGNORECASE)
+
+
+
 
 
 
