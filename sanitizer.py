@@ -1687,6 +1687,27 @@ def sanitize_html5_slot_name_attributes(html: str) -> str:
     return re.sub(r'<slot\b[^>]*>', fix_slot, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_ruby_annotation_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 phonetic annotation elements (<ruby>, <rt>, <rp>, <rb>, <rtc>)
+    by stripping inline event handlers, style attributes, and nested script execution vectors,
+    ensuring safe academic and linguistic typography.
+    """
+    if not html or "<ruby" not in html.lower():
+        return html
+
+    def fix_ruby_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<(?:/)?(?:ruby|rt|rp|rb|rtc)\b[^>]*>', fix_ruby_tag, html, flags=re.IGNORECASE)
+    out = re.sub(r'<ruby\b[\s\S]*?</ruby>', lambda m: re.sub(r'<(?:script|iframe)\b[\s\S]*?</(?:script|iframe)>', '', m.group(0), flags=re.IGNORECASE), out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
