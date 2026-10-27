@@ -27,7 +27,10 @@ from sanitizer import (
     sanitize_html5_wbr_and_zero_width_spaces,
     sanitize_html5_picture_source_elements,
     sanitize_html5_kbd_samp_elements,
-    sanitize_html5_meter_progress_elements
+    sanitize_html5_meter_progress_elements,
+    sanitize_html5_data_value_attributes,
+    sanitize_html5_slot_name_attributes,
+    sanitize_html5_ruby_annotation_elements
 )
 
 
@@ -1001,6 +1004,33 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("style=", cleaned)
         self.assertNotIn("onchange=", cleaned)
         self.assertIn('value="0"', cleaned)
+
+    def test_sanitize_html5_data_value_attributes(self):
+        raw = '<p>Harga: <data value="150000" onclick="alert(1)" style="font-weight:bold">Rp 150.000</data> dan <data value="javascript:steal()">Token</data></p>'
+        cleaned = sanitize_html5_data_value_attributes(raw)
+        self.assertIn('value="150000"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:steal()", cleaned)
+
+    def test_sanitize_html5_slot_name_attributes(self):
+        raw = '<slot name="user-profile" onfocus="evil()" style="color:blue">Fallback</slot><slot name="bad<script>">Bad</slot>'
+        cleaned = sanitize_html5_slot_name_attributes(raw)
+        self.assertIn('name="user-profile"', cleaned)
+        self.assertNotIn("onfocus=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('name="bad<script>"', cleaned)
+
+    def test_sanitize_html5_ruby_annotation_elements(self):
+        raw = '<ruby onclick="alert(1)"><rb style="color:red">漢</rb><rp>(</rp><rt onmouseover="hack()">kan<script>alert(2)</script></rt><rp>)</rp></ruby>'
+        cleaned = sanitize_html5_ruby_annotation_elements(raw)
+        self.assertIn("<ruby>", cleaned)
+        self.assertIn("<rb>漢</rb>", cleaned)
+        self.assertIn("<rt>kan</rt>", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertNotIn("<script>", cleaned)
 
 
 if __name__ == "__main__":

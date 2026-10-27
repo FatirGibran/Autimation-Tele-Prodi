@@ -1684,7 +1684,8 @@ def sanitize_html5_slot_name_attributes(html: str) -> str:
                 tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
         return tag
 
-    return re.sub(r'<slot\b[^>]*>', fix_slot, html, flags=re.IGNORECASE)
+    return re.sub(r'<slot\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_slot, html, flags=re.IGNORECASE)
+
 
 
 def sanitize_html5_ruby_annotation_elements(html: str) -> str:
