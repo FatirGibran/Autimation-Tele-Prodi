@@ -5446,6 +5446,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pmm_mbkm_card(
+        cls,
+        student_name: str,
+        nim: str,
+        host_university: str,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str
+    ) -> str:
+        """
+        Renders a student Pertukaran Mahasiswa Merdeka (PMM) MBKM learning achievement and recognition card.
+        """
+        from xml.sax.saxutils import escape
+
+        name_clean = escape(student_name.strip())
+        nim_clean = escape(nim.strip())
+        host_clean = escape(host_university.strip())
+        grade_clean = escape(letter_grade.strip())
+        status_clean = escape(status.strip())
+
+        return f"""    <div class="tu-pmm-mbkm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 16px; background: #0f172a; margin: 16px 0; color: #f8fafc;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="background: #1e293b; color: #f59e0b; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 600;">PMM Kemendikbudristek</span>
+        <span style="background: #10b98122; color: #10b981; border: 1px solid #10b98155; font-size: 12px; padding: 2px 8px; border-radius: 9999px; font-weight: 600;">Nilai Mutu: {grade_clean}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #ffffff;">{name_clean} ({nim_clean})</h4>
+      <p style="margin: 0 0 12px 0; font-size: 13px; color: #94a3b8;">Perguruan Tinggi Mitra (Host): <strong style="color: #38bdf8;">{host_clean}</strong></p>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 13px; margin-bottom: 12px; text-align: center;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Skor Komposit:</span>
+          <strong style="color: #38bdf8; font-size: 16px;">{composite_score:.2f}</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">Nilai Huruf:</span>
+          <strong style="color: #10b981; font-size: 16px;">{grade_clean}</strong>
+        </div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">
+          <span style="color: #94a3b8; display: block; font-size: 11px;">SKS Diakui:</span>
+          <strong style="color: #f59e0b; font-size: 16px;">{converted_sks} SKS</strong>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 8px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;">
+        <span>Status: <strong style="color: #10b981;">{status_clean}</strong></span>
+        <span>Program: <strong>MBKM Nasional</strong></span>
+      </div>
+    </div>"""
+
+
 
 
 
