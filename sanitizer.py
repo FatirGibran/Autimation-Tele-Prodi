@@ -1665,6 +1665,29 @@ def sanitize_html5_data_value_attributes(html: str) -> str:
     return re.sub(r'<data\b[^>]*>', fix_data, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_slot_name_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 Web Component <slot> elements by stripping inline event handlers,
+    style attributes, and validating that the name attribute strictly matches safe identifier tokens.
+    """
+    if not html or "<slot" not in html.lower():
+        return html
+
+    def fix_slot(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        name_m = re.search(r'\bname=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if name_m:
+            name_val = name_m.group(1).strip()
+            if not re.match(r'^[a-zA-Z0-9_\-]+$', name_val):
+                tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    return re.sub(r'<slot\b[^>]*>', fix_slot, html, flags=re.IGNORECASE)
+
+
+
 
 
 
