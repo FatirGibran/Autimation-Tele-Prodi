@@ -775,6 +775,37 @@ class TestWordPressClient(unittest.TestCase):
         media = self.client.get_media_by_slug("non-existent")
         self.assertIsNone(media)
 
+    @patch("urllib.request.urlopen")
+    def test_get_page_by_slug(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 201, "slug": "kurikulum-s1-telekomunikasi", "title": {"rendered": "Kurikulum S1"}}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        page = self.client.get_page_by_slug("kurikulum-s1-telekomunikasi")
+        self.assertIsNotNone(page)
+        self.assertEqual(page["id"], 201)
+        self.assertEqual(page["slug"], "kurikulum-s1-telekomunikasi")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/pages?slug=kurikulum-s1-telekomunikasi", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_page_by_id(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 201, "title": {"rendered": "Kurikulum S1"}, "slug": "kurikulum-s1"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        page = self.client.get_page_by_id(201)
+        self.assertIsNotNone(page)
+        self.assertEqual(page["id"], 201)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/pages/201", req.full_url)
+
+        # 404 test
+        mock_urlopen.side_effect = Exception("HTTP 404")
+        self.assertIsNone(self.client.get_page_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
