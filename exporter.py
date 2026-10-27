@@ -1888,6 +1888,37 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_fumadocs_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial content to Fumadocs Next.js App Router MDX documentation format
+        with YAML frontmatter (title, description, icon, full, authors, tags).
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        icon = metadata.get("icon", "BookOpen")
+        authors = metadata.get("authors", ["Tim Redaksi Editorial Prodi"])
+        if isinstance(authors, str):
+            authors = [authors.strip()]
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'icon: "{icon}"',
+            "full: true",
+            f'authors: {json.dumps(authors)}',
+            f'tags: {json.dumps(tags)}',
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
