@@ -5329,6 +5329,75 @@ def parse_pkm_mbkm_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_cross_phase_modulation(
+    pump_power_mw: float,
+    probe_power_mw: float,
+    fiber_length_km: float,
+    attenuation_db_km: float = 0.2,
+    nonlinear_refractive_index_n2: float = 2.6e-20,
+    effective_area_um2: float = 80.0,
+    wavelength_nm: float = 1550.0
+) -> Dict[str, Any]:
+    """
+    Calculates Cross-Phase Modulation (XPM) and Self-Phase Modulation (SPM) nonlinear phase shifts
+    in wavelength-division multiplexing (WDM/DWDM) optical fiber transmission according to Agrawal nonlinear optics.
+    """
+    p_pump_mw = max(0.001, float(pump_power_mw))
+    p_probe_mw = max(0.001, float(probe_power_mw))
+    l_km = max(0.1, float(fiber_length_km))
+    alpha_db = max(0.01, float(attenuation_db_km))
+    n2 = max(1e-21, float(nonlinear_refractive_index_n2))
+    a_eff_um2 = max(10.0, float(effective_area_um2))
+    wl_nm = max(800.0, float(wavelength_nm))
+
+    # Convert units to SI
+    alpha_km = alpha_db / 4.3429448
+    l_eff_km = (1.0 - math.exp(-alpha_km * l_km)) / alpha_km
+    wl_m = wl_nm * 1e-9
+    a_eff_m2 = a_eff_um2 * 1e-12
+
+    # Nonlinear coefficient gamma in (W * km)^-1
+    gamma_per_w_km = (2.0 * math.pi * n2 / (wl_m * a_eff_m2)) * 1000.0
+
+    p_pump_w = p_pump_mw * 1e-3
+    p_probe_w = p_probe_mw * 1e-3
+
+    # Nonlinear phase shifts
+    phi_spm_rad = gamma_per_w_km * p_probe_w * l_eff_km
+    phi_xpm_rad = 2.0 * gamma_per_w_km * p_pump_w * l_eff_km
+    phi_total_rad = phi_spm_rad + phi_xpm_rad
+
+    phi_xpm_deg = phi_xpm_rad * (180.0 / math.pi)
+    phi_spm_deg = phi_spm_rad * (180.0 / math.pi)
+
+    if phi_xpm_rad <= 0.5:
+        xpm_risk = "Rendah (Aman untuk Transmisi DWDM Standar)"
+        is_acceptable = True
+    elif phi_xpm_rad <= 1.0:
+        xpm_risk = "Moderat (Perlu Monitoring Dispersion Mapping & Walk-Off)"
+        is_acceptable = True
+    else:
+        xpm_risk = "Tinggi (Kritis / Distorsi Fase Nonlinier Signifikan)"
+        is_acceptable = False
+
+    return {
+        "pump_power_mw": round(p_pump_mw, 3),
+        "probe_power_mw": round(p_probe_mw, 3),
+        "fiber_length_km": round(l_km, 2),
+        "attenuation_db_km": round(alpha_db, 3),
+        "effective_length_km": round(l_eff_km, 3),
+        "gamma_per_w_km": round(gamma_per_w_km, 4),
+        "phi_spm_rad": round(phi_spm_rad, 4),
+        "phi_spm_deg": round(phi_spm_deg, 2),
+        "phi_xpm_rad": round(phi_xpm_rad, 4),
+        "phi_xpm_deg": round(phi_xpm_deg, 2),
+        "phi_total_rad": round(phi_total_rad, 4),
+        "xpm_risk": xpm_risk,
+        "is_acceptable": is_acceptable
+    }
+
+
+
 
 
 
