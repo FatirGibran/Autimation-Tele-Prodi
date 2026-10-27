@@ -5075,6 +5075,66 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_resource_hints_prefetch_preconnect(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits performance resource hints (<link rel="preconnect"> and <link rel="dns-prefetch">)
+        for critical third-party CDN/Font connections to optimize Core Web Vitals (LCP/FCP).
+        """
+        if not html_content:
+            return {"has_resource_hints": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        found_hints = []
+
+        valid_rels = {"preconnect", "dns-prefetch"}
+        links = soup.find_all("link", rel=True)
+        for link in links:
+            rels = link.get("rel")
+            rels_list = rels if isinstance(rels, list) else [rels]
+            matching = [r.lower() for r in rels_list if r.lower() in valid_rels]
+            if matching:
+                href = (link.get("href") or "").strip()
+                crossorigin = link.get("crossorigin")
+                found_hints.append({
+                    "rel": matching[0],
+                    "href": href,
+                    "crossorigin": crossorigin is not None
+                })
+
+        if not found_hints:
+            return {
+                "has_resource_hints": False,
+                "total_hints": 0,
+                "is_valid": True,
+                "warnings": ["Tidak ada tag resource hints preconnect atau dns-prefetch yang dideklarasikan."]
+            }
+
+        valid_count = 0
+        for idx, hint in enumerate(found_hints, 1):
+            href = hint["href"]
+            if not href:
+                issues.append(f"Resource hint #{idx} ({hint['rel']}) tidak memiliki atribut 'href'.")
+            elif not (href.startswith("http://") or href.startswith("https://") or href.startswith("//")):
+                issues.append(f"Resource hint #{idx} memiliki URL href yang tidak valid: {href}")
+            else:
+                if "fonts.gstatic.com" in href and not hint["crossorigin"]:
+                    warnings.append("Preconnect ke fonts.gstatic.com sebaiknya menyertakan atribut crossorigin.")
+                valid_count += 1
+
+        return {
+            "has_resource_hints": True,
+            "total_hints": len(found_hints),
+            "valid_hints": valid_count,
+            "hints": found_hints,
+            "is_valid": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
