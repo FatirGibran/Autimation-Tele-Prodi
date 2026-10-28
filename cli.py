@@ -24,7 +24,10 @@ from parser import (
     parse_pkm_mbkm_evaluation,
     calculate_optical_cross_phase_modulation,
     calculate_5g_nr_numerology_timing,
-    parse_pmm_mbkm_evaluation
+    parse_pmm_mbkm_evaluation,
+    calculate_optical_srs_threshold,
+    calculate_5g_nr_eirp_psd,
+    parse_praktisi_mengajar_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2116,6 +2119,127 @@ def cmd_pmm(args):
             print(f"{r['id']:<4} | {r['nim']:<10} | {r['converted_sks']:<4} | {r['letter_grade']:<5} | {r['student_name'][:16]:<18} | {r['host_university']}")
 
 
+def cmd_srs(args):
+    if args.action == "add":
+        if args.length is None:
+            print("Error: Argumen --length (panjang serat optik dalam km) wajib diisi.")
+            sys.exit(1)
+        fiber_name = args.fiber if args.fiber else "Standard SMF-28"
+        pwr = args.power if args.power is not None else 100.0
+        att = args.att if args.att is not None else 0.2
+        area = args.area if args.area is not None else 80.0
+        calc = calculate_optical_srs_threshold(
+            fiber_length_km=args.length,
+            attenuation_db_km=att,
+            effective_area_um2=area,
+            input_power_mw=pwr
+        )
+        sid = storage.record_optical_srs(
+            fiber_name=fiber_name,
+            input_power_mw=pwr,
+            threshold_power_mw=calc["threshold_power_mw"],
+            fiber_length_km=args.length,
+            effective_area_um2=area,
+            raman_gain_coeff=1.0e-13,
+            srs_margin_db=calc["srs_margin_db"],
+            srs_risk=calc["srs_risk"],
+            is_safe=calc["is_safe"]
+        )
+        print(f"Catatan SRS berhasil disimpan dengan ID: {sid} (Ambang: {calc['threshold_power_mw']:.2f} mW, Margin: {calc['srs_margin_db']:+.2f} dB)")
+    else:
+        records = storage.list_optical_srs(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan ambang batas SRS yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FIBER':<18} | {'DAYA (MW)':<10} | {'AMBANG':<10} | {'MARGIN (DB)':<12} | {'RISIKO'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['fiber_name'][:16]:<18} | {r['input_power_mw']:<10.1f} | {r['threshold_power_mw']:<10.1f} | {r['srs_margin_db']:<12.2f} | {r['srs_risk']}")
+
+
+def cmd_eirp(args):
+    if args.action == "add":
+        if args.power is None or args.gain is None:
+            print("Error: Argumen --power dan --gain wajib diisi.")
+            sys.exit(1)
+        cell = args.cell if args.cell else "NR-CELL-BDG-01"
+        bw = args.bw if args.bw is not None else 20.0
+        loss = args.loss if args.loss is not None else 2.0
+        calc = calculate_5g_nr_eirp_psd(
+            conducted_power_dbm=args.power,
+            antenna_gain_dbi=args.gain,
+            cable_loss_db=loss,
+            bandwidth_mhz=bw
+        )
+        eid = storage.record_nr_eirp(
+            cell_id=cell,
+            conducted_power_dbm=args.power,
+            antenna_gain_dbi=args.gain,
+            channel_bandwidth_mhz=bw,
+            eirp_dbm=calc["eirp_dbm"],
+            eirp_watt=calc["eirp_watt"],
+            psd_eirp_dbm_mhz=calc["psd_eirp_dbm_mhz"],
+            regulatory_status=calc["regulatory_status"],
+            is_compliant=calc["is_compliant"]
+        )
+        print(f"Catatan 5G NR EIRP berhasil disimpan dengan ID: {eid} (EIRP: {calc['eirp_dbm']:.2f} dBm)")
+    else:
+        records = storage.list_nr_eirps(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan EIRP 5G NR yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CELL ID':<16} | {'EIRP (DBM)':<12} | {'EIRP (W)':<10} | {'PSD (DBM/MHZ)':<14} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cell_id'][:14]:<16} | {r['eirp_dbm']:<12.2f} | {r['eirp_watt']:<10.2f} | {r['psd_eirp_dbm_mhz']:<14.2f} | {r['regulatory_status']}")
+
+
+def cmd_praktisi(args):
+    if args.action == "add":
+        if not args.course or not args.code or not args.practitioner or not args.company:
+            print("Error: Argumen --course, --code, --practitioner, dan --company wajib diisi.")
+            sys.exit(1)
+        lecturer = args.lecturer if args.lecturer else "Dosen Pengampu"
+        hours = args.hours if args.hours is not None else 12
+        case_score = args.case if args.case is not None else 85.0
+        prac_score = args.assessment if args.assessment is not None else 85.0
+        stud_score = args.student if args.student is not None else 85.0
+
+        eval_res = parse_praktisi_mengajar_evaluation({
+            "course_name": args.course,
+            "course_code": args.code,
+            "practitioner_name": args.practitioner,
+            "industry_company": args.company,
+            "lecturer_name": lecturer,
+            "teaching_hours": hours,
+            "case_study_score": case_score,
+            "practitioner_assessment": prac_score,
+            "student_evaluation": stud_score
+        })
+        pid = storage.record_praktisi_mengajar(
+            course_name=args.course,
+            course_code=args.code,
+            practitioner_name=args.practitioner,
+            industry_company=args.company,
+            lecturer_name=lecturer,
+            teaching_hours=hours,
+            composite_score=eval_res["composite_score"],
+            letter_grade=eval_res["letter_grade"],
+            converted_sks=eval_res["converted_sks"],
+            status=eval_res["status"]
+        )
+        print(f"Catatan Praktisi Mengajar berhasil disimpan dengan ID: {pid} ({eval_res['converted_sks']} SKS Diakui, Grade: {eval_res['letter_grade']})")
+    else:
+        records = storage.list_praktisi_mengajar(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Praktisi Mengajar yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KODE':<8} | {'MATA KULIAH':<20} | {'PRAKTISI':<18} | {'SKS':<4} | {'GRADE'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['course_code']:<8} | {r['course_name'][:18]:<20} | {r['practitioner_name'][:16]:<18} | {r['converted_sks']:<4} | {r['letter_grade']}")
+
+
 
 def main():
 
@@ -2914,6 +3038,43 @@ def main():
     pmm_parser.add_argument("--mentor", type=float, default=85.0, help="Nilai mentor host (0-100)")
     pmm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pmm_parser.set_defaults(func=cmd_pmm)
+
+    # SRS command
+    srs_parser = subparsers.add_parser("srs", help="Kelola evaluasi ambang batas hamburan Raman terstimulasi (SRS) serat optik (list, add)")
+    srs_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi SRS")
+    srs_parser.add_argument("--fiber", default="Standard SMF-28", help="Tipe serat optik")
+    srs_parser.add_argument("--length", type=float, help="Panjang bentang serat optik (km)")
+    srs_parser.add_argument("--power", type=float, default=100.0, help="Daya optik kanal masukan (mW)")
+    srs_parser.add_argument("--att", type=float, default=0.2, help="Koefisien atenuasi serat optik (dB/km)")
+    srs_parser.add_argument("--area", type=float, default=80.0, help="Luas efektif serat optik (um^2)")
+    srs_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    srs_parser.set_defaults(func=cmd_srs)
+
+    # EIRP command
+    eirp_parser = subparsers.add_parser("eirp", help="Kelola kepatuhan daya radiasi isotropik efektif (EIRP) 5G NR (list, add)")
+    eirp_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi EIRP 5G")
+    eirp_parser.add_argument("--cell", default="NR-CELL-BDG-01", help="Pengenal sel transceiver 5G NR")
+    eirp_parser.add_argument("--power", type=float, help="Daya konduksi pemancar conducted power (dBm)")
+    eirp_parser.add_argument("--gain", type=float, help="Penguatan antena transmitter gain (dBi)")
+    eirp_parser.add_argument("--loss", type=float, default=2.0, help="Rugi-rugi kabel dan combiner (dB)")
+    eirp_parser.add_argument("--bw", type=float, default=20.0, help="Lebar pita saluran channel bandwidth (MHz)")
+    eirp_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    eirp_parser.set_defaults(func=cmd_eirp)
+
+    # Praktisi Mengajar command
+    praktisi_parser = subparsers.add_parser("praktisi", help="Kelola kolaborasi industri & rekognisi MBKM Praktisi Mengajar (list, add)")
+    praktisi_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan rekognisi Praktisi Mengajar")
+    praktisi_parser.add_argument("--course", help="Nama mata kuliah kolaborasi praktisi")
+    praktisi_parser.add_argument("--code", help="Kode mata kuliah (misal TT3104)")
+    praktisi_parser.add_argument("--practitioner", help="Nama praktisi industri pengampu")
+    praktisi_parser.add_argument("--company", help="Nama perusahaan / industri mitra")
+    praktisi_parser.add_argument("--lecturer", default="Dosen Pengampu", help="Nama dosen pendamping mata kuliah")
+    praktisi_parser.add_argument("--hours", type=int, default=12, help="Jumlah jam tatap muka praktisi")
+    praktisi_parser.add_argument("--case", type=float, default=85.0, help="Nilai studi kasus riil industri (0-100)")
+    praktisi_parser.add_argument("--assessment", type=float, default=85.0, help="Nilai asesmen kompetensi praktisi (0-100)")
+    praktisi_parser.add_argument("--student", type=float, default=85.0, help="Nilai kuesioner evaluasi mahasiswa (0-100)")
+    praktisi_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    praktisi_parser.set_defaults(func=cmd_praktisi)
 
 
     args = parser.parse_args()
