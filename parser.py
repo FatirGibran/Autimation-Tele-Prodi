@@ -5629,6 +5629,67 @@ def parse_pmm_mbkm_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_srs_threshold(
+    fiber_length_km: float,
+    attenuation_db_km: float = 0.2,
+    effective_area_um2: float = 80.0,
+    raman_gain_coeff_m_w: float = 1.0e-13,
+    input_power_mw: float = 100.0
+) -> Dict[str, Any]:
+    """
+    Calculates the Stimulated Raman Scattering (SRS) critical threshold power
+    and Raman depletion margin in single-mode optical fiber according to Stolen & Smith / Agrawal nonlinear optics.
+    """
+    l_km = max(0.1, float(fiber_length_km))
+    alpha_db = max(0.01, float(attenuation_db_km))
+    a_eff_um2 = max(10.0, float(effective_area_um2))
+    g_r = max(1e-15, float(raman_gain_coeff_m_w))
+    p_in_mw = max(0.1, float(input_power_mw))
+
+    # Attenuation coefficient in 1/km and 1/m
+    alpha_km = alpha_db / 4.3429448
+    l_eff_km = (1.0 - math.exp(-alpha_km * l_km)) / alpha_km
+    l_eff_m = l_eff_km * 1000.0
+
+    a_eff_m2 = a_eff_um2 * 1e-12
+
+    # Critical threshold power P_th = 16 * A_eff / (g_R * L_eff) (in Watts)
+    p_th_w = (16.0 * a_eff_m2) / (g_r * l_eff_m)
+    p_th_mw = p_th_w * 1000.0
+    p_th_dbm = 10.0 * math.log10(p_th_mw)
+
+    p_in_w = p_in_mw * 1e-3
+    p_in_dbm = 10.0 * math.log10(p_in_mw)
+    power_ratio = p_in_w / p_th_w
+    margin_db = p_th_dbm - p_in_dbm
+
+    if power_ratio <= 0.5:
+        srs_risk = "Sangat Aman (Jauh di Bawah Ambang SRS)"
+        is_safe = True
+    elif power_ratio <= 1.0:
+        srs_risk = "Moderat (Mendekati Ambang Depletion SRS)"
+        is_safe = True
+    else:
+        srs_risk = "Kritis (Terjadi Depletion Daya dan Crosstalk Raman Parah)"
+        is_safe = False
+
+    return {
+        "fiber_length_km": round(l_km, 2),
+        "attenuation_db_km": round(alpha_db, 3),
+        "effective_length_km": round(l_eff_km, 3),
+        "effective_area_um2": round(a_eff_um2, 1),
+        "input_power_mw": round(p_in_mw, 2),
+        "input_power_dbm": round(p_in_dbm, 2),
+        "threshold_power_mw": round(p_th_mw, 2),
+        "threshold_power_dbm": round(p_th_dbm, 2),
+        "power_to_threshold_ratio": round(power_ratio, 4),
+        "srs_margin_db": round(margin_db, 2),
+        "srs_risk": srs_risk,
+        "is_safe": is_safe
+    }
+
+
+
 
 
 
