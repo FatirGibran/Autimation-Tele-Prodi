@@ -2171,6 +2171,93 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("+24.0 dBi", html)
         self.assertIn("<svg", html)
 
+    def test_render_optical_spm_card(self):
+        html = EditorialComponents.render_optical_spm_card(
+            title="Tautan Transmisi Backbone Jakarta-Surabaya",
+            peak_power_w=0.08,
+            fiber_length_km=80.0,
+            phi_max_rad=1.85,
+            b_integral=1.85,
+            broadening_factor=1.62,
+            spm_risk="Moderat",
+            is_acceptable=True
+        )
+        self.assertIn("tu-optical-spm-card", html)
+        self.assertIn("Tautan Transmisi Backbone Jakarta-Surabaya", html)
+        self.assertIn("80.0 mW", html)
+        self.assertIn("1.850 rad", html)
+        self.assertIn("1.62x", html)
+        self.assertIn("1.85 rad", html)
+        self.assertIn("Lolos Toleransi SPM", html)
+
+    def test_render_5g_nr_ca_throughput_card(self):
+        html = EditorialComponents.render_5g_nr_ca_throughput_card(
+            configuration_name="Konfigurasi 3CC CA (n78 + n41 + n28)",
+            total_bandwidth_mhz=160.0,
+            num_carriers=3,
+            total_throughput_gbps=2.145,
+            spectral_efficiency_bps_hz=13.4,
+            status_badge="3GPP Rel-16 Aggregation"
+        )
+        self.assertIn("tu-5g-ca-card", html)
+        self.assertIn("Konfigurasi 3CC CA (n78 + n41 + n28)", html)
+        self.assertIn("3 Komponen", html)
+        self.assertIn("160 MHz", html)
+        self.assertIn("2.145 Gbps", html)
+        self.assertIn("13.40 bps/Hz", html)
+
+    def test_render_satellite_rain_attenuation_card(self):
+        html = EditorialComponents.render_satellite_rain_attenuation_card(
+            satellite_name="Telkom-4 (Ku-Band)",
+            frequency_ghz=12.25,
+            elevation_angle_deg=52.0,
+            rain_rate_mm_h=95.0,
+            predicted_attenuation_db=7.85,
+            attenuation_risk="Sedang",
+            is_link_viable=True
+        )
+        self.assertIn("tu-satellite-rain-card", html)
+        self.assertIn("Telkom-4 (Ku-Band)", html)
+        self.assertIn("12.2 GHz", html)
+        self.assertIn("95.0 mm/jam", html)
+        self.assertIn("7.85 dB", html)
+        self.assertIn("LINK ANDAL & TERSEDIA", html)
+
+    def test_render_p2mw_startup_card(self):
+        html = EditorialComponents.render_p2mw_startup_card(
+            student_name="Dimas Pratama",
+            nim="1201202050",
+            business_name="AgroTele-IoT",
+            business_stage="Tahap Bertumbuh",
+            category="Teknologi Terapan &amp; IoT",
+            composite_score=88.5,
+            letter_grade="A",
+            converted_sks=6,
+            status="Lolos Pendanaan &amp; Inkubasi P2MW Tahap Bertumbuh"
+        )
+        self.assertIn("tu-p2mw-card", html)
+        self.assertIn("AgroTele-IoT", html)
+        self.assertIn("Dimas Pratama", html)
+        self.assertIn("1201202050", html)
+        self.assertIn("Tahap Bertumbuh", html)
+        self.assertIn("88.5 (A)", html)
+        self.assertIn("6 SKS Diakui", html)
+
+    def test_render_5g_nr_ca_spectrum_svg_card(self):
+        html = EditorialComponents.render_5g_nr_ca_spectrum_svg_card(
+            title="Diagram Alokasi Spektrum 3CC Carrier Aggregation 5G NR",
+            pcc_mhz=100.0,
+            scc1_mhz=40.0,
+            scc2_mhz=20.0,
+            total_gbps=2.15
+        )
+        self.assertIn("tu-5g-ca-spectrum-svg-card", html)
+        self.assertIn("Diagram Alokasi Spektrum 3CC Carrier Aggregation 5G NR", html)
+        self.assertIn("100 MHz", html)
+        self.assertIn("160 MHz Total CA", html)
+        self.assertIn("2.15 Gbps", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
