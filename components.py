@@ -5710,6 +5710,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_praktisi_mengajar_card(
+        cls,
+        course_name: str,
+        practitioner_name: str,
+        industry_company: str,
+        lecturer_name: str,
+        teaching_hours: int,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str
+    ) -> str:
+        """
+        Renders a Praktisi Mengajar MBKM industry collaboration card
+        showing co-teaching hours, competency assessment, and SKS credit equivalency.
+        """
+        is_passed = composite_score >= 60.0
+        badge_bg = "#eff6ff" if is_passed else "#fef2f2"
+        badge_color = "#1d4ed8" if is_passed else "#b91c1c"
+        border_color = "#2563eb" if is_passed else "#ef4444"
+
+        return f"""    <div class="tu-praktisi-mengajar-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-praktisi-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #2563eb; font-size: 13px; text-transform: uppercase;">MBKM Praktisi Mengajar Kolaborasi Industri</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">{course_name}</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+        Praktisi: <strong>{practitioner_name}</strong> ({industry_company}) | Dosen Pengampu: {lecturer_name}
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Jam Mengajar Praktisi</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{teaching_hours} Jam</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Nilai Komposit &amp; Huruf</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{composite_score:.1f} ({letter_grade})</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">SKS Diakui</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{converted_sks} SKS</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 10px 12px; border-radius: 6px; border-left: 4px solid {border_color}; font-size: 12px; color: #334155;">
+        Program Kolaborasi Praktisi Industri &amp; Sivitas Akademika Teknik Telekomunikasi Terakreditasi.
+      </div>
+    </div>"""
+
 
 
 
