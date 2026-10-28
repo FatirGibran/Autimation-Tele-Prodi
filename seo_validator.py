@@ -5300,6 +5300,68 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_subresource_integrity_sri(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits external third-party scripts and stylesheets for Subresource Integrity (SRI) hashes
+        (integrity="sha384-..." and crossorigin="anonymous") to protect against CDN compromise and supply chain tampering.
+        """
+        if not html_content:
+            return {"total_external_resources": 0, "is_secure": True, "issues": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        external_resources = []
+
+        # Check external scripts
+        for script in soup.find_all("script", src=True):
+            src = script["src"].strip()
+            if src.startswith(("http://", "https://", "//")):
+                external_resources.append({"type": "script", "url": src, "element": script})
+
+        # Check external stylesheets
+        for link in soup.find_all("link", rel=lambda r: r and "stylesheet" in (r if isinstance(r, list) else [r])):
+            href = (link.get("href") or "").strip()
+            if href.startswith(("http://", "https://", "//")):
+                external_resources.append({"type": "stylesheet", "url": href, "element": link})
+
+        if not external_resources:
+            return {
+                "total_external_resources": 0,
+                "verified_resources": 0,
+                "is_secure": True,
+                "issues": [],
+                "warnings": warnings
+            }
+
+        verified_count = 0
+        for item in external_resources:
+            el = item["element"]
+            integrity = el.get("integrity", "").strip()
+            crossorigin = el.get("crossorigin", "").strip()
+
+            has_valid_hash = bool(re.match(r'^(?:sha256|sha384|sha512)-[A-Za-z0-9+/=]+$', integrity))
+            if not integrity:
+                issues.append(f"Aset eksternal {item['type']} '{item['url']}' tidak memiliki atribut 'integrity' (SRI).")
+            elif not has_valid_hash:
+                issues.append(f"Aset eksternal {item['type']} '{item['url']}' memiliki format hash integrity yang tidak valid: {integrity}")
+            elif not crossorigin:
+                warnings.append(f"Aset eksternal {item['type']} '{item['url']}' sebaiknya menyertakan atribut crossorigin='anonymous' saat menggunakan SRI.")
+            else:
+                verified_count += 1
+
+        is_secure = len(issues) == 0
+
+        return {
+            "total_external_resources": len(external_resources),
+            "verified_resources": verified_count,
+            "is_secure": is_secure,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
