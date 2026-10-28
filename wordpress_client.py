@@ -882,6 +882,34 @@ class WordPressClient:
         except Exception:
             return None
 
+    def create_page(
+        self,
+        title: str,
+        content: str,
+        slug: Optional[str] = None,
+        status: str = "publish",
+        parent_id: Optional[int] = None,
+        menu_order: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Creates a new static WordPress page via REST API (/wp/v2/pages).
+        """
+        endpoint = f"{self.api_url}/pages"
+        payload = {
+            "title": title.strip(),
+            "content": content,
+            "status": status,
+            "menu_order": int(menu_order)
+        }
+        if slug:
+            payload["slug"] = slug.strip().lower()
+        if parent_id is not None:
+            payload["parent"] = int(parent_id)
+
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+        return self._send_request(req)
+
 
 
 
