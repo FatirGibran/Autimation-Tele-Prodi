@@ -1094,6 +1094,20 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_spm_link ON optical_spm_records(link_name);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_spm_acceptable ON optical_spm_records(is_acceptable);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_ca_throughput_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    configuration_name TEXT NOT NULL,
+                    num_carriers INTEGER NOT NULL,
+                    total_bandwidth_mhz REAL NOT NULL,
+                    total_throughput_mbps REAL NOT NULL,
+                    total_throughput_gbps REAL NOT NULL,
+                    spectral_efficiency_bps_hz REAL NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ca_config ON nr_ca_throughput_records(configuration_name);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ca_bandwidth ON nr_ca_throughput_records(total_bandwidth_mhz);")
 
 
 
@@ -5088,6 +5102,53 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_spm_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_nr_ca_throughput(
+        self,
+        configuration_name: str,
+        num_carriers: int,
+        total_bandwidth_mhz: float,
+        total_throughput_mbps: float,
+        total_throughput_gbps: float,
+        spectral_efficiency_bps_hz: float
+    ) -> int:
+        """
+        Stores a 5G NR Carrier Aggregation (CA) throughput evaluation record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_ca_throughput_records (
+                    configuration_name, num_carriers, total_bandwidth_mhz,
+                    total_throughput_mbps, total_throughput_gbps, spectral_efficiency_bps_hz
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                configuration_name.strip(), int(num_carriers), float(total_bandwidth_mhz),
+                float(total_throughput_mbps), float(total_throughput_gbps), float(spectral_efficiency_bps_hz)
+            ))
+            return cursor.lastrowid
+
+    def list_nr_ca_throughputs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored 5G NR Carrier Aggregation throughput records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_ca_throughput_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_ca_throughput_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR Carrier Aggregation throughput record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_ca_throughput_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
