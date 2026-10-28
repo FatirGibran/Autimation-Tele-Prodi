@@ -5789,6 +5789,77 @@ def calculate_satellite_faraday_rotation(
     }
 
 
+def parse_praktisi_mengajar_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates industry collaborative teaching and competency achievements in the
+    Program Praktisi Mengajar Kemendikbudristek for telecommunication engineering courses.
+    """
+    course_name = str(data.get("course_name", "Rekayasa Jaringan Telekomunikasi")).strip()
+    course_code = str(data.get("course_code", "TT3104")).strip()
+    practitioner = str(data.get("practitioner_name", "Praktisi Industri")).strip()
+    company = str(data.get("industry_company", "Industri Telekomunikasi")).strip()
+    lecturer = str(data.get("lecturer_name", "Dosen Pengampu")).strip()
+    teaching_hours = max(1, int(data.get("teaching_hours", 12)))
+
+    score_case = max(0.0, min(100.0, float(data.get("case_study_score", 85.0))))
+    score_practitioner = max(0.0, min(100.0, float(data.get("practitioner_assessment", 85.0))))
+    score_student = max(0.0, min(100.0, float(data.get("student_evaluation", 85.0))))
+
+    # Composite: 40% Studi Kasus Riil, 40% Penilaian Praktisi, 20% Evaluasi Mahasiswa
+    composite = round((0.40 * score_case) + (0.40 * score_practitioner) + (0.20 * score_student), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 78.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 68.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    if teaching_hours >= 12 and composite >= 70.0:
+        converted_sks = 4
+        status = f"Kolaborasi Industri Selesai Penuh - Rekognisi 4 SKS ({company})"
+        is_eligible = True
+    elif composite >= 60.0:
+        converted_sks = 2
+        status = f"Kolaborasi Selesai Parsial - Rekognisi 2 SKS ({company})"
+        is_eligible = True
+    else:
+        converted_sks = 0
+        status = "Tidak Memenuhi Ambang Batas Praktisi Mengajar"
+        is_eligible = False
+
+    return {
+        "course_name": course_name,
+        "course_code": course_code,
+        "practitioner_name": practitioner,
+        "industry_company": company,
+        "lecturer_name": lecturer,
+        "teaching_hours": teaching_hours,
+        "case_study_score": score_case,
+        "practitioner_assessment": score_practitioner,
+        "student_evaluation": score_student,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_eligible": is_eligible
+    }
+
+
+
 
 
 
