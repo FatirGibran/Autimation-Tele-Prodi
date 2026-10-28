@@ -6110,6 +6110,80 @@ def calculate_satellite_rain_attenuation_itu_r(
     }
 
 
+def parse_p2mw_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student technology entrepreneurship milestones in the Program Pembinaan Mahasiswa
+    Wirausaha (P2MW) Kemendikbudristek for academic SKS credit recognition and startup incubation.
+    """
+    student_name = str(data.get("student_name", "Mahasiswa")).strip()
+    nim = str(data.get("nim", "")).strip()
+    business_name = str(data.get("business_name", "Startup Telekomunikasi")).strip()
+    business_stage = str(data.get("business_stage", "Tahap Awal")).strip()
+    category = str(data.get("business_category", "Teknologi Terapan & IoT")).strip()
+
+    score_pitch = max(0.0, min(100.0, float(data.get("pitch_bmc_score", 85.0))))
+    score_proto = max(0.0, min(100.0, float(data.get("prototype_progress_score", 85.0))))
+    score_finance = max(0.0, min(100.0, float(data.get("financial_governance_score", 85.0))))
+
+    # Composite: 35% Business Model Canvas & Pitch, 35% Progress Prototipe/Traksi, 30% Akuntabilitas Keuangan
+    composite = round((0.35 * score_pitch) + (0.35 * score_proto) + (0.30 * score_finance), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 78.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 68.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    is_growth = "tumbuh" in business_stage.lower()
+
+    if is_growth and composite >= 80.0:
+        converted_sks = 6
+        status = f"Lolos Pendanaan & Inkubasi P2MW Tahap Bertumbuh - Rekognisi 6 SKS ({business_name})"
+        is_funded = True
+    elif composite >= 70.0:
+        converted_sks = 4
+        status = f"Lolos Pendanaan P2MW Tahap Awal - Rekognisi 4 SKS ({business_name})"
+        is_funded = True
+    elif composite >= 60.0:
+        converted_sks = 2
+        status = f"Penyelesaian Parsial Inkubasi P2MW - Rekognisi 2 SKS ({business_name})"
+        is_funded = False
+    else:
+        converted_sks = 0
+        status = "Tidak Memenuhi Standar Kelulusan P2MW"
+        is_funded = False
+
+    return {
+        "student_name": student_name,
+        "nim": nim,
+        "business_name": business_name,
+        "business_stage": business_stage,
+        "business_category": category,
+        "pitch_bmc_score": score_pitch,
+        "prototype_progress_score": score_proto,
+        "financial_governance_score": score_finance,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "converted_sks": converted_sks,
+        "status": status,
+        "is_funded": is_funded
+    }
+
+
 
 
 
