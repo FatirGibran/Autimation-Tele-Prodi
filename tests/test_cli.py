@@ -2346,6 +2346,85 @@ class TestCLI(unittest.TestCase):
             self.assertIn("1201201088", out)
             self.assertIn("Universitas Gadjah Mada", out)
 
+    def test_cmd_srs(self):
+        class ArgsAdd:
+            action = "add"
+            fiber = "Standard SMF-28"
+            length = 80.0
+            power = 100.0
+            att = 0.2
+            area = 80.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_srs(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan SRS berhasil disimpan", out)
+            self.assertIn("Ambang:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_srs(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Standard SMF-28", out)
+            self.assertIn("100.0", out)
+
+    def test_cmd_eirp(self):
+        class ArgsAdd:
+            action = "add"
+            cell = "NR-CELL-BDG-01"
+            power = 43.0
+            gain = 18.0
+            loss = 2.0
+            bw = 20.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_eirp(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR EIRP berhasil disimpan", out)
+            self.assertIn("59.00 dBm", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_eirp(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("NR-CELL-BDG-01", out)
+            self.assertIn("59.00", out)
+
+    def test_cmd_praktisi(self):
+        class ArgsAdd:
+            action = "add"
+            course = "Rekayasa Jaringan Telekomunikasi"
+            code = "TT3104"
+            practitioner = "Ir. Hendra Wijaya, M.Sc."
+            company = "PT Telkomsel"
+            lecturer = "Dr. Ir. Budi Santoso, M.T."
+            hours = 14
+            case = 88.0
+            assessment = 90.0
+            student = 85.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_praktisi(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Praktisi Mengajar berhasil disimpan", out)
+            self.assertIn("SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_praktisi(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("TT3104", out)
+            self.assertIn("Rekayasa Jaringan", out)
+
 
 if __name__ == "__main__":
     unittest.main()

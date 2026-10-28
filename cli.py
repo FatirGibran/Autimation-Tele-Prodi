@@ -2177,7 +2177,7 @@ def cmd_eirp(args):
             antenna_gain_dbi=args.gain,
             channel_bandwidth_mhz=bw,
             eirp_dbm=calc["eirp_dbm"],
-            eirp_watt=calc["eirp_watt"],
+            eirp_watt=calc.get("eirp_watts", calc.get("eirp_watt", 0.0)),
             psd_eirp_dbm_mhz=calc["psd_eirp_dbm_mhz"],
             regulatory_status=calc["regulatory_status"],
             is_compliant=calc["is_compliant"]
