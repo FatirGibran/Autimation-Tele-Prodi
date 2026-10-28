@@ -33,7 +33,10 @@ from sanitizer import (
     sanitize_html5_ruby_annotation_elements,
     sanitize_html5_del_ins_attributes,
     sanitize_html5_form_input_attributes,
-    sanitize_html5_datalist_options
+    sanitize_html5_datalist_options,
+    sanitize_html5_col_colgroup_attributes,
+    sanitize_html5_cite_q_elements,
+    sanitize_html5_textarea_attributes
 )
 
 
@@ -1061,6 +1064,36 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("onclick=", cleaned)
         self.assertNotIn("onmouseover=", cleaned)
         self.assertNotIn("javascript:alert(1)", cleaned)
+
+    def test_sanitize_html5_col_colgroup_attributes(self):
+        raw = '<colgroup span="3" onclick="evil()" style="color:red"><col span="2" onmouseover="hack()"><col span="-5"><col span="abc"></colgroup>'
+        cleaned = sanitize_html5_col_colgroup_attributes(raw)
+        self.assertIn('span="3"', cleaned)
+        self.assertIn('span="2"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('span="-5"', cleaned)
+        self.assertNotIn('span="abc"', cleaned)
+
+    def test_sanitize_html5_cite_q_elements(self):
+        raw = '<p>Standar ITU-R: <q cite="https://itu.int/p531" onclick="bad()">Propagasi</q> <q cite="javascript:steal()">Bahaya</q> menurut <cite onfocus="evil()" style="font-weight:bold">Buku Komunikasi</cite></p>'
+        cleaned = sanitize_html5_cite_q_elements(raw)
+        self.assertIn('cite="https://itu.int/p531"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onfocus=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:steal()", cleaned)
+
+    def test_sanitize_html5_textarea_attributes(self):
+        raw = '<textarea name="desc" rows="5" cols="40" onclick="evil()" style="border:1px solid red"></textarea><textarea rows="-1" cols="evil"></textarea>'
+        cleaned = sanitize_html5_textarea_attributes(raw)
+        self.assertIn('rows="5"', cleaned)
+        self.assertIn('cols="40"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('rows="-1"', cleaned)
+        self.assertNotIn('cols="evil"', cleaned)
 
 
 if __name__ == "__main__":
