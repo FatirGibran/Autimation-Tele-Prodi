@@ -5361,6 +5361,63 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_educational_credential_schema(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits presence and completeness of Schema.org EducationalOccupationalCredential structured data
+        markup (JSON-LD or Microdata) for academic degrees, BNSP certifications, and professional competencies.
+        """
+        if not html_content:
+            return {"has_credential_schema": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        found_credentials = []
+
+        # Check JSON-LD
+        for script in soup.find_all("script", type=lambda t: t and "ld+json" in t.lower()):
+            try:
+                data = json.loads(script.string or "{}")
+                items = data if isinstance(data, list) else [data]
+                for item in items:
+                    t = item.get("@type", "")
+                    if (isinstance(t, str) and t.lower() == "educationaloccupationalcredential") or (isinstance(t, list) and any(x.lower() == "educationaloccupationalcredential" for x in t)):
+                        found_credentials.append(item)
+            except Exception:
+                continue
+
+        # Check Microdata
+        for el in soup.find_all(attrs={"itemtype": re.compile(r'schema\.org/EducationalOccupationalCredential', re.IGNORECASE)}):
+            name_el = el.find(attrs={"itemprop": "name"})
+            cat_el = el.find(attrs={"itemprop": "credentialCategory"})
+            found_credentials.append({
+                "name": name_el.get_text().strip() if name_el else "",
+                "credentialCategory": cat_el.get_text().strip() if cat_el else ""
+            })
+
+        if not found_credentials:
+            return {
+                "has_credential_schema": False,
+                "is_valid": False,
+                "issues": ["Tidak ditemukan penanda data terstruktur Schema.org EducationalOccupationalCredential (JSON-LD atau Microdata)."]
+            }
+
+        valid_count = 0
+        for idx, cred in enumerate(found_credentials, 1):
+            name = cred.get("name")
+            if not name:
+                issues.append(f"Skema Kredensial #{idx} tidak memiliki properti wajib 'name'.")
+            else:
+                valid_count += 1
+
+        return {
+            "has_credential_schema": True,
+            "total_credentials": len(found_credentials),
+            "valid_credentials": valid_count,
+            "is_valid": len(issues) == 0 and valid_count > 0,
+            "issues": issues
+        }
+
 
 
 
