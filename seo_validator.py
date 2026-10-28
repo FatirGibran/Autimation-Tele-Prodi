@@ -5500,6 +5500,54 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_font_preload_cors(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits <link rel="preload" as="font"> tags to ensure the 'crossorigin' attribute is declared.
+        According to W3C Preload specs, font preloads without crossorigin are discarded and fetched twice,
+        harming Core Web Vitals (Largest Contentful Paint) and triggering browser CORS warnings.
+        """
+        if not html_content:
+            return {"total_font_preloads": 0, "is_valid": True, "issues": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        font_preloads = []
+
+        for link in soup.find_all("link", rel=lambda r: r and "preload" in (r if isinstance(r, list) else [r])):
+            if link.get("as") == "font":
+                font_preloads.append(link)
+
+        if not font_preloads:
+            return {
+                "total_font_preloads": 0,
+                "valid_font_preloads": 0,
+                "is_valid": True,
+                "issues": [],
+                "warnings": warnings
+            }
+
+        valid_count = 0
+        for idx, fp in enumerate(font_preloads, 1):
+            href = fp.get("href", "").strip()
+            crossorigin = fp.get("crossorigin")
+
+            if not href:
+                issues.append(f"Font preload #{idx} tidak memiliki atribut 'href'.")
+            elif crossorigin is None:
+                issues.append(f"Font preload #{idx} ('{href}') tidak memiliki atribut 'crossorigin' (wajib untuk font preload agar tidak di-fetch ganda).")
+            else:
+                valid_count += 1
+
+        return {
+            "total_font_preloads": len(font_preloads),
+            "valid_font_preloads": valid_count,
+            "is_valid": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
