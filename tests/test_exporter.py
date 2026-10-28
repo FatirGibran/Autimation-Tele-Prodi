@@ -1037,6 +1037,39 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('breadcrumb: "Tutorial Routing dan Loader Remix v2"', res)
         self.assertIn("<p>Implementasi loader dan action pada Remix.</p>", res)
 
+    def test_generate_credential_json_ld(self):
+        cred = {
+            "name": "Sertifikasi Kompetensi Perekayasa Jaringan 5G",
+            "description": "Kualifikasi keahlian perencanaan dan optimasi radio access network 5G NR.",
+            "credential_category": "certificate",
+            "issuer": "Telkom University Purwokerto",
+            "issuer_url": "https://bif-pwt.telkomuniversity.ac.id",
+            "competency_required": "Perancangan Alokasi Spektrum & Numerologi 5G",
+            "url": "https://bif-pwt.telkomuniversity.ac.id/cert/5g-001"
+        }
+        res = ArticleExporter.generate_credential_json_ld(cred)
+        self.assertIn('<script type="application/ld+json">', res)
+        self.assertIn("EducationalOccupationalCredential", res)
+        self.assertIn("Sertifikasi Kompetensi Perekayasa Jaringan 5G", res)
+        self.assertIn("Perancangan Alokasi Spektrum & Numerologi 5G", res)
+
+    def test_to_qwik_mdx(self):
+        meta = {
+            "seo_title": "Panduan Qwik City MDX",
+            "meta_description": "Dokumentasi modern menggunakan resumable framework Qwik.",
+            "slug": "panduan-qwik-city",
+            "publish_date": "2026-10-29",
+            "tags": ["qwik", "mdx", "telekomunikasi"]
+        }
+        res = ArticleExporter.to_qwik_mdx(meta, "<p>Penjelasan resumability pada Qwik.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Qwik City MDX"', res)
+        self.assertIn('slug: "panduan-qwik-city"', res)
+        self.assertIn('published: "2026-10-29"', res)
+        self.assertIn("head:", res)
+        self.assertIn('name: "og:type"', res)
+        self.assertIn("<p>Penjelasan resumability pada Qwik.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
