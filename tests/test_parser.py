@@ -1902,6 +1902,89 @@ Status: Granted
         self.assertEqual(res_fail["converted_sks"], 0)
         self.assertFalse(res_fail["is_eligible"])
 
+    def test_calculate_optical_srs_threshold(self):
+        from parser import calculate_optical_srs_threshold
+        # Low power safe transmission: 50 mW over 40 km
+        res_safe = calculate_optical_srs_threshold(
+            fiber_length_km=40.0,
+            attenuation_db_km=0.2,
+            effective_area_um2=80.0,
+            input_power_mw=50.0
+        )
+        self.assertGreater(res_safe["threshold_power_mw"], 50.0)
+        self.assertTrue(res_safe["is_safe"])
+        self.assertIn("Aman", res_safe["srs_risk"])
+
+        # High power depleted transmission: 3000 mW
+        res_crit = calculate_optical_srs_threshold(
+            fiber_length_km=50.0,
+            input_power_mw=3000.0
+        )
+        self.assertFalse(res_crit["is_safe"])
+        self.assertIn("Kritis", res_crit["srs_risk"])
+
+    def test_calculate_5g_nr_eirp_psd(self):
+        from parser import calculate_5g_nr_eirp_psd
+        # Standard gNodeB macro transmitter: 46 dBm, 16 dBi antenna, 2 dB loss, 100 MHz BW
+        res = calculate_5g_nr_eirp_psd(
+            conducted_power_dbm=46.0,
+            antenna_gain_dbi=16.0,
+            cable_loss_db=2.0,
+            bandwidth_mhz=100.0,
+            is_macro_cell=True
+        )
+        self.assertEqual(res["eirp_dbm"], 60.0)
+        self.assertEqual(res["psd_conducted_dbm_mhz"], 26.0)
+        self.assertEqual(res["psd_eirp_dbm_mhz"], 40.0)
+        self.assertTrue(res["is_compliant"])
+
+    def test_calculate_satellite_faraday_rotation(self):
+        from parser import calculate_satellite_faraday_rotation
+        # L-band link at 1.5 GHz with 30 TECU
+        res_lband = calculate_satellite_faraday_rotation(
+            frequency_ghz=1.5,
+            total_electron_content_tecu=30.0
+        )
+        self.assertGreater(res_lband["rotation_angle_deg"], 0.0)
+        self.assertGreaterEqual(res_lband["polarization_loss_db"], 0.0)
+
+        # High frequency Ka-band 20 GHz (Faraday rotation negligible)
+        res_kaband = calculate_satellite_faraday_rotation(
+            frequency_ghz=20.0,
+            total_electron_content_tecu=30.0
+        )
+        self.assertLess(res_kaband["effective_angle_deg"], 1.0)
+        self.assertTrue(res_kaband["is_linear_viable"])
+
+    def test_parse_praktisi_mengajar_evaluation(self):
+        from parser import parse_praktisi_mengajar_evaluation
+        # High performing collaborative class
+        res_pass = parse_praktisi_mengajar_evaluation({
+            "course_name": "Rekayasa Jaringan Nirkabel",
+            "course_code": "TT3201",
+            "practitioner_name": "Ir. Hendra Wijaya",
+            "industry_company": "PT Telkomsel",
+            "lecturer_name": "Dr. Eng. Wahyu",
+            "teaching_hours": 14,
+            "case_study_score": 92.0,
+            "practitioner_assessment": 90.0,
+            "student_evaluation": 88.0
+        })
+        self.assertEqual(res_pass["letter_grade"], "A")
+        self.assertEqual(res_pass["converted_sks"], 4)
+        self.assertTrue(res_pass["is_eligible"])
+        self.assertIn("PT Telkomsel", res_pass["status"])
+
+        # Under threshold hours
+        res_fail = parse_praktisi_mengajar_evaluation({
+            "teaching_hours": 6,
+            "case_study_score": 50.0,
+            "practitioner_assessment": 55.0,
+            "student_evaluation": 50.0
+        })
+        self.assertEqual(res_fail["converted_sks"], 0)
+        self.assertFalse(res_fail["is_eligible"])
+
 
 if __name__ == "__main__":
     unittest.main()
