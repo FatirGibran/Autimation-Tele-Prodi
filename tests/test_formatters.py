@@ -863,6 +863,48 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("20 SKS Diakui", msg)
         self.assertIn("https://mbkm.telkomuniversity.ac.id/pmm/2026-088", msg)
 
+    def test_format_satellite_faraday_telegram(self):
+        msg = TelegramFormatter.format_satellite_faraday_telegram(
+            satellite_name="Nusantara Satu (L-Band)",
+            frequency_ghz=1.5,
+            tec_tecu=45.0,
+            rotation_angle_deg=8.4,
+            polarization_loss_db=0.095,
+            rotation_risk="Sedang",
+            is_linear_viable=True,
+            portal_url="https://sat.telkomuniversity.ac.id/faraday"
+        )
+        self.assertIn("Telemetri Faraday Rotation Satelit (ITU-R P.531)", msg)
+        self.assertIn("Nusantara Satu (L-Band)", msg)
+        self.assertIn("1.50 GHz", msg)
+        self.assertIn("45.0 TECU", msg)
+        self.assertIn("8.40°", msg)
+        self.assertIn("0.095 dB", msg)
+        self.assertIn("Polarisasi Linier Aman", msg)
+        self.assertIn("https://sat.telkomuniversity.ac.id/faraday", msg)
+
+    def test_format_praktisi_mengajar_telegram(self):
+        msg = TelegramFormatter.format_praktisi_mengajar_telegram(
+            course_name="Jaringan Akses Nirkabel 5G & Beyond",
+            practitioner_name="Ir. Hendra Wijaya, M.Sc.",
+            industry_company="PT Telkomsel",
+            lecturer_name="Dr. Ir. Budi Santoso, M.T.",
+            teaching_hours=14,
+            composite_score=88.5,
+            letter_grade="A",
+            converted_sks=3,
+            status="Lulus Rekognisi Praktisi Industri",
+            portal_url="https://mbkm.telkomuniversity.ac.id/praktisi/2026"
+        )
+        self.assertIn("Kolaborasi MBKM Praktisi Mengajar Industri", msg)
+        self.assertIn("Jaringan Akses Nirkabel 5G & Beyond", msg)
+        self.assertIn("Ir. Hendra Wijaya, M.Sc.", msg)
+        self.assertIn("PT Telkomsel", msg)
+        self.assertIn("14 Jam Pertemuan", msg)
+        self.assertIn("88.5", msg)
+        self.assertIn("3 SKS Diakui", msg)
+        self.assertIn("https://mbkm.telkomuniversity.ac.id/praktisi/2026", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
