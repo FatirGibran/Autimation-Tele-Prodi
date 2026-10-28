@@ -5737,6 +5737,59 @@ def calculate_5g_nr_eirp_psd(
     }
 
 
+def calculate_satellite_faraday_rotation(
+    frequency_ghz: float,
+    total_electron_content_tecu: float = 30.0,
+    geomagnetic_field_tesla: float = 4.5e-5
+) -> Dict[str, Any]:
+    """
+    Calculates ionospheric Faraday rotation angle and polarization mismatch loss
+    for Earth-space satellite links according to ITU-R Recommendation P.531.
+    """
+    f_ghz = max(0.1, float(frequency_ghz))
+    tec = max(1.0, float(total_electron_content_tecu))
+    b_avg = max(1e-6, float(geomagnetic_field_tesla))
+
+    # Faraday rotation angle in radians: Omega = (2.36e4 * B * TEC * 1e16) / (f_Hz)^2
+    omega_rad = (2.36e20 * b_avg * tec) / ((f_ghz * 1e9) ** 2)
+    omega_deg = math.degrees(omega_rad)
+
+    # Polarization mismatch loss for linear polarization: L_pol = -20 * log10(cos(omega))
+    # Using modulo 90 degrees for effective polarization alignment
+    eff_angle_deg = abs(omega_deg) % 90.0
+    if eff_angle_deg > 45.0:
+        eff_angle_deg = 90.0 - eff_angle_deg
+
+    cos_val = math.cos(math.radians(eff_angle_deg))
+    if cos_val > 1e-4:
+        pol_mismatch_loss_db = -20.0 * math.log10(cos_val)
+    else:
+        pol_mismatch_loss_db = 40.0
+
+    if eff_angle_deg <= 5.0:
+        rotation_risk = "Sangat Rendah (Aman untuk Polarisasi Linier)"
+        is_linear_viable = True
+    elif eff_angle_deg <= 20.0:
+        rotation_risk = "Moderat (Disarankan Kompensasi atau Polarisasi Sirkular)"
+        is_linear_viable = True
+    else:
+        rotation_risk = "Tinggi (Kritis / Wajib Menggunakan Polarisasi Sirkular RHCP/LHCP)"
+        is_linear_viable = False
+
+    return {
+        "frequency_ghz": round(f_ghz, 3),
+        "total_electron_content_tecu": round(tec, 1),
+        "geomagnetic_field_tesla": b_avg,
+        "rotation_angle_rad": round(omega_rad, 4),
+        "rotation_angle_deg": round(omega_deg, 2),
+        "effective_angle_deg": round(eff_angle_deg, 2),
+        "polarization_loss_db": round(pol_mismatch_loss_db, 2),
+        "rotation_risk": rotation_risk,
+        "is_linear_viable": is_linear_viable
+    }
+
+
+
 
 
 
