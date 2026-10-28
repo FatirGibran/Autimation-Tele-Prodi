@@ -5760,6 +5760,68 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_radiation_pattern_svg_card(
+        cls,
+        title: str,
+        eirp_dbm: float,
+        beamwidth_deg: float,
+        main_lobe_gain_dbi: float
+    ) -> str:
+        """
+        Renders an interactive SVG-enhanced 5G NR antenna array radiation pattern diagram
+        illustrating boresight main lobe, half-power beamwidth (HPBW), and sidelobe suppression.
+        """
+        return f"""    <div class="tu-5g-radiation-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Beamforming Radiation Pattern</span>
+        <span style="font-size: 11px; background: #0369a1; color: #e0f2fe; padding: 2px 8px; border-radius: 4px; font-weight: 600;">EIRP: {eirp_dbm:.1f} dBm</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 12px; overflow-x: auto;">
+        <svg viewBox="0 0 400 220" width="100%" height="220" style="max-width: 480px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background grid and concentric circles -->
+          <circle cx="200" cy="190" r="170" fill="none" stroke="#334155" stroke-dasharray="3,3" stroke-width="1" />
+          <circle cx="200" cy="190" r="120" fill="none" stroke="#334155" stroke-dasharray="3,3" stroke-width="1" />
+          <circle cx="200" cy="190" r="70" fill="none" stroke="#334155" stroke-dasharray="3,3" stroke-width="1" />
+          <line x1="30" y1="190" x2="370" y2="190" stroke="#475569" stroke-width="1.5" />
+          <line x1="200" y1="190" x2="200" y2="20" stroke="#475569" stroke-width="1.5" />
+
+          <!-- Angular radial guide lines -->
+          <line x1="200" y1="190" x2="80" y2="70" stroke="#334155" stroke-dasharray="2,2" />
+          <line x1="200" y1="190" x2="320" y2="70" stroke="#334155" stroke-dasharray="2,2" />
+
+          <!-- Sidelobes -->
+          <path d="M 170 190 Q 130 160 140 130 Q 155 125 175 160 Z" fill="#0284c7" opacity="0.3" stroke="#38bdf8" stroke-width="1" />
+          <path d="M 230 190 Q 270 160 260 130 Q 245 125 225 160 Z" fill="#0284c7" opacity="0.3" stroke="#38bdf8" stroke-width="1" />
+
+          <!-- Main Boresight Lobe -->
+          <path d="M 180 190 C 160 110, 175 30, 200 25 C 225 30, 240 110, 220 190 Z" fill="url(#nrBeamGradient)" stroke="#38bdf8" stroke-width="2" />
+
+          <!-- Beamwidth angle indicator arc -->
+          <path d="M 185 85 A 110 110 0 0 1 215 85" fill="none" stroke="#f59e0b" stroke-width="2" />
+          <text x="200" y="105" fill="#f59e0b" font-size="10" text-anchor="middle" font-weight="bold">HPBW: {beamwidth_deg:.1f}&deg;</text>
+
+          <!-- Labels -->
+          <text x="200" y="16" fill="#38bdf8" font-size="11" text-anchor="middle" font-weight="bold">Main Lobe Gain: +{main_lobe_gain_dbi:.1f} dBi (0&deg; Boresight)</text>
+          <text x="360" y="185" fill="#94a3b8" font-size="9" text-anchor="end">+90&deg;</text>
+          <text x="40" y="185" fill="#94a3b8" font-size="9" text-anchor="start">-90&deg;</text>
+
+          <defs>
+            <linearGradient id="nrBeamGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#0369a1" stop-opacity="0.4" />
+              <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.85" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Radiated EIRP: <strong style="color: #38bdf8;">{eirp_dbm:.1f} dBm</strong></div>
+        <div>Main Lobe: <strong style="color: #10b981;">+{main_lobe_gain_dbi:.1f} dBi</strong></div>
+        <div>HPBW (-3dB): <strong style="color: #f59e0b;">{beamwidth_deg:.1f}&deg;</strong></div>
+      </div>
+    </div>"""
+
 
 
 
