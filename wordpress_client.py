@@ -927,6 +927,15 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
         return self._send_request(req)
 
+    def update_site_settings(self, settings_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Updates global WordPress site configuration settings via REST API (/wp/v2/settings).
+        """
+        endpoint = f"{self.api_url}/settings"
+        data = json.dumps(settings_data).encode("utf-8")
+        req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+        return self._send_request(req)
+
 
 
 
