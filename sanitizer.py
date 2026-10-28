@@ -1795,6 +1795,30 @@ def sanitize_html5_datalist_options(html: str) -> str:
     return out
 
 
+def sanitize_html5_col_colgroup_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <colgroup> and <col> table column elements by stripping inline event handlers,
+    removing dangerous style attributes, and validating span attributes to ensure positive integer values.
+    """
+    if not html or not re.search(r'<(?:col|colgroup)\b', html, re.IGNORECASE):
+        return html
+
+    def fix_col_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        span_m = re.search(r'\bspan=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if span_m:
+            span_val = span_m.group(1).strip()
+            if not span_val.isdigit() or int(span_val) <= 0 or int(span_val) > 1000:
+                tag = re.sub(r'\s+span=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<(?:col|colgroup)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_col_tag, html, flags=re.IGNORECASE)
+
+
 
 
 
