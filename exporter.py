@@ -1977,6 +1977,33 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_credential_json_ld(credential_data: Dict[str, Any]) -> str:
+        """
+        Generates Schema.org EducationalOccupationalCredential JSON-LD structured data markup
+        for study program professional certifications, BNSP competencies, and academic credentials.
+        """
+        schema: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "EducationalOccupationalCredential",
+            "name": credential_data.get("name", "").strip(),
+            "description": credential_data.get("description", "").strip(),
+            "credentialCategory": credential_data.get("credential_category", "certificate"),
+            "recognizedBy": {
+                "@type": "EducationalOrganization",
+                "name": credential_data.get("issuer", "Telkom University Purwokerto"),
+                "url": credential_data.get("issuer_url", "https://bif-pwt.telkomuniversity.ac.id")
+            }
+        }
+        if credential_data.get("competency_required"):
+            schema["competencyRequired"] = credential_data["competency_required"].strip()
+        if credential_data.get("url"):
+            schema["url"] = credential_data["url"].strip()
+        if credential_data.get("valid_for"):
+            schema["validFor"] = credential_data["valid_for"].strip()
+
+        return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2, ensure_ascii=False)}\n</script>'
+
 
 
 
