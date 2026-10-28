@@ -5916,6 +5916,98 @@ def calculate_optical_spm_broadening(
     }
 
 
+def calculate_5g_nr_carrier_aggregation_throughput(
+    component_carriers: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP TS 38.306 aggregate multi-carrier peak data rate throughput for 5G NR Carrier Aggregation (CA).
+    Evaluates individual Component Carriers (CC), MIMO layer efficiency, modulation coding, and total bandwidth aggregation.
+    """
+    if not component_carriers:
+        return {
+            "num_carriers": 0,
+            "total_bandwidth_mhz": 0.0,
+            "total_throughput_mbps": 0.0,
+            "total_throughput_gbps": 0.0,
+            "carriers": [],
+            "spectral_efficiency_bps_hz": 0.0
+        }
+
+    # Bandwidth to PRB lookup table for numerology mu=1 (30 kHz SCS) in FR1
+    prb_table_mu1 = {
+        10: 24,
+        15: 38,
+        20: 51,
+        40: 106,
+        50: 133,
+        60: 162,
+        80: 217,
+        90: 245,
+        100: 273
+    }
+
+    # Modulation order Qm lookup
+    qm_table = {
+        "QPSK": 2,
+        "16QAM": 4,
+        "64QAM": 6,
+        "256QAM": 8,
+        "1024QAM": 10
+    }
+
+    r_max = 948.0 / 1024.0  # Max code rate ~0.92578
+    total_bw = 0.0
+    total_rate_mbps = 0.0
+    carrier_details = []
+
+    for idx, cc in enumerate(component_carriers, 1):
+        name = str(cc.get("name", f"CC{idx}"))
+        bw_mhz = int(cc.get("bandwidth_mhz", 100))
+        mu = int(cc.get("numerology_mu", 1))
+        mimo_layers = max(1, int(cc.get("mimo_layers", 4)))
+        mod_str = str(cc.get("modulation", "256QAM")).upper().replace("-", "")
+        qm = qm_table.get(mod_str, 8)
+        scaling_factor = float(cc.get("scaling_factor", 1.0))
+        overhead = float(cc.get("overhead", 0.14))  # FR1 DL standard overhead
+
+        # Approximate PRBs
+        prb = cc.get("prb")
+        if not prb:
+            prb = prb_table_mu1.get(bw_mhz, int(bw_mhz * 2.73))
+
+        # Average symbol duration Ts^mu = 10^-3 / (14 * 2^mu)
+        symbols_per_sec = 14 * (2 ** mu) * 1000.0
+
+        # Throughput for this CC in Mbps: 10^-6 * (layers * Qm * f * Rmax * (PRB * 12 * symbols/sec) * (1 - OH))
+        data_rate_bps = mimo_layers * qm * scaling_factor * r_max * (prb * 12 * symbols_per_sec) * (1.0 - overhead)
+        rate_mbps = data_rate_bps * 1e-6
+
+        total_bw += bw_mhz
+        total_rate_mbps += rate_mbps
+
+        carrier_details.append({
+            "carrier": name,
+            "bandwidth_mhz": bw_mhz,
+            "numerology_mu": mu,
+            "prb": prb,
+            "mimo_layers": mimo_layers,
+            "modulation": mod_str,
+            "qm": qm,
+            "data_rate_mbps": round(rate_mbps, 2)
+        })
+
+    spectral_eff = (total_rate_mbps * 1e6) / (total_bw * 1e6) if total_bw > 0 else 0.0
+
+    return {
+        "num_carriers": len(carrier_details),
+        "total_bandwidth_mhz": round(total_bw, 1),
+        "total_throughput_mbps": round(total_rate_mbps, 2),
+        "total_throughput_gbps": round(total_rate_mbps / 1000.0, 3),
+        "spectral_efficiency_bps_hz": round(spectral_eff, 2),
+        "carriers": carrier_details
+    }
+
+
 
 
 
