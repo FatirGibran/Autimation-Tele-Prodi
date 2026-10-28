@@ -2425,6 +2425,83 @@ class TestCLI(unittest.TestCase):
             self.assertIn("TT3104", out)
             self.assertIn("Rekayasa Jaringan", out)
 
+    def test_cmd_spm(self):
+        class ArgsAdd:
+            action = "add"
+            power = 0.5
+            length = 80.0
+            link = "Optic-Core-01"
+            gamma = 1.3
+            att = 0.2
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_spm(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan SPM berhasil disimpan", out)
+            self.assertIn("B-Integral:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_spm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Optic-Core-01", out)
+            self.assertIn("0.500", out)
+
+    def test_cmd_ca(self):
+        class ArgsAdd:
+            action = "add"
+            pcc = 100
+            scc1 = 40
+            scc2 = 20
+            config = "CA-100+40+20MHz"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ca(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR CA berhasil disimpan", out)
+            self.assertIn("Throughput:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ca(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("CA-100+40+20MHz", out)
+            self.assertIn("160", out)
+
+    def test_cmd_p2mw(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Dewi Sartika"
+            nim = "1101210088"
+            biz = "IoT Smart Agriculture Kit"
+            stage = "Tahap Bertumbuh"
+            category = "Teknologi Terapan"
+            pitch = 88.0
+            proto = 90.0
+            finance = 86.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_p2mw(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan P2MW berhasil disimpan", out)
+            self.assertIn("SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_p2mw(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("1101210088", out)
+            self.assertIn("IoT Smart Agricult", out)
+
 
 if __name__ == "__main__":
     unittest.main()
