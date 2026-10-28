@@ -5689,6 +5689,55 @@ def calculate_optical_srs_threshold(
     }
 
 
+def calculate_5g_nr_eirp_psd(
+    conducted_power_dbm: float,
+    antenna_gain_dbi: float,
+    cable_loss_db: float = 2.0,
+    bandwidth_mhz: float = 20.0,
+    is_macro_cell: bool = True
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP TS 38.104 5G NR base station Equivalent Isotropically Radiated Power (EIRP)
+    and Power Spectral Density (PSD) for spectrum emissions compliance.
+    """
+    p_tx_dbm = float(conducted_power_dbm)
+    g_tx_dbi = float(antenna_gain_dbi)
+    l_cable_db = max(0.0, float(cable_loss_db))
+    bw_mhz = max(1.4, float(bandwidth_mhz))
+
+    eirp_dbm = p_tx_dbm + g_tx_dbi - l_cable_db
+    eirp_w = (10.0 ** ((eirp_dbm - 30.0) / 10.0))
+
+    psd_conducted_dbm_mhz = p_tx_dbm - (10.0 * math.log10(bw_mhz))
+    psd_eirp_dbm_mhz = eirp_dbm - (10.0 * math.log10(bw_mhz))
+
+    max_limit_dbm = 65.0 if is_macro_cell else 43.0
+    is_compliant = eirp_dbm <= max_limit_dbm
+
+    if eirp_dbm <= (max_limit_dbm - 7.0):
+        regulatory_status = "Optimal (Sesuai Standar Kominfo / 3GPP)"
+    elif eirp_dbm <= max_limit_dbm:
+        regulatory_status = "Batas Atas Regulasi (Mendekati Limit Emisi)"
+    else:
+        regulatory_status = "Melebihi Ambang Regulasi (Daya Terpancar Terlalu Tinggi)"
+
+    return {
+        "conducted_power_dbm": round(p_tx_dbm, 2),
+        "antenna_gain_dbi": round(g_tx_dbi, 2),
+        "cable_loss_db": round(l_cable_db, 2),
+        "bandwidth_mhz": round(bw_mhz, 2),
+        "eirp_dbm": round(eirp_dbm, 2),
+        "eirp_watts": round(eirp_w, 2),
+        "psd_conducted_dbm_mhz": round(psd_conducted_dbm_mhz, 2),
+        "psd_eirp_dbm_mhz": round(psd_eirp_dbm_mhz, 2),
+        "is_macro_cell": is_macro_cell,
+        "max_limit_eirp_dbm": max_limit_dbm,
+        "regulatory_status": regulatory_status,
+        "is_compliant": is_compliant
+    }
+
+
+
 
 
 
