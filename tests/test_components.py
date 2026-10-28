@@ -2085,6 +2085,92 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("20 Slot", html)
         self.assertIn("<svg", html)
 
+    def test_render_optical_srs_card(self):
+        html = EditorialComponents.render_optical_srs_card(
+            title="Tautan DWDM Backbone Jawa Bagian Timur",
+            input_power_mw=25.0,
+            threshold_power_mw=65.4,
+            fiber_length_km=80.0,
+            srs_margin_db=4.18,
+            srs_risk="Rendah (Aman)",
+            is_safe=True
+        )
+        self.assertIn("tu-optical-srs-card", html)
+        self.assertIn("Tautan DWDM Backbone Jawa Bagian Timur", html)
+        self.assertIn("25.00 mW", html)
+        self.assertIn("65.40 mW", html)
+        self.assertIn("+4.18 dB", html)
+        self.assertIn("Lolos Uji SRS", html)
+
+    def test_render_5g_nr_eirp_psd_card(self):
+        html = EditorialComponents.render_5g_nr_eirp_psd_card(
+            cell_id="NR-CELL-BDG-01",
+            conducted_power_dbm=43.0,
+            antenna_gain_dbi=18.0,
+            eirp_dbm=61.0,
+            psd_eirp_dbm_mhz=41.0,
+            regulatory_status="Compliant (Kominfo Standard)",
+            is_compliant=True
+        )
+        self.assertIn("tu-5g-eirp-card", html)
+        self.assertIn("NR-CELL-BDG-01", html)
+        self.assertIn("43.0 dBm", html)
+        self.assertIn("+18.0 dBi", html)
+        self.assertIn("61.00 dBm", html)
+        self.assertIn("41.00 dBm/MHz", html)
+        self.assertIn("SESUAI AMBANG REGULASI", html)
+
+    def test_render_satellite_faraday_card(self):
+        html = EditorialComponents.render_satellite_faraday_card(
+            satellite_name="Nusantara Satu (L-Band)",
+            frequency_ghz=1.5,
+            tec_tecu=45.0,
+            rotation_angle_deg=8.4,
+            polarization_loss_db=0.095,
+            rotation_risk="Sedang",
+            is_linear_viable=True
+        )
+        self.assertIn("tu-satellite-faraday-card", html)
+        self.assertIn("Nusantara Satu (L-Band)", html)
+        self.assertIn("45.0 TECU", html)
+        self.assertIn("8.40&deg;", html)
+        self.assertIn("0.095 dB", html)
+        self.assertIn("POLARISASI LINIER AMAN", html)
+
+    def test_render_praktisi_mengajar_card(self):
+        html = EditorialComponents.render_praktisi_mengajar_card(
+            course_name="Jaringan Akses Nirkabel 5G &amp; Beyond",
+            practitioner_name="Ir. Hendra Wijaya, M.Sc.",
+            industry_company="PT Telkomsel Regional Jabar",
+            lecturer_name="Dr. Ir. Budi Santoso, M.T.",
+            teaching_hours=14,
+            composite_score=88.5,
+            letter_grade="A",
+            converted_sks=3,
+            status="Lulus Rekognisi Praktisi Industri"
+        )
+        self.assertIn("tu-praktisi-mengajar-card", html)
+        self.assertIn("Jaringan Akses Nirkabel 5G &amp; Beyond", html)
+        self.assertIn("Ir. Hendra Wijaya, M.Sc.", html)
+        self.assertIn("PT Telkomsel Regional Jabar", html)
+        self.assertIn("14 Jam", html)
+        self.assertIn("88.5 (A)", html)
+        self.assertIn("3 SKS", html)
+
+    def test_render_5g_nr_radiation_pattern_svg_card(self):
+        html = EditorialComponents.render_5g_nr_radiation_pattern_svg_card(
+            title="Diagram Pola Radiasi Antena Panel 5G Massive MIMO",
+            eirp_dbm=62.5,
+            beamwidth_deg=15.0,
+            main_lobe_gain_dbi=24.0
+        )
+        self.assertIn("tu-5g-radiation-svg-card", html)
+        self.assertIn("Diagram Pola Radiasi Antena Panel 5G Massive MIMO", html)
+        self.assertIn("62.5 dBm", html)
+        self.assertIn("HPBW: 15.0&deg;", html)
+        self.assertIn("+24.0 dBi", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
