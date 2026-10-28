@@ -5610,6 +5610,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_eirp_psd_card(
+        cls,
+        cell_id: str,
+        conducted_power_dbm: float,
+        antenna_gain_dbi: float,
+        eirp_dbm: float,
+        psd_eirp_dbm_mhz: float,
+        regulatory_status: str,
+        is_compliant: bool
+    ) -> str:
+        """
+        Renders a cellular 5G NR Effective Isotropic Radiated Power (EIRP)
+        and Power Spectral Density (PSD) compliance telemetry card.
+        """
+        badge_bg = "#ecfdf5" if is_compliant else "#fef2f2"
+        badge_color = "#047857" if is_compliant else "#b91c1c"
+        border_color = "#0284c7" if is_compliant else "#ef4444"
+
+        return f"""    <div class="tu-5g-eirp-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-5g-eirp-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0284c7; font-size: 13px; text-transform: uppercase;">5G NR Radiated Power &amp; Regulatory Compliance</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{regulatory_status}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Cell Transceiver #{cell_id}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Conducted Power (Tx)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{conducted_power_dbm:.1f} dBm</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Gain Antena Array</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">+{antenna_gain_dbi:.1f} dBi</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">EIRP Power Spectral Density</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{psd_eirp_dbm_mhz:.2f} dBm/MHz</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 12px; border-radius: 6px; border-left: 4px solid {border_color}; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: {badge_color}; font-weight: 600;">Total Radiated EIRP:</span>
+          <div style="font-size: 18px; font-weight: 800; color: {badge_color};">{eirp_dbm:.2f} dBm</div>
+        </div>
+        <div style="text-align: right; font-size: 12px; color: #475569;">
+          Kepatuhan Regulasi: <strong style="color: {badge_color};">{'SESUAI AMBANG REGULASI' if is_compliant else 'MELEBIHI AMBANG REGULASI'}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
