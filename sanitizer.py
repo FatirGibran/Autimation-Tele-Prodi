@@ -1741,6 +1741,31 @@ def sanitize_html5_del_ins_attributes(html: str) -> str:
     return re.sub(r'<(?:del|ins)\b[^>]*>', fix_edit_tag, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_form_input_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <input> form controls by stripping inline event handlers, style attributes,
+    and validating formaction URLs against dangerous pseudo-protocols (javascript:, data:).
+    """
+    if not html or "<input" not in html.lower():
+        return html
+
+    def fix_input(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        fa_m = re.search(r'\bformaction=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if fa_m:
+            fa_val = fa_m.group(1).strip().lower()
+            if fa_val.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', fa_val):
+                tag = re.sub(r'\s+formaction=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<input\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_input, html, flags=re.IGNORECASE)
+
+
+
 
 
 
