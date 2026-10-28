@@ -27,7 +27,10 @@ from parser import (
     parse_pmm_mbkm_evaluation,
     calculate_optical_srs_threshold,
     calculate_5g_nr_eirp_psd,
-    parse_praktisi_mengajar_evaluation
+    parse_praktisi_mengajar_evaluation,
+    calculate_optical_spm_broadening,
+    calculate_5g_nr_carrier_aggregation_throughput,
+    parse_p2mw_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2240,6 +2243,120 @@ def cmd_praktisi(args):
             print(f"{r['id']:<4} | {r['course_code']:<8} | {r['course_name'][:18]:<20} | {r['practitioner_name'][:16]:<18} | {r['converted_sks']:<4} | {r['letter_grade']}")
 
 
+def cmd_spm(args):
+    if args.action == "add":
+        if args.power is None or args.length is None:
+            print("Error: Argumen --power (W) dan --length (km) wajib diisi.")
+            sys.exit(1)
+        link = args.link if args.link else "DWDM-Link-01"
+        gamma = args.gamma if args.gamma is not None else 1.3
+        att = args.att if args.att is not None else 0.2
+        calc = calculate_optical_spm_broadening(
+            fiber_length_km=args.length,
+            peak_power_w=args.power,
+            non_linear_coeff_gamma=gamma,
+            attenuation_db_km=att
+        )
+        sid = storage.record_optical_spm(
+            link_name=link,
+            peak_power_w=args.power,
+            fiber_length_km=args.length,
+            phi_max_rad=calc["phi_max_rad"],
+            b_integral=calc["b_integral"],
+            broadening_factor=calc["broadening_factor"],
+            spm_risk=calc["spm_risk"],
+            is_acceptable=calc["is_acceptable"]
+        )
+        print(f"Catatan SPM berhasil disimpan dengan ID: {sid} (B-Integral: {calc['b_integral']:.2f} rad, Pelebaran: {calc['broadening_factor']:.2f}x)")
+    else:
+        records = storage.list_optical_spm(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan SPM serat optik yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'LINK':<18} | {'DAYA (W)':<10} | {'PANJANG':<10} | {'B-INT (RAD)':<12} | {'RISIKO'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['link_name'][:16]:<18} | {r['peak_power_w']:<10.3f} | {r['fiber_length_km']:<10.1f} | {r['b_integral']:<12.2f} | {r['spm_risk']}")
+
+
+def cmd_ca(args):
+    if args.action == "add":
+        pcc = args.pcc if args.pcc is not None else 100
+        scc1 = args.scc1 if args.scc1 is not None else 40
+        scc2 = args.scc2 if args.scc2 is not None else 20
+        config_name = args.config if args.config else f"CA-{pcc}+{scc1}+{scc2}MHz"
+        ccs = [
+            {"name": "PCC", "bandwidth_mhz": pcc, "mimo_layers": 4, "modulation": "256QAM"},
+            {"name": "SCC1", "bandwidth_mhz": scc1, "mimo_layers": 4, "modulation": "256QAM"}
+        ]
+        if scc2 > 0:
+            ccs.append({"name": "SCC2", "bandwidth_mhz": scc2, "mimo_layers": 4, "modulation": "256QAM"})
+
+        calc = calculate_5g_nr_carrier_aggregation_throughput(ccs)
+        cid = storage.record_nr_ca_throughput(
+            configuration_name=config_name,
+            num_carriers=calc["num_carriers"],
+            total_bandwidth_mhz=calc["total_bandwidth_mhz"],
+            total_throughput_mbps=calc["total_throughput_mbps"],
+            total_throughput_gbps=calc["total_throughput_gbps"],
+            spectral_efficiency_bps_hz=calc["spectral_efficiency_bps_hz"]
+        )
+        print(f"Catatan 5G NR CA berhasil disimpan dengan ID: {cid} (Throughput: {calc['total_throughput_gbps']:.3f} Gbps, Total BW: {calc['total_bandwidth_mhz']:.0f} MHz)")
+    else:
+        records = storage.list_nr_ca_throughputs(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR Carrier Aggregation yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CONFIG':<22} | {'CC':<4} | {'BW (MHZ)':<10} | {'PEAK (GBPS)':<12} | {'EFF (BPS/HZ)'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['configuration_name'][:20]:<22} | {r['num_carriers']:<4} | {r['total_bandwidth_mhz']:<10.0f} | {r['total_throughput_gbps']:<12.3f} | {r['spectral_efficiency_bps_hz']:<12.2f}")
+
+
+def cmd_p2mw(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.biz:
+            print("Error: Argumen --name, --nim, dan --biz wajib diisi.")
+            sys.exit(1)
+        stage = args.stage if args.stage else "Tahap Awal"
+        category = args.category if args.category else "Teknologi Terapan"
+        pitch = args.pitch if args.pitch is not None else 85.0
+        proto = args.proto if args.proto is not None else 85.0
+        finance = args.finance if args.finance is not None else 85.0
+
+        eval_res = parse_p2mw_evaluation({
+            "student_name": args.name,
+            "nim": args.nim,
+            "business_name": args.biz,
+            "business_stage": stage,
+            "business_category": category,
+            "pitch_bmc_score": pitch,
+            "prototype_progress_score": proto,
+            "financial_governance_score": finance
+        })
+        pid = storage.record_p2mw_startup(
+            student_name=args.name,
+            nim=args.nim,
+            business_name=args.biz,
+            business_stage=stage,
+            business_category=category,
+            composite_score=eval_res["composite_score"],
+            letter_grade=eval_res["letter_grade"],
+            converted_sks=eval_res["converted_sks"],
+            status=eval_res["status"]
+        )
+        print(f"Catatan P2MW berhasil disimpan dengan ID: {pid} ({eval_res['converted_sks']} SKS Diakui, Status: {eval_res['letter_grade']})")
+    else:
+        records = storage.list_p2mw_startups(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan P2MW yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'STARTUP':<20} | {'TAHAP':<16} | {'SKS':<4} | {'GRADE'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['nim']:<10} | {r['business_name'][:18]:<20} | {r['business_stage'][:14]:<16} | {r['converted_sks']:<4} | {r['letter_grade']}")
+
+
 
 def main():
 
@@ -3075,6 +3192,41 @@ def main():
     praktisi_parser.add_argument("--student", type=float, default=85.0, help="Nilai kuesioner evaluasi mahasiswa (0-100)")
     praktisi_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     praktisi_parser.set_defaults(func=cmd_praktisi)
+
+    # SPM command
+    spm_parser = subparsers.add_parser("spm", help="Kelola evaluasi pergeseran fase nonlinier SPM serat optik (list, add)")
+    spm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi SPM")
+    spm_parser.add_argument("--link", default="DWDM-Link-01", help="Nama tautan serat optik")
+    spm_parser.add_argument("--power", type=float, help="Daya puncak optik peak power P0 (Watt)")
+    spm_parser.add_argument("--length", type=float, help="Panjang bentang serat optik (km)")
+    spm_parser.add_argument("--gamma", type=float, default=1.3, help="Koefisien nonlinier gamma (1/(W*km))")
+    spm_parser.add_argument("--att", type=float, default=0.2, help="Koefisien redaman serat optik (dB/km)")
+    spm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    spm_parser.set_defaults(func=cmd_spm)
+
+    # Carrier Aggregation command
+    ca_parser = subparsers.add_parser("ca", help="Kelola evaluasi aggregate throughput 5G NR Carrier Aggregation (list, add)")
+    ca_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi 5G CA")
+    ca_parser.add_argument("--config", default="CA-100+40MHz", help="Nama konfigurasi Carrier Aggregation")
+    ca_parser.add_argument("--pcc", type=int, default=100, help="Bandwidth Primary Component Carrier PCC (MHz)")
+    ca_parser.add_argument("--scc1", type=int, default=40, help="Bandwidth Secondary Component Carrier SCC1 (MHz)")
+    ca_parser.add_argument("--scc2", type=int, default=0, help="Bandwidth Secondary Component Carrier SCC2 (MHz, opsional)")
+    ca_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    ca_parser.set_defaults(func=cmd_ca)
+
+    # P2MW command
+    p2mw_parser = subparsers.add_parser("p2mw", help="Kelola evaluasi & rekognisi MBKM Wirausaha Mahasiswa P2MW (list, add)")
+    p2mw_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan rekognisi P2MW")
+    p2mw_parser.add_argument("--name", help="Nama lengkap mahasiswa peserta P2MW")
+    p2mw_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    p2mw_parser.add_argument("--biz", help="Nama produk usaha / startup rintisan")
+    p2mw_parser.add_argument("--stage", default="Tahap Awal", help="Tahapan usaha (Tahap Awal, Tahap Bertumbuh)")
+    p2mw_parser.add_argument("--category", default="Teknologi Terapan", help="Kategori usaha P2MW")
+    p2mw_parser.add_argument("--pitch", type=float, default=85.0, help="Nilai Business Model Canvas & Pitching (0-100)")
+    p2mw_parser.add_argument("--proto", type=float, default=85.0, help="Nilai kemajuan prototipe dan traksi (0-100)")
+    p2mw_parser.add_argument("--finance", type=float, default=85.0, help="Nilai akuntabilitas keuangan (0-100)")
+    p2mw_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    p2mw_parser.set_defaults(func=cmd_p2mw)
 
 
     args = parser.parse_args()
