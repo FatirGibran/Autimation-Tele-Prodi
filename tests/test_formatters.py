@@ -905,6 +905,48 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("3 SKS Diakui", msg)
         self.assertIn("https://mbkm.telkomuniversity.ac.id/praktisi/2026", msg)
 
+    def test_format_satellite_rain_attenuation_telegram(self):
+        msg = TelegramFormatter.format_satellite_rain_attenuation_telegram(
+            satellite_name="Telkom-4 (Ku-Band)",
+            frequency_ghz=12.25,
+            elevation_angle_deg=52.0,
+            rain_rate_mm_h=95.0,
+            predicted_attenuation_db=7.85,
+            attenuation_risk="Sedang",
+            is_link_viable=True,
+            portal_url="https://sat.telkomuniversity.ac.id/rain"
+        )
+        self.assertIn("Telemetri Redaman Hujan Satelit (ITU-R P.618)", msg)
+        self.assertIn("Telkom-4 (Ku-Band)", msg)
+        self.assertIn("12.25 GHz", msg)
+        self.assertIn("52.0°", msg)
+        self.assertIn("95.0 mm/jam", msg)
+        self.assertIn("7.85 dB", msg)
+        self.assertIn("Tautan Andal & Stabil", msg)
+        self.assertIn("https://sat.telkomuniversity.ac.id/rain", msg)
+
+    def test_format_p2mw_startup_telegram(self):
+        msg = TelegramFormatter.format_p2mw_startup_telegram(
+            student_name="Dimas Pratama",
+            nim="1201202050",
+            business_name="AgroTele-IoT",
+            business_stage="Tahap Bertumbuh",
+            category="Teknologi Terapan & IoT",
+            composite_score=88.5,
+            letter_grade="A",
+            converted_sks=6,
+            status="Lolos Pendanaan & Inkubasi P2MW Tahap Bertumbuh",
+            portal_url="https://mbkm.telkomuniversity.ac.id/p2mw/2026-050"
+        )
+        self.assertIn("Apresiasi Inkubasi Startup Mahasiswa P2MW Kemendikbudristek", msg)
+        self.assertIn("AgroTele-IoT", msg)
+        self.assertIn("Dimas Pratama", msg)
+        self.assertIn("1201202050", msg)
+        self.assertIn("Tahap Bertumbuh", msg)
+        self.assertIn("88.5", msg)
+        self.assertIn("6 SKS Diakui", msg)
+        self.assertIn("https://mbkm.telkomuniversity.ac.id/p2mw/2026-050", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
