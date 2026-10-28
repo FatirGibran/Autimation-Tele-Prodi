@@ -910,6 +910,15 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
         return self._send_request(req)
 
+    def delete_page(self, page_id: int, force: bool = True) -> Dict[str, Any]:
+        """
+        Deletes a static WordPress page by its unique numeric page ID via REST API (/wp/v2/pages/{id}).
+        """
+        force_param = "true" if force else "false"
+        endpoint = f"{self.api_url}/pages/{int(page_id)}?force={force_param}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="DELETE")
+        return self._send_request(req)
+
 
 
 
