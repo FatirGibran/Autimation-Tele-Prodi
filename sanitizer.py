@@ -1819,6 +1819,30 @@ def sanitize_html5_col_colgroup_attributes(html: str) -> str:
     return re.sub(r'<(?:col|colgroup)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_col_tag, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_cite_q_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <cite> and <q> quotation elements by stripping inline event handlers,
+    contenteditable attributes, and validating the cite URL attribute against unsafe pseudo-protocols (javascript:, data:).
+    """
+    if not html or not re.search(r'<(?:cite|q)\b', html, re.IGNORECASE):
+        return html
+
+    def fix_quote_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        cite_m = re.search(r'\bcite=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if cite_m:
+            cite_val = cite_m.group(1).strip().lower()
+            if cite_val.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', cite_val):
+                tag = re.sub(r'\s+cite=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<(?:cite|q)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_quote_tag, html, flags=re.IGNORECASE)
+
+
 
 
 
