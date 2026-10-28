@@ -5418,6 +5418,45 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_web_app_manifest_and_theme(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Web App Manifest link and theme-color meta tag for Progressive Web App (PWA) readiness,
+        mobile browser chrome theming, and modern mobile installation UX.
+        """
+        if not html_content:
+            return {"has_manifest": False, "has_theme_color": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        manifest_link = soup.find("link", rel=lambda r: r and "manifest" in (r if isinstance(r, list) else [r]))
+        manifest_url = manifest_link.get("href", "").strip() if manifest_link else ""
+
+        theme_meta = soup.find("meta", attrs={"name": lambda n: n and n.lower() == "theme-color"})
+        theme_color = theme_meta.get("content", "").strip() if theme_meta else ""
+
+        if not manifest_link:
+            issues.append("Tag <link rel='manifest'> tidak ditemukan dalam header dokumen.")
+        elif not manifest_url:
+            issues.append("Tag manifest tidak memiliki atribut 'href'.")
+
+        if not theme_meta:
+            warnings.append("Tag meta <meta name='theme-color'> sebaiknya disertakan untuk branding address bar peramban mobile.")
+        elif not re.match(r'^(?:#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|hsl\([^)]+\))$', theme_color):
+            warnings.append(f"Format nilai theme-color '{theme_color}' tidak standar (disarankan format hex, rgb, atau hsl).")
+
+        return {
+            "has_manifest": bool(manifest_link and manifest_url),
+            "has_theme_color": bool(theme_meta and theme_color),
+            "manifest_url": manifest_url,
+            "theme_color": theme_color,
+            "is_valid": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
