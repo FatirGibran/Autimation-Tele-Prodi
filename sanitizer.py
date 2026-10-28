@@ -1843,6 +1843,31 @@ def sanitize_html5_cite_q_elements(html: str) -> str:
     return re.sub(r'<(?:cite|q)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_quote_tag, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_textarea_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <textarea> form control elements by removing inline event handlers,
+    stripping dangerous style/contenteditable attributes, and ensuring rows/cols attributes are valid integers.
+    """
+    if not html or "<textarea" not in html.lower():
+        return html
+
+    def fix_textarea(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        for dim in ("rows", "cols", "maxlength", "minlength"):
+            dim_m = re.search(rf'\b{dim}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if dim_m:
+                val = dim_m.group(1).strip()
+                if not val.isdigit() or int(val) <= 0:
+                    tag = re.sub(rf'\s+{dim}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<textarea\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_textarea, html, flags=re.IGNORECASE)
+
+
 
 
 
