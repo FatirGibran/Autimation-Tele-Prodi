@@ -1108,6 +1108,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ca_config ON nr_ca_throughput_records(configuration_name);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ca_bandwidth ON nr_ca_throughput_records(total_bandwidth_mhz);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS p2mw_startup_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    business_name TEXT NOT NULL,
+                    business_stage TEXT NOT NULL,
+                    business_category TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_p2mw_nim ON p2mw_startup_records(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_p2mw_stage ON p2mw_startup_records(business_stage);")
 
 
 
@@ -5149,6 +5166,58 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM nr_ca_throughput_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_p2mw_startup(
+        self,
+        student_name: str,
+        nim: str,
+        business_name: str,
+        business_stage: str,
+        business_category: str,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str
+    ) -> int:
+        """
+        Stores a P2MW student technology startup incubation and SKS recognition record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO p2mw_startup_records (
+                    student_name, nim, business_name, business_stage,
+                    business_category, composite_score, letter_grade,
+                    converted_sks, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(), nim.strip(), business_name.strip(),
+                business_stage.strip(), business_category.strip(), float(composite_score),
+                letter_grade.strip(), int(converted_sks), status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_p2mw_startups(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored P2MW student startup records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM p2mw_startup_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_p2mw_startup_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a P2MW student startup record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM p2mw_startup_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
