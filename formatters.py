@@ -1337,6 +1337,34 @@ class TelegramFormatter:
             f"✨ *Evaluasi redaman atmosfer propagasi satelit terverifikasi.*"
         )
 
+    @staticmethod
+    def format_p2mw_startup_telegram(
+        student_name: str,
+        nim: str,
+        business_name: str,
+        business_stage: str,
+        category: str,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student P2MW entrepreneurship milestone announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Wirausaha:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🚀 **Apresiasi Inkubasi Startup Mahasiswa P2MW Kemendikbudristek**\n\n"
+            f"🏢 **Nama Usaha / Startup:** {business_name.strip()}\n"
+            f"👤 **Ketua Pengusul:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏷️ **Kategori:** {category.strip()} (`Tahap: {business_stage.strip()}`)\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Nilai: {letter_grade.strip()}`)\n"
+            f"🎖️ **Rekognisi Kurikulum:** `{int(converted_sks)} SKS Diakui`\n"
+            f"📊 **Status:** `{status.strip()}`{portal_link}\n\n"
+            f"✨ *Semangat berinovasi menciptakan solusi teknologi berdaya saing global!*"
+        )
+
 
 
 
