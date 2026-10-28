@@ -5457,6 +5457,49 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_aria_landmarks_and_headings(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic ARIA landmarks (<main>, <nav>, <header>, <footer>, <aside>) and heading distribution
+        against WCAG 2.1 Success Criterion 1.3.1 (Info and Relationships) for accessible screen reader navigation.
+        """
+        if not html_content:
+            return {"has_main": False, "is_accessible": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        mains = soup.find_all(lambda el: el.name == "main" or el.get("role") == "main")
+        navs = soup.find_all(lambda el: el.name == "nav" or el.get("role") == "navigation")
+        headers = soup.find_all(lambda el: el.name == "header" or el.get("role") == "banner")
+        footers = soup.find_all(lambda el: el.name == "footer" or el.get("role") == "contentinfo")
+        h1s = soup.find_all("h1")
+
+        if len(mains) == 0:
+            issues.append("Dokumen tidak memiliki landmark utama (<main> atau role='main') untuk orientasi pembaca layar.")
+        elif len(mains) > 1:
+            warnings.append(f"Ditemukan {len(mains)} landmark <main>. Disarankan hanya memiliki satu landmark <main> per halaman.")
+
+        if len(h1s) == 0:
+            issues.append("Dokumen tidak memiliki judul tingkat utama (<h1>) sebagai titik awal hierarki konten.")
+        elif len(h1s) > 1:
+            warnings.append(f"Ditemukan {len(h1s)} tag <h1>. Disarankan menggunakan satu tag <h1> per artikel untuk struktur outline yang jelas.")
+
+        if len(navs) == 0:
+            warnings.append("Dokumen sebaiknya memiliki elemen navigasi (<nav> atau role='navigation').")
+
+        return {
+            "has_main": len(mains) > 0,
+            "has_nav": len(navs) > 0,
+            "has_header": len(headers) > 0,
+            "has_footer": len(footers) > 0,
+            "h1_count": len(h1s),
+            "is_accessible": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
