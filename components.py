@@ -6017,6 +6017,62 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_ca_spectrum_svg_card(
+        cls,
+        title: str,
+        pcc_mhz: float,
+        scc1_mhz: float,
+        scc2_mhz: float,
+        total_gbps: float
+    ) -> str:
+        """
+        Renders an interactive SVG-enhanced 5G NR Carrier Aggregation spectrum diagram
+        illustrating contiguous and non-contiguous Component Carriers (PCC, SCC1, SCC2).
+        """
+        total_bw = pcc_mhz + scc1_mhz + scc2_mhz
+        return f"""    <div class="tu-5g-ca-spectrum-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Carrier Aggregation Spectrum</span>
+        <span style="font-size: 11px; background: #0369a1; color: #e0f2fe; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{total_bw:.0f} MHz Total CA</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 460 140" width="100%" height="140" style="max-width: 520px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Frequency Axis -->
+          <line x1="20" y1="100" x2="440" y2="100" stroke="#475569" stroke-width="2" />
+          <polygon points="440,96 448,100 440,104" fill="#475569" />
+          <text x="440" y="120" fill="#94a3b8" font-size="10" text-anchor="end">Frekuensi (f)</text>
+
+          <!-- PCC Carrier Box -->
+          <rect x="30" y="30" width="160" height="70" rx="4" fill="#0369a1" fill-opacity="0.3" stroke="#38bdf8" stroke-width="2" />
+          <text x="110" y="55" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">PCC (Primary)</text>
+          <text x="110" y="75" fill="#e0f2fe" font-size="11" text-anchor="middle">{pcc_mhz:.0f} MHz (n78)</text>
+
+          <!-- Guard Band 1 -->
+          <line x1="190" y1="85" x2="205" y2="85" stroke="#64748b" stroke-dasharray="2,2" />
+
+          <!-- SCC1 Carrier Box -->
+          <rect x="205" y="45" width="110" height="55" rx="4" fill="#059669" fill-opacity="0.3" stroke="#34d399" stroke-width="2" />
+          <text x="260" y="68" fill="#34d399" font-size="11" font-weight="bold" text-anchor="middle">SCC 1</text>
+          <text x="260" y="85" fill="#d1fae5" font-size="10" text-anchor="middle">{scc1_mhz:.0f} MHz</text>
+
+          <!-- Guard Band 2 -->
+          <line x1="315" y1="85" x2="330" y2="85" stroke="#64748b" stroke-dasharray="2,2" />
+
+          <!-- SCC2 Carrier Box -->
+          <rect x="330" y="55" width="95" height="45" rx="4" fill="#d97706" fill-opacity="0.3" stroke="#fbbf24" stroke-width="2" />
+          <text x="377" y="75" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="middle">SCC 2</text>
+          <text x="377" y="90" fill="#fef3c7" font-size="10" text-anchor="middle">{scc2_mhz:.0f} MHz</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>PCC Bandwidth: <strong style="color: #38bdf8;">{pcc_mhz:.0f} MHz</strong></div>
+        <div>Total Bandwidth: <strong style="color: #34d399;">{total_bw:.0f} MHz</strong></div>
+        <div>Aggregate Peak: <strong style="color: #fbbf24;">{total_gbps:.2f} Gbps</strong></div>
+      </div>
+    </div>"""
+
 
 
 
