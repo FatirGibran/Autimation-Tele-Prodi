@@ -1060,6 +1060,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_eirp_cell ON nr_eirp_records(cell_id);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_eirp_compliant ON nr_eirp_records(is_compliant);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS praktisi_mengajar_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    course_name TEXT NOT NULL,
+                    course_code TEXT NOT NULL,
+                    practitioner_name TEXT NOT NULL,
+                    industry_company TEXT NOT NULL,
+                    lecturer_name TEXT NOT NULL,
+                    teaching_hours INTEGER NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_praktisi_course ON praktisi_mengajar_records(course_code);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_praktisi_company ON praktisi_mengajar_records(industry_company);")
 
 
 
@@ -4951,6 +4969,59 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM nr_eirp_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_praktisi_mengajar(
+        self,
+        course_name: str,
+        course_code: str,
+        practitioner_name: str,
+        industry_company: str,
+        lecturer_name: str,
+        teaching_hours: int,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str
+    ) -> int:
+        """
+        Stores a Praktisi Mengajar MBKM collaboration and competency record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO praktisi_mengajar_records (
+                    course_name, course_code, practitioner_name, industry_company,
+                    lecturer_name, teaching_hours, composite_score, letter_grade,
+                    converted_sks, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                course_name.strip(), course_code.strip(), practitioner_name.strip(),
+                industry_company.strip(), lecturer_name.strip(), int(teaching_hours),
+                float(composite_score), letter_grade.strip(), int(converted_sks), status.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_praktisi_mengajar(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored Praktisi Mengajar MBKM records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM praktisi_mengajar_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_praktisi_mengajar_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a Praktisi Mengajar MBKM record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM praktisi_mengajar_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
