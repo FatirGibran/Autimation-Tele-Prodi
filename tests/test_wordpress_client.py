@@ -806,6 +806,37 @@ class TestWordPressClient(unittest.TestCase):
         mock_urlopen.side_effect = Exception("HTTP 404")
         self.assertIsNone(self.client.get_page_by_id(99999))
 
+    @patch("urllib.request.urlopen")
+    def test_create_page(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 305, "title": {"rendered": "Struktur Kurikulum"}, "slug": "struktur-kurikulum", "status": "publish"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        page = self.client.create_page(
+            title="Struktur Kurikulum",
+            content="<p>Daftar mata kuliah dan silabus.</p>",
+            slug="struktur-kurikulum",
+            status="publish"
+        )
+        self.assertEqual(page["id"], 305)
+        self.assertEqual(page["slug"], "struktur-kurikulum")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/pages", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_delete_page(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"deleted": true, "previous": {"id": 305, "slug": "struktur-kurikulum"}}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.delete_page(305, force=True)
+        self.assertTrue(res["deleted"])
+        self.assertEqual(res["previous"]["id"], 305)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "DELETE")
+        self.assertIn("/pages/305?force=true", req.full_url)
+
 
 if __name__ == "__main__":
     unittest.main()
