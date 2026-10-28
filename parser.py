@@ -5859,6 +5859,63 @@ def parse_praktisi_mengajar_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_spm_broadening(
+    fiber_length_km: float,
+    peak_power_w: float,
+    non_linear_coeff_gamma: float = 1.3,
+    attenuation_db_km: float = 0.2,
+    initial_pulse_width_ps: float = 20.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical Self-Phase Modulation (SPM) nonlinear phase shift, B-integral accumulation,
+    and spectral broadening factor in single-mode optical fiber according to Agrawal Nonlinear Optics.
+    """
+    l_km = max(0.1, float(fiber_length_km))
+    p0 = max(0.001, float(peak_power_w))
+    gamma = max(0.1, float(non_linear_coeff_gamma))
+    alpha_db = max(0.01, float(attenuation_db_km))
+    t0_ps = max(0.1, float(initial_pulse_width_ps))
+
+    # Attenuation coefficient in 1/km
+    alpha_km = alpha_db / 4.3429448
+    l_eff_km = (1.0 - math.exp(-alpha_km * l_km)) / alpha_km
+
+    # Maximum nonlinear phase shift phi_max = gamma * P0 * L_eff
+    phi_max_rad = gamma * p0 * l_eff_km
+    phi_max_deg = math.degrees(phi_max_rad)
+
+    # Approximate spectral broadening factor for Gaussian pulse: sqrt(1 + (4 / (3 * sqrt(3))) * phi_max^2)
+    broadening_factor = math.sqrt(1.0 + (4.0 / (3.0 * math.sqrt(3.0))) * (phi_max_rad ** 2))
+
+    # B-integral is equivalent to maximum accumulated nonlinear phase shift
+    b_integral = phi_max_rad
+
+    if b_integral < 1.0:
+        spm_risk = "Rendah (Rezim Linier / Efek SPM Minimal)"
+        is_acceptable = True
+    elif b_integral <= 3.0:
+        spm_risk = "Moderat (Terjadi Chirping, Dapat Dikompensasi Dispersi Kromatik)"
+        is_acceptable = True
+    else:
+        spm_risk = "Kritis (Degradasi Spektral Parah & B-Integral Melampaui Batas)"
+        is_acceptable = False
+
+    return {
+        "fiber_length_km": round(l_km, 2),
+        "effective_length_km": round(l_eff_km, 3),
+        "peak_power_w": round(p0, 3),
+        "gamma_per_w_km": round(gamma, 2),
+        "attenuation_db_km": round(alpha_db, 3),
+        "initial_pulse_width_ps": round(t0_ps, 1),
+        "phi_max_rad": round(phi_max_rad, 4),
+        "phi_max_deg": round(phi_max_deg, 2),
+        "b_integral": round(b_integral, 3),
+        "broadening_factor": round(broadening_factor, 3),
+        "spm_risk": spm_risk,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
