@@ -1078,6 +1078,22 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_praktisi_course ON praktisi_mengajar_records(course_code);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_praktisi_company ON praktisi_mengajar_records(industry_company);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_spm_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_name TEXT NOT NULL,
+                    peak_power_w REAL NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    phi_max_rad REAL NOT NULL,
+                    b_integral REAL NOT NULL,
+                    broadening_factor REAL NOT NULL,
+                    spm_risk TEXT NOT NULL,
+                    is_acceptable INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_spm_link ON optical_spm_records(link_name);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_spm_acceptable ON optical_spm_records(is_acceptable);")
 
 
 
@@ -5022,6 +5038,56 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM praktisi_mengajar_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_spm(
+        self,
+        link_name: str,
+        peak_power_w: float,
+        fiber_length_km: float,
+        phi_max_rad: float,
+        b_integral: float,
+        broadening_factor: float,
+        spm_risk: str,
+        is_acceptable: bool
+    ) -> int:
+        """
+        Stores an optical fiber SPM nonlinear phase shift and B-integral evaluation record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_spm_records (
+                    link_name, peak_power_w, fiber_length_km, phi_max_rad,
+                    b_integral, broadening_factor, spm_risk, is_acceptable
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                link_name.strip(), float(peak_power_w), float(fiber_length_km),
+                float(phi_max_rad), float(b_integral), float(broadening_factor),
+                spm_risk.strip(), 1 if is_acceptable else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_spm(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical SPM nonlinear records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_spm_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_spm_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical SPM nonlinear record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_spm_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
