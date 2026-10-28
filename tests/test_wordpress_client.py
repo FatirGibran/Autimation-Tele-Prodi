@@ -837,6 +837,31 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "DELETE")
         self.assertIn("/pages/305?force=true", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_site_settings(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"title": "Portal Teknik Telekomunikasi", "description": "Situs Resmi Prodi", "timezone": "Asia/Jakarta"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        settings = self.client.get_site_settings()
+        self.assertEqual(settings["title"], "Portal Teknik Telekomunikasi")
+        self.assertEqual(settings["timezone"], "Asia/Jakarta")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/settings", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_update_site_settings(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"title": "Teknik Telekomunikasi Tel-U", "updated": true}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.update_site_settings({"title": "Teknik Telekomunikasi Tel-U"})
+        self.assertEqual(res["title"], "Teknik Telekomunikasi Tel-U")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertIn("/settings", req.full_url)
+
 
 if __name__ == "__main__":
     unittest.main()
