@@ -1747,6 +1747,79 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertTrue(res_ok["is_valid"])
         self.assertEqual(res_ok["total_hints"], 2)
 
+    def test_audit_person_schema_markup(self):
+        html_ok = (
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "Person", "name": "Dr. Eng. Ir. Telekomunikasi, S.T., M.T.", "jobTitle": "Ketua Program Studi"}'
+            '</script>'
+        )
+        res_ok = YoastSEOValidator.audit_person_schema_markup(html_ok)
+        self.assertTrue(res_ok["has_person_schema"])
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["total_persons"], 1)
+
+        html_bad = '<div><p>Profil Dosen tanpa Schema</p></div>'
+        res_bad = YoastSEOValidator.audit_person_schema_markup(html_bad)
+        self.assertFalse(res_bad["has_person_schema"])
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_open_graph_image_dimensions(self):
+        html_ok = (
+            '<head>'
+            '<meta property="og:image" content="https://tele.ac.id/banner.png">'
+            '<meta property="og:image:width" content="1200">'
+            '<meta property="og:image:height" content="630">'
+            '<meta property="og:image:alt" content="Banner Prodi Telekomunikasi">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_open_graph_image_dimensions(html_ok)
+        self.assertTrue(res_ok["has_og_image"])
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["width"], 1200)
+        self.assertEqual(res_ok["height"], 630)
+
+        html_bad = (
+            '<head>'
+            '<meta property="og:image" content="https://tele.ac.id/thumb.png">'
+            '<meta property="og:image:width" content="300">'
+            '<meta property="og:image:height" content="200">'
+            '</head>'
+        )
+        res_bad = YoastSEOValidator.audit_open_graph_image_dimensions(html_bad)
+        self.assertTrue(res_bad["has_og_image"])
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_viewport_scalable_accessibility(self):
+        html_ok = '<head><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>'
+        res_ok = YoastSEOValidator.audit_viewport_scalable_accessibility(html_ok)
+        self.assertTrue(res_ok["has_viewport"])
+        self.assertTrue(res_ok["is_accessible"])
+
+        html_bad = '<head><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"></head>'
+        res_bad = YoastSEOValidator.audit_viewport_scalable_accessibility(html_bad)
+        self.assertTrue(res_bad["has_viewport"])
+        self.assertFalse(res_bad["is_accessible"])
+
+    def test_audit_subresource_integrity_sri(self):
+        html_ok = (
+            '<head>'
+            '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" '
+            'integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_subresource_integrity_sri(html_ok)
+        self.assertTrue(res_ok["is_secure"])
+        self.assertEqual(res_ok["verified_resources"], 1)
+
+        html_bad = (
+            '<head>'
+            '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>'
+            '</head>'
+        )
+        res_bad = YoastSEOValidator.audit_subresource_integrity_sri(html_bad)
+        self.assertFalse(res_bad["is_secure"])
+        self.assertEqual(len(res_bad["issues"]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
