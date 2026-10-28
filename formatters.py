@@ -1280,6 +1280,35 @@ class TelegramFormatter:
             f"✨ *Hasil audit propagasi ionosfer terverifikasi.*"
         )
 
+    @staticmethod
+    def format_praktisi_mengajar_telegram(
+        course_name: str,
+        practitioner_name: str,
+        industry_company: str,
+        lecturer_name: str,
+        teaching_hours: int,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a Praktisi Mengajar MBKM collaboration announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal MBKM:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"💼 **Kolaborasi MBKM Praktisi Mengajar Industri**\n\n"
+            f"📚 **Mata Kuliah:** {course_name.strip()}\n"
+            f"👔 **Praktisi Ahli:** {practitioner_name.strip()} ({industry_company.strip()})\n"
+            f"👨‍🏫 **Dosen Pendamping:** {lecturer_name.strip()}\n"
+            f"⏱️ **Beban Mengajar Praktisi:** `{int(teaching_hours)} Jam Pertemuan`\n"
+            f"📈 **Nilai Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"🎖️ **Ekivalensi Kurikulum:** `{int(converted_sks)} SKS Diakui`\n"
+            f"📊 **Status:** `{status.strip()}`{portal_link}\n\n"
+            f"✨ *Sinergi industri dan perguruan tinggi mencetak talenta unggul telekomunikasi.*"
+        )
+
 
 
 
