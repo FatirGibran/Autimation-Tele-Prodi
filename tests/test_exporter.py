@@ -1000,6 +1000,43 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('"nextjs", "fumadocs", "telekomunikasi"', res)
         self.assertIn("<p>Struktur routing dan konten Fumadocs.</p>", res)
 
+    def test_generate_person_json_ld(self):
+        person_data = {
+            "name": "Dr. Eng. Ir. Ahmad Zaki, M.T.",
+            "job_title": "Kepala Laboratorium Telekomunikasi Nirkabel",
+            "organization": "Telkom University Purwokerto",
+            "email": "ahmadzaki@telkomuniversity.ac.id",
+            "url": "https://staff.telkomuniversity.ac.id/ahmadzaki",
+            "same_as": [
+                "https://scholar.google.com/citations?user=test1234",
+                "https://orcid.org/0000-0002-1825-0097"
+            ]
+        }
+        res_str = ArticleExporter.generate_person_json_ld(person_data)
+        self.assertIn('<script type="application/ld+json">', res_str)
+        self.assertIn("Dr. Eng. Ir. Ahmad Zaki, M.T.", res_str)
+        self.assertIn("Kepala Laboratorium Telekomunikasi Nirkabel", res_str)
+        self.assertIn("EducationalOrganization", res_str)
+        self.assertIn("ahmadzaki@telkomuniversity.ac.id", res_str)
+        self.assertIn("https://scholar.google.com/citations?user=test1234", res_str)
+
+    def test_to_remix_mdx(self):
+        meta = {
+            "seo_title": "Tutorial Routing dan Loader Remix v2",
+            "meta_description": "Panduan integrasi MDX pada Remix dan React Router v7.",
+            "slug": "tutorial-remix-mdx",
+            "publish_date": "2026-10-28",
+            "tags": ["remix", "react", "telekomunikasi"]
+        }
+        res = ArticleExporter.to_remix_mdx(meta, "<p>Implementasi loader dan action pada Remix.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Tutorial Routing dan Loader Remix v2"', res)
+        self.assertIn('slug: "tutorial-remix-mdx"', res)
+        self.assertIn('publishedAt: "2026-10-28"', res)
+        self.assertIn("handle:", res)
+        self.assertIn('breadcrumb: "Tutorial Routing dan Loader Remix v2"', res)
+        self.assertIn("<p>Implementasi loader dan action pada Remix.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
