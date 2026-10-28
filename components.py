@@ -5660,6 +5660,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_faraday_card(
+        cls,
+        satellite_name: str,
+        frequency_ghz: float,
+        tec_tecu: float,
+        rotation_angle_deg: float,
+        polarization_loss_db: float,
+        rotation_risk: str,
+        is_linear_viable: bool
+    ) -> str:
+        """
+        Renders a satellite link ionospheric Faraday rotation telemetry card
+        showing wave polarization tilt angle and polarization mismatch loss.
+        """
+        badge_bg = "#eff6ff" if is_linear_viable else "#fff7ed"
+        badge_color = "#1d4ed8" if is_linear_viable else "#c2410c"
+        border_color = "#3b82f6" if is_linear_viable else "#f97316"
+
+        return f"""    <div class="tu-satellite-faraday-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-satellite-faraday-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e40af; font-size: 13px; text-transform: uppercase;">ITU-R P.531 Faraday Rotation Telemetry</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{rotation_risk}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Satelit: {satellite_name} ({frequency_ghz:.2f} GHz)</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Total Electron Content (TEC)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{tec_tecu:.1f} TECU</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Sudut Rotasi Polarisasi</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{rotation_angle_deg:.2f}&deg;</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Rugi Polarisasi (Mismatch)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{polarization_loss_db:.3f} dB</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 12px; border-radius: 6px; border-left: 4px solid {border_color}; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: {badge_color}; font-weight: 600;">Rekomendasi Polarisasi:</span>
+          <div style="font-size: 16px; font-weight: 800; color: {badge_color};">{'POLARISASI LINIER AMAN' if is_linear_viable else 'GUNAKAN POLARISASI SIRKULAR (CP)'}</div>
+        </div>
+        <div style="text-align: right; font-size: 12px; color: #475569;">
+          Kondisi Ionosfer: <strong style="color: {badge_color};">{rotation_risk}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
