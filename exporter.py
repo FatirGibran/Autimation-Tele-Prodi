@@ -1949,6 +1949,34 @@ navigation: true
 
         return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2, ensure_ascii=False)}\n</script>'
 
+    @staticmethod
+    def to_remix_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Remix / React Router v7 MDX documentation format with frontmatter and export headers.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        pub_date = metadata.get("publish_date", "2026-10-01")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'slug: "{slug}"',
+            f'publishedAt: "{pub_date}"',
+            f'tags: {json.dumps(tags)}',
+            "handle:",
+            f'  breadcrumb: "{title}"',
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
