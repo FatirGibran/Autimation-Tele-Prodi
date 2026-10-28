@@ -1820,6 +1820,79 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_secure"])
         self.assertEqual(len(res_bad["issues"]), 1)
 
+    def test_audit_educational_credential_schema(self):
+        html_ok = (
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "EducationalOccupationalCredential", "name": "Sertifikasi Kompetensi Perekayasa Jaringan 5G", "credentialCategory": "degree"}'
+            '</script>'
+        )
+        res_ok = YoastSEOValidator.audit_educational_credential_schema(html_ok)
+        self.assertTrue(res_ok["has_credential_schema"])
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["total_credentials"], 1)
+
+        html_bad = '<div><p>Hanya sertifikat biasa tanpa schema</p></div>'
+        res_bad = YoastSEOValidator.audit_educational_credential_schema(html_bad)
+        self.assertFalse(res_bad["has_credential_schema"])
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_web_app_manifest_and_theme(self):
+        html_ok = (
+            '<head>'
+            '<link rel="manifest" href="/manifest.webmanifest">'
+            '<meta name="theme-color" content="#b91c1c">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_web_app_manifest_and_theme(html_ok)
+        self.assertTrue(res_ok["has_manifest"])
+        self.assertTrue(res_ok["has_theme_color"])
+        self.assertTrue(res_ok["is_valid"])
+
+        html_bad = '<head><title>No manifest</title></head>'
+        res_bad = YoastSEOValidator.audit_web_app_manifest_and_theme(html_bad)
+        self.assertFalse(res_bad["has_manifest"])
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_aria_landmarks_and_headings(self):
+        html_ok = (
+            '<body>'
+            '<header><nav><a href="/">Home</a></nav></header>'
+            '<main><h1>Judul Artikel Utama</h1><p>Konten</p></main>'
+            '<footer><p>Copyright</p></footer>'
+            '</body>'
+        )
+        res_ok = YoastSEOValidator.audit_aria_landmarks_and_headings(html_ok)
+        self.assertTrue(res_ok["has_main"])
+        self.assertTrue(res_ok["has_nav"])
+        self.assertTrue(res_ok["has_header"])
+        self.assertTrue(res_ok["has_footer"])
+        self.assertEqual(res_ok["h1_count"], 1)
+        self.assertTrue(res_ok["is_accessible"])
+
+        html_bad = '<div><p>Konten tanpa landmark semantik</p></div>'
+        res_bad = YoastSEOValidator.audit_aria_landmarks_and_headings(html_bad)
+        self.assertFalse(res_bad["has_main"])
+        self.assertFalse(res_bad["is_accessible"])
+
+    def test_audit_font_preload_cors(self):
+        html_ok = (
+            '<head>'
+            '<link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin="anonymous">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_font_preload_cors(html_ok)
+        self.assertEqual(res_ok["total_font_preloads"], 1)
+        self.assertTrue(res_ok["is_valid"])
+
+        html_bad = (
+            '<head>'
+            '<link rel="preload" href="/fonts/inter.woff2" as="font">'
+            '</head>'
+        )
+        res_bad = YoastSEOValidator.audit_font_preload_cors(html_bad)
+        self.assertEqual(res_bad["total_font_preloads"], 1)
+        self.assertFalse(res_bad["is_valid"])
+
 
 if __name__ == "__main__":
     unittest.main()
