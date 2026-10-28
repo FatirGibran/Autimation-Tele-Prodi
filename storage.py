@@ -1026,6 +1026,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pmm_nim ON student_pmm_records(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pmm_host ON student_pmm_records(host_university);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_srs_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fiber_name TEXT NOT NULL,
+                    input_power_mw REAL NOT NULL,
+                    threshold_power_mw REAL NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    effective_area_um2 REAL NOT NULL,
+                    raman_gain_coeff REAL NOT NULL,
+                    srs_margin_db REAL NOT NULL,
+                    srs_risk TEXT NOT NULL,
+                    is_safe INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_srs_fiber ON optical_srs_records(fiber_name);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_srs_safe ON optical_srs_records(is_safe);")
 
 
 
@@ -4816,6 +4833,57 @@ class StorageManager:
             cursor = conn.execute(
                 "SELECT * FROM student_pmm_records WHERE nim = ?",
                 (nim.strip(),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_srs(
+        self,
+        fiber_name: str,
+        input_power_mw: float,
+        threshold_power_mw: float,
+        fiber_length_km: float,
+        effective_area_um2: float,
+        raman_gain_coeff: float,
+        srs_margin_db: float,
+        srs_risk: str,
+        is_safe: bool
+    ) -> int:
+        """
+        Stores an optical fiber SRS nonlinear power threshold evaluation record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_srs_records (
+                    fiber_name, input_power_mw, threshold_power_mw, fiber_length_km,
+                    effective_area_um2, raman_gain_coeff, srs_margin_db, srs_risk, is_safe
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                fiber_name.strip(), float(input_power_mw), float(threshold_power_mw),
+                float(fiber_length_km), float(effective_area_um2), float(raman_gain_coeff),
+                float(srs_margin_db), srs_risk.strip(), 1 if is_safe else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_srs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical SRS nonlinear threshold records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_srs_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_srs_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical SRS threshold record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_srs_records WHERE id = ?",
+                (int(record_id),)
             )
             row = cursor.fetchone()
             return dict(row) if row else None
