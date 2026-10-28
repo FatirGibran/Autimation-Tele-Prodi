@@ -919,6 +919,14 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, headers=self._get_headers(), method="DELETE")
         return self._send_request(req)
 
+    def get_site_settings(self) -> Dict[str, Any]:
+        """
+        Retrieves global WordPress site configuration settings via REST API (/wp/v2/settings).
+        """
+        endpoint = f"{self.api_url}/settings"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        return self._send_request(req)
+
 
 
 
