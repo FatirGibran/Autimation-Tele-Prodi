@@ -1985,6 +1985,87 @@ Status: Granted
         self.assertEqual(res_fail["converted_sks"], 0)
         self.assertFalse(res_fail["is_eligible"])
 
+    def test_calculate_optical_spm_broadening(self):
+        from parser import calculate_optical_spm_broadening
+        # Moderate power in 80 km fiber
+        res = calculate_optical_spm_broadening(
+            fiber_length_km=80.0,
+            peak_power_w=0.05,
+            non_linear_coeff_gamma=1.3,
+            attenuation_db_km=0.2,
+            initial_pulse_width_ps=20.0
+        )
+        self.assertGreater(res["effective_length_km"], 0.0)
+        self.assertGreater(res["phi_max_rad"], 0.0)
+        self.assertGreater(res["broadening_factor"], 1.0)
+        self.assertTrue(res["is_acceptable"])
+
+        # High power leading to critical distortion
+        res_high = calculate_optical_spm_broadening(
+            fiber_length_km=100.0,
+            peak_power_w=0.5,
+            non_linear_coeff_gamma=1.5
+        )
+        self.assertGreater(res_high["b_integral"], 3.0)
+        self.assertFalse(res_high["is_acceptable"])
+        self.assertIn("Kritis", res_high["spm_risk"])
+
+    def test_calculate_5g_nr_carrier_aggregation_throughput(self):
+        from parser import calculate_5g_nr_carrier_aggregation_throughput
+        # 2CC CA (100 MHz + 40 MHz) with 4x4 MIMO and 256-QAM
+        ccs = [
+            {"name": "PCC-n78", "bandwidth_mhz": 100, "mimo_layers": 4, "modulation": "256QAM"},
+            {"name": "SCC1-n78", "bandwidth_mhz": 40, "mimo_layers": 4, "modulation": "256QAM"}
+        ]
+        res = calculate_5g_nr_carrier_aggregation_throughput(ccs)
+        self.assertEqual(res["num_carriers"], 2)
+        self.assertEqual(res["total_bandwidth_mhz"], 140.0)
+        self.assertGreater(res["total_throughput_mbps"], 1000.0)
+        self.assertGreater(res["total_throughput_gbps"], 1.0)
+        self.assertEqual(len(res["carriers"]), 2)
+
+    def test_calculate_satellite_rain_attenuation_itu_r(self):
+        from parser import calculate_satellite_rain_attenuation_itu_r
+        # Ku-band 12 GHz slant path in tropical region
+        res = calculate_satellite_rain_attenuation_itu_r(
+            frequency_ghz=12.0,
+            elevation_angle_deg=45.0,
+            rain_rate_001_mm_h=95.0,
+            percentage_p=0.01
+        )
+        self.assertGreater(res["predicted_attenuation_db"], 5.0)
+        self.assertGreater(res["effective_path_length_km"], 0.0)
+        self.assertTrue(res["is_link_viable"])
+
+    def test_parse_p2mw_evaluation(self):
+        from parser import parse_p2mw_evaluation
+        # High score growth startup
+        res_growth = parse_p2mw_evaluation({
+            "student_name": "Dimas Pratama",
+            "nim": "1201202050",
+            "business_name": "AgroTele-IoT",
+            "business_stage": "Tahap Bertumbuh",
+            "pitch_bmc_score": 90.0,
+            "prototype_progress_score": 88.0,
+            "financial_governance_score": 85.0
+        })
+        self.assertEqual(res_growth["letter_grade"], "A")
+        self.assertEqual(res_growth["converted_sks"], 6)
+        self.assertTrue(res_growth["is_funded"])
+
+        # Early stage startup
+        res_early = parse_p2mw_evaluation({
+            "student_name": "Sarah Amalia",
+            "nim": "1201202051",
+            "business_name": "SmartAntenna-Labs",
+            "business_stage": "Tahap Awal",
+            "pitch_bmc_score": 75.0,
+            "prototype_progress_score": 72.0,
+            "financial_governance_score": 70.0
+        })
+        self.assertEqual(res_early["converted_sks"], 4)
+        self.assertTrue(res_early["is_funded"])
+
 
 if __name__ == "__main__":
     unittest.main()
