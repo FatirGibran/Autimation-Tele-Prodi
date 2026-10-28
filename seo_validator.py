@@ -5191,6 +5191,61 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_open_graph_image_dimensions(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Open Graph image metadata tags (og:image, og:image:width, og:image:height, og:image:alt)
+        for social share rich snippet previews and high-DPI social media card display.
+        """
+        if not html_content:
+            return {"has_og_image": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+        if not og_img or not og_img.get("content"):
+            return {
+                "has_og_image": False,
+                "is_valid": False,
+                "issues": ["Tidak ditemukan tag meta Open Graph gambar (<meta property='og:image'>)."]
+            }
+
+        img_url = og_img["content"].strip()
+        width_tag = soup.find("meta", property="og:image:width")
+        height_tag = soup.find("meta", property="og:image:height")
+        alt_tag = soup.find("meta", property="og:image:alt")
+
+        width = int(width_tag["content"].strip()) if width_tag and width_tag.get("content", "").isdigit() else None
+        height = int(height_tag["content"].strip()) if height_tag and height_tag.get("content", "").isdigit() else None
+
+        if width is None or height is None:
+            warnings.append("Disarankan mendeklarasikan 'og:image:width' dan 'og:image:height' secara eksplisit untuk mencegah lag render pertama.")
+        else:
+            if width < 600 or height < 315:
+                issues.append(f"Dimensi gambar Open Graph ({width}x{height}) terlalu kecil (rekomendasi minimal 1200x630 px).")
+            ratio = width / height if height > 0 else 0
+            if not (1.8 <= ratio <= 2.0):
+                warnings.append(f"Rasio aspek gambar ({ratio:.2f}:1) menyimpang dari standar ideal 1.91:1 (1200x630).")
+
+        if not alt_tag or not alt_tag.get("content"):
+            warnings.append("Disarankan menambahkan tag 'og:image:alt' untuk aksesibilitas pratinjau media sosial.")
+
+        is_valid = len(issues) == 0
+
+        return {
+            "has_og_image": True,
+            "image_url": img_url,
+            "width": width,
+            "height": height,
+            "has_alt": bool(alt_tag and alt_tag.get("content")),
+            "is_valid": is_valid,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
