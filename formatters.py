@@ -1252,6 +1252,34 @@ class TelegramFormatter:
             f"✨ *Selamat atas keberhasilan menimba ilmu dan memperkuat wawasan kebangsaan!*"
         )
 
+    @staticmethod
+    def format_satellite_faraday_telegram(
+        satellite_name: str,
+        frequency_ghz: float,
+        tec_tecu: float,
+        rotation_angle_deg: float,
+        polarization_loss_db: float,
+        rotation_risk: str,
+        is_linear_viable: bool,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a satellite ionospheric Faraday rotation bulletin for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Satelit:** {portal_url.strip()}" if portal_url else ""
+        polarization_advice = "Polarisasi Linier Aman" if is_linear_viable else "Rekomendasi Polarisasi Sirkular (CP)"
+        return (
+            f"🛰️ **Telemetri Faraday Rotation Satelit (ITU-R P.531)**\n\n"
+            f"📡 **Tautan Satelit:** {satellite_name.strip()}\n"
+            f"📶 **Frekuensi:** `{float(frequency_ghz):.2f} GHz`\n"
+            f"⚡ **Total Electron Content (TEC):** `{float(tec_tecu):.1f} TECU`\n"
+            f"🔄 **Sudut Rotasi Polarisasi:** `{float(rotation_angle_deg):.2f}°`\n"
+            f"📉 **Polarization Mismatch Loss:** `{float(polarization_loss_db):.3f} dB`\n"
+            f"📊 **Tingkat Risiko Rotasi:** `{rotation_risk.strip()}`\n"
+            f"🎯 **Rekomendasi Link:** `{polarization_advice}`{portal_link}\n\n"
+            f"✨ *Hasil audit propagasi ionosfer terverifikasi.*"
+        )
+
 
 
 
