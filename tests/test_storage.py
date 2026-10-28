@@ -2366,6 +2366,69 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["practitioner_name"], "Ir. Hendra Wijaya, M.Sc.")
         self.assertIsNone(self.storage.get_praktisi_mengajar_by_id(99999))
 
+    def test_optical_spm_storage(self):
+        rec_id = self.storage.record_optical_spm(
+            link_name="DWDM-Trunk-Jawa",
+            peak_power_w=0.08,
+            fiber_length_km=80.0,
+            phi_max_rad=1.85,
+            b_integral=1.85,
+            broadening_factor=1.62,
+            spm_risk="Moderat",
+            is_acceptable=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_spm()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["link_name"], "DWDM-Trunk-Jawa")
+        self.assertEqual(items[0]["is_acceptable"], 1)
+
+        single = self.storage.get_optical_spm_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["phi_max_rad"], 1.85)
+        self.assertIsNone(self.storage.get_optical_spm_by_id(99999))
+
+    def test_nr_ca_throughput_storage(self):
+        rec_id = self.storage.record_nr_ca_throughput(
+            configuration_name="3CC CA n78+n41+n28",
+            num_carriers=3,
+            total_bandwidth_mhz=160.0,
+            total_throughput_mbps=2145.0,
+            total_throughput_gbps=2.145,
+            spectral_efficiency_bps_hz=13.4
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_ca_throughputs()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["configuration_name"], "3CC CA n78+n41+n28")
+
+        single = self.storage.get_nr_ca_throughput_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["total_throughput_gbps"], 2.145)
+        self.assertIsNone(self.storage.get_nr_ca_throughput_by_id(99999))
+
+    def test_p2mw_startup_storage(self):
+        rec_id = self.storage.record_p2mw_startup(
+            student_name="Dimas Pratama",
+            nim="1201202050",
+            business_name="AgroTele-IoT",
+            business_stage="Tahap Bertumbuh",
+            business_category="Teknologi Terapan",
+            composite_score=88.5,
+            letter_grade="A",
+            converted_sks=6,
+            status="Lolos Pendanaan P2MW"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_p2mw_startups()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["nim"], "1201202050")
+
+        single = self.storage.get_p2mw_startup_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["business_name"], "AgroTele-IoT")
+        self.assertIsNone(self.storage.get_p2mw_startup_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
