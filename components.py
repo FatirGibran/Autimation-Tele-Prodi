@@ -5873,6 +5873,51 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_ca_throughput_card(
+        cls,
+        configuration_name: str,
+        total_bandwidth_mhz: float,
+        num_carriers: int,
+        total_throughput_gbps: float,
+        spectral_efficiency_bps_hz: float,
+        status_badge: str = "3GPP Rel-16 Aggregation"
+    ) -> str:
+        """
+        Renders a 5G NR Carrier Aggregation (CA) multi-carrier throughput telemetry card
+        showing aggregate peak data rate, aggregated bandwidth, and composite spectral efficiency.
+        """
+        return f"""    <div class="tu-5g-ca-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-5g-ca-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0284c7; font-size: 13px; text-transform: uppercase;">5G NR Carrier Aggregation Throughput</span>
+        <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status_badge}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">{configuration_name}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Jumlah Komponen Kanal (CC)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{num_carriers} Komponen</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Total Bandwidth Agregasi</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{total_bandwidth_mhz:.0f} MHz</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Efisiensi Spektral</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{spectral_efficiency_bps_hz:.2f} bps/Hz</div>
+        </div>
+      </div>
+      <div style="background: #f0fdf4; padding: 12px; border-radius: 6px; border-left: 4px solid #10b981; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: #047857; font-weight: 600;">Aggregate Peak Data Rate:</span>
+          <div style="font-size: 18px; font-weight: 800; color: #065f46;">{total_throughput_gbps:.3f} Gbps ({total_throughput_gbps * 1000.0:.1f} Mbps)</div>
+        </div>
+        <div style="text-align: right; font-size: 12px; color: #475569;">
+          Kapasitas Transmisi: <strong style="color: #047857;">HIGH-THROUGHPUT eMBB</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
