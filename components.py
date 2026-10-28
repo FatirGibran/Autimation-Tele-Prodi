@@ -5968,6 +5968,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_p2mw_startup_card(
+        cls,
+        student_name: str,
+        nim: str,
+        business_name: str,
+        business_stage: str,
+        category: str,
+        composite_score: float,
+        letter_grade: str,
+        converted_sks: int,
+        status: str
+    ) -> str:
+        """
+        Renders a P2MW Kemendikbudristek student startup incubation and SKS recognition card.
+        """
+        is_high = converted_sks >= 4
+        badge_bg = "#ecfdf5" if is_high else "#eff6ff"
+        badge_color = "#047857" if is_high else "#1d4ed8"
+        border_color = "#10b981" if is_high else "#3b82f6"
+
+        return f"""    <div class="tu-p2mw-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-p2mw-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0f172a; font-size: 13px; text-transform: uppercase;">P2MW Wirausaha Mahasiswa Kemendikbudristek</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{business_stage}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">{business_name}</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+        Kategori: <strong>{category}</strong> | Mahasiswa: {student_name} ({nim})
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Skor Komposit</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{composite_score:.1f} ({letter_grade})</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Tahapan Usaha</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{business_stage}</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Konversi Kurikulum</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{converted_sks} SKS Diakui</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 10px 12px; border-radius: 6px; border-left: 4px solid {border_color}; font-size: 12px; color: #334155;">
+        Status: <strong style="color: {badge_color};">{status}</strong>
+      </div>
+    </div>"""
+
 
 
 
