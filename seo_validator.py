@@ -5245,6 +5245,62 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_viewport_scalable_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits mobile viewport meta tags against WCAG 2.1 Success Criterion 1.4.4 (Resize Text)
+        ensuring that user zooming is not disabled via user-scalable=no, user-scalable=0, or maximum-scale=1.0.
+        """
+        if not html_content:
+            return {"has_viewport": False, "is_accessible": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        viewport_tag = soup.find("meta", attrs={"name": lambda n: n and n.lower() == "viewport"})
+        if not viewport_tag or not viewport_tag.get("content"):
+            return {
+                "has_viewport": False,
+                "is_accessible": False,
+                "issues": ["Tidak ditemukan tag meta viewport (<meta name='viewport'>)."]
+            }
+
+        content = viewport_tag["content"].strip().lower()
+        parts = [p.strip() for p in content.split(",") if p.strip()]
+        params = {}
+        for part in parts:
+            if "=" in part:
+                k, v = part.split("=", 1)
+                params[k.strip()] = v.strip()
+
+        if params.get("user-scalable") in ("no", "0"):
+            issues.append("Tag meta viewport menonaktifkan zoom pengguna ('user-scalable=no' atau '0') yang melanggar WCAG 2.1 SC 1.4.4.")
+
+        if "maximum-scale" in params:
+            try:
+                max_scale = float(params["maximum-scale"])
+                if max_scale <= 1.0:
+                    issues.append(f"Tag meta viewport membatasi maximum-scale ke {max_scale}, mencegah pembesaran teks oleh pengguna disabilitas netra.")
+                elif max_scale < 2.0:
+                    warnings.append(f"Disarankan mengizinkan pembesaran minimal hingga 2.0 (saat ini {max_scale}).")
+            except ValueError:
+                pass
+
+        if params.get("width") != "device-width":
+            warnings.append("Disarankan menggunakan 'width=device-width' pada deklarasi meta viewport.")
+
+        is_accessible = len(issues) == 0
+
+        return {
+            "has_viewport": True,
+            "viewport_content": viewport_tag["content"].strip(),
+            "is_accessible": is_accessible,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
