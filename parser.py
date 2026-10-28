@@ -6008,6 +6008,108 @@ def calculate_5g_nr_carrier_aggregation_throughput(
     }
 
 
+def calculate_satellite_rain_attenuation_itu_r(
+    frequency_ghz: float,
+    elevation_angle_deg: float,
+    rain_rate_001_mm_h: float = 95.0,
+    earth_station_altitude_km: float = 0.05,
+    latitude_deg: float = -7.4,
+    percentage_p: float = 0.01
+) -> Dict[str, Any]:
+    """
+    Calculates Earth-space satellite slant-path rain attenuation according to ITU-R P.618-13
+    and specific rain attenuation coefficients according to ITU-R P.838-3.
+    Particularly tuned for tropical high-intensity precipitation regimes (ITU Climate Zone P / Indonesia).
+    """
+    f_ghz = max(1.0, float(frequency_ghz))
+    theta_deg = max(5.0, min(89.0, float(elevation_angle_deg)))
+    r001 = max(0.1, float(rain_rate_001_mm_h))
+    hs = max(0.0, float(earth_station_altitude_km))
+    lat = abs(float(latitude_deg))
+    p = max(0.001, min(1.0, float(percentage_p)))
+
+    theta_rad = math.radians(theta_deg)
+
+    # 1. Rain height h_R (km) based on 0 deg C isotherm height for tropical latitudes
+    hr = 5.0 - (0.075 * (lat - 23.0)) if lat > 23.0 else 5.0
+    hr = max(hs + 0.5, hr)
+
+    # 2. Slant-path length L_s (km)
+    ls = (hr - hs) / math.sin(theta_rad)
+
+    # 3. Horizontal projection L_G (km)
+    lg = ls * math.cos(theta_rad)
+
+    # 4. Specific attenuation gamma_R = k * (R_001)^alpha (dB/km) ITU-R P.838
+    # Accurate empirical interpolation for 4 GHz <= f <= 50 GHz
+    if f_ghz < 10.0:
+        k = 0.0001 * (f_ghz ** 2.2)
+        alpha = 1.28
+    elif f_ghz < 20.0:
+        k = 0.018 * ((f_ghz / 12.0) ** 1.9)
+        alpha = 1.15
+    else:
+        k = 0.075 * ((f_ghz / 20.0) ** 1.5)
+        alpha = 1.05
+
+    gamma_r = k * (r001 ** alpha)
+
+    # 5. Horizontal path reduction factor r_001
+    term_lg = math.sqrt(lg * gamma_r / f_ghz)
+    r_denom = 1.0 + (0.78 * term_lg) - (0.38 * (1.0 - math.exp(-2.0 * lg)))
+    r001_factor = 1.0 / max(0.1, r_denom)
+    r001_factor = min(1.0, r001_factor)
+
+    # 6. Vertical adjustment factor v_001
+    zeta_rad = math.atan((hr - hs) / (lg * r001_factor))
+    lr = (lg * r001_factor) / math.cos(theta_rad) if math.cos(theta_rad) > 0 else ls
+    chi = 36.0 - lat if lat < 36.0 else 0.0
+    v_denom = 1.0 + (math.sqrt(math.sin(theta_rad)) * ((31.0 * (1.0 - math.exp(-(theta_deg / (1.0 + chi))))) * (math.sqrt(lr * gamma_r) / (f_ghz ** 2))))
+    v001_factor = 1.0 / max(0.1, v_denom)
+
+    # Effective path length L_E (km)
+    l_eff = lr * v001_factor
+
+    # Rain attenuation at 0.01% outage A_0.01 (dB)
+    a_001 = gamma_r * l_eff
+
+    # 7. Extrapolate to percentage p
+    if abs(p - 0.01) < 1e-6:
+        a_p = a_001
+    else:
+        beta = 0.0 if p >= 1.0 or theta_deg >= 36.0 else (-0.005 * (theta_deg - 36.0)) if lat >= 36.0 else (-0.005 * (theta_deg - 36.0) + 1.8 - 4.25 * math.sin(math.radians(lat)))
+        a_p = a_001 * 0.12 * (p ** (-(0.546 + 0.043 * math.log10(p))))
+
+    a_p = max(0.1, a_p)
+
+    if a_p <= 3.0:
+        attenuation_risk = "Rendah (Margin Fading Standar Cukupi)"
+        is_link_viable = True
+    elif a_p <= 10.0:
+        attenuation_risk = "Sedang (Memerlukan Adaptive Coding & Modulation ACM)"
+        is_link_viable = True
+    elif a_p <= 20.0:
+        attenuation_risk = "Tinggi (Memerlukan Uplink Power Control & Site Diversity)"
+        is_link_viable = True
+    else:
+        attenuation_risk = "Kritis (Potensi Terputusnya Sinyal Akibat Hujan Lebat)"
+        is_link_viable = False
+
+    return {
+        "frequency_ghz": round(f_ghz, 2),
+        "elevation_angle_deg": round(theta_deg, 2),
+        "rain_rate_mm_h": round(r001, 1),
+        "specific_attenuation_db_km": round(gamma_r, 3),
+        "slant_path_length_km": round(ls, 2),
+        "effective_path_length_km": round(l_eff, 2),
+        "attenuation_001_db": round(a_001, 2),
+        "outage_percentage": round(p, 4),
+        "predicted_attenuation_db": round(a_p, 2),
+        "attenuation_risk": attenuation_risk,
+        "is_link_viable": is_link_viable
+    }
+
+
 
 
 
