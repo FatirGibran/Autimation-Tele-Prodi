@@ -5134,6 +5134,64 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_person_schema_markup(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits presence and completeness of Schema.org Person structured data markup (JSON-LD or Microdata)
+        for academic faculty members, researchers, and author profiles to enhance Google E-E-A-T signals.
+        """
+        if not html_content:
+            return {"has_person_schema": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        found_persons = []
+
+        # Check JSON-LD
+        for script in soup.find_all("script", type=lambda t: t and "ld+json" in t.lower()):
+            try:
+                data = json.loads(script.string or "{}")
+                items = data if isinstance(data, list) else [data]
+                for item in items:
+                    t = item.get("@type", "")
+                    if (isinstance(t, str) and t.lower() == "person") or (isinstance(t, list) and any(x.lower() == "person" for x in t)):
+                        found_persons.append(item)
+            except Exception:
+                continue
+
+        # Check Microdata
+        for el in soup.find_all(attrs={"itemtype": re.compile(r'schema\.org/Person', re.IGNORECASE)}):
+            name_el = el.find(attrs={"itemprop": "name"})
+            job_el = el.find(attrs={"itemprop": "jobTitle"})
+            found_persons.append({
+                "name": name_el.get_text().strip() if name_el else "",
+                "jobTitle": job_el.get_text().strip() if job_el else ""
+            })
+
+        if not found_persons:
+            return {
+                "has_person_schema": False,
+                "is_valid": False,
+                "issues": ["Tidak ditemukan penanda data terstruktur Schema.org Person (JSON-LD atau Microdata)."]
+            }
+
+        valid_count = 0
+        for idx, person in enumerate(found_persons, 1):
+            name = person.get("name")
+            if not name:
+                issues.append(f"Skema Person #{idx} tidak memiliki properti wajib 'name'.")
+            else:
+                valid_count += 1
+
+        return {
+            "has_person_schema": True,
+            "total_persons": len(found_persons),
+            "valid_persons": valid_count,
+            "is_valid": len(issues) == 0 and valid_count > 0,
+            "issues": issues
+        }
+
+
 
 
 
