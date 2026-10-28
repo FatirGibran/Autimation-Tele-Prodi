@@ -30,7 +30,10 @@ from sanitizer import (
     sanitize_html5_meter_progress_elements,
     sanitize_html5_data_value_attributes,
     sanitize_html5_slot_name_attributes,
-    sanitize_html5_ruby_annotation_elements
+    sanitize_html5_ruby_annotation_elements,
+    sanitize_html5_del_ins_attributes,
+    sanitize_html5_form_input_attributes,
+    sanitize_html5_datalist_options
 )
 
 
@@ -1031,6 +1034,33 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("style=", cleaned)
         self.assertNotIn("onmouseover=", cleaned)
         self.assertNotIn("<script>", cleaned)
+
+    def test_sanitize_html5_del_ins_attributes(self):
+        raw = '<p>Revisi: <del cite="https://example.com/rev" datetime="2026-10-28" onclick="bad()">Lama</del> <ins cite="javascript:steal()" datetime="invalid-date" style="color:green">Baru</ins></p>'
+        cleaned = sanitize_html5_del_ins_attributes(raw)
+        self.assertIn('cite="https://example.com/rev"', cleaned)
+        self.assertIn('datetime="2026-10-28"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("javascript:steal()", cleaned)
+        self.assertNotIn("invalid-date", cleaned)
+        self.assertNotIn("style=", cleaned)
+
+    def test_sanitize_html5_form_input_attributes(self):
+        raw = '<input type="text" name="nim" formaction="https://example.com/submit" onfocus="evil()" style="border:1px solid red"><input type="submit" formaction="javascript:hack()">'
+        cleaned = sanitize_html5_form_input_attributes(raw)
+        self.assertIn('formaction="https://example.com/submit"', cleaned)
+        self.assertNotIn("onfocus=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:hack()", cleaned)
+
+    def test_sanitize_html5_datalist_options(self):
+        raw = '<datalist id="bands" onclick="bad()"><option value="n78" onmouseover="evil()"><option value="javascript:alert(1)"></datalist>'
+        cleaned = sanitize_html5_datalist_options(raw)
+        self.assertIn('id="bands"', cleaned)
+        self.assertIn('value="n78"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
 
 
 if __name__ == "__main__":
