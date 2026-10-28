@@ -1309,6 +1309,34 @@ class TelegramFormatter:
             f"✨ *Sinergi industri dan perguruan tinggi mencetak talenta unggul telekomunikasi.*"
         )
 
+    @staticmethod
+    def format_satellite_rain_attenuation_telegram(
+        satellite_name: str,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        rain_rate_mm_h: float,
+        predicted_attenuation_db: float,
+        attenuation_risk: str,
+        is_link_viable: bool,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a satellite link slant-path rain attenuation bulletin for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Satelit:** {portal_url.strip()}" if portal_url else ""
+        link_status = "Tautan Andal & Stabil" if is_link_viable else "Rekomendasi Uplink Power Control / Diversity"
+        return (
+            f"🛰️ **Telemetri Redaman Hujan Satelit (ITU-R P.618)**\n\n"
+            f"📡 **Tautan Satelit:** {satellite_name.strip()}\n"
+            f"📶 **Frekuensi Carrier:** `{float(frequency_ghz):.2f} GHz`\n"
+            f"📐 **Sudut Elevasi Stasiun Bumi:** `{float(elevation_angle_deg):.1f}°`\n"
+            f"🌧️ **Intensitas Curah Hujan (R0.01):** `{float(rain_rate_mm_h):.1f} mm/jam`\n"
+            f"📉 **Prediksi Redaman Hujan (Ap):** `{float(predicted_attenuation_db):.2f} dB`\n"
+            f"📊 **Tingkat Risiko Fading:** `{attenuation_risk.strip()}`\n"
+            f"🎯 **Status Operasional:** `{link_status}`{portal_link}\n\n"
+            f"✨ *Evaluasi redaman atmosfer propagasi satelit terverifikasi.*"
+        )
+
 
 
 
