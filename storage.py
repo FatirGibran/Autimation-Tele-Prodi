@@ -1043,6 +1043,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_srs_fiber ON optical_srs_records(fiber_name);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_srs_safe ON optical_srs_records(is_safe);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_eirp_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cell_id TEXT NOT NULL,
+                    conducted_power_dbm REAL NOT NULL,
+                    antenna_gain_dbi REAL NOT NULL,
+                    channel_bandwidth_mhz REAL NOT NULL,
+                    eirp_dbm REAL NOT NULL,
+                    eirp_watt REAL NOT NULL,
+                    psd_eirp_dbm_mhz REAL NOT NULL,
+                    regulatory_status TEXT NOT NULL,
+                    is_compliant INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_eirp_cell ON nr_eirp_records(cell_id);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_eirp_compliant ON nr_eirp_records(is_compliant);")
 
 
 
@@ -4883,6 +4900,57 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_srs_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_nr_eirp(
+        self,
+        cell_id: str,
+        conducted_power_dbm: float,
+        antenna_gain_dbi: float,
+        channel_bandwidth_mhz: float,
+        eirp_dbm: float,
+        eirp_watt: float,
+        psd_eirp_dbm_mhz: float,
+        regulatory_status: str,
+        is_compliant: bool
+    ) -> int:
+        """
+        Stores a cellular 5G NR radiated power (EIRP/PSD) compliance record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_eirp_records (
+                    cell_id, conducted_power_dbm, antenna_gain_dbi, channel_bandwidth_mhz,
+                    eirp_dbm, eirp_watt, psd_eirp_dbm_mhz, regulatory_status, is_compliant
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                cell_id.strip(), float(conducted_power_dbm), float(antenna_gain_dbi),
+                float(channel_bandwidth_mhz), float(eirp_dbm), float(eirp_watt),
+                float(psd_eirp_dbm_mhz), regulatory_status.strip(), 1 if is_compliant else 0
+            ))
+            return cursor.lastrowid
+
+    def list_nr_eirps(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored 5G NR radiated power records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_eirp_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_eirp_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR radiated power record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_eirp_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
