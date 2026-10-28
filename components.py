@@ -5918,6 +5918,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_rain_attenuation_card(
+        cls,
+        satellite_name: str,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        rain_rate_mm_h: float,
+        predicted_attenuation_db: float,
+        attenuation_risk: str,
+        is_link_viable: bool
+    ) -> str:
+        """
+        Renders an ITU-R P.618-13 satellite link rain attenuation telemetry card
+        showing slant-path fade depth, specific rain loss, and tropical fading resilience.
+        """
+        badge_bg = "#ecfdf5" if is_link_viable else "#fef2f2"
+        badge_color = "#047857" if is_link_viable else "#b91c1c"
+        border_color = "#3b82f6" if is_link_viable else "#ef4444"
+
+        return f"""    <div class="tu-satellite-rain-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-satellite-rain-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e40af; font-size: 13px; text-transform: uppercase;">ITU-R P.618 Rain Attenuation Telemetry</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{attenuation_risk}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Satelit: {satellite_name} ({frequency_ghz:.1f} GHz)</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Curah Hujan (R0.01)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{rain_rate_mm_h:.1f} mm/jam</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Sudut Elevasi Antena</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{elevation_angle_deg:.1f}&deg;</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Redaman Hujan (Ap)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{predicted_attenuation_db:.2f} dB</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 12px; border-radius: 6px; border-left: 4px solid {border_color}; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 12px; color: {badge_color}; font-weight: 600;">Status Kelayakan Tautan:</span>
+          <div style="font-size: 16px; font-weight: 800; color: {badge_color};">{'LINK ANDAL & TERSEDIA' if is_link_viable else 'MEMERLUKAN UPLINK POWER CONTROL'}</div>
+        </div>
+        <div style="text-align: right; font-size: 12px; color: #475569;">
+          Kategori Risiko: <strong style="color: {badge_color};">{attenuation_risk}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
