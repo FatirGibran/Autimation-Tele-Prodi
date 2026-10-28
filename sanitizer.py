@@ -1765,6 +1765,37 @@ def sanitize_html5_form_input_attributes(html: str) -> str:
     return re.sub(r'<input\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_input, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_datalist_options(html: str) -> str:
+    """
+    Sanitizes HTML5 <datalist> and nested <option> autocomplete elements by removing
+    inline event handlers, style attributes, and stripping unsafe script payloads in the value attribute.
+    """
+    if not html or "<datalist" not in html.lower():
+        return html
+
+    def fix_datalist(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    def fix_option(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        val_m = re.search(r'\bvalue=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if val_m:
+            val = val_m.group(1).strip()
+            if val.lower().startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', val):
+                tag = re.sub(r'\s+value=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    out = re.sub(r'<(?:/)?datalist\b[^>]*>', fix_datalist, html, flags=re.IGNORECASE)
+    out = re.sub(r'<option\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_option, out, flags=re.IGNORECASE)
+    return out
+
+
+
 
 
 
