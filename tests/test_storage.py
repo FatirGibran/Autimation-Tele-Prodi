@@ -2296,6 +2296,76 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(by_nim["converted_sks"], 20)
         self.assertIsNone(self.storage.get_pmm_by_nim("99999999"))
 
+    def test_optical_srs_storage(self):
+        rec_id = self.storage.record_optical_srs(
+            fiber_name="Corning SMF-28e+ Link C",
+            input_power_mw=20.0,
+            threshold_power_mw=65.4,
+            fiber_length_km=80.0,
+            effective_area_um2=80.0,
+            raman_gain_coeff=1.0e-13,
+            srs_margin_db=5.15,
+            srs_risk="Rendah (Aman)",
+            is_safe=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_srs()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["fiber_name"], "Corning SMF-28e+ Link C")
+        self.assertEqual(items[0]["is_safe"], 1)
+
+        single = self.storage.get_optical_srs_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["threshold_power_mw"], 65.4)
+        self.assertIsNone(self.storage.get_optical_srs_by_id(99999))
+
+    def test_nr_eirp_storage(self):
+        rec_id = self.storage.record_nr_eirp(
+            cell_id="NR-CELL-01",
+            conducted_power_dbm=43.0,
+            antenna_gain_dbi=18.0,
+            channel_bandwidth_mhz=100.0,
+            eirp_dbm=61.0,
+            eirp_watt=1258.93,
+            psd_eirp_dbm_mhz=41.0,
+            regulatory_status="Compliant (Kominfo Standard)",
+            is_compliant=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_eirps()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cell_id"], "NR-CELL-01")
+        self.assertEqual(items[0]["is_compliant"], 1)
+
+        single = self.storage.get_nr_eirp_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["eirp_dbm"], 61.0)
+        self.assertIsNone(self.storage.get_nr_eirp_by_id(99999))
+
+    def test_praktisi_mengajar_storage(self):
+        rec_id = self.storage.record_praktisi_mengajar(
+            course_name="Jaringan Akses Nirkabel 5G & Beyond",
+            course_code="TT3013",
+            practitioner_name="Ir. Hendra Wijaya, M.Sc.",
+            industry_company="PT Telkomsel",
+            lecturer_name="Dr. Ir. Budi Santoso, M.T.",
+            teaching_hours=14,
+            composite_score=88.5,
+            letter_grade="A",
+            converted_sks=3,
+            status="Lulus Rekognisi Praktisi Industri"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_praktisi_mengajar()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["course_code"], "TT3013")
+        self.assertEqual(items[0]["industry_company"], "PT Telkomsel")
+
+        single = self.storage.get_praktisi_mengajar_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["practitioner_name"], "Ir. Hendra Wijaya, M.Sc.")
+        self.assertIsNone(self.storage.get_praktisi_mengajar_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
