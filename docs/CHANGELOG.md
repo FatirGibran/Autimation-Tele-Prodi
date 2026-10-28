@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 805+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 835+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 791 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 819 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -975,6 +975,43 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 810. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 33, dan pembaruan metrik proyek.
 811. **Ekspansi Suite Pengujian Unit Terpadu (791 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 791 unit test terverifikasi (100% pass rate).
 812. **Finalisasi Milestone v4.5.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
+---
+
+## 34. Ekspansi Arsitektur v4.6.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+813. **Sanitasi Elemen Riwayat Revisi `<del>` dan `<ins>` (`sanitizer.py`)**: Validasi elemen HTML5 `<del>` dan `<ins>`, pembersihan atribut `cite` dari pseudo-protokol JavaScript, penegakan format datetime ISO 8601, dan eliminasi event handler inline.
+814. **Sanitasi Atribut Aksi Form Input HTML5 (`sanitizer.py`)**: Pengamanan atribut aksi dinamis `formaction`, `formmethod`, `formtarget`, `formenctype` pada elemen form HTML5, pembatasan target ke nilai aman, dan stripping script eksternal.
+815. **Sanitasi Opsi Saran Datalist HTML5 (`sanitizer.py`)**: Sanitasi elemen `<datalist>` dan `<option>`, validasi atribut `value` dan `label`, pembersihan muatan karakter berbahaya dan injeksi event inline.
+816. **Kalkulator Ambang Nonlinier Stimulated Raman Scattering (SRS) (`parser.py`)**: Perhitungan panjang efektif serat optik $L_{\text{eff}}$, ambang daya kritis Raman $P_{\text{th}} = \frac{16 A_{\text{eff}}}{g_R L_{\text{eff}}}$, margin redaman Raman depletion dalam dB, dan klasifikasi keamanan transmisi DWDM menurut kaidah Stolen & Smith.
+817. **Kalkulator Radiasi Daya 5G NR EIRP & PSD 3GPP TS 38.104 (`parser.py`)**: Perhitungan daya terpancar isotropik efektif EIRP (dBm dan Watt), Power Spectral Density (dBm/MHz), serta evaluasi kepatuhan ambang batas emisi regulasi Kominfo / 3GPP.
+818. **Kalkulator Faraday Rotation Propagasi Satelit ITU-R P.531 (`parser.py`)**: Estimasi sudut rotasi polarisasi gelombang ionosfer $\Omega$ berdasarkan frekuensi GHz, Total Electron Content (TEC), dan medan geomagnetik rata-rata, serta perhitungan rugi-rugi ketidakcocokan polarisasi.
+819. **Evaluator Rekognisi MBKM Praktisi Mengajar Kolaborasi Industri (`parser.py`)**: Evaluasi penilaian studi kasus industri (40%), penilaian praktisi ahli (40%), evaluasi kuesioner mahasiswa (20%), konversi nilai mutu huruf, dan pengakuan hingga 4 SKS kurikulum prodi.
+820. **Auditor Penanda Data Terstruktur Skema Person Schema.org (`seo_validator.py`)**: Pemeriksaan kelengkapan metadata profil akademisi dan dosen peneliti (JSON-LD atau Microdata) untuk penguatan sinyal Google E-E-A-T.
+821. **Auditor Dimensi & Rasio Open Graph Image (`seo_validator.py`)**: Audit dimensi lebar minimal 600 px dan tinggi minimal 315 px (rekomendasi 1200x630 px) serta rasio aspek ideal 1.91:1 untuk pratinjau media sosial tajam.
+822. **Auditor Aksesibilitas Skalabilitas Viewport WCAG 2.1 (`seo_validator.py`)**: Verifikasi deklarasi meta viewport terhadap pencegahan disabilitas netra akibat `user-scalable=no` atau pembatasan `maximum-scale <= 1.0` sesuai WCAG 2.1 SC 1.4.4.
+823. **Auditor Subresource Integrity (SRI) Keamanan Aset CDN (`seo_validator.py`)**: Validasi keberadaan hash kriptografis `integrity` (sha256/sha384/sha512) dan atribut `crossorigin="anonymous"` pada script dan stylesheet CDN pihak ketiga.
+824. **Komponen Telemetri Ambang Batas SRS Serat Optik (`components.py`)**: Kartu visual Elementor daya input kanal, ambang batas Raman $P_{\text{th}}$, panjang bentang serat optik, margin keselamatan dB, dan status kelulusan uji SRS.
+825. **Komponen Telemetri Radiasi Daya 5G NR EIRP & PSD (`components.py`)**: Kartu visual Elementor conducted power, antenna gain dBi, total radiated power EIRP, kerapatan daya spektral PSD dBm/MHz, dan kepatuhan regulasi Kominfo.
+826. **Komponen Telemetri Faraday Rotation Satelit ITU-R P.531 (`components.py`)**: Kartu visual Elementor frekuensi satelit, Total Electron Content (TEC), sudut rotasi derajat, rugi mismatch polarisasi dB, dan rekomendasi penggunaan circular polarization.
+827. **Komponen Rekognisi Kolaborasi Industri Praktisi Mengajar (`components.py`)**: Kartu penghargaan kolaborasi MBKM praktisi industri, instansi mitra, nama dosen pendamping, jam mengajar, nilai komposit, dan SKS diakui.
+828. **Komponen Diagram Pola Radiasi Antena 5G NR Inline SVG (`components.py`)**: Kartu visualisasi diagram polar pola radiasi antena beamforming 5G NR menampilkan main lobe boresight 0°, Half-Power Beamwidth (HPBW), dan penekanan sidelobe.
+829. **Formatter Telegram Laporan Faraday Rotation Satelit (`formatters.py`)**: Format buletin Telegram resmi audit rotasi polarisasi ionosfer satelit bumi-angkasa menurut standar ITU-R P.531.
+830. **Formatter Telegram Pengumuman Kolaborasi Praktisi Mengajar (`formatters.py`)**: Format buletin Telegram resmi pengumuman sinergi industri dan dosen dalam perkuliahan praktisi mengajar MBKM.
+831. **Manajer Rekam Audit Ambang SRS Serat Optik (`storage.py`)**: Skema tabel SQLite `optical_srs_records` dan fungsi `record_optical_srs`, `list_optical_srs`, `get_optical_srs_by_id`.
+832. **Manajer Rekam Kepatuhan Radiasi Daya 5G NR (`storage.py`)**: Skema tabel SQLite `nr_eirp_records` dan fungsi `record_nr_eirp`, `list_nr_eirps`, `get_nr_eirp_by_id`.
+833. **Manajer Rekam Kolaborasi Praktisi Mengajar MBKM (`storage.py`)**: Skema tabel SQLite `praktisi_mengajar_records` dan fungsi `record_praktisi_mengajar`, `list_praktisi_mengajar`, `get_praktisi_mengajar_by_id`.
+834. **Helper WordPress Create Page (`wordpress_client.py`)**: Metode `create_page` untuk membuat halaman statis WordPress baru via REST API (`/wp/v2/pages`).
+835. **Helper WordPress Delete Page (`wordpress_client.py`)**: Metode `delete_page` untuk menghapus halaman statis WordPress via REST API (`/wp/v2/pages/{id}`).
+836. **Generator Schema.org Person JSON-LD (`exporter.py`)**: Metode `generate_person_json_ld` menghasilkan struktur metadata standar Google Person Knowledge Graph untuk author profile dosen dan peneliti.
+837. **Eksportir Dokumentasi MDX Remix App (`exporter.py`)**: Metode `to_remix_mdx` mengonversi artikel ke format dokumentasi Remix / React Router v7 MDX dengan frontmatter YAML dan deklarasi rute terintegrasi.
+838. **Subcommand CLI `srs` (`cli.py`)**: Perintah konsol `srs` untuk audit dan kalkulasi ambang batas nonlinier Stimulated Raman Scattering serat optik.
+839. **Subcommand CLI `eirp` (`cli.py`)**: Perintah konsol `eirp` untuk evaluasi kepatuhan daya radiasi efektif isotropik dan PSD 5G NR.
+840. **Subcommand CLI `praktisi` (`cli.py`)**: Perintah konsol `praktisi` untuk evaluasi dan pencatatan rekognisi SKS kolaborasi industri Praktisi Mengajar.
+841. **Dokumentasi Perubahan Arsitektur v4.6.0 (`docs/changes/83_v4_6_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.6.0.
+842. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 34, dan pembaruan metrik proyek.
+843. **Ekspansi Suite Pengujian Unit Terpadu (819 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 819 unit test terverifikasi (100% pass rate).
+844. **Finalisasi Milestone v4.6.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
 
 
 
