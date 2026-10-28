@@ -1918,6 +1918,37 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_person_json_ld(person_data: Dict[str, Any]) -> str:
+        """
+        Generates Schema.org Person JSON-LD structured data markup for faculty profiles,
+        researchers, and lecturers to enrich Google Knowledge Graph & E-E-A-T signals.
+        """
+        schema: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": person_data.get("name", "").strip(),
+            "jobTitle": person_data.get("job_title", person_data.get("jobTitle", "Dosen & Peneliti")),
+            "worksFor": {
+                "@type": "EducationalOrganization",
+                "name": person_data.get("organization", "Telkom University Purwokerto"),
+                "sameAs": person_data.get("org_url", "https://bif-pwt.telkomuniversity.ac.id")
+            }
+        }
+        if person_data.get("email"):
+            schema["email"] = person_data["email"].strip()
+        if person_data.get("url"):
+            schema["url"] = person_data["url"].strip()
+        if person_data.get("image_url") or person_data.get("image"):
+            schema["image"] = (person_data.get("image_url") or person_data.get("image", "")).strip()
+        if person_data.get("same_as") or person_data.get("sameAs"):
+            same_as = person_data.get("same_as") or person_data.get("sameAs")
+            if isinstance(same_as, str):
+                same_as = [s.strip() for s in same_as.split(",") if s.strip()]
+            schema["sameAs"] = same_as
+
+        return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2, ensure_ascii=False)}\n</script>'
+
 
 
 
