@@ -1708,6 +1708,40 @@ def sanitize_html5_ruby_annotation_elements(html: str) -> str:
     return out
 
 
+def sanitize_html5_del_ins_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 editorial track-changes elements (<del> and <ins>) by stripping inline event handlers,
+    style attributes, validating that the cite attribute only allows safe HTTP/HTTPS URLs (scrubbing javascript:
+    and data: schemes), and ensuring datetime attributes are valid ISO date strings.
+    """
+    if not html or ("<del" not in html.lower() and "<ins" not in html.lower()):
+        return html
+
+    def fix_edit_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate cite attribute
+        cite_m = re.search(r'\bcite=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if cite_m:
+            cite_val = cite_m.group(1).strip().lower()
+            if cite_val.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', cite_val):
+                tag = re.sub(r'\s+cite=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate datetime attribute
+        dt_m = re.search(r'\bdatetime=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if dt_m:
+            dt_val = dt_m.group(1).strip()
+            if not re.match(r'^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?$', dt_val):
+                tag = re.sub(r'\s+datetime=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<(?:del|ins)\b[^>]*>', fix_edit_tag, html, flags=re.IGNORECASE)
+
+
+
 
 
 
