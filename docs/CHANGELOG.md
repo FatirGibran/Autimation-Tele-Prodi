@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 835+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 865+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 819 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 845 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -1012,6 +1012,44 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 842. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 34, dan pembaruan metrik proyek.
 843. **Ekspansi Suite Pengujian Unit Terpadu (819 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 819 unit test terverifikasi (100% pass rate).
 844. **Finalisasi Milestone v4.6.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
+---
+
+## 35. Ekspansi Arsitektur v4.7.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+845. **Sanitasi Elemen Kolom Tabel `<col>` dan `<colgroup>` (`sanitizer.py`)**: Sanitasi elemen tabel HTML5 `<col>` dan `<colgroup>`, validasi atribut numerik `span`, pembersihan format lebar `width` (persentase, piksel, atau nilai relatif), dan eliminasi event handler inline.
+846. **Sanitasi Elemen Kutipan `<cite>` dan `<q>` (`sanitizer.py`)**: Sanitasi elemen kutipan teks, verifikasi skema URI aman atribut `cite` (`http`, `https`, atau jalur relatif), proteksi terhadap skema pseudo-protokol JavaScript, dan pembersihan event handler inline.
+847. **Sanitasi Atribut Form Kontrol `<textarea>` (`sanitizer.py`)**: Sanitasi kontrol formulir teks banyak baris, validasi batasan dimensi `rows` dan `cols`, panjang karakter `maxlength` dan `minlength`, teks placeholder, serta pembatasan mode `wrap`.
+848. **Kalkulator Pelebaran Spektral Self-Phase Modulation (SPM) Serat Optik DWDM (`parser.py`)**: Perhitungan panjang efektif serat $L_{\text{eff}}$, pergeseran fase nonlinier maksimum $\phi_{\max} = \gamma P_0 L_{\text{eff}}$, B-integral, estimasi faktor pelebaran spektral $\sigma/\sigma_0$, dan evaluasi tingkat risiko SPM transmisi DWDM berkecepatan tinggi.
+849. **Kalkulator Throughput 5G NR Carrier Aggregation (CA) 3GPP TS 38.306 (`parser.py`)**: Perhitungan akumulasi kapasitas throughput multi-carrier (PCC dan SCC) berdasarkan alokasi bandwidth MHz, jumlah lapisan MIMO spatial multiplexing, skema modulasi digital, serta efisiensi spektral agregat (bps/Hz).
+850. **Kalkulator Redaman Hujan Propagasi Satelit ITU-R P.618-13 (`parser.py`)**: Perhitungan panjang lintasan miring efektif satelit bumi-angkasa $L_s$, koefisien redaman spesifik $\gamma_R = k R^\alpha$ rekomendasi ITU-R P.838, faktor penyesuaian lintasan horizontal & vertikal, estimasi redaman hujan $A_{0.01}$, dan evaluasi link margin ketersediaan satelit Ku/Ka-band.
+851. **Evaluator Rekognisi MBKM Wirausaha Mahasiswa P2MW (`parser.py`)**: Evaluasi performa startup mahasiswa peserta program P2MW berdasarkan Business Model Canvas & Pitching (35%), kemajuan prototipe dan traksi pasar (40%), tata kelola dan akuntabilitas keuangan (25%), konversi nilai mutu, dan pengakuan hingga 6 SKS kurikulum prodi.
+852. **Auditor Skema EducationalOccupationalCredential Schema.org (`seo_validator.py`)**: Audit penanda data terstruktur Schema.org `EducationalOccupationalCredential` (JSON-LD atau Microdata) untuk sertifikasi keahlian telekomunikasi dan modul mikrokredensial akademik prodi.
+853. **Auditor Web App Manifest & Theme Color (`seo_validator.py`)**: Audit keterhubungan berkas `manifest.json` / `site.webmanifest` dan meta tag `theme-color` pada header dokumen untuk optimasi Progressive Web App dan mobile search indexing.
+854. **Auditor Aksesibilitas ARIA Landmarks & Heading Semantik WCAG 2.1 (`seo_validator.py`)**: Audit struktur peran landmark ARIA (`banner`, `main`, `navigation`, `contentinfo`) dan konsistensi hirarki heading semantik H1-H6 sesuai standar WCAG 2.1 SC 1.3.1.
+855. **Auditor Kepatuhan CORS Preload Font Web (`seo_validator.py`)**: Audit deklarasi `<link rel="preload" as="font">` terhadap kepatuhan atribut `crossorigin="anonymous"` untuk mencegah double-fetch font yang memperburuk metrik Core Web Vitals (LCP/CLS).
+856. **Komponen Telemetri Pergeseran Fase SPM Serat Optik (`components.py`)**: Kartu visual Elementor daya input optik, panjang bentang serat, pergeseran fase nonlinier maksimum $\phi_{\max}$, B-integral, faktor pelebaran spektral, dan klasifikasi kelayakan SPM.
+857. **Komponen Telemetri Aggregate Throughput 5G NR Carrier Aggregation (`components.py`)**: Kartu visual Elementor konfigurasi alokasi komponen carrier PCC & SCC, jumlah carrier, total bandwidth MHz, estimasi aggregate peak data rate (Gbps), dan efisiensi spektral (bps/Hz).
+858. **Komponen Evaluasi Link Margin Redaman Hujan Satelit ITU-R P.618 (`components.py`)**: Kartu visual Elementor sudut elevasi antena stasiun bumi, frekuensi GHz, laju curah hujan R0.01, estimasi redaman hujan lintasan miring dB, dan evaluasi link availability margin.
+859. **Komponen Rekognisi Program Wirausaha Mahasiswa P2MW (`components.py`)**: Kartu visual Elementor capaian startup rintisan mahasiswa, tahapan usaha, kategori industri, skor pitch BMC, prototipe, tata kelola keuangan, indeks prestasi mutu, dan konversi SKS.
+860. **Komponen Diagram Alokasi Spektrum 5G NR Carrier Aggregation Inline SVG (`components.py`)**: Kartu visualisasi representasi grafis distribusi pita spektrum frekuensi PCC dan SCC multi-carrier 5G NR berbasis inline SVG responsif dengan detail bandwidth dan pusat frekuensi.
+861. **Formatter Telegram Laporan Redaman Hujan Satelit ITU-R P.618 (`formatters.py`)**: Format buletin Telegram resmi audit transmisi propagasi satelit bumi-angkasa dan evaluasi ketahanan link redaman hujan.
+862. **Formatter Telegram Pengumuman Rekognisi Wirausaha P2MW (`formatters.py`)**: Format buletin Telegram resmi pengumuman pencapaian mahasiswa wirausaha dan pengakuan konversi SKS program P2MW.
+863. **Manajer Rekam Audit Pergeseran Fase SPM Serat Optik (`storage.py`)**: Skema tabel SQLite `optical_spm_records` dan fungsi `record_optical_spm`, `list_optical_spm`, `get_optical_spm_by_id`.
+864. **Manajer Rekam Konfigurasi 5G NR Carrier Aggregation (`storage.py`)**: Skema tabel SQLite `nr_ca_records` dan fungsi `record_nr_ca_throughput`, `list_nr_ca_throughputs`, `get_nr_ca_by_id`.
+865. **Manajer Rekam Startup Wirausaha Mahasiswa P2MW (`storage.py`)**: Skema tabel SQLite `p2mw_startup_records` dan fungsi `record_p2mw_startup`, `list_p2mw_startups`, `get_p2mw_startup_by_id`.
+866. **Helper WordPress Get Site Settings (`wordpress_client.py`)**: Metode `get_site_settings` untuk membaca konfigurasi situs WordPress via REST API (`/wp/v2/settings`).
+867. **Helper WordPress Update Site Settings (`wordpress_client.py`)**: Metode `update_site_settings` untuk memperbarui pengaturan situs WordPress via REST API (`/wp/v2/settings`).
+868. **Generator Schema.org EducationalOccupationalCredential JSON-LD (`exporter.py`)**: Metode `generate_credential_json_ld` menghasilkan struktur metadata standar Google Credential Knowledge Graph untuk mikrokredensial dan sertifikasi prodi.
+869. **Eksportir Dokumentasi MDX Qwik City App (`exporter.py`)**: Metode `to_qwik_city_mdx` mengonversi artikel ke format dokumentasi Qwik City MDX dengan frontmatter YAML dan struktur komponen terintegrasi.
+870. **Subcommand CLI `spm` (`cli.py`)**: Perintah konsol `spm` untuk audit dan kalkulasi efek nonlinier Self-Phase Modulation serat optik.
+871. **Subcommand CLI `ca` (`cli.py`)**: Perintah konsol `ca` untuk evaluasi dan pencatatan konfigurasi multi-carrier 5G NR Carrier Aggregation.
+872. **Subcommand CLI `p2mw` (`cli.py`)**: Perintah konsol `p2mw` untuk evaluasi dan pencatatan rekognisi SKS program wirausaha mahasiswa P2MW.
+873. **Dokumentasi Perubahan Arsitektur v4.7.0 (`docs/changes/84_v4_7_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.7.0.
+874. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 35, dan pembaruan metrik proyek.
+875. **Ekspansi Suite Pengujian Unit Terpadu (845 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 845 unit test terverifikasi (100% pass rate).
+876. **Finalisasi Milestone v4.7.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
 
 
 
