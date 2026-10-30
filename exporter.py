@@ -2035,6 +2035,39 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_software_application_json_ld(app_data: Dict[str, Any]) -> str:
+        """
+        Generates Schema.org/SoftwareApplication or WebApplication JSON-LD markup
+        for engineering calculation tools, antenna simulators, and lab software.
+        """
+        schema = {
+            "@context": "https://schema.org",
+            "@type": app_data.get("application_type", "WebApplication"),
+            "name": app_data.get("name", "Tool Rekayasa Telekomunikasi").strip(),
+            "description": app_data.get("description", "").strip(),
+            "applicationCategory": app_data.get("application_category", "EducationalApplication"),
+            "operatingSystem": app_data.get("operating_system", "Web Browser"),
+            "softwareVersion": app_data.get("software_version", "1.0.0"),
+            "offers": {
+                "@type": "Offer",
+                "price": app_data.get("offers_price", "0"),
+                "priceCurrency": "IDR"
+            },
+            "author": {
+                "@type": "CollegeOrUniversity",
+                "name": "Telkom University Purwokerto",
+                "url": "https://bif-pwt.telkomuniversity.ac.id"
+            }
+        }
+        if app_data.get("download_url"):
+            schema["downloadUrl"] = app_data["download_url"].strip()
+        if app_data.get("url"):
+            schema["url"] = app_data["url"].strip()
+
+        return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2, ensure_ascii=False)}\n</script>'
+
+
 
 
 
