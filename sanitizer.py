@@ -1868,6 +1868,40 @@ def sanitize_html5_textarea_attributes(html: str) -> str:
     return re.sub(r'<textarea\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_textarea, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_button_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <button> interactive elements by stripping inline event handlers,
+    contenteditable/style attributes, enforcing safe type values (button/submit/reset),
+    and neutralizing unsafe formaction URLs (javascript:, data:).
+    """
+    if not html or "<button" not in html.lower():
+        return html
+
+    def fix_button(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate type attribute
+        type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if type_m:
+            btn_type = type_m.group(1).strip().lower()
+            if btn_type not in ("button", "submit", "reset"):
+                tag = re.sub(r'\btype=["\'][^"\']*["\']', 'type="button"', tag, flags=re.IGNORECASE)
+
+        # Validate formaction URL
+        fa_m = re.search(r'\bformaction=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if fa_m:
+            url = fa_m.group(1).strip().lower()
+            if url.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', url):
+                tag = re.sub(r'\s+formaction=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<button\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_button, html, flags=re.IGNORECASE)
+
+
+
 
 
 
