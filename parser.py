@@ -6255,6 +6255,64 @@ def calculate_optical_xpm_phase_shift(
     }
 
 
+def calculate_5g_nr_massive_mimo_gain(
+    num_rows: int = 8,
+    num_cols: int = 8,
+    polarization_layers: int = 2,
+    element_gain_dbi: float = 6.0,
+    carrier_freq_ghz: float = 3.5,
+    conducted_power_dbm: float = 43.0
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP TS 38.211 / TR 38.901 Massive MIMO planar antenna array gain,
+    beamwidth (HPBW), Equivalent Isotropically Radiated Power (EIRP), and spatial multiplexing capacity.
+    """
+    m_rows = max(1, int(num_rows))
+    n_cols = max(1, int(num_cols))
+    p_layers = max(1, int(polarization_layers))
+    elem_gain = float(element_gain_dbi)
+    freq_ghz = max(0.4, float(carrier_freq_ghz))
+    p_conducted = float(conducted_power_dbm)
+
+    # Total physical antenna elements
+    total_elements = m_rows * n_cols * p_layers
+
+    # Planar array coherent beamforming gain: 10 * log10(M * N)
+    array_gain_db = 10.0 * math.log10(m_rows * n_cols)
+    total_antenna_gain_dbi = elem_gain + array_gain_db
+
+    # Half-Power Beamwidth (HPBW) approximations for uniform rectangular array (deg)
+    # HPBW_az ~ 102 deg / N_cols, HPBW_el ~ 102 deg / M_rows
+    hpbw_azimuth_deg = 102.0 / n_cols
+    hpbw_elevation_deg = 102.0 / m_rows
+
+    # Total Radiated Power / EIRP
+    eirp_dbm = p_conducted + total_antenna_gain_dbi
+    eirp_watts = 10.0 ** ((eirp_dbm - 30.0) / 10.0)
+
+    # Maximum supported simultaneous spatial layers (rank) in 3GPP Rel-16/17 (up to 16 for gNB)
+    max_spatial_layers = min(16, total_elements // 2)
+
+    return {
+        "num_rows": m_rows,
+        "num_cols": n_cols,
+        "polarization_layers": p_layers,
+        "total_elements": total_elements,
+        "element_gain_dbi": round(elem_gain, 2),
+        "array_gain_dbi": round(array_gain_db, 2),
+        "total_gain_dbi": round(total_antenna_gain_dbi, 2),
+        "hpbw_azimuth_deg": round(hpbw_azimuth_deg, 2),
+        "hpbw_elevation_deg": round(hpbw_elevation_deg, 2),
+        "carrier_freq_ghz": round(freq_ghz, 2),
+        "conducted_power_dbm": round(p_conducted, 2),
+        "eirp_dbm": round(eirp_dbm, 2),
+        "eirp_watts": round(eirp_watts, 2),
+        "max_spatial_layers": max_spatial_layers,
+        "is_massive_mimo": total_elements >= 32
+    }
+
+
+
 
 
 
