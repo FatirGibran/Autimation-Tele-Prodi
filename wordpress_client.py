@@ -951,6 +951,31 @@ class WordPressClient:
         results = self._send_request(req)
         return results if isinstance(results, list) else []
 
+    def bulk_update_comment_status(
+        self,
+        comment_ids: List[int],
+        status: str = "approve"
+    ) -> Dict[str, Any]:
+        """
+        Bulk updates moderation status for multiple comments in batch via REST API (/wp/v2/comments/{id}).
+        """
+        success = []
+        failed = []
+        for cid in comment_ids:
+            try:
+                self.update_comment_status(int(cid), status.strip())
+                success.append(int(cid))
+            except Exception as e:
+                failed.append({"comment_id": int(cid), "error": str(e)})
+
+        return {
+            "success": success,
+            "failed": failed,
+            "total": len(comment_ids),
+            "status": status.strip()
+        }
+
+
 
 
 
