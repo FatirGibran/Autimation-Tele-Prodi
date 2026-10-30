@@ -5649,6 +5649,49 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_prefers_reduced_motion_media(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits CSS stylesheet and style blocks to ensure animations and keyframes
+        respect the user's 'prefers-reduced-motion: reduce' media query according to WCAG 2.1 SC 2.3.3.
+        """
+        if not html_content:
+            return {"has_animations": False, "is_accessible": True, "issues": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        all_styles = []
+        for s in soup.find_all("style"):
+            if s.string:
+                all_styles.append(s.string)
+
+        combined_css = " ".join(all_styles)
+
+        # Check for presence of CSS animations or keyframes
+        has_keyframes = bool(re.search(r'@(?:-webkit-)?keyframes\b', combined_css, re.IGNORECASE))
+        has_animation_prop = bool(re.search(r'\banimation\s*:', combined_css, re.IGNORECASE))
+        has_animations = has_keyframes or has_animation_prop
+
+        # Check for prefers-reduced-motion query
+        has_reduced_motion = bool(re.search(r'@media[^{]*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)', combined_css, re.IGNORECASE))
+
+        if has_animations and not has_reduced_motion:
+            issues.append("Halaman mendefinisikan CSS animation/keyframes tanpa menyertakan media query '@media (prefers-reduced-motion: reduce)'.")
+
+        if not has_animations and has_reduced_motion:
+            warnings.append("Deklarasi prefers-reduced-motion ditemukan meskipun tidak ada @keyframes terdeteksi.")
+
+        return {
+            "has_animations": has_animations,
+            "has_reduced_motion_override": has_reduced_motion,
+            "is_accessible": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
