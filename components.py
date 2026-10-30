@@ -6221,6 +6221,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_proposal_card(
+        cls,
+        student_name: str,
+        nim: str,
+        proposal_title: str,
+        scheme: str,
+        composite_score: float,
+        letter_grade: str,
+        funding_status: str,
+        converted_sks: int
+    ) -> str:
+        """
+        Renders a PKM Simbelmawa student proposal funding, milestone evaluation, and SKS conversion card.
+        """
+        is_funded = converted_sks >= 3
+        badge_bg = "#ecfdf5" if is_funded else "#eff6ff"
+        badge_color = "#047857" if is_funded else "#1d4ed8"
+        border_color = "#10b981" if is_funded else "#3b82f6"
+
+        return f"""    <div class="tu-pkm-proposal-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-pkm-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0f172a; font-size: 13px; text-transform: uppercase;">Program Kreativitas Mahasiswa (PKM Simbelmawa)</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{scheme}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">{proposal_title}</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+        Skema: <strong>{scheme}</strong> | Ketua Tim: {student_name} ({nim})
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Skor Evaluasi</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{composite_score:.1f} ({letter_grade})</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Pengakuan SKS</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{converted_sks} SKS Diakui</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Status Hibah</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{'Didanai' if is_funded else 'Seleksi Internal'}</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 10px 12px; border-radius: 6px; border-left: 4px solid {border_color}; font-size: 12px; color: #334155;">
+        Capaian Pendanaan: <strong style="color: {badge_color};">{funding_status}</strong>
+      </div>
+    </div>"""
+
+
 
 
 
