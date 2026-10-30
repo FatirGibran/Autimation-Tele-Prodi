@@ -1391,6 +1391,34 @@ class TelegramFormatter:
             f"📡 *Data diverifikasi menurut rekomendasi propagasi gelombang mikro ITU-R P.676.*"
         )
 
+    @staticmethod
+    def format_pkm_proposal_telegram(
+        student_name: str,
+        nim: str,
+        proposal_title: str,
+        scheme: str,
+        composite_score: float,
+        letter_grade: str,
+        funding_status: str,
+        converted_sks: int,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a student PKM proposal funding and SKS recognition announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Simbelmawa:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🏆 **Apresiasi Kelulusan Proposal PKM Simbelmawa Kemendikbudristek**\n\n"
+            f"💡 **Judul Proposal:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_name.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏷️ **Skema:** {scheme.strip()}\n"
+            f"📈 **Skor Evaluasi:** `{float(composite_score):.1f}` (`Nilai: {letter_grade.strip()}`)\n"
+            f"🎖️ **Rekognisi Kurikulum:** `{int(converted_sks)} SKS Diakui`\n"
+            f"📊 **Status Pendanaan:** `{funding_status.strip()}`{portal_link}\n\n"
+            f"🎉 *Selamat kepada tim mahasiswa pengusul! Teruslah berkarya dan berprestasi menuju PIMNAS!*"
+        )
+
+
 
 
 
