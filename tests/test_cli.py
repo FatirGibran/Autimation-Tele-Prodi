@@ -2502,6 +2502,88 @@ class TestCLI(unittest.TestCase):
             self.assertIn("1101210088", out)
             self.assertIn("IoT Smart Agricult", out)
 
+    def test_cmd_gas(self):
+        class ArgsAdd:
+            action = "add"
+            sat = "Telkom-4-Ka"
+            freq = 28.5
+            elev = 45.0
+            temp = 27.0
+            pressure = 1013.25
+            vapor = 18.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_gas(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan redaman gas atmosfer satelit berhasil disimpan", out)
+            self.assertIn("Slant Path:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_gas(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Telkom-4-Ka", out)
+            self.assertIn("28.5", out)
+
+    def test_cmd_massive_mimo(self):
+        class ArgsAdd:
+            action = "add"
+            site = "GNB-SITE-BDG-01"
+            rows = 8
+            cols = 8
+            pol = 2
+            gain = 6.0
+            freq = 3.5
+            power = 43.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_massive_mimo(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR Massive MIMO berhasil disimpan", out)
+            self.assertIn("Elemen: 128", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_massive_mimo(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("GNB-SITE-BDG-01", out)
+            self.assertIn("8x8x2", out)
+            self.assertIn("128", out)
+
+    def test_cmd_pkm_proposal(self):
+        class ArgsAdd:
+            action = "add"
+            name = "Rizky Firmansyah"
+            nim = "1201210034"
+            title = "Sistem Radar Cuaca Maritim Terdistribusi"
+            scheme = "PKM-KC"
+            creat = 90.0
+            method = 88.0
+            out = 85.0
+            budget = 86.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkm_proposal(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Proposal PKM berhasil disimpan", out)
+            self.assertIn("SKS Diakui", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkm_proposal(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("1201210034", out)
+            self.assertIn("PKM-KC", out)
+
 
 if __name__ == "__main__":
     unittest.main()
