@@ -936,6 +936,22 @@ class WordPressClient:
         req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
         return self._send_request(req)
 
+    def get_comments_by_status(
+        self,
+        status: str = "hold",
+        page: int = 1,
+        per_page: int = 20
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves comments across all posts filtered by moderation status (approve, hold, spam, trash) via REST API (/wp/v2/comments).
+        """
+        clean_status = urllib.parse.quote(status.strip().lower())
+        endpoint = f"{self.api_url}/comments?status={clean_status}&page={max(1, int(page))}&per_page={max(1, min(100, int(per_page)))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        return results if isinstance(results, list) else []
+
+
 
 
 
