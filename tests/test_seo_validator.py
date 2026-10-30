@@ -1893,6 +1893,71 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(res_bad["total_font_preloads"], 1)
         self.assertFalse(res_bad["is_valid"])
 
+    def test_audit_scholarly_article_schema(self):
+        html_ok = (
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "ScholarlyArticle", "headline": "Analisis Nonlinier XPM", "author": {"@type": "Person", "name": "Dr. Eng. Ir. Budi"}}'
+            '</script>'
+        )
+        res_ok = YoastSEOValidator.audit_scholarly_article_schema(html_ok)
+        self.assertTrue(res_ok["has_scholarly_schema"])
+        self.assertTrue(res_ok["is_valid"])
+
+        html_bad = '<div><p>Paper tanpa skema</p></div>'
+        res_bad = YoastSEOValidator.audit_scholarly_article_schema(html_bad)
+        self.assertFalse(res_bad["has_scholarly_schema"])
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_coop_coep_cross_origin_isolation(self):
+        html_ok = (
+            '<head>'
+            '<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">'
+            '<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_coop_coep_cross_origin_isolation(html_ok)
+        self.assertTrue(res_ok["is_isolated"])
+        self.assertTrue(res_ok["is_valid"])
+
+        html_bad = '<head><title>No isolation</title></head>'
+        res_bad = YoastSEOValidator.audit_coop_coep_cross_origin_isolation(html_bad)
+        self.assertFalse(res_bad["is_isolated"])
+        self.assertFalse(res_bad["is_valid"])
+
+    def test_audit_prefers_reduced_motion_media(self):
+        html_ok = (
+            '<style>'
+            '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }'
+            '@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }'
+            '</style>'
+        )
+        res_ok = YoastSEOValidator.audit_prefers_reduced_motion_media(html_ok)
+        self.assertTrue(res_ok["has_animations"])
+        self.assertTrue(res_ok["has_reduced_motion_override"])
+        self.assertTrue(res_ok["is_accessible"])
+
+        html_bad = '<style>@keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0; } }</style>'
+        res_bad = YoastSEOValidator.audit_prefers_reduced_motion_media(html_bad)
+        self.assertTrue(res_bad["has_animations"])
+        self.assertFalse(res_bad["has_reduced_motion_override"])
+        self.assertFalse(res_bad["is_accessible"])
+
+    def test_audit_pdf_link_indicators(self):
+        html_ok = (
+            '<p>Unduh silabus: <a href="/docs/silabus-tel4102.pdf">Silabus Kurikulum 2026 [PDF]</a> dan '
+            '<a href="/docs/laporan.docx" aria-label="Laporan DOCX">Format Laporan</a></p>'
+        )
+        res_ok = YoastSEOValidator.audit_pdf_link_indicators(html_ok)
+        self.assertEqual(res_ok["total_document_links"], 2)
+        self.assertEqual(res_ok["compliant_links"], 2)
+        self.assertTrue(res_ok["is_compliant"])
+
+        html_bad = '<p>Dokumen: <a href="/docs/guide.pdf">Klik disini</a></p>'
+        res_bad = YoastSEOValidator.audit_pdf_link_indicators(html_bad)
+        self.assertEqual(res_bad["total_document_links"], 1)
+        self.assertEqual(res_bad["compliant_links"], 0)
+        self.assertFalse(res_bad["is_compliant"])
+
 
 if __name__ == "__main__":
     unittest.main()
