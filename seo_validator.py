@@ -5548,6 +5548,66 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_scholarly_article_schema(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Schema.org 'ScholarlyArticle', 'TechArticle', or academic research paper
+        metadata markup in JSON-LD or Microdata format to boost scientific E-E-A-T indexing.
+        """
+        if not html_content:
+            return {"has_scholarly_schema": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        found_scholarly = False
+        valid_count = 0
+
+        # 1. Audit JSON-LD
+        for script in soup.find_all("script", type="application/ld+json"):
+            try:
+                data = json.loads(script.string or "{}")
+                items = data if isinstance(data, list) else data.get("@graph", [data])
+                for item in items:
+                    stype = item.get("@type", "")
+                    if isinstance(stype, list):
+                        stypes = stype
+                    else:
+                        stypes = [stype]
+                    if any(t in ("ScholarlyArticle", "TechArticle", "MedicalScholarlyArticle") for t in stypes):
+                        found_scholarly = True
+                        if not item.get("headline") and not item.get("name"):
+                            issues.append("ScholarlyArticle JSON-LD wajib memiliki properti 'headline' atau 'name'.")
+                        if not item.get("author"):
+                            issues.append("ScholarlyArticle JSON-LD wajib mencantumkan properti 'author' peneliti/penulis.")
+                        if not item.get("datePublished"):
+                            warnings.append("Disarankan mencantumkan tanggal publikasi artikel 'datePublished'.")
+                        if not item.get("abstract") and not item.get("description"):
+                            warnings.append("Disarankan mencantumkan ringkasan riset 'abstract' atau 'description'.")
+                        if len(issues) == 0:
+                            valid_count += 1
+            except Exception as e:
+                issues.append(f"Gagal mem-parsing blok JSON-LD: {str(e)}")
+
+        # 2. Audit Microdata itemtype
+        for el in soup.find_all(attrs={"itemtype": True}):
+            itype = el.get("itemtype", "")
+            if any(t in itype for t in ("ScholarlyArticle", "TechArticle")):
+                found_scholarly = True
+                valid_count += 1
+
+        if not found_scholarly:
+            issues.append("Tidak ditemukan penanda data terstruktur Schema.org ScholarlyArticle atau TechArticle.")
+
+        return {
+            "has_scholarly_schema": found_scholarly,
+            "valid_count": valid_count,
+            "is_valid": found_scholarly and len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
