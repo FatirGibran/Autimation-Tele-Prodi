@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 865+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 895+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 845 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 872 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -1049,6 +1049,44 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 874. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 35, dan pembaruan metrik proyek.
 875. **Ekspansi Suite Pengujian Unit Terpadu (845 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 845 unit test terverifikasi (100% pass rate).
 876. **Finalisasi Milestone v4.7.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
+---
+
+## 36. Ekspansi Arsitektur v4.8.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+877. **Sanitasi Elemen Kontrol Tombol `<button>` (`sanitizer.py`)**: Sanitasi elemen tombol HTML5, pembatasan atribut `type` ke nilai yang aman (`button`, `submit`, `reset`), netralisasi parameter URL `formaction` berbahaya (`javascript:`, `data:`), dan eliminasi event handler inline.
+878. **Sanitasi Peta Area Navigasi `<area>` (`sanitizer.py`)**: Sanitasi elemen peta navigasi `<map>` dan `<area>`, verifikasi bentuk `shape` (`rect`, `circle`, `poly`), validasi koordinat numerik `coords`, netralisasi URI berbahaya pada `href`, serta penegakan atribut teks alternatif `alt` sesuai WCAG 2.1 SC 1.1.1.
+879. **Sanitasi Atribut Elemen Daftar `<ol>`, `<ul>`, `<li>` (`sanitizer.py`)**: Sanitasi elemen daftar berurutan dan tidak berurutan, validasi integritas numerik `start` dan tipe `type` pada `<ol>`, serta validasi nomor urut `value` pada `<li>`.
+880. **Kalkulator Pergeseran Fase Nonlinier Cross-Phase Modulation (XPM) (`parser.py`)**: Perhitungan panjang efektif serat $L_{\text{eff}}$, parameter dispersi walk-off $d_{12}$, panjang walk-off $L_w$, faktor supresi $\eta_{\text{XPM}}$, akumulasi pergeseran fase efektif $\phi_{\text{XPM,eff}} = 2\gamma P_{\text{pump}} L_{\text{eff}} \eta_{\text{XPM}}$, dan evaluasi penalti interferensi kanal DWDM berkecepatan tinggi menurut kaidah optika nonlinier Agrawal.
+881. **Kalkulator Penguatan Susunan 5G NR Massive MIMO 3GPP TS 38.211 (`parser.py`)**: Perhitungan penguatan susunan koheren $G_{\text{array}} = 10\log_{10}(M \cdot N)$ dBi untuk konfigurasi planar array $M \times N \times P$ (64–128 elemen antena), estimasi Half-Power Beamwidth (HPBW) azimuth dan elevasi, Equivalent Isotropically Radiated Power (EIRP dBm dan Watt), serta estimasi batas kapasitas lapisan spasial (spatial rank).
+882. **Kalkulator Redaman Gas Atmosfer Satelit ITU-R P.676-12 (`parser.py`)**: Perhitungan koefisien serapan spesifik udara kering (resonansi oksigen $O_2$ 60 GHz) $\gamma_o$ dan uap air ($H_2O$ 22.2 GHz) $\gamma_w$ pada rentang frekuensi 1–350 GHz, ketinggian skala ekivalen atmosfer $h_o$ dan $h_w$, total redaman zenith, dan estimasi redaman lintasan miring stasiun bumi (slant path attenuation $A_g$) di iklim tropis berkelembapan tinggi.
+883. **Evaluator Seleksi Proposal Mahasiswa PKM Simbelmawa Kemendikbudristek (`parser.py`)**: Evaluasi skor seleksi proposal Program Kreativitas Mahasiswa (PKM) berdasarkan bobot penilaian nasional (kreativitas 30%, metodologi rekayasa 35%, potensi luaran/paten 20%, kelayakan RAB 15%), penentuan status pendanaan Belmawa / lolos PIMNAS, dan konversi rekognisi kurikulum hingga 4 SKS mata kuliah prodi.
+884. **Auditor Skema ScholarlyArticle Schema.org (`seo_validator.py`)**: Audit penanda data terstruktur Schema.org `ScholarlyArticle` / `TechArticle` (JSON-LD atau Microdata) untuk naskah publikasi ilmiah dosen peneliti dan skripsi mahasiswa guna memperkuat sinyal E-E-A-T Google Scholar.
+885. **Auditor Isolasi Asal Silang (COOP & COEP) WebAssembly (`seo_validator.py`)**: Audit keberadaan meta header `Cross-Origin-Opener-Policy` (COOP) dan `Cross-Origin-Embedder-Policy` (COEP) untuk menjamin pemenuhan lingkungan isolated process browser yang disyaratkan saat menjalankan simulator antena berbasis WebAssembly (Wasm) dan multi-threaded Web Workers.
+886. **Auditor Aksesibilitas Animasi Prefers-Reduced-Motion WCAG 2.1 (`seo_validator.py`)**: Audit lembar gaya CSS terhadap deklarasi media query `@media (prefers-reduced-motion: reduce)` guna melindungi pengguna penderita gangguan vestibular dari animasi transisi yang berlebihan sesuai kriteria sukses WCAG 2.1 SC 2.3.3.
+887. **Auditor Indikator Tautan Berkas Unduhan Dokumen & PDF (`seo_validator.py`)**: Audit verifikasi tautan dokumen biner non-HTML (`.pdf`, `.docx`, `.xlsx`, `.zip`) terhadap kewajiban pencantuman teks indikator ekstensi atau label aksesibilitas aria-label untuk menjamin kepatuhan WCAG 2.1 SC 3.2.4.
+888. **Komponen Telemetri Pergeseran Fase XPM Serat Optik (`components.py`)**: Kartu visual Elementor daya kanal pompa, spasi kanal frekuensi, panjang walk-off $L_w$, faktor reduksi supresi, dan pergeseran fase nonlinier XPM serat optik DWDM.
+889. **Komponen Telemetri Penguatan Planar Array 5G NR Massive MIMO (`components.py`)**: Kartu visual Elementor konfigurasi planar array, jumlah elemen antena, penguatan total antena dBi, lebar berkas azimuth HPBW, EIRP radiasi terpancar, dan kapasitas aliran spasial gNodeB.
+890. **Komponen Evaluasi Redaman Gas Atmosfer Satelit ITU-R P.676 (`components.py`)**: Kartu visual Elementor frekuensi gelombang mikro GHz, sudut elevasi antena stasiun bumi, serapan spesifik oksigen & uap air dB/km, total redaman slant-path dB, dan status transparansi atmosfer tautan bumi-angkasa.
+891. **Komponen Capaian Seleksi & Pendanaan Proposal PKM Simbelmawa (`components.py`)**: Kartu visual Elementor judul usulan inovasi mahasiswa, skema PKM, ketua pengusul, skor komposit, status pendanaan Belmawa / nominasi PIMNAS, dan konversi SKS kurikulum.
+892. **Komponen Diagram Polar Kemudi Berkas 5G NR Massive MIMO Inline SVG (`components.py`)**: Kartu visualisasi representasi grafis diagram polar berkas utama (main lobe) terpancar dengan sudut kemudi terarah, Half-Power Beamwidth (HPBW), pelemahan sidelobe, dan alokasi multi-user spatial beams berbasis inline SVG responsif.
+893. **Formatter Telegram Laporan Redaman Gas Atmosfer Satelit ITU-R P.676 (`formatters.py`)**: Format buletin Telegram resmi audit transmisi propagasi satelit bumi-angkasa dan evaluasi ketahanan link redaman serapan molekular udara.
+894. **Formatter Telegram Pengumuman Kelulusan Proposal PKM Simbelmawa (`formatters.py`)**: Format buletin Telegram resmi apresiasi pencapaian mahasiswa lolos pendanaan proposal Program Kreativitas Mahasiswa (PKM) Kemendikbudristek.
+895. **Manajer Rekam Audit Redaman Gas Atmosfer Satelit (`storage.py`)**: Skema tabel SQLite `satellite_gaseous_records` dan fungsi `record_satellite_gaseous`, `list_satellite_gaseous`, `get_satellite_gaseous_by_id`.
+896. **Manajer Rekam Penguatan 5G NR Massive MIMO (`storage.py`)**: Skema tabel SQLite `nr_massive_mimo_records` dan fungsi `record_nr_massive_mimo`, `list_nr_massive_mimos`, `get_nr_massive_mimo_by_id`.
+897. **Manajer Rekam Evaluasi & Pendanaan Proposal PKM Mahasiswa (`storage.py`)**: Skema tabel SQLite `pkm_proposal_records` dan fungsi `record_pkm_proposal`, `list_pkm_proposals`, `get_pkm_proposal_by_id`.
+898. **Helper WordPress Get Comments by Status (`wordpress_client.py`)**: Metode `get_comments_by_status` untuk membaca antrean komentar berdasarkan status moderasi (`approve`, `hold`, `spam`, `trash`) via REST API (`/wp/v2/comments`).
+899. **Helper WordPress Bulk Update Comment Status (`wordpress_client.py`)**: Metode `bulk_update_comment_status` untuk memperbarui status sekumpulan ID komentar editorial secara massal via REST API (`/wp/v2/comments/{id}`).
+900. **Generator Schema.org SoftwareApplication JSON-LD (`exporter.py`)**: Metode `generate_software_application_json_ld` menghasilkan struktur metadata standar Google Application Knowledge Graph untuk perangkat lunak simulator rekayasa telekomunikasi prodi.
+901. **Eksportir Dokumentasi MDX Deno Fresh Islands (`exporter.py`)**: Metode `to_fresh_mdx` mengonversi artikel ke format dokumentasi framework Deno Fresh (Islands Architecture) MDX dengan frontmatter YAML terintegrasi.
+902. **Subcommand CLI `gas` (`cli.py`)**: Perintah konsol `gas` untuk audit dan kalkulasi redaman gas atmosfer satelit bumi-angkasa ITU-R P.676.
+903. **Subcommand CLI `massive_mimo` (`cli.py`)**: Perintah konsol `massive_mimo` untuk evaluasi penguatan susunan beamforming dan kapasitas spatial stream 5G NR Massive MIMO.
+904. **Subcommand CLI `pkm_proposal` (`cli.py`)**: Perintah konsol `pkm_proposal` untuk evaluasi dan pencatatan seleksi proposal riset & inovasi mahasiswa PKM Simbelmawa.
+905. **Dokumentasi Perubahan Arsitektur v4.8.0 (`docs/changes/85_v4_8_feature_expansions.md`)**: Dokumentasi menyeluruh pembaruan arsitektural v4.8.0.
+906. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 36, dan pembaruan metrik proyek.
+907. **Ekspansi Suite Pengujian Unit Terpadu (872 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 872 unit test terverifikasi (100% pass rate).
+908. **Finalisasi Milestone v4.8.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
 
 
 
