@@ -1158,6 +1158,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_mimo_site ON nr_massive_mimo_records(site_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_name TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    scheme TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    funding_status TEXT NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_prop_nim ON pkm_proposal_records(nim);")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_prop_scheme ON pkm_proposal_records(scheme);")
+
 
 
 
@@ -5363,6 +5381,59 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_pkm_proposal(
+        self,
+        student_name: str,
+        nim: str,
+        proposal_title: str,
+        scheme: str,
+        composite_score: float,
+        letter_grade: str,
+        funding_status: str,
+        converted_sks: int,
+        is_funded: bool = False
+    ) -> int:
+        """
+        Stores a PKM student proposal review, funding milestone, and SKS conversion record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_proposal_records (
+                    student_name, nim, proposal_title, scheme,
+                    composite_score, letter_grade, funding_status,
+                    converted_sks, is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_name.strip(), nim.strip(), proposal_title.strip(),
+                scheme.strip().upper(), float(composite_score), letter_grade.strip(),
+                funding_status.strip(), int(converted_sks), 1 if is_funded else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored PKM student proposal records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_proposal_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a PKM student proposal record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
