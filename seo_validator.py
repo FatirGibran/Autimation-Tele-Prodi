@@ -5607,6 +5607,49 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_coop_coep_cross_origin_isolation(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Cross-Origin-Opener-Policy (COOP) and Cross-Origin-Embedder-Policy (COEP)
+        meta directives required for web cross-origin isolation and high-performance WebAssembly simulation execution.
+        """
+        if not html_content:
+            return {"is_isolated": False, "is_valid": False, "issues": ["Konten HTML kosong."]}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        coop_tag = soup.find("meta", attrs={"http-equiv": lambda h: h and h.lower() == "cross-origin-opener-policy"})
+        coep_tag = soup.find("meta", attrs={"http-equiv": lambda h: h and h.lower() == "cross-origin-embedder-policy"})
+
+        coop_val = coop_tag.get("content", "").strip().lower() if coop_tag else None
+        coep_val = coep_tag.get("content", "").strip().lower() if coep_tag else None
+
+        if not coop_val:
+            issues.append("Tag meta 'Cross-Origin-Opener-Policy' (COOP) tidak ditemukan atau bernilai kosong.")
+        elif coop_val not in ("same-origin", "same-origin-allow-popups", "unsafe-none"):
+            issues.append(f"Nilai COOP '{coop_val}' tidak dikenali oleh spesifikasi W3C.")
+
+        if not coep_val:
+            issues.append("Tag meta 'Cross-Origin-Embedder-Policy' (COEP) tidak ditemukan atau bernilai kosong.")
+        elif coep_val not in ("require-corp", "credentialless", "unsafe-none"):
+            issues.append(f"Nilai COEP '{coep_val}' tidak dikenali oleh spesifikasi W3C.")
+
+        is_isolated = (coop_val == "same-origin" and coep_val in ("require-corp", "credentialless"))
+        if not is_isolated:
+            warnings.append("Halaman belum memenuhi syarat Cross-Origin Isolation (membutuhkan COOP: same-origin & COEP: require-corp/credentialless).")
+
+        return {
+            "coop_value": coop_val,
+            "coep_value": coep_val,
+            "is_isolated": is_isolated,
+            "is_valid": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
