@@ -30,7 +30,10 @@ from parser import (
     parse_praktisi_mengajar_evaluation,
     calculate_optical_spm_broadening,
     calculate_5g_nr_carrier_aggregation_throughput,
-    parse_p2mw_evaluation
+    parse_p2mw_evaluation,
+    calculate_satellite_gaseous_attenuation_itu_r_p676,
+    calculate_5g_nr_massive_mimo_gain,
+    parse_pkm_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2357,6 +2360,135 @@ def cmd_p2mw(args):
             print(f"{r['id']:<4} | {r['nim']:<10} | {r['business_name'][:18]:<20} | {r['business_stage'][:14]:<16} | {r['converted_sks']:<4} | {r['letter_grade']}")
 
 
+def cmd_gas(args):
+    if args.action == "add":
+        if args.freq is None or args.elev is None:
+            print("Error: Argumen --freq (GHz) dan --elev (derajat) wajib diisi.")
+            sys.exit(1)
+        sat = args.sat if args.sat else "Telkom-4-Ka"
+        temp = args.temp if args.temp is not None else 27.0
+        pres = args.pressure if args.pressure is not None else 1013.25
+        vapor = args.vapor if args.vapor is not None else 18.0
+
+        calc = calculate_satellite_gaseous_attenuation_itu_r_p676(
+            frequency_ghz=args.freq,
+            elevation_angle_deg=args.elev,
+            surface_temp_c=temp,
+            surface_pressure_hpa=pres,
+            water_vapor_density_g_m3=vapor
+        )
+        gid = storage.record_satellite_gaseous(
+            satellite_name=sat,
+            frequency_ghz=calc["frequency_ghz"],
+            elevation_angle_deg=calc["elevation_angle_deg"],
+            gamma_oxygen_db_km=calc["gamma_oxygen_db_km"],
+            gamma_vapor_db_km=calc["gamma_vapor_db_km"],
+            zenith_attenuation_db=calc["zenith_attenuation_db"],
+            slant_attenuation_db=calc["slant_attenuation_db"],
+            risk_level=calc["risk_level"],
+            is_viable=calc["is_link_viable"]
+        )
+        print(f"Catatan redaman gas atmosfer satelit berhasil disimpan dengan ID: {gid} (Slant Path: {calc['slant_attenuation_db']:.3f} dB, Status: {calc['risk_level']})")
+    else:
+        records = storage.list_satellite_gaseous(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan redaman gas atmosfer satelit yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'SATELIT':<18} | {'FREQ (GHZ)':<12} | {'ELEV':<8} | {'AP (DB)':<10} | {'KELAYAKAN'}")
+        print("-" * 80)
+        for r in records:
+            viable_str = "LAYAK" if r["is_viable"] else "TERKENDALA"
+            print(f"{r['id']:<4} | {r['satellite_name'][:16]:<18} | {r['frequency_ghz']:<12.1f} | {r['elevation_angle_deg']:<8.1f} | {r['slant_attenuation_db']:<10.3f} | {viable_str}")
+
+
+def cmd_massive_mimo(args):
+    if args.action == "add":
+        site = args.site if args.site else "GNB-SITE-BDG-01"
+        rows = args.rows if args.rows is not None else 8
+        cols = args.cols if args.cols is not None else 8
+        pol = args.pol if args.pol is not None else 2
+        gain = args.gain if args.gain is not None else 6.0
+        freq = args.freq if args.freq is not None else 3.5
+        power = args.power if args.power is not None else 43.0
+
+        calc = calculate_5g_nr_massive_mimo_gain(
+            num_rows=rows,
+            num_cols=cols,
+            polarization_layers=pol,
+            element_gain_dbi=gain,
+            carrier_freq_ghz=freq,
+            conducted_power_dbm=power
+        )
+        config_name = f"{rows}x{cols}x{pol}"
+        mid = storage.record_nr_massive_mimo(
+            site_id=site,
+            array_config=config_name,
+            total_elements=calc["total_elements"],
+            total_gain_dbi=calc["total_gain_dbi"],
+            hpbw_azimuth_deg=calc["hpbw_azimuth_deg"],
+            hpbw_elevation_deg=calc["hpbw_elevation_deg"],
+            eirp_dbm=calc["eirp_dbm"],
+            max_spatial_layers=calc["max_spatial_layers"],
+            carrier_freq_ghz=calc["carrier_freq_ghz"],
+            is_massive_mimo=calc["is_massive_mimo"]
+        )
+        print(f"Catatan 5G NR Massive MIMO berhasil disimpan dengan ID: {mid} (Elemen: {calc['total_elements']}, EIRP: {calc['eirp_dbm']:.2f} dBm)")
+    else:
+        records = storage.list_nr_massive_mimos(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR Massive MIMO yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'SITE ID':<18} | {'CONFIG':<10} | {'ELEMEN':<8} | {'GAIN (DBI)':<12} | {'EIRP (DBM)'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['site_id'][:16]:<18} | {r['array_config']:<10} | {r['total_elements']:<8} | {r['total_gain_dbi']:<12.2f} | {r['eirp_dbm']:<10.2f}")
+
+
+def cmd_pkm_proposal(args):
+    if args.action == "add":
+        if not args.name or not args.nim or not args.title:
+            print("Error: Argumen --name, --nim, dan --title wajib diisi.")
+            sys.exit(1)
+        scheme = args.scheme if args.scheme else "PKM-KC"
+        creat = args.creat if args.creat is not None else 85.0
+        method = args.method if args.method is not None else 85.0
+        out_score = args.out if args.out is not None else 85.0
+        budget = args.budget if args.budget is not None else 85.0
+
+        eval_res = parse_pkm_proposal_evaluation({
+            "student_name": args.name,
+            "nim": args.nim,
+            "proposal_title": args.title,
+            "scheme": scheme,
+            "creativity_score": creat,
+            "methodology_score": method,
+            "output_potential_score": out_score,
+            "budget_feasibility_score": budget
+        })
+        pid = storage.record_pkm_proposal(
+            student_name=args.name,
+            nim=args.nim,
+            proposal_title=args.title,
+            scheme=scheme,
+            composite_score=eval_res["composite_score"],
+            letter_grade=eval_res["letter_grade"],
+            funding_status=eval_res["funding_status"],
+            converted_sks=eval_res["converted_sks"],
+            is_funded=eval_res["is_funded"]
+        )
+        print(f"Catatan Proposal PKM berhasil disimpan dengan ID: {pid} ({eval_res['converted_sks']} SKS Diakui, Status: {eval_res['funding_status']})")
+    else:
+        records = storage.list_pkm_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NIM':<10} | {'SKEMA':<8} | {'SKOR':<6} | {'SKS':<4} | {'STATUS PENDANAAN'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['nim']:<10} | {r['scheme']:<8} | {r['composite_score']:<6.1f} | {r['converted_sks']:<4} | {r['funding_status']}")
+
+
+
 
 def main():
 
@@ -3227,6 +3359,46 @@ def main():
     p2mw_parser.add_argument("--finance", type=float, default=85.0, help="Nilai akuntabilitas keuangan (0-100)")
     p2mw_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     p2mw_parser.set_defaults(func=cmd_p2mw)
+
+    # Satellite Gaseous Attenuation command
+    gas_parser = subparsers.add_parser("gas", help="Kelola evaluasi redaman gas atmosfer satelit ITU-R P.676 (list, add)")
+    gas_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi redaman gas")
+    gas_parser.add_argument("--sat", default="Telkom-4-Ka", help="Nama satelit / transponder")
+    gas_parser.add_argument("--freq", type=float, help="Frekuensi downlink/uplink satelit (GHz)")
+    gas_parser.add_argument("--elev", type=float, help="Sudut elevasi stasiun bumi (derajat)")
+    gas_parser.add_argument("--temp", type=float, default=27.0, help="Suhu permukaan (Celsius)")
+    gas_parser.add_argument("--pressure", type=float, default=1013.25, help="Tekanan udara (hPa)")
+    gas_parser.add_argument("--vapor", type=float, default=18.0, help="Kerapatan uap air (g/m3)")
+    gas_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    gas_parser.set_defaults(func=cmd_gas)
+
+    # Massive MIMO command
+    mimo_parser = subparsers.add_parser("massive_mimo", help="Kelola kalkulasi 5G NR Massive MIMO beamforming gain (list, add)")
+    mimo_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan kalkulasi MIMO")
+    mimo_parser.add_argument("--site", default="GNB-SITE-BDG-01", help="ID site gNodeB 5G NR")
+    mimo_parser.add_argument("--rows", type=int, default=8, help="Jumlah baris elemen planar array (M)")
+    mimo_parser.add_argument("--cols", type=int, default=8, help="Jumlah kolom elemen planar array (N)")
+    mimo_parser.add_argument("--pol", type=int, default=2, help="Jumlah lapisan polarisasi (1 atau 2)")
+    mimo_parser.add_argument("--gain", type=float, default=6.0, help="Gain elemen tunggal dBi")
+    mimo_parser.add_argument("--freq", type=float, default=3.5, help="Frekuensi pembawa GHz")
+    mimo_parser.add_argument("--power", type=float, default=43.0, help="Daya terkonduksi conducted power dBm")
+    mimo_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    mimo_parser.set_defaults(func=cmd_massive_mimo)
+
+    # PKM Proposal command
+    pkm_prop_parser = subparsers.add_parser("pkm_proposal", help="Kelola evaluasi & rekognisi proposal PKM Simbelmawa (list, add)")
+    pkm_prop_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi proposal PKM")
+    pkm_prop_parser.add_argument("--name", help="Nama ketua pengusul proposal")
+    pkm_prop_parser.add_argument("--nim", help="Nomor Induk Mahasiswa")
+    pkm_prop_parser.add_argument("--title", help="Judul proposal PKM")
+    pkm_prop_parser.add_argument("--scheme", default="PKM-KC", help="Skema PKM (PKM-RE, PKM-KC, PKM-PI, dll)")
+    pkm_prop_parser.add_argument("--creat", type=float, default=85.0, help="Skor kreativitas/gagasan (0-100)")
+    pkm_prop_parser.add_argument("--method", type=float, default=85.0, help="Skor metodologi/rancangan (0-100)")
+    pkm_prop_parser.add_argument("--out", type=float, default=85.0, help="Skor potensi luaran/paten (0-100)")
+    pkm_prop_parser.add_argument("--budget", type=float, default=85.0, help="Skor kelayakan RAB (0-100)")
+    pkm_prop_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkm_prop_parser.set_defaults(func=cmd_pkm_proposal)
+
 
 
     args = parser.parse_args()
