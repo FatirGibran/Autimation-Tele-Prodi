@@ -6184,6 +6184,78 @@ def parse_p2mw_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_xpm_phase_shift(
+    fiber_length_km: float,
+    pump_power_w: float,
+    probe_power_w: float = 0.001,
+    wavelength_spacing_nm: float = 0.8,
+    chromatic_dispersion_ps_nm_km: float = 17.0,
+    non_linear_coeff_gamma: float = 1.3,
+    attenuation_db_km: float = 0.2,
+    pulse_width_ps: float = 50.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical Cross-Phase Modulation (XPM) induced phase shift, walk-off parameter,
+    and suppression factor in WDM/DWDM single-mode optical fiber systems (Agrawal Nonlinear Fiber Optics).
+    """
+    l_km = max(0.1, float(fiber_length_km))
+    p_pump = max(0.0001, float(pump_power_w))
+    p_probe = max(0.0001, float(probe_power_w))
+    delta_lambda = max(0.01, float(wavelength_spacing_nm))
+    d_coeff = max(0.1, float(chromatic_dispersion_ps_nm_km))
+    gamma = max(0.1, float(non_linear_coeff_gamma))
+    alpha_db = max(0.01, float(attenuation_db_km))
+    t0_ps = max(0.1, float(pulse_width_ps))
+
+    alpha_km = alpha_db / 4.3429448
+    l_eff_km = (1.0 - math.exp(-alpha_km * l_km)) / alpha_km
+
+    # Walk-off parameter d_12 = D * delta_lambda (ps/km)
+    d12_ps_km = d_coeff * delta_lambda
+
+    # Walk-off length L_w = T0 / |d_12| (km)
+    l_w_km = t0_ps / d12_ps_km if d12_ps_km > 0 else 1000.0
+
+    # Maximum XPM phase shift (factor of 2 compared to SPM)
+    phi_xpm_max_rad = 2.0 * gamma * p_pump * l_eff_km
+    phi_xpm_max_deg = math.degrees(phi_xpm_max_rad)
+
+    # Walk-off suppression factor eta_xpm = 1 / sqrt(1 + (L_eff / L_w)^2)
+    eta_xpm = 1.0 / math.sqrt(1.0 + ((l_eff_km / l_w_km) ** 2))
+
+    # Effective accumulated XPM phase shift
+    phi_xpm_eff_rad = phi_xpm_max_rad * eta_xpm
+    phi_xpm_eff_deg = math.degrees(phi_xpm_eff_rad)
+
+    if phi_xpm_eff_rad < 0.5:
+        xpm_risk = "Rendah (Penalti Crosstalk Nonlinier XPM Minimal)"
+        is_acceptable = True
+    elif phi_xpm_eff_rad <= 1.5:
+        xpm_risk = "Moderat (Interferensi Kanal Terkelola Berkat Walk-off Dispersion)"
+        is_acceptable = True
+    else:
+        xpm_risk = "Tinggi (Distorsi Spektral & Penalti Asimetri XPM Parah)"
+        is_acceptable = False
+
+    return {
+        "fiber_length_km": round(l_km, 2),
+        "effective_length_km": round(l_eff_km, 3),
+        "pump_power_w": round(p_pump, 3),
+        "probe_power_w": round(p_probe, 4),
+        "wavelength_spacing_nm": round(delta_lambda, 2),
+        "dispersion_ps_nm_km": round(d_coeff, 2),
+        "walk_off_parameter_ps_km": round(d12_ps_km, 2),
+        "walk_off_length_km": round(l_w_km, 2),
+        "suppression_factor_eta": round(eta_xpm, 4),
+        "phi_xpm_max_rad": round(phi_xpm_max_rad, 4),
+        "phi_xpm_effective_rad": round(phi_xpm_eff_rad, 4),
+        "phi_xpm_effective_deg": round(phi_xpm_eff_deg, 2),
+        "xpm_risk": xpm_risk,
+        "is_acceptable": is_acceptable
+    }
+
+
+
 
 
 
