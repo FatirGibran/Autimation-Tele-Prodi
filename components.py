@@ -6174,6 +6174,54 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_gaseous_attenuation_card(
+        cls,
+        satellite_name: str,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        gamma_oxygen_db_km: float,
+        gamma_vapor_db_km: float,
+        slant_attenuation_db: float,
+        risk_level: str,
+        is_viable: bool
+    ) -> str:
+        """
+        Renders a satellite Earth-space atmospheric gas and vapor attenuation card according to ITU-R P.676.
+        """
+        badge_bg = "#ecfdf5" if is_viable else "#fef2f2"
+        badge_color = "#047857" if is_viable else "#b91c1c"
+        border_color = "#10b981" if is_viable else "#ef4444"
+
+        return f"""    <div class="tu-satellite-gaseous-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-sat-gas-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0f172a; font-size: 13px; text-transform: uppercase;">Redaman Gas Atmosfer Satelit (ITU-R P.676)</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{risk_level}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">Satelit: {satellite_name} ({frequency_ghz:.1f} GHz)</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+        Sudut Elevasi: <strong>{elevation_angle_deg:.1f}&deg;</strong> | Redaman Slant-Path Total: <strong>{slant_attenuation_db:.3f} dB</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Spesifik Oksigen (O2)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{gamma_oxygen_db_km:.4f} dB/km</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Spesifik Uap Air (H2O)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{gamma_vapor_db_km:.4f} dB/km</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Total Redaman Lintasan</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{slant_attenuation_db:.2f} dB</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 10px 12px; border-radius: 6px; border-left: 4px solid {border_color}; font-size: 12px; color: #334155;">
+        Kelayakan Tautan: <strong style="color: {badge_color};">{'LINK ANDAL (TRANSPARANSI GELOMBANG MIKRO)' if is_viable else 'MEMERLUKAN KOMPENSASI DAYA BESAR'}</strong>
+      </div>
+    </div>"""
+
+
 
 
 
