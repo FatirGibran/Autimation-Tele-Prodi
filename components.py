@@ -6126,6 +6126,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_massive_mimo_card(
+        cls,
+        site_id: str,
+        array_config: str,
+        total_elements: int,
+        total_gain_dbi: float,
+        hpbw_azimuth_deg: float,
+        eirp_dbm: float,
+        max_layers: int,
+        carrier_freq_ghz: float
+    ) -> str:
+        """
+        Renders a 5G NR Massive MIMO beamforming array gain, HPBW beamwidth, and spatial rank card.
+        """
+        is_massive = total_elements >= 32
+        badge_bg = "#ecfdf5" if is_massive else "#eff6ff"
+        badge_color = "#047857" if is_massive else "#1d4ed8"
+        border_color = "#10b981" if is_massive else "#3b82f6"
+
+        return f"""    <div class="tu-5g-massive-mimo-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-mimo-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0f172a; font-size: 13px; text-transform: uppercase;">5G NR Massive MIMO Beamforming Telemetry</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{total_elements} Elements ({array_config})</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">gNodeB Site: {site_id} ({carrier_freq_ghz:.1f} GHz)</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+        Konfigurasi Array: <strong>{array_config}</strong> | Lapisan Spatial Maksimal: <strong>{max_layers} Streams</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Penguatan Total Antena</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{total_gain_dbi:.2f} dBi</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Lebar Berkas Azimuth</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{hpbw_azimuth_deg:.1f}&deg; HPBW</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">EIRP Radiasi Terpancar</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{eirp_dbm:.2f} dBm</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 10px 12px; border-radius: 6px; border-left: 4px solid {border_color}; font-size: 12px; color: #334155;">
+        Status: <strong style="color: {badge_color};">{'MASSIVE MIMO AKTIF (BEAMFORMING 3D 3GPP REL-16)' if is_massive else 'ARRAY MIMO STANDAR'}</strong>
+      </div>
+    </div>"""
+
+
 
 
 
