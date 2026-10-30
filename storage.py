@@ -1125,6 +1125,23 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_p2mw_nim ON p2mw_startup_records(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_p2mw_stage ON p2mw_startup_records(business_stage);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS satellite_gaseous_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    satellite_name TEXT NOT NULL,
+                    frequency_ghz REAL NOT NULL,
+                    elevation_angle_deg REAL NOT NULL,
+                    gamma_oxygen_db_km REAL NOT NULL,
+                    gamma_vapor_db_km REAL NOT NULL,
+                    zenith_attenuation_db REAL NOT NULL,
+                    slant_attenuation_db REAL NOT NULL,
+                    risk_level TEXT NOT NULL,
+                    is_viable INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_gaseous_freq ON satellite_gaseous_records(frequency_ghz);")
+
 
 
 
@@ -5222,6 +5239,59 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_satellite_gaseous(
+        self,
+        satellite_name: str,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        gamma_oxygen_db_km: float,
+        gamma_vapor_db_km: float,
+        zenith_attenuation_db: float,
+        slant_attenuation_db: float,
+        risk_level: str,
+        is_viable: bool
+    ) -> int:
+        """
+        Stores an Earth-space satellite atmospheric gas and vapor attenuation record according to ITU-R P.676.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO satellite_gaseous_records (
+                    satellite_name, frequency_ghz, elevation_angle_deg,
+                    gamma_oxygen_db_km, gamma_vapor_db_km, zenith_attenuation_db,
+                    slant_attenuation_db, risk_level, is_viable
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                satellite_name.strip(), float(frequency_ghz), float(elevation_angle_deg),
+                float(gamma_oxygen_db_km), float(gamma_vapor_db_km), float(zenith_attenuation_db),
+                float(slant_attenuation_db), risk_level.strip(), 1 if is_viable else 0
+            ))
+            return cursor.lastrowid
+
+    def list_satellite_gaseous(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored satellite atmospheric gaseous attenuation records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_gaseous_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_satellite_gaseous_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a satellite atmospheric gaseous attenuation record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_gaseous_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
