@@ -2429,6 +2429,75 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["business_name"], "AgroTele-IoT")
         self.assertIsNone(self.storage.get_p2mw_startup_by_id(99999))
 
+    def test_satellite_gaseous_storage(self):
+        rec_id = self.storage.record_satellite_gaseous(
+            satellite_name="Nusantara-2",
+            frequency_ghz=28.5,
+            elevation_angle_deg=45.0,
+            gamma_oxygen_db_km=0.035,
+            gamma_vapor_db_km=0.125,
+            zenith_attenuation_db=0.41,
+            slant_attenuation_db=0.58,
+            risk_level="Rendah",
+            is_viable=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_satellite_gaseous()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["satellite_name"], "Nusantara-2")
+        self.assertEqual(items[0]["is_viable"], 1)
+
+        single = self.storage.get_satellite_gaseous_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["frequency_ghz"], 28.5)
+        self.assertIsNone(self.storage.get_satellite_gaseous_by_id(99999))
+
+    def test_nr_massive_mimo_storage(self):
+        rec_id = self.storage.record_nr_massive_mimo(
+            site_id="GNB-BDG-01",
+            array_config="8x8x2",
+            total_elements=128,
+            total_gain_dbi=24.06,
+            hpbw_azimuth_deg=12.75,
+            hpbw_elevation_deg=12.75,
+            eirp_dbm=67.06,
+            max_spatial_layers=16,
+            carrier_freq_ghz=3.5,
+            is_massive_mimo=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_massive_mimos()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["site_id"], "GNB-BDG-01")
+
+        single = self.storage.get_nr_massive_mimo_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["total_elements"], 128)
+        self.assertIsNone(self.storage.get_nr_massive_mimo_by_id(99999))
+
+    def test_pkm_proposal_storage(self):
+        rec_id = self.storage.record_pkm_proposal(
+            student_name="Rizky Firmansyah",
+            nim="1201210034",
+            proposal_title="Sistem Radar Cuaca Maritim Terdistribusi",
+            scheme="PKM-KC",
+            composite_score=88.5,
+            letter_grade="A",
+            funding_status="Didanai Belmawa & Lolos PIMNAS",
+            converted_sks=4,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["nim"], "1201210034")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_pkm_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["scheme"], "PKM-KC")
+        self.assertIsNone(self.storage.get_pkm_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
