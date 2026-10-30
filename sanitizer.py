@@ -1901,6 +1901,51 @@ def sanitize_html5_button_attributes(html: str) -> str:
     return re.sub(r'<button\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_button, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_area_map_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <area> elements within image maps by removing inline event handlers,
+    validating coordinate and shape attributes, stripping unsafe href schemes (javascript:, data:),
+    and ensuring mandatory WCAG accessibility alt text.
+    """
+    if not html or "<area" not in html.lower():
+        return html
+
+    def fix_area(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate shape attribute
+        shape_m = re.search(r'\bshape=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if shape_m:
+            shape = shape_m.group(1).strip().lower()
+            if shape not in ("rect", "circle", "poly", "default"):
+                tag = re.sub(r'\bshape=["\'][^"\']*["\']', 'shape="rect"', tag, flags=re.IGNORECASE)
+
+        # Validate coords attribute (numeric comma-separated list)
+        coords_m = re.search(r'\bcoords=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if coords_m:
+            coords = coords_m.group(1).strip()
+            if not re.match(r'^[0-9,\s\.\-]+$', coords):
+                tag = re.sub(r'\s+coords=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate href attribute
+        href_m = re.search(r'\bhref=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if href_m:
+            url = href_m.group(1).strip().lower()
+            if url.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', url):
+                tag = re.sub(r'\s+href=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Enforce alt attribute for WCAG SC 1.1.1 accessibility
+        if not re.search(r'\balt=["\'][^"\']*["\']', tag, re.IGNORECASE):
+            tag = tag.rstrip(" />").rstrip(">") + ' alt="Peta area navigasi">'
+
+        return tag
+
+    return re.sub(r'<area\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_area, html, flags=re.IGNORECASE)
+
+
+
 
 
 
