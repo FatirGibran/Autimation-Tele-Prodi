@@ -1945,6 +1945,46 @@ def sanitize_html5_area_map_attributes(html: str) -> str:
     return re.sub(r'<area\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_area, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_list_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 list elements (<ol>, <ul>, <li>) by scrubbing inline event handlers,
+    contenteditable/style attributes, and validating start/type attributes on <ol>
+    and numeric value attributes on <li>.
+    """
+    if not html or not re.search(r'<(?:ol|ul|li)\b', html, re.IGNORECASE):
+        return html
+
+    def fix_list_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        if tag.lower().startswith("<ol"):
+            start_m = re.search(r'\bstart=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if start_m:
+                val = start_m.group(1).strip()
+                if not re.match(r'^-?[0-9]+$', val):
+                    tag = re.sub(r'\s+start=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+            type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if type_m:
+                tval = type_m.group(1).strip()
+                if tval not in ("1", "a", "A", "i", "I"):
+                    tag = re.sub(r'\s+type=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        elif tag.lower().startswith("<li"):
+            val_m = re.search(r'\bvalue=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if val_m:
+                val = val_m.group(1).strip()
+                if not re.match(r'^-?[0-9]+$', val):
+                    tag = re.sub(r'\s+value=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<(?:ol|ul|li)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_list_tag, html, flags=re.IGNORECASE)
+
+
+
 
 
 
