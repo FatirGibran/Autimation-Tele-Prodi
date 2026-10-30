@@ -1365,6 +1365,33 @@ class TelegramFormatter:
             f"✨ *Semangat berinovasi menciptakan solusi teknologi berdaya saing global!*"
         )
 
+    @staticmethod
+    def format_satellite_gaseous_attenuation_telegram(
+        satellite_name: str,
+        frequency_ghz: float,
+        elevation_angle_deg: float,
+        gamma_oxygen: float,
+        gamma_vapor: float,
+        slant_attenuation_db: float,
+        risk_level: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a satellite link atmospheric gas and vapor attenuation bulletin (ITU-R P.676) for Telegram.
+        """
+        portal_link = f"\n🔗 **Telemetri Satelit:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🛰️ **Laporan Audit Redaman Gas Atmosfer Satelit (ITU-R P.676)**\n\n"
+            f"📡 **Tautan Satelit:** {satellite_name.strip()} (`{float(frequency_ghz):.1f} GHz`)\n"
+            f"📐 **Sudut Elevasi Stasiun Bumi:** `{float(elevation_angle_deg):.1f}°`\n"
+            f"💨 **Redaman Oksigen (O2):** `{float(gamma_oxygen):.4f} dB/km`\n"
+            f"💧 **Redaman Uap Air (H2O):** `{float(gamma_vapor):.4f} dB/km`\n"
+            f"📉 **Total Redaman Slant-Path:** `{float(slant_attenuation_db):.3f} dB`\n"
+            f"⚠️ **Tingkat Risiko:** `{risk_level.strip()}`{portal_link}\n\n"
+            f"📡 *Data diverifikasi menurut rekomendasi propagasi gelombang mikro ITU-R P.676.*"
+        )
+
+
 
 
 
