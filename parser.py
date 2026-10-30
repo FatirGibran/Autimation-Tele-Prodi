@@ -6393,6 +6393,79 @@ def calculate_satellite_gaseous_attenuation_itu_r_p676(
     }
 
 
+def parse_pkm_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student proposal assessment in Program Kreativitas Mahasiswa (PKM) Simbelmawa Kemendikbudristek
+    for research/innovation milestone tracking, Belmawa funding qualification, and SKS credit conversion.
+    """
+    student_name = str(data.get("student_name", "Mahasiswa")).strip()
+    nim = str(data.get("nim", "")).strip()
+    title = str(data.get("proposal_title", "Proposal Rekayasa")).strip()
+    scheme = str(data.get("scheme", "PKM-KC")).strip().upper()
+
+    score_creat = max(0.0, min(100.0, float(data.get("creativity_score", 85.0))))
+    score_method = max(0.0, min(100.0, float(data.get("methodology_score", 85.0))))
+    score_output = max(0.0, min(100.0, float(data.get("output_potential_score", 85.0))))
+    score_budget = max(0.0, min(100.0, float(data.get("budget_feasibility_score", 85.0))))
+
+    # Composite: 30% Orisinalitas/Kreativitas, 35% Metodologi Rekayasa, 20% Potensi Luaran/Paten, 15% Kelayakan Tim & RAB
+    composite = round((0.30 * score_creat) + (0.35 * score_method) + (0.20 * score_output) + (0.15 * score_budget), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 78.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 68.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    if composite >= 82.0:
+        funding_status = f"Didanai Belmawa & Lolos Nominasi PIMNAS ({scheme})"
+        converted_sks = 4
+        is_funded = True
+    elif composite >= 72.0:
+        funding_status = f"Lolos Pendanaan Hibah Simbelmawa ({scheme})"
+        converted_sks = 3
+        is_funded = True
+    elif composite >= 60.0:
+        funding_status = f"Insentif Internal Hibah Riset Prodi ({scheme})"
+        converted_sks = 2
+        is_funded = False
+    else:
+        funding_status = "Belum Memenuhi Ambang Batas Pendanaan"
+        converted_sks = 0
+        is_funded = False
+
+    return {
+        "student_name": student_name,
+        "nim": nim,
+        "proposal_title": title,
+        "scheme": scheme,
+        "creativity_score": score_creat,
+        "methodology_score": score_method,
+        "output_potential_score": score_output,
+        "budget_feasibility_score": score_budget,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
+
 
 
 
