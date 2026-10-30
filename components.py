@@ -6073,6 +6073,60 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_xpm_card(
+        cls,
+        link_name: str,
+        pump_power_w: float,
+        wavelength_spacing_nm: float,
+        effective_length_km: float,
+        phi_xpm_rad: float,
+        walk_off_length_km: float,
+        suppression_factor: float,
+        xpm_risk: str,
+        is_acceptable: bool
+    ) -> str:
+        """
+        Renders an optical Cross-Phase Modulation (XPM) nonlinear telemetry card
+        showing pump channel impact, walk-off length, and crosstalk suppression factor.
+        """
+        badge_bg = "#ecfdf5" if is_acceptable else "#fef2f2"
+        badge_color = "#047857" if is_acceptable else "#b91c1c"
+        border_color = "#10b981" if is_acceptable else "#ef4444"
+
+        return f"""    <div class="tu-optical-xpm-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff;">
+      <div class="tu-optical-xpm-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0f172a; font-size: 13px; text-transform: uppercase;">Telemetri Nonlinier XPM Serat Optik DWDM</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{xpm_risk}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">Tautan: {link_name}</h4>
+      <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+        Spasi Kanal: <strong>{wavelength_spacing_nm:.2f} nm</strong> | Panjang Efektif (Leff): <strong>{effective_length_km:.2f} km</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Daya Kanal Pompa</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{pump_power_w:.3f} W</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Pergeseran Fase XPM</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{phi_xpm_rad:.3f} rad</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Panjang Walk-off (Lw)</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{walk_off_length_km:.1f} km</div>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; color: #64748b;">Faktor Reduksi Walk-off</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{suppression_factor:.3f}</div>
+        </div>
+      </div>
+      <div style="background: {badge_bg}; padding: 10px 12px; border-radius: 6px; border-left: 4px solid {border_color}; font-size: 12px; color: #334155;">
+        Status: <strong style="color: {badge_color};">{'MEMENUHI AMBANG TOLERANSI CROSSTALK' if is_acceptable else 'MELAMPAUI BATAS NONLINIER XPM'}</strong>
+      </div>
+    </div>"""
+
+
 
 
 
