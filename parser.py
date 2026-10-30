@@ -6335,23 +6335,20 @@ def calculate_satellite_gaseous_attenuation_itu_r_p676(
     p_ratio = p_hpa / 1013.0
 
     # 1. Oxygen / dry air specific attenuation gamma_o (dB/km)
-    # Simplified ITU-R P.676 model
-    if f_ghz < 57.0:
-        gamma_o = (7.2e-3 + (0.34 * (p_ratio ** 2) * (theta_param ** 0.8)) / ((f_ghz ** 2) + 0.34 * (p_ratio ** 2) * (theta_param ** 1.6))) * (f_ghz ** 2) * (p_ratio ** 2) * (theta_param ** 2)
-        # 60 GHz resonance tail adjustment
-        if f_ghz > 45.0:
-            gamma_o += 0.5 * ((f_ghz - 45.0) / 12.0) ** 2
-    elif f_ghz <= 63.0:
+    # ITU-R P.676 model for dry air absorption
+    if f_ghz <= 54.0:
+        gamma_o = (0.0072 * (p_ratio ** 2) * (theta_param ** 2) + (0.326 * (p_ratio ** 2) * (theta_param ** 1.5)) / (((f_ghz - 60.0) ** 2) + 1.0)) * ((f_ghz / 30.0) ** 1.2) * 0.1
+    elif f_ghz <= 66.0:
         # 60 GHz oxygen absorption peak (~15 dB/km)
-        gamma_o = 15.0 - (0.5 * abs(f_ghz - 60.0))
+        gamma_o = 15.0 - (0.8 * abs(f_ghz - 60.0))
     else:
-        gamma_o = 0.05 + (0.2 * ((f_ghz - 63.0) / 100.0))
+        gamma_o = 0.05 + (0.15 * ((f_ghz - 66.0) / 100.0))
 
     # 2. Water vapor specific attenuation gamma_w (dB/km)
-    # ITU-R P.676 approximation for 22.2 GHz line and continuum
-    term_22 = (rho * (theta_param ** 2.5)) / (((f_ghz - 22.235) ** 2) + 9.0)
-    term_continuum = 1.2e-4 * rho * (f_ghz ** 1.8) * p_ratio * (theta_param ** 1.5)
-    gamma_w = (term_22 * 0.02 + term_continuum)
+    # ITU-R P.676 model for 22.235 GHz resonance and continuum
+    term_22 = (0.05 * rho * (theta_param ** 2.5)) / (((f_ghz - 22.235) ** 2) + 9.0)
+    term_continuum = 1.5e-5 * rho * (f_ghz ** 1.6) * p_ratio * (theta_param ** 1.5)
+    gamma_w = term_22 + term_continuum
 
     gamma_o = max(0.001, gamma_o)
     gamma_w = max(0.001, gamma_w)

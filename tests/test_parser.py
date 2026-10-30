@@ -2066,6 +2066,81 @@ Status: Granted
         self.assertEqual(res_early["converted_sks"], 4)
         self.assertTrue(res_early["is_funded"])
 
+    def test_calculate_optical_xpm_phase_shift(self):
+        from parser import calculate_optical_xpm_phase_shift
+        res = calculate_optical_xpm_phase_shift(
+            fiber_length_km=80.0,
+            pump_power_w=0.05,
+            wavelength_spacing_nm=0.8,
+            chromatic_dispersion_ps_nm_km=17.0
+        )
+        self.assertGreater(res["effective_length_km"], 0.0)
+        self.assertGreater(res["walk_off_parameter_ps_km"], 0.0)
+        self.assertGreater(res["phi_xpm_effective_rad"], 0.0)
+        self.assertTrue(res["is_acceptable"])
+
+    def test_calculate_5g_nr_massive_mimo_gain(self):
+        from parser import calculate_5g_nr_massive_mimo_gain
+        res = calculate_5g_nr_massive_mimo_gain(
+            num_rows=8,
+            num_cols=8,
+            polarization_layers=2,
+            element_gain_dbi=6.0,
+            carrier_freq_ghz=3.5,
+            conducted_power_dbm=43.0
+        )
+        self.assertEqual(res["total_elements"], 128)
+        self.assertTrue(res["is_massive_mimo"])
+        self.assertGreater(res["total_gain_dbi"], 20.0)
+        self.assertGreater(res["eirp_dbm"], 60.0)
+        self.assertLessEqual(res["hpbw_azimuth_deg"], 15.0)
+
+    def test_calculate_satellite_gaseous_attenuation_itu_r_p676(self):
+        from parser import calculate_satellite_gaseous_attenuation_itu_r_p676
+        res = calculate_satellite_gaseous_attenuation_itu_r_p676(
+            frequency_ghz=28.0,
+            elevation_angle_deg=45.0,
+            surface_temp_c=27.0,
+            surface_pressure_hpa=1013.25,
+            water_vapor_density_g_m3=18.0
+        )
+        self.assertGreater(res["gamma_vapor_db_km"], 0.0)
+        self.assertGreater(res["zenith_attenuation_db"], 0.0)
+        self.assertGreater(res["slant_attenuation_db"], 0.0)
+        self.assertTrue(res["is_link_viable"])
+
+    def test_parse_pkm_proposal_evaluation(self):
+        from parser import parse_pkm_proposal_evaluation
+        # High score qualifying PIMNAS
+        res_pimnas = parse_pkm_proposal_evaluation({
+            "student_name": "Rizky Firmansyah",
+            "nim": "1201210034",
+            "proposal_title": "Sistem Radar Cuaca Maritim Terdistribusi",
+            "scheme": "PKM-KC",
+            "creativity_score": 90.0,
+            "methodology_score": 88.0,
+            "output_potential_score": 85.0,
+            "budget_feasibility_score": 86.0
+        })
+        self.assertEqual(res_pimnas["letter_grade"], "A")
+        self.assertEqual(res_pimnas["converted_sks"], 4)
+        self.assertTrue(res_pimnas["is_funded"])
+        self.assertIn("PIMNAS", res_pimnas["funding_status"])
+
+        # Moderate score funded
+        res_funded = parse_pkm_proposal_evaluation({
+            "student_name": "Nadia Putri",
+            "nim": "1201210035",
+            "proposal_title": "Antena Mikrostrip MIMO 5G Sub-6 GHz",
+            "scheme": "PKM-RE",
+            "creativity_score": 75.0,
+            "methodology_score": 74.0,
+            "output_potential_score": 72.0,
+            "budget_feasibility_score": 70.0
+        })
+        self.assertEqual(res_funded["converted_sks"], 3)
+        self.assertTrue(res_funded["is_funded"])
+
 
 if __name__ == "__main__":
     unittest.main()
