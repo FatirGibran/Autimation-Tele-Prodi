@@ -36,7 +36,10 @@ from sanitizer import (
     sanitize_html5_datalist_options,
     sanitize_html5_col_colgroup_attributes,
     sanitize_html5_cite_q_elements,
-    sanitize_html5_textarea_attributes
+    sanitize_html5_textarea_attributes,
+    sanitize_html5_button_attributes,
+    sanitize_html5_area_map_attributes,
+    sanitize_html5_list_attributes
 )
 
 
@@ -1094,6 +1097,41 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("style=", cleaned)
         self.assertNotIn('rows="-1"', cleaned)
         self.assertNotIn('cols="evil"', cleaned)
+
+    def test_sanitize_html5_button_attributes(self):
+        raw = '<button type="submit" formaction="https://campus.ac.id/calc" onclick="hack()" style="color:red">Hitung</button><button type="evil" formaction="javascript:alert(1)">Batal</button>'
+        cleaned = sanitize_html5_button_attributes(raw)
+        self.assertIn('type="submit"', cleaned)
+        self.assertIn('formaction="https://campus.ac.id/calc"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn('type="button"', cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+
+    def test_sanitize_html5_area_map_attributes(self):
+        raw = '<map name="topo"><area shape="rect" coords="0,0,100,100" href="/node1" onclick="bad()" style="outline:none"><area shape="evil" coords="invalid_coord" href="javascript:steal()"></map>'
+        cleaned = sanitize_html5_area_map_attributes(raw)
+        self.assertIn('shape="rect"', cleaned)
+        self.assertIn('coords="0,0,100,100"', cleaned)
+        self.assertIn('href="/node1"', cleaned)
+        self.assertIn('alt="Peta area navigasi"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("coords=\"invalid_coord\"", cleaned)
+        self.assertNotIn("javascript:steal()", cleaned)
+
+    def test_sanitize_html5_list_attributes(self):
+        raw = '<ol start="1" type="1" onclick="evil()" style="list-style:none"><li value="5" onmouseover="hack()">Item 1</li><li value="abc">Item 2</li></ol><ol start="invalid" type="evil"></ol>'
+        cleaned = sanitize_html5_list_attributes(raw)
+        self.assertIn('start="1"', cleaned)
+        self.assertIn('type="1"', cleaned)
+        self.assertIn('value="5"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('value="abc"', cleaned)
+        self.assertNotIn('start="invalid"', cleaned)
+        self.assertNotIn('type="evil"', cleaned)
 
 
 if __name__ == "__main__":
