@@ -1141,6 +1141,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_gaseous_freq ON satellite_gaseous_records(frequency_ghz);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_massive_mimo_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    site_id TEXT NOT NULL,
+                    array_config TEXT NOT NULL,
+                    total_elements INTEGER NOT NULL,
+                    total_gain_dbi REAL NOT NULL,
+                    hpbw_azimuth_deg REAL NOT NULL,
+                    hpbw_elevation_deg REAL NOT NULL,
+                    eirp_dbm REAL NOT NULL,
+                    max_spatial_layers INTEGER NOT NULL,
+                    carrier_freq_ghz REAL NOT NULL,
+                    is_massive_mimo INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_mimo_site ON nr_massive_mimo_records(site_id);")
+
 
 
 
@@ -5291,6 +5309,61 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_nr_massive_mimo(
+        self,
+        site_id: str,
+        array_config: str,
+        total_elements: int,
+        total_gain_dbi: float,
+        hpbw_azimuth_deg: float,
+        hpbw_elevation_deg: float,
+        eirp_dbm: float,
+        max_spatial_layers: int,
+        carrier_freq_ghz: float,
+        is_massive_mimo: bool = True
+    ) -> int:
+        """
+        Stores a 5G NR Massive MIMO beamforming array gain, HPBW beamwidth, and spatial multiplexing record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_massive_mimo_records (
+                    site_id, array_config, total_elements, total_gain_dbi,
+                    hpbw_azimuth_deg, hpbw_elevation_deg, eirp_dbm,
+                    max_spatial_layers, carrier_freq_ghz, is_massive_mimo
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                site_id.strip(), array_config.strip(), int(total_elements),
+                float(total_gain_dbi), float(hpbw_azimuth_deg), float(hpbw_elevation_deg),
+                float(eirp_dbm), int(max_spatial_layers), float(carrier_freq_ghz),
+                1 if is_massive_mimo else 0
+            ))
+            return cursor.lastrowid
+
+    def list_nr_massive_mimos(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored 5G NR Massive MIMO records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_massive_mimo_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_massive_mimo_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR Massive MIMO record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_massive_mimo_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
