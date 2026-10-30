@@ -6312,6 +6312,88 @@ def calculate_5g_nr_massive_mimo_gain(
     }
 
 
+def calculate_satellite_gaseous_attenuation_itu_r_p676(
+    frequency_ghz: float,
+    elevation_angle_deg: float,
+    surface_temp_c: float = 27.0,
+    surface_pressure_hpa: float = 1013.25,
+    water_vapor_density_g_m3: float = 18.0
+) -> Dict[str, Any]:
+    """
+    Calculates Earth-space satellite slant-path atmospheric gaseous attenuation according to ITU-R P.676-12.
+    Evaluates dry air (oxygen O2) and water vapor (H2O) absorption up to 350 GHz for tropical climates.
+    """
+    f_ghz = max(1.0, min(350.0, float(frequency_ghz)))
+    theta_deg = max(5.0, min(90.0, float(elevation_angle_deg)))
+    t_c = float(surface_temp_c)
+    p_hpa = max(800.0, min(1050.0, float(surface_pressure_hpa)))
+    rho = max(0.1, min(50.0, float(water_vapor_density_g_m3)))
+
+    theta_rad = math.radians(theta_deg)
+    t_k = t_c + 273.15
+    theta_param = 300.0 / t_k
+    p_ratio = p_hpa / 1013.0
+
+    # 1. Oxygen / dry air specific attenuation gamma_o (dB/km)
+    # Simplified ITU-R P.676 model
+    if f_ghz < 57.0:
+        gamma_o = (7.2e-3 + (0.34 * (p_ratio ** 2) * (theta_param ** 0.8)) / ((f_ghz ** 2) + 0.34 * (p_ratio ** 2) * (theta_param ** 1.6))) * (f_ghz ** 2) * (p_ratio ** 2) * (theta_param ** 2)
+        # 60 GHz resonance tail adjustment
+        if f_ghz > 45.0:
+            gamma_o += 0.5 * ((f_ghz - 45.0) / 12.0) ** 2
+    elif f_ghz <= 63.0:
+        # 60 GHz oxygen absorption peak (~15 dB/km)
+        gamma_o = 15.0 - (0.5 * abs(f_ghz - 60.0))
+    else:
+        gamma_o = 0.05 + (0.2 * ((f_ghz - 63.0) / 100.0))
+
+    # 2. Water vapor specific attenuation gamma_w (dB/km)
+    # ITU-R P.676 approximation for 22.2 GHz line and continuum
+    term_22 = (rho * (theta_param ** 2.5)) / (((f_ghz - 22.235) ** 2) + 9.0)
+    term_continuum = 1.2e-4 * rho * (f_ghz ** 1.8) * p_ratio * (theta_param ** 1.5)
+    gamma_w = (term_22 * 0.02 + term_continuum)
+
+    gamma_o = max(0.001, gamma_o)
+    gamma_w = max(0.001, gamma_w)
+
+    # 3. Equivalent scale heights (km)
+    h_o = 6.0
+    h_w = 1.6 + (0.02 * rho)
+
+    # 4. Zenith attenuation (dB)
+    a_zenith_oxygen = gamma_o * h_o
+    a_zenith_vapor = gamma_w * h_w
+    a_zenith_total = a_zenith_oxygen + a_zenith_vapor
+
+    # 5. Slant path gaseous attenuation (dB)
+    sin_theta = math.sin(theta_rad)
+    a_slant_total = a_zenith_total / sin_theta
+
+    if a_slant_total <= 0.5:
+        risk = "Sangat Rendah (Redaman Atmosferik Transparan)"
+    elif a_slant_total <= 2.0:
+        risk = "Rendah (Dapat Diatasi Margin Daya Standar)"
+    elif a_slant_total <= 5.0:
+        risk = "Moderat (Perlu Alokasi Fading Margin Ku/Ka-Band)"
+    else:
+        risk = "Tinggi (Resonansi Molekular Atmosfer Signifikan)"
+
+    return {
+        "frequency_ghz": round(f_ghz, 2),
+        "elevation_angle_deg": round(theta_deg, 2),
+        "surface_temp_c": round(t_c, 1),
+        "surface_pressure_hpa": round(p_hpa, 1),
+        "water_vapor_density_g_m3": round(rho, 1),
+        "gamma_oxygen_db_km": round(gamma_o, 4),
+        "gamma_vapor_db_km": round(gamma_w, 4),
+        "zenith_attenuation_db": round(a_zenith_total, 3),
+        "slant_attenuation_db": round(a_slant_total, 3),
+        "risk_level": risk,
+        "is_link_viable": a_slant_total < 8.0
+    }
+
+
+
 
 
 
