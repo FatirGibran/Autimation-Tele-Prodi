@@ -6269,6 +6269,58 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_mimo_beam_svg_card(
+        cls,
+        title: str,
+        steer_angle_deg: float,
+        array_gain_dbi: float,
+        hpbw_deg: float,
+        num_beams: int
+    ) -> str:
+        """
+        Renders an interactive SVG-enhanced 5G NR Massive MIMO 3D beam steering polar diagram
+        illustrating array radiation direction, half-power beamwidth, and spatial multi-user beams.
+        """
+        return f"""    <div class="tu-5g-mimo-beam-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Beamforming Array Pattern</span>
+        <span style="font-size: 11px; background: #0369a1; color: #e0f2fe; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Steer: {steer_angle_deg:+.1f}&deg;</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 460 180" width="100%" height="180" style="max-width: 520px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Polar Grid Reference Arcs -->
+          <path d="M 50,150 A 180,180 0 0,1 410,150" fill="none" stroke="#334155" stroke-dasharray="3,3" stroke-width="1.5" />
+          <path d="M 110,150 A 120,120 0 0,1 350,150" fill="none" stroke="#334155" stroke-dasharray="3,3" stroke-width="1.5" />
+          <path d="M 170,150 A 60,60 0 0,1 290,150" fill="none" stroke="#334155" stroke-dasharray="3,3" stroke-width="1.5" />
+          <line x1="230" y1="150" x2="230" y2="15" stroke="#475569" stroke-width="1.5" />
+          <line x1="20" y1="150" x2="440" y2="150" stroke="#475569" stroke-width="2" />
+
+          <!-- Antenna Array Base (gNB) -->
+          <rect x="200" y="146" width="60" height="8" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="230" y="170" fill="#94a3b8" font-size="10" text-anchor="middle">Planar Array (64-T/R)</text>
+
+          <!-- Steered Main Beam Lobe -->
+          <path d="M 230,150 Q 210,50 245,25 Q 280,50 230,150" fill="#0284c7" fill-opacity="0.4" stroke="#38bdf8" stroke-width="2.5" />
+
+          <!-- Side Lobes -->
+          <path d="M 230,150 Q 150,110 130,95 Q 160,135 230,150" fill="#334155" fill-opacity="0.5" stroke="#64748b" stroke-width="1.5" />
+          <path d="M 230,150 Q 310,110 330,95 Q 300,135 230,150" fill="#334155" fill-opacity="0.5" stroke="#64748b" stroke-width="1.5" />
+
+          <!-- Annotations -->
+          <text x="250" y="20" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Main Lobe ({array_gain_dbi:.1f} dBi)</text>
+          <text x="360" y="90" fill="#94a3b8" font-size="10">Sidelobe -18dB</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Sudut Kemudi: <strong style="color: #38bdf8;">{steer_angle_deg:+.1f}&deg;</strong></div>
+        <div>HPBW Beamwidth: <strong style="color: #34d399;">{hpbw_deg:.1f}&deg;</strong></div>
+        <div>Multiplexing: <strong style="color: #fbbf24;">{num_beams} User Beams</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
