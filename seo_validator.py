@@ -5691,6 +5691,59 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_pdf_link_indicators(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits links pointing to downloadable document formats (.pdf, .docx, .xlsx, .zip)
+        to verify clear file type indicators in anchor text or accessibility labels (WCAG SC 3.2.4).
+        """
+        if not html_content:
+            return {"total_document_links": 0, "is_compliant": True, "issues": []}
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        doc_exts = (".pdf", ".docx", ".xlsx", ".pptx", ".zip", ".tar.gz", ".csv")
+
+        links = soup.find_all("a", href=True)
+        doc_links = []
+        for a in links:
+            href_clean = a["href"].split("?")[0].lower()
+            for ext in doc_exts:
+                if href_clean.endswith(ext):
+                    doc_links.append((a, ext))
+                    break
+
+        if not doc_links:
+            return {
+                "total_document_links": 0,
+                "compliant_links": 0,
+                "is_compliant": True,
+                "issues": [],
+                "warnings": warnings
+            }
+
+        compliant_count = 0
+        for idx, (a, ext) in enumerate(doc_links, 1):
+            text = a.get_text(strip=True).upper()
+            aria_label = (a.get("aria-label") or "").upper()
+            ext_label = ext.replace(".", "").upper()
+
+            has_indicator = (ext_label in text) or (ext_label in aria_label) or ("UNDUH" in text) or ("DOWNLOAD" in text)
+            if has_indicator:
+                compliant_count += 1
+            else:
+                issues.append(f"Tautan dokumen #{idx} ('{a['href']}') tidak mencantumkan indikator ekstensi '{ext_label}' pada teks atau aria-label.")
+
+        return {
+            "total_document_links": len(doc_links),
+            "compliant_links": compliant_count,
+            "is_compliant": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
