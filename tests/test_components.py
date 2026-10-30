@@ -2258,6 +2258,90 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("2.15 Gbps", html)
         self.assertIn("<svg", html)
 
+    def test_render_optical_xpm_card(self):
+        html = EditorialComponents.render_optical_xpm_card(
+            link_name="DWDM-Core-Span-01",
+            pump_power_w=0.08,
+            wavelength_spacing_nm=0.8,
+            effective_length_km=21.65,
+            phi_xpm_rad=0.45,
+            walk_off_length_km=3.68,
+            suppression_factor=0.168,
+            xpm_risk="Rendah",
+            is_acceptable=True
+        )
+        self.assertIn("tu-optical-xpm-card", html)
+        self.assertIn("DWDM-Core-Span-01", html)
+        self.assertIn("0.080 W", html)
+        self.assertIn("0.450 rad", html)
+        self.assertIn("MEMENUHI AMBANG TOLERANSI CROSSTALK", html)
+
+    def test_render_5g_nr_massive_mimo_card(self):
+        html = EditorialComponents.render_5g_nr_massive_mimo_card(
+            site_id="GNB-BDG-01",
+            array_config="8x8x2",
+            total_elements=128,
+            total_gain_dbi=24.06,
+            hpbw_azimuth_deg=12.75,
+            eirp_dbm=67.06,
+            max_layers=16,
+            carrier_freq_ghz=3.5
+        )
+        self.assertIn("tu-5g-massive-mimo-card", html)
+        self.assertIn("GNB-BDG-01", html)
+        self.assertIn("128 Elements", html)
+        self.assertIn("24.06 dBi", html)
+        self.assertIn("MASSIVE MIMO AKTIF", html)
+
+    def test_render_satellite_gaseous_attenuation_card(self):
+        html = EditorialComponents.render_satellite_gaseous_attenuation_card(
+            satellite_name="Nusantara-2 (Ka-Band)",
+            frequency_ghz=28.5,
+            elevation_angle_deg=45.0,
+            gamma_oxygen_db_km=0.035,
+            gamma_vapor_db_km=0.125,
+            slant_attenuation_db=0.65,
+            risk_level="Rendah",
+            is_viable=True
+        )
+        self.assertIn("tu-satellite-gaseous-card", html)
+        self.assertIn("Nusantara-2", html)
+        self.assertIn("28.5 GHz", html)
+        self.assertIn("0.65 dB", html)
+        self.assertIn("LINK ANDAL", html)
+
+    def test_render_pkm_proposal_card(self):
+        html = EditorialComponents.render_pkm_proposal_card(
+            student_name="Rizky Firmansyah",
+            nim="1201210034",
+            proposal_title="Sistem Radar Cuaca Maritim Terdistribusi",
+            scheme="PKM-KC",
+            composite_score=88.5,
+            letter_grade="A",
+            funding_status="Didanai Belmawa & Lolos PIMNAS",
+            converted_sks=4
+        )
+        self.assertIn("tu-pkm-proposal-card", html)
+        self.assertIn("Sistem Radar Cuaca Maritim Terdistribusi", html)
+        self.assertIn("Rizky Firmansyah", html)
+        self.assertIn("PKM-KC", html)
+        self.assertIn("4 SKS Diakui", html)
+
+    def test_render_5g_nr_mimo_beam_svg_card(self):
+        html = EditorialComponents.render_5g_nr_mimo_beam_svg_card(
+            title="Diagram Pola Radiasi Kemudi Berkas 5G NR Beamforming",
+            steer_angle_deg=15.0,
+            array_gain_dbi=24.1,
+            hpbw_deg=12.5,
+            num_beams=4
+        )
+        self.assertIn("tu-5g-mimo-beam-svg-card", html)
+        self.assertIn("Diagram Pola Radiasi Kemudi Berkas 5G NR Beamforming", html)
+        self.assertIn("+15.0&deg;", html)
+        self.assertIn("24.1 dBi", html)
+        self.assertIn("4 User Beams", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
