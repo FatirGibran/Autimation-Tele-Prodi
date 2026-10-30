@@ -947,6 +947,45 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("6 SKS Diakui", msg)
         self.assertIn("https://mbkm.telkomuniversity.ac.id/p2mw/2026-050", msg)
 
+    def test_format_satellite_gaseous_attenuation_telegram(self):
+        msg = TelegramFormatter.format_satellite_gaseous_attenuation_telegram(
+            satellite_name="Nusantara-2",
+            frequency_ghz=28.5,
+            elevation_angle_deg=45.0,
+            gamma_oxygen=0.0352,
+            gamma_vapor=0.1245,
+            slant_attenuation_db=0.648,
+            risk_level="Rendah",
+            portal_url="https://telemetry.telkomuniversity.ac.id/satellite/nusantara-2"
+        )
+        self.assertIn("Laporan Audit Redaman Gas Atmosfer Satelit (ITU-R P.676)", msg)
+        self.assertIn("Nusantara-2", msg)
+        self.assertIn("28.5 GHz", msg)
+        self.assertIn("45.0°", msg)
+        self.assertIn("0.0352 dB/km", msg)
+        self.assertIn("0.648 dB", msg)
+        self.assertIn("https://telemetry.telkomuniversity.ac.id/satellite/nusantara-2", msg)
+
+    def test_format_pkm_proposal_telegram(self):
+        msg = TelegramFormatter.format_pkm_proposal_telegram(
+            student_name="Rizky Firmansyah",
+            nim="1201210034",
+            proposal_title="Sistem Radar Cuaca Maritim Terdistribusi",
+            scheme="PKM-KC",
+            composite_score=88.5,
+            letter_grade="A",
+            funding_status="Didanai Belmawa & Lolos PIMNAS",
+            converted_sks=4,
+            portal_url="https://simbelmawa.kemdikbud.go.id/pkm/2026-034"
+        )
+        self.assertIn("Apresiasi Kelulusan Proposal PKM Simbelmawa Kemendikbudristek", msg)
+        self.assertIn("Sistem Radar Cuaca Maritim Terdistribusi", msg)
+        self.assertIn("Rizky Firmansyah", msg)
+        self.assertIn("1201210034", msg)
+        self.assertIn("PKM-KC", msg)
+        self.assertIn("4 SKS Diakui", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/pkm/2026-034", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
