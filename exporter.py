@@ -2043,7 +2043,7 @@ navigation: true
         """
         schema = {
             "@context": "https://schema.org",
-            "@type": app_data.get("application_type", "WebApplication"),
+            "@type": app_data.get("application_type", "SoftwareApplication"),
             "name": app_data.get("name", "Tool Rekayasa Telekomunikasi").strip(),
             "description": app_data.get("description", "").strip(),
             "applicationCategory": app_data.get("application_category", "EducationalApplication"),

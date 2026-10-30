@@ -1070,6 +1070,38 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('name: "og:type"', res)
         self.assertIn("<p>Penjelasan resumability pada Qwik.</p>", res)
 
+    def test_generate_software_application_json_ld(self):
+        app = {
+            "name": "Kalkulator Propagasi Satelit ITU-R",
+            "description": "Aplikasi simulasi redaman hujan dan gas atmosfer satelit bumi-angkasa.",
+            "application_category": "EngineeringApplication",
+            "operating_system": "Web Browser",
+            "software_version": "2.4.0",
+            "download_url": "https://bif-pwt.telkomuniversity.ac.id/tools/sat-calc.zip",
+            "url": "https://bif-pwt.telkomuniversity.ac.id/tools/sat-calc"
+        }
+        res = ArticleExporter.generate_software_application_json_ld(app)
+        self.assertIn('<script type="application/ld+json">', res)
+        self.assertIn("SoftwareApplication", res)
+        self.assertIn("Kalkulator Propagasi Satelit ITU-R", res)
+        self.assertIn("EngineeringApplication", res)
+        self.assertIn("2.4.0", res)
+
+    def test_to_fresh_mdx(self):
+        meta = {
+            "seo_title": "Panduan Deno Fresh Islands",
+            "meta_description": "Dokumentasi modern menggunakan framework Fresh Deno.",
+            "slug": "panduan-fresh-islands",
+            "publish_date": "2026-10-30",
+            "tags": ["deno", "fresh", "islands"]
+        }
+        res = ArticleExporter.to_fresh_mdx(meta, "<p>Penjelasan konsep islands pada Deno Fresh.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Deno Fresh Islands"', res)
+        self.assertIn('framework: "fresh"', res)
+        self.assertIn("island: true", res)
+        self.assertIn("<p>Penjelasan konsep islands pada Deno Fresh.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
