@@ -862,6 +862,30 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(req.get_method(), "POST")
         self.assertIn("/settings", req.full_url)
 
+    @patch("urllib.request.urlopen")
+    def test_get_comments_by_status(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 401, "content": {"rendered": "Komentar moderasi"}, "status": "hold"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        comments = self.client.get_comments_by_status(status="hold", page=1, per_page=10)
+        self.assertEqual(len(comments), 1)
+        self.assertEqual(comments[0]["id"], 401)
+        self.assertEqual(comments[0]["status"], "hold")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/comments?status=hold&page=1&per_page=10", req.full_url)
+
+    @patch.object(WordPressClient, "update_comment_status")
+    def test_bulk_update_comment_status(self, mock_update):
+        mock_update.side_effect = lambda cid, status: {"id": cid, "status": status} if cid != 999 else (_ for _ in ()).throw(Exception("Not found"))
+
+        res = self.client.bulk_update_comment_status([101, 102, 999], status="approve")
+        self.assertEqual(res["success"], [101, 102])
+        self.assertEqual(len(res["failed"]), 1)
+        self.assertEqual(res["failed"][0]["comment_id"], 999)
+        self.assertEqual(res["total"], 3)
+
 
 if __name__ == "__main__":
     unittest.main()
