@@ -1193,6 +1193,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fwm_phase_span ON optical_fwm_phase_records(span_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_comp_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cluster_name TEXT NOT NULL,
+                    serving_cell_rsrp_dbm REAL NOT NULL,
+                    cooperating_cells_count INTEGER NOT NULL,
+                    sinr_comp_db REAL NOT NULL,
+                    sinr_gain_db REAL NOT NULL,
+                    throughput_comp_mbps REAL NOT NULL,
+                    throughput_gain_percent REAL NOT NULL,
+                    coordination_type TEXT NOT NULL DEFAULT 'Joint Transmission (JT)',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_comp_cluster ON nr_comp_records(cluster_name);")
 
 
 
@@ -5503,6 +5518,57 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_fwm_phase_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_nr_comp(
+        self,
+        cluster_name: str,
+        serving_cell_rsrp_dbm: float,
+        cooperating_cells_count: int,
+        sinr_comp_db: float,
+        sinr_gain_db: float,
+        throughput_comp_mbps: float,
+        throughput_gain_percent: float,
+        coordination_type: str = "Joint Transmission (JT)"
+    ) -> int:
+        """
+        Stores a 3GPP 5G NR Coordinated Multi-Point (CoMP) Joint Transmission cluster performance record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_comp_records (
+                    cluster_name, serving_cell_rsrp_dbm, cooperating_cells_count,
+                    sinr_comp_db, sinr_gain_db, throughput_comp_mbps,
+                    throughput_gain_percent, coordination_type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                cluster_name.strip(), float(serving_cell_rsrp_dbm), int(cooperating_cells_count),
+                float(sinr_comp_db), float(sinr_gain_db), float(throughput_comp_mbps),
+                float(throughput_gain_percent), coordination_type.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_comps(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored 5G NR CoMP records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_comp_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_comp_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR CoMP record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_comp_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
