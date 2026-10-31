@@ -1175,6 +1175,24 @@ class StorageManager:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_prop_nim ON pkm_proposal_records(nim);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_prop_scheme ON pkm_proposal_records(scheme);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_fwm_phase_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    span_name TEXT NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    channel_spacing_ghz REAL NOT NULL,
+                    chromatic_dispersion REAL NOT NULL,
+                    beta2 REAL NOT NULL,
+                    phase_mismatch REAL NOT NULL,
+                    coherence_length_km REAL NOT NULL,
+                    efficiency_percent REAL NOT NULL,
+                    fwm_power_dbm REAL NOT NULL,
+                    fwm_risk TEXT NOT NULL,
+                    is_acceptable INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fwm_phase_span ON optical_fwm_phase_records(span_name);")
 
 
 
@@ -5429,6 +5447,62 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM pkm_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_fwm_phase(
+        self,
+        span_name: str,
+        fiber_length_km: float,
+        channel_spacing_ghz: float,
+        chromatic_dispersion: float,
+        beta2: float,
+        phase_mismatch: float,
+        coherence_length_km: float,
+        efficiency_percent: float,
+        fwm_power_dbm: float,
+        fwm_risk: str,
+        is_acceptable: bool = True
+    ) -> int:
+        """
+        Stores an optical DWDM Four-Wave Mixing (FWM) phase-matching, coherence length, and efficiency record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_fwm_phase_records (
+                    span_name, fiber_length_km, channel_spacing_ghz,
+                    chromatic_dispersion, beta2, phase_mismatch,
+                    coherence_length_km, efficiency_percent, fwm_power_dbm,
+                    fwm_risk, is_acceptable
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                span_name.strip(), float(fiber_length_km), float(channel_spacing_ghz),
+                float(chromatic_dispersion), float(beta2), float(phase_mismatch),
+                float(coherence_length_km), float(efficiency_percent), float(fwm_power_dbm),
+                fwm_risk.strip(), 1 if is_acceptable else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_fwm_phases(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical DWDM FWM phase-matching records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_fwm_phase_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_fwm_phase_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical DWDM FWM phase-matching record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_fwm_phase_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
