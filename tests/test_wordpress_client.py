@@ -912,6 +912,31 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertTrue(res["force"])
 
+    @patch("urllib.request.urlopen")
+    def test_get_categories_by_parent(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 42, "name": "5G & IoT", "parent": 10}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        cats = self.client.get_categories_by_parent(10, page=1, per_page=20)
+        self.assertEqual(len(cats), 1)
+        self.assertEqual(cats[0]["name"], "5G & IoT")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("parent=10", req.full_url)
+        self.assertIn("per_page=20", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_trash_posts(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 101, "status": "trash"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.batch_trash_posts([101, 102])
+        self.assertEqual(res["trashed"], [101, 102])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
