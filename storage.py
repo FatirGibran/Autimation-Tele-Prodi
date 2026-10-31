@@ -1208,6 +1208,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_comp_cluster ON nr_comp_records(cluster_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS ppk_ormawa_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ormawa_name TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    topic TEXT NOT NULL,
+                    village_location TEXT NOT NULL,
+                    total_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    funding_approved INTEGER NOT NULL DEFAULT 0,
+                    allocated_budget_idr INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ppk_ormawa_name ON ppk_ormawa_records(ormawa_name);")
 
 
 
@@ -5569,6 +5584,56 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM nr_comp_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_ppk_ormawa(
+        self,
+        ormawa_name: str,
+        proposal_title: str,
+        topic: str,
+        village_location: str,
+        total_score: float,
+        letter_grade: str,
+        funding_approved: bool = False,
+        allocated_budget_idr: int = 0
+    ) -> int:
+        """
+        Stores a Belmawa Kemendikbudristek PPK Ormawa community development proposal evaluation and funding record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO ppk_ormawa_records (
+                    ormawa_name, proposal_title, topic, village_location,
+                    total_score, letter_grade, funding_approved, allocated_budget_idr
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                ormawa_name.strip(), proposal_title.strip(), topic.strip(),
+                village_location.strip(), float(total_score), letter_grade.strip(),
+                1 if funding_approved else 0, int(allocated_budget_idr)
+            ))
+            return cursor.lastrowid
+
+    def list_ppk_ormawa(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored PPK Ormawa proposal evaluation records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM ppk_ormawa_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_ppk_ormawa_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a PPK Ormawa proposal evaluation record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM ppk_ormawa_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
