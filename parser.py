@@ -6764,6 +6764,69 @@ def parse_ppk_ormawa_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_sbs_threshold(
+    fiber_length_km: float,
+    effective_area_um2: float = 80.0,
+    attenuation_db_km: float = 0.2,
+    brillouin_gain_coeff: float = 5.0e-11,
+    laser_linewidth_mhz: float = 10.0,
+    pump_wavelength_nm: float = 1550.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical fiber Stimulated Brillouin Scattering (SBS) power threshold and acoustic frequency shift
+    according to Smith's relation and Agrawal Nonlinear Fiber Optics (dominant nonlinear limitation for narrowband DWDM).
+    """
+    l_km = max(0.1, float(fiber_length_km))
+    a_eff_um2 = max(10.0, float(effective_area_um2))
+    alpha_db = max(0.01, float(attenuation_db_km))
+    g_b = max(1.0e-12, float(brillouin_gain_coeff))
+    linewidth_mhz = max(0.1, float(laser_linewidth_mhz))
+    lambda_nm = max(1200.0, float(pump_wavelength_nm))
+
+    # Attenuation coefficient in 1/km and effective length in meters
+    alpha_per_km = alpha_db / 4.3429448
+    l_eff_km = (1.0 - math.exp(-alpha_per_km * l_km)) / alpha_per_km
+    l_eff_m = l_eff_km * 1000.0
+    a_eff_m2 = a_eff_um2 * 1e-12
+
+    # Intrinsic Brillouin linewidth in silica at 1550 nm (~20 MHz)
+    delta_nu_b_mhz = 20.0
+    linewidth_factor = 1.0 + (linewidth_mhz / delta_nu_b_mhz)
+
+    # Smith threshold formula: P_th ~ 21 * A_eff / (g_B * L_eff) * (1 + delta_nu_p / delta_nu_B)
+    p_th_w = (21.0 * a_eff_m2 * linewidth_factor) / (g_b * l_eff_m)
+    p_th_mw = p_th_w * 1000.0
+    p_th_dbm = 10.0 * math.log10(p_th_mw) if p_th_mw > 0 else -100.0
+
+    # Acoustic velocity in silica ~ 5960 m/s, n ~ 1.45
+    # Brillouin frequency shift nu_B = 2 * n * v_a / lambda
+    nu_b_ghz = (2.0 * 1.45 * 5960.0) / (lambda_nm * 1e-9 * 1e9)
+
+    if p_th_mw < 6.0:
+        sbs_risk = "Kritis (Ambang Rendah, Hamburan Balik Stokes Mudah Terstimulasi)"
+        is_safe = False
+    elif p_th_mw <= 18.0:
+        sbs_risk = "Moderat (Ambang Standar Serat SMF-28 DWDM)"
+        is_safe = True
+    else:
+        sbs_risk = "Aman (Ambang Tinggi Didukung Linewidth Dither Broadening)"
+        is_safe = True
+
+    return {
+        "fiber_length_km": round(l_km, 2),
+        "effective_length_km": round(l_eff_km, 2),
+        "effective_area_um2": round(a_eff_um2, 1),
+        "laser_linewidth_mhz": round(linewidth_mhz, 2),
+        "brillouin_linewidth_mhz": round(delta_nu_b_mhz, 1),
+        "brillouin_shift_ghz": round(nu_b_ghz, 2),
+        "sbs_threshold_mw": round(p_th_mw, 2),
+        "sbs_threshold_dbm": round(p_th_dbm, 2),
+        "linewidth_enhancement_factor": round(linewidth_factor, 2),
+        "sbs_risk": sbs_risk,
+        "is_safe_for_dwdm": is_safe
+    }
+
+
 
 
 
