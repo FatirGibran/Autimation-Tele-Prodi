@@ -2228,6 +2228,35 @@ navigation: true
             payload["url"] = url.strip()
         return payload
 
+    @staticmethod
+    def to_solidstart_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports content as a SolidStart MDX route document with YAML frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        pub_date = metadata.get("publish_date", "2026-10-01")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'slug: "{slug}"',
+            f'published: "{pub_date}"',
+            f'tags: {json.dumps(tags)}',
+            'framework: "solidstart"',
+            "solid: true",
+            "ssr: true",
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
