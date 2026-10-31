@@ -6461,6 +6461,50 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_ppk_ormawa_card(
+        cls,
+        title: str,
+        ormawa_name: str,
+        proposal_topic: str,
+        village_location: str,
+        total_score: float,
+        funding_approved: bool,
+        allocated_budget_idr: int,
+        letter_grade: str
+    ) -> str:
+        """
+        Renders a Belmawa Kemendikbudristek PPK Ormawa (Program Penguatan Kapasitas Organisasi Kemahasiswaan)
+        community empowerment milestone card displaying proposal score, village target, and grant allocation.
+        """
+        badge_bg = "#ecfdf5" if funding_approved else "#fef2f2"
+        badge_color = "#047857" if funding_approved else "#b91c1c"
+        border_color = "#10b981" if funding_approved else "#ef4444"
+        status_label = "Didanai Kemendikbudristek" if funding_approved else "Tidak Lolos Pendanaan"
+
+        return f"""    <div class="tu-ppk-ormawa-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase;">PPK Ormawa Belmawa Dikti</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status_label}</span>
+      </div>
+      <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px;">Organisasi: <strong style="color: #0284c7;">{ormawa_name}</strong> &bull; Topik: {proposal_topic}</p>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Desa / Komunitas Binaan</span>
+          <strong style="color: #0f172a;">{village_location}</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Skor Evaluasi &amp; Grade</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{total_score:.1f} / 100.0</strong> ({letter_grade})
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; grid-column: span 2;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Alokasi Hibah Kemendikbudristek</span>
+          <strong style="color: #059669; font-size: 16px;">Rp {allocated_budget_idr:,}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
