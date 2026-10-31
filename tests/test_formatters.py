@@ -986,6 +986,46 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("4 SKS Diakui", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/pkm/2026-034", msg)
 
+    def test_format_optical_fwm_telegram(self):
+        msg = TelegramFormatter.format_optical_fwm_telegram(
+            fiber_title="Span Jawa-Bali SMF-28",
+            fiber_length_km=75.0,
+            channel_spacing_ghz=100.0,
+            chromatic_dispersion=17.0,
+            phase_mismatch=8.56,
+            coherence_length_km=0.734,
+            fwm_efficiency_percent=0.012,
+            fwm_power_dbm=-52.4,
+            fwm_risk="Sangat Rendah (Dispersi Terkendali)",
+            portal_url="https://telemetry.telkomuniversity.ac.id/fwm/jb-1"
+        )
+        self.assertIn("DWDM Four-Wave Mixing (FWM) Phase-Matching", msg)
+        self.assertIn("Span Jawa-Bali SMF-28", msg)
+        self.assertIn("75.0 km", msg)
+        self.assertIn("100.0 GHz", msg)
+        self.assertIn("0.734 km", msg)
+        self.assertIn("-52.40 dBm", msg)
+        self.assertIn("https://telemetry.telkomuniversity.ac.id/fwm/jb-1", msg)
+
+    def test_format_ppk_ormawa_telegram(self):
+        msg = TelegramFormatter.format_ppk_ormawa_telegram(
+            proposal_title="Pemberdayaan Desa Cerdas Berbasis LoRaWAN",
+            ormawa_name="HMTT Telkom University",
+            topic="Smart Agriculture & Monitoring Lingkungan",
+            village_location="Desa Cibeusi",
+            composite_score=89.0,
+            letter_grade="A",
+            allocated_budget_idr=38000000,
+            funding_status="Lolos Pendanaan Belmawa Dikti 2026",
+            portal_url="https://belmawa.kemdikbud.go.id/ppk-ormawa/2026-089"
+        )
+        self.assertIn("Pengumuman Pendanaan PPK Ormawa Belmawa Kemendikbudristek", msg)
+        self.assertIn("Pemberdayaan Desa Cerdas Berbasis LoRaWAN", msg)
+        self.assertIn("HMTT Telkom University", msg)
+        self.assertIn("Desa Cibeusi", msg)
+        self.assertIn("Rp 38,000,000", msg)
+        self.assertIn("https://belmawa.kemdikbud.go.id/ppk-ormawa/2026-089", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
