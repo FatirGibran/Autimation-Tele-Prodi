@@ -2036,6 +2036,68 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(res["server_timing_entries"][0]["duration_ms"], 53.2)
         self.assertTrue(res["is_compliant"])
 
+    def test_audit_table_accessibility_wcag(self):
+        html_ok = (
+            '<table>'
+            '<caption>Alokasi Spektrum 5G NR Telkomsel</caption>'
+            '<tr><th scope="col">Band</th><th scope="col">Frekuensi</th></tr>'
+            '<tr><td>n40</td><td>2300 MHz</td></tr>'
+            '</table>'
+        )
+        res_ok = YoastSEOValidator.audit_table_accessibility_wcag(html_ok)
+        self.assertEqual(res_ok["total_tables"], 1)
+        self.assertEqual(res_ok["tables_with_caption"], 1)
+        self.assertEqual(res_ok["headers_with_scope"], 2)
+        self.assertTrue(res_ok["is_compliant"])
+
+        html_bad = '<table><tr><th>Band</th></tr><tr><td>n40</td></tr></table>'
+        res_bad = YoastSEOValidator.audit_table_accessibility_wcag(html_bad)
+        self.assertEqual(res_bad["tables_with_caption"], 0)
+        self.assertEqual(res_bad["headers_with_scope"], 0)
+        self.assertFalse(res_bad["is_compliant"])
+
+    def test_audit_client_hints_delegation(self):
+        html_ch = (
+            '<html><head>'
+            '<meta http-equiv="Accept-CH" content="Sec-CH-DPR, Sec-CH-Width, Sec-CH-Viewport-Width">'
+            '</head><body></body></html>'
+        )
+        res = YoastSEOValidator.audit_client_hints_delegation(html_ch)
+        self.assertTrue(res["has_client_hints"])
+        self.assertEqual(res["hints_count"], 3)
+        self.assertTrue(res["has_responsive_hints"])
+        self.assertTrue(res["is_compliant"])
+
+    def test_audit_html_lang_and_dir_attributes(self):
+        html_ok = '<html lang="id" dir="ltr"><head></head><body>Konten</body></html>'
+        res_ok = YoastSEOValidator.audit_html_lang_and_dir_attributes(html_ok)
+        self.assertTrue(res_ok["has_html_element"])
+        self.assertTrue(res_ok["has_lang_attr"])
+        self.assertEqual(res_ok["lang_code"], "id")
+        self.assertTrue(res_ok["is_valid_lang_code"])
+        self.assertTrue(res_ok["is_compliant"])
+
+        html_bad = '<html dir="ltr"><head></head><body>Konten</body></html>'
+        res_bad = YoastSEOValidator.audit_html_lang_and_dir_attributes(html_bad)
+        self.assertFalse(res_bad["has_lang_attr"])
+        self.assertFalse(res_bad["is_compliant"])
+
+    def test_audit_speculative_loading_rules(self):
+        html_spec = (
+            '<html><head>'
+            '<script type="speculationrules">'
+            '{"prerender": [{"urls": ["/next-page"]}]}'
+            '</script>'
+            '<link rel="dns-prefetch" href="//cdn.telkomuniversity.ac.id">'
+            '</head><body></body></html>'
+        )
+        res = YoastSEOValidator.audit_speculative_loading_rules(html_spec)
+        self.assertTrue(res["has_speculation_rules"])
+        self.assertTrue(res["has_dns_prefetch"])
+        self.assertEqual(res["prerender_urls"], ["/next-page"])
+        self.assertIn("//cdn.telkomuniversity.ac.id", res["dns_prefetch_domains"])
+        self.assertTrue(res["is_compliant"])
+
 
 if __name__ == "__main__":
     unittest.main()
