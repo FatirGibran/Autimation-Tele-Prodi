@@ -6059,6 +6059,73 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_table_accessibility_wcag(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML data tables according to WCAG 2.1 SC 1.3.1 (Info and Relationships).
+        Verifies presence of <caption> or aria-label descriptions, and scope="col"/"row" on <th> headers.
+        """
+        if not html_content:
+            return {
+                "total_tables": 0,
+                "tables_with_caption": 0,
+                "total_headers": 0,
+                "headers_with_scope": 0,
+                "is_compliant": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+        if not tables:
+            return {
+                "total_tables": 0,
+                "tables_with_caption": 0,
+                "total_headers": 0,
+                "headers_with_scope": 0,
+                "is_compliant": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        issues = []
+        warnings = []
+        tables_with_caption = 0
+        total_th = 0
+        th_with_scope = 0
+
+        for idx, table in enumerate(tables, 1):
+            caption = table.find("caption")
+            aria_label = table.get("aria-label") or table.get("aria-labelledby")
+            has_cap = bool((caption and caption.get_text(strip=True)) or aria_label)
+            if has_cap:
+                tables_with_caption += 1
+            else:
+                warnings.append(f"Tabel #{idx} tidak memiliki elemen <caption> atau atribut aria-label untuk pembaca layar (WCAG SC 1.3.1).")
+
+            ths = table.find_all("th")
+            for th in ths:
+                total_th += 1
+                scope = (th.get("scope") or "").strip().lower()
+                if scope in ("col", "row", "colgroup", "rowgroup"):
+                    th_with_scope += 1
+                else:
+                    th_text = th.get_text(strip=True) or "header"
+                    issues.append(f"Header tabel <th> '{th_text}' tidak mendeklarasikan atribut scope (scope='col' atau scope='row').")
+
+        is_comp = len(issues) == 0
+
+        return {
+            "total_tables": len(tables),
+            "tables_with_caption": tables_with_caption,
+            "total_headers": total_th,
+            "headers_with_scope": th_with_scope,
+            "is_compliant": is_comp,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
