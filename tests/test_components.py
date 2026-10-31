@@ -2342,6 +2342,90 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("4 User Beams", html)
         self.assertIn("<svg", html)
 
+    def test_render_optical_fwm_card(self):
+        html = EditorialComponents.render_optical_fwm_card(
+            title="DWDM C-Band 50GHz Grid",
+            fiber_length_km=80.0,
+            channel_spacing_ghz=50.0,
+            chromatic_dispersion=17.0,
+            beta2=-21.68,
+            phase_mismatch=2.14,
+            coherence_length_km=2.94,
+            efficiency_percent=0.12,
+            fwm_power_dbm=-48.5,
+            risk="Moderat",
+            is_acceptable=True
+        )
+        self.assertIn("tu-optical-fwm-card", html)
+        self.assertIn("DWDM C-Band 50GHz Grid", html)
+        self.assertIn("80.0 km", html)
+        self.assertIn("50.0 GHz", html)
+        self.assertIn("2.94 km", html)
+
+    def test_render_5g_nr_comp_card(self):
+        html = EditorialComponents.render_5g_nr_comp_card(
+            title="CoMP Joint Transmission Cluster",
+            serving_rsrp_dbm=-86.0,
+            comp_cells_count=3,
+            sinr_comp_db=14.2,
+            sinr_gain_db=4.5,
+            throughput_comp_mbps=185.0,
+            throughput_gain_percent=42.0
+        )
+        self.assertIn("tu-5g-comp-card", html)
+        self.assertIn("CoMP Joint Transmission Cluster", html)
+        self.assertIn("-86.0 dBm", html)
+        self.assertIn("185.0 Mbps", html)
+        self.assertIn("+42.0%", html)
+
+    def test_render_satellite_scintillation_card(self):
+        html = EditorialComponents.render_satellite_scintillation_card(
+            title="Ka-Band Earth Station Scintillation",
+            frequency_ghz=20.0,
+            elevation_deg=25.0,
+            antenna_dia_m=3.8,
+            scintillation_fade_db=1.85,
+            wet_term_nwet=45.2,
+            signal_enhancement_db=1.20,
+            fade_risk="Rendah",
+            is_acceptable=True
+        )
+        self.assertIn("tu-satellite-scintillation-card", html)
+        self.assertIn("Ka-Band Earth Station Scintillation", html)
+        self.assertIn("20.0 GHz", html)
+        self.assertIn("-1.85 dB", html)
+
+    def test_render_ppk_ormawa_card(self):
+        html = EditorialComponents.render_ppk_ormawa_card(
+            title="Pemberdayaan IoT Desa Cerdas",
+            ormawa_name="HMTT",
+            proposal_topic="Smart Agriculture",
+            village_location="Desa Sukapura",
+            total_score=88.5,
+            funding_approved=True,
+            allocated_budget_idr=35000000,
+            letter_grade="A"
+        )
+        self.assertIn("tu-ppk-ormawa-card", html)
+        self.assertIn("HMTT", html)
+        self.assertIn("Desa Sukapura", html)
+        self.assertIn("35,000,000", html)
+        self.assertIn("Didanai Kemendikbudristek", html)
+
+    def test_render_5g_nr_comp_topology_svg_card(self):
+        html = EditorialComponents.render_5g_nr_comp_topology_svg_card(
+            title="Topologi Kooperasi Sel 5G CoMP",
+            num_coop_nodes=3,
+            serving_rsrp_dbm=-85.0,
+            coord_rsrp_avg_dbm=-88.0,
+            sinr_boost_db=4.2
+        )
+        self.assertIn("tu-5g-comp-svg-card", html)
+        self.assertIn("Topologi Kooperasi Sel 5G CoMP", html)
+        self.assertIn("Xn / eXn C-RAN", html)
+        self.assertIn("Cell-Edge UE", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
