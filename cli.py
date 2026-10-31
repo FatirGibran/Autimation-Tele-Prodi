@@ -36,7 +36,10 @@ from parser import (
     parse_pkm_proposal_evaluation,
     calculate_optical_fwm_phase_matching,
     calculate_5g_nr_comp_joint_transmission,
-    parse_ppk_ormawa_evaluation
+    parse_ppk_ormawa_evaluation,
+    calculate_optical_sbs_threshold,
+    calculate_5g_nr_daps_handover,
+    parse_innovillage_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2607,7 +2610,122 @@ def cmd_ormawa(args):
             print(f"{r['id']:<4} | {r['ormawa_name']:<20} | {r['village_location']:<15} | {r['total_score']:<6.1f} | {r['letter_grade']:<6} | Rp {r['allocated_budget_idr']:<12,} | {status}")
 
 
+def cmd_sbs(args):
+    if args.action == "add":
+        span = args.span or "Span-1"
+        length = float(args.length) if args.length is not None else 50.0
+        area = float(args.area) if args.area is not None else 80.0
+        linewidth = float(args.linewidth) if args.linewidth is not None else 10.0
 
+        res = calculate_optical_sbs_threshold(
+            fiber_length_km=length,
+            effective_area_um2=area,
+            laser_linewidth_mhz=linewidth
+        )
+        rec_id = storage.record_optical_sbs(
+            span_name=span,
+            fiber_length_km=res["fiber_length_km"],
+            effective_area_um2=res["effective_area_um2"],
+            laser_linewidth_mhz=res["laser_linewidth_mhz"],
+            sbs_threshold_mw=res["sbs_threshold_mw"],
+            sbs_threshold_dbm=res["sbs_threshold_dbm"],
+            brillouin_shift_ghz=res["brillouin_shift_ghz"],
+            sbs_risk=res["sbs_risk"],
+            is_safe=res["is_safe_for_dwdm"]
+        )
+        status_label = "SAFE" if res["is_safe_for_dwdm"] else "CRITICAL"
+        print(f"Catatan Ambang SBS Fiber Optik berhasil disimpan dengan ID: {rec_id} (Pth: {res['sbs_threshold_mw']} mW / {res['sbs_threshold_dbm']} dBm, Status: {status_label})")
+    else:
+        records = storage.list_optical_sbs(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan ambang SBS fiber optik yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'SPAN':<20} | {'PANJANG':<8} | {'AREA':<6} | {'LINEWIDTH':<10} | {'Pth (mW)':<10} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            status = "SAFE" if r["is_safe"] else "CRITICAL"
+            print(f"{r['id']:<4} | {r['span_name']:<20} | {r['fiber_length_km']:<8.1f} | {r['effective_area_um2']:<6.1f} | {r['laser_linewidth_mhz']:<10.1f} | {r['sbs_threshold_mw']:<10.2f} | {status}")
+
+
+def cmd_daps(args):
+    if args.action == "add":
+        handover_id = args.id or "HO-DAPS-001"
+        serving = float(args.serving) if args.serving is not None else 6.0
+        target = float(args.target) if args.target is not None else 14.0
+        duration = float(args.duration) if args.duration is not None else 40.0
+
+        res = calculate_5g_nr_daps_handover(
+            serving_sinr_db=serving,
+            target_sinr_db=target,
+            daps_buffer_duration_ms=duration
+        )
+        rec_id = storage.record_nr_daps(
+            handover_id=handover_id,
+            serving_sinr_db=res["serving_sinr_db"],
+            target_sinr_db=res["target_sinr_db"],
+            traditional_interruption_ms=res["traditional_interruption_ms"],
+            daps_interruption_ms=res["daps_interruption_ms"],
+            pdcp_buffer_kb=res["pdcp_buffer_kb"],
+            handover_reliability_percent=res["handover_reliability_percent"]
+        )
+        print(f"Catatan 5G NR DAPS Handover berhasil disimpan dengan ID: {rec_id} (DAPS Interruption: {res['daps_interruption_ms']} ms, Reliability: {res['handover_reliability_percent']}%)")
+    else:
+        records = storage.list_nr_daps(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR DAPS handover yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'HANDOVER ID':<16} | {'SERV SINR':<10} | {'TGT SINR':<10} | {'DAPS INT':<10} | {'BUFFER':<10} | {'RELIABILITY'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['handover_id']:<16} | {r['serving_sinr_db']:<10.1f} | {r['target_sinr_db']:<10.1f} | {r['daps_interruption_ms']:<10.1f} | {r['pdcp_buffer_kb']:<10.2f} | {r['handover_reliability_percent']:.3f}%")
+
+
+def cmd_innovillage(args):
+    if args.action == "add":
+        leader = args.leader or "Ketua Tim Innovillage"
+        nim = args.nim or "1101210001"
+        title = args.title or "Digitalisasi Desa Cerdas"
+        village = args.village or "Desa Sukapura"
+        field = args.field or "Smart Agriculture"
+        prob = float(args.prob) if args.prob is not None else 85.0
+        sol = float(args.sol) if args.sol is not None else 85.0
+        sust = float(args.sust) if args.sust is not None else 85.0
+        budget = float(args.budget) if args.budget is not None else 85.0
+
+        res = parse_innovillage_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "village_location": village,
+            "focus_field": field,
+            "social_problem_score": prob,
+            "digital_solution_score": sol,
+            "sustainability_score": sust,
+            "budget_efficiency_score": budget
+        })
+        rec_id = storage.record_innovillage_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            village_location=village,
+            focus_field=field,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi Innovillage berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_innovillage_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan evaluasi Innovillage yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'LOKASI':<16} | {'SKOR':<6} | {'DANA HIBAH':<15} | {'STATUS'}")
+        print("-" * 85)
+        for r in records:
+            status = "DIDANAI" if r["is_funded"] else "TIDAK_LOLOS"
+            print(f"{r['id']:<4} | {r['student_leader']:<18} | {r['nim']:<12} | {r['village_location']:<16} | {r['composite_score']:<6.1f} | Rp {r['allocated_budget_idr']:<12,} | {status}")
 
 
 def main():
@@ -3551,6 +3669,41 @@ def main():
     ormawa_parser.add_argument("--sustainability", type=float, default=85.0, help="Skor keberlanjutan program (0-100)")
     ormawa_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     ormawa_parser.set_defaults(func=cmd_ormawa)
+
+    # SBS Threshold command
+    sbs_parser = subparsers.add_parser("sbs", help="Kelola kalkulasi ambang SBS Stimulated Brillouin Scattering (list, add)")
+    sbs_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi ambang SBS")
+    sbs_parser.add_argument("--span", default="Span-1", help="Nama span link fiber optik")
+    sbs_parser.add_argument("--length", type=float, default=50.0, help="Panjang bentang fiber (km)")
+    sbs_parser.add_argument("--area", type=float, default=80.0, help="Luas area efektif Aeff (um^2)")
+    sbs_parser.add_argument("--linewidth", type=float, default=10.0, help="Lebar garis spektral laser (MHz)")
+    sbs_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    sbs_parser.set_defaults(func=cmd_sbs)
+
+    # 5G NR DAPS command
+    daps_parser = subparsers.add_parser("daps", help="Kelola performansi 5G NR DAPS zero-interruption handover (list, add)")
+    daps_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi DAPS handover")
+    daps_parser.add_argument("--id", default="HO-DAPS-001", help="Identifier handover")
+    daps_parser.add_argument("--serving", type=float, default=6.0, help="Serving cell SINR (dB)")
+    daps_parser.add_argument("--target", type=float, default=14.0, help="Target cell SINR (dB)")
+    daps_parser.add_argument("--duration", type=float, default=40.0, help="Durasi dual protocol stack buffering (ms)")
+    daps_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    daps_parser.set_defaults(func=cmd_daps)
+
+    # Innovillage Proposal command
+    innovillage_parser = subparsers.add_parser("innovillage", help="Kelola evaluasi proposal Innovillage Telkom (list, add)")
+    innovillage_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi Innovillage")
+    innovillage_parser.add_argument("--leader", default="Ketua Tim Innovillage", help="Nama ketua mahasiswa pengusul")
+    innovillage_parser.add_argument("--nim", default="1101210001", help="Nomor Induk Mahasiswa (NIM)")
+    innovillage_parser.add_argument("--title", default="Digitalisasi Desa Cerdas", help="Judul proposal solusi sosial teknologi")
+    innovillage_parser.add_argument("--village", default="Desa Sukapura", help="Lokasi desa sasaran")
+    innovillage_parser.add_argument("--field", default="Smart Agriculture", help="Bidang fokus solusi")
+    innovillage_parser.add_argument("--prob", type=float, default=85.0, help="Skor ketepatan rumusan masalah sosial (0-100)")
+    innovillage_parser.add_argument("--sol", type=float, default=85.0, help="Skor kelayakan solusi digital/IoT (0-100)")
+    innovillage_parser.add_argument("--sust", type=float, default=85.0, help="Skor keberlanjutan & kolaborasi stakeholder (0-100)")
+    innovillage_parser.add_argument("--budget", type=float, default=85.0, help="Skor efisiensi RAB alokasi dana (0-100)")
+    innovillage_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    innovillage_parser.set_defaults(func=cmd_innovillage)
 
 
 
