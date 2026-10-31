@@ -2092,6 +2092,51 @@ def sanitize_html5_time_attributes(html: str) -> str:
     return re.sub(r'<time\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_time, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_picture_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <picture> and associated responsive <source> elements by scrubbing inline event handlers,
+    validating image MIME types, and neutralizing unsafe URI schemes in srcset and media query attributes.
+    """
+    if not html or ("<picture" not in html.lower() and "<source" not in html.lower()):
+        return html
+
+    allowed_types = {"image/webp", "image/avif", "image/jpeg", "image/png", "image/svg+xml"}
+
+    def fix_picture(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    def fix_source(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if type_m:
+            t_val = type_m.group(1).strip().lower()
+            if t_val not in allowed_types:
+                tag = re.sub(r'\s+type=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        srcset_m = re.search(r'\bsrcset=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if srcset_m:
+            s_val = srcset_m.group(1).strip().lower()
+            if s_val.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', s_val):
+                tag = re.sub(r'\s+srcset=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        media_m = re.search(r'\bmedia=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if media_m:
+            m_val = media_m.group(1).strip()
+            if re.search(r'[<>"\'`]', m_val) or "javascript:" in m_val.lower():
+                tag = re.sub(r'\s+media=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    html = re.sub(r'<picture\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_picture, html, flags=re.IGNORECASE)
+    return re.sub(r'<source\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_source, html, flags=re.IGNORECASE)
+
+
 
 
 
