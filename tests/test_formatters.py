@@ -1026,6 +1026,44 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Rp 38,000,000", msg)
         self.assertIn("https://belmawa.kemdikbud.go.id/ppk-ormawa/2026-089", msg)
 
+    def test_format_optical_sbs_telegram(self):
+        msg = TelegramFormatter.format_optical_sbs_telegram(
+            fiber_title="Span Pantura SMF-28",
+            fiber_length_km=50.0,
+            effective_area_um2=80.0,
+            laser_linewidth_mhz=100.0,
+            sbs_threshold_mw=10.32,
+            sbs_threshold_dbm=10.13,
+            brillouin_shift_ghz=11.15,
+            sbs_risk="Moderat (Ambang Standar SMF-28 DWDM)",
+            portal_url="https://telemetry.telkom.ac.id/sbs/pantura-1"
+        )
+        self.assertIn("Ambang Nonlinier SBS Serat Optik", msg)
+        self.assertIn("Span Pantura SMF-28", msg)
+        self.assertIn("10.32 mW", msg)
+        self.assertIn("11.15 GHz", msg)
+        self.assertIn("https://telemetry.telkom.ac.id/sbs/pantura-1", msg)
+
+    def test_format_innovillage_telegram(self):
+        msg = TelegramFormatter.format_innovillage_telegram(
+            proposal_title="IoT Smart Agriculture & Early Pest Detection",
+            student_leader="Ahmad Fauzan",
+            nim="1201210088",
+            focus_field="Smart Agriculture & Monitoring Lingkungan",
+            village_location="Desa Karangsalam",
+            composite_score=89.5,
+            letter_grade="A",
+            allocated_budget_idr=25000000,
+            funding_status="Lolos Pendanaan Top Innovillage Telkom",
+            portal_url="https://innovillage.id/project/2026-088"
+        )
+        self.assertIn("Pengumuman Pendanaan Innovillage Telkom Indonesia", msg)
+        self.assertIn("Ahmad Fauzan", msg)
+        self.assertIn("1201210088", msg)
+        self.assertIn("Desa Karangsalam", msg)
+        self.assertIn("Rp 25,000,000", msg)
+        self.assertIn("https://innovillage.id/project/2026-088", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
