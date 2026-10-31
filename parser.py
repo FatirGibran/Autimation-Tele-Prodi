@@ -6601,6 +6601,95 @@ def calculate_5g_nr_comp_joint_transmission(
     }
 
 
+def calculate_satellite_tropospheric_scintillation(
+    frequency_ghz: float = 14.0,
+    elevation_angle_deg: float = 25.0,
+    antenna_diameter_m: float = 1.8,
+    antenna_efficiency: float = 0.65,
+    surface_temp_c: float = 27.0,
+    relative_humidity_percent: float = 80.0,
+    outage_percentage_p: float = 0.01
+) -> Dict[str, Any]:
+    """
+    Calculates Earth-space satellite tropospheric scintillation fading according to ITU-R P.618-13.
+    Evaluates temperature, wet term radio refractivity, antenna aperture averaging, and fade depth for Ku/Ka-band links.
+    """
+    f_ghz = max(4.0, min(50.0, float(frequency_ghz)))
+    theta_deg = max(4.0, min(89.0, float(elevation_angle_deg)))
+    d_ant = max(0.3, float(antenna_diameter_m))
+    eta_ant = max(0.3, min(0.9, float(antenna_efficiency)))
+    t_c = float(surface_temp_c)
+    h_rel = max(1.0, min(100.0, float(relative_humidity_percent)))
+    p_pct = max(0.001, min(50.0, float(outage_percentage_p)))
+
+    t_k = t_c + 273.15
+    theta_rad = math.radians(theta_deg)
+
+    # 1. Saturation water vapor pressure e_s (hPa)
+    e_s = 6.1121 * math.exp((17.502 * t_c) / (t_c + 240.97))
+    e_vapor = (h_rel / 100.0) * e_s
+
+    # 2. Wet term of radio refractivity N_wet
+    n_wet = (72.0 * (e_vapor / t_k)) + (3.75e5 * (e_vapor / (t_k ** 2)))
+
+    # 3. Reference standard deviation sigma_ref (dB)
+    sigma_ref = 3.6e-3 + (1e-4 * n_wet)
+
+    # 4. Effective path length through turbulence layer h_L ~ 1000m
+    h_l = 1000.0
+    sin_theta = math.sin(theta_rad)
+    l_turb = (2.0 * h_l) / (math.sqrt((sin_theta ** 2) + 2.35e-4) + sin_theta)
+
+    # 5. Effective antenna diameter and aperture averaging factor g(x)
+    d_eff = math.sqrt(eta_ant) * d_ant
+    c_light = 299792458.0
+    wavelength_m = c_light / (f_ghz * 1e9)
+    x = 0.572 * (d_eff / math.sqrt(wavelength_m * l_turb))
+
+    # Aperture averaging factor approximation ITU-R P.618-13
+    term_main = 3.86 * ((x ** 2 + 1.0) ** (11.0 / 12.0)) * math.sin((11.0 / 6.0) * math.atan(1.0 / x))
+    term_sub = 7.08 * (x ** (5.0 / 6.0))
+    g_x_sq = term_main - term_sub
+    g_x = math.sqrt(max(0.001, g_x_sq))
+
+    # 6. Signal standard deviation sigma (dB)
+    sigma = sigma_ref * (f_ghz ** (7.0 / 12.0)) * (g_x / (sin_theta ** 1.2))
+
+    # 7. Time percentage factor a(p)
+    log_p = math.log10(p_pct)
+    a_p = (-0.0615 * (log_p ** 3)) + (0.1395 * (log_p ** 2)) - (0.4379 * log_p) + 1.474
+
+    # Scintillation fade depth A_s(p) in dB
+    fade_depth_db = a_p * sigma
+
+    if fade_depth_db <= 0.5:
+        scintillation_risk = "Sangat Rendah (Fluktuasi Terabaikan)"
+        is_viable = True
+    elif fade_depth_db <= 1.5:
+        scintillation_risk = "Rendah (Dapat Diredam Margin Fading Standar)"
+        is_viable = True
+    elif fade_depth_db <= 3.0:
+        scintillation_risk = "Moderat (Perlu Alokasi Fade Margin Tambahan)"
+        is_viable = True
+    else:
+        scintillation_risk = "Tinggi (Scintillation Fading Signifikan pada Elevasi Rendah)"
+        is_viable = False
+
+    return {
+        "frequency_ghz": round(f_ghz, 2),
+        "elevation_angle_deg": round(theta_deg, 2),
+        "antenna_diameter_m": round(d_ant, 2),
+        "n_wet": round(n_wet, 2),
+        "sigma_db": round(sigma, 4),
+        "aperture_averaging_factor": round(g_x, 4),
+        "outage_percentage": round(p_pct, 4),
+        "fade_depth_db": round(fade_depth_db, 3),
+        "scintillation_risk": scintillation_risk,
+        "is_viable": is_viable
+    }
+
+
+
 
 
 
