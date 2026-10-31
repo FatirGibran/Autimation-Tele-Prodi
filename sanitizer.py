@@ -2067,6 +2067,32 @@ def sanitize_html5_input_list_binding(html: str) -> str:
     return re.sub(r'<input\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_input, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_time_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <time> semantic date-time elements by scrubbing inline event handlers,
+    styles, and validating the datetime attribute string against dangerous script injection.
+    """
+    if not html or "<time" not in html.lower():
+        return html
+
+    def fix_time(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        dt_m = re.search(r'\bdatetime=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if dt_m:
+            dt_val = dt_m.group(1).strip()
+            # Allow ISO date, time, timezone, duration, or year formats: e.g. 2026-10-31, 2026-10-31T14:30:00Z, PT4H
+            if not re.match(r'^[0-9T:\-\+\.ZPdDhHmMsS/ ]+$', dt_val) or re.search(r'[<>"\'`]', dt_val):
+                tag = re.sub(r'\s+datetime=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<time\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_time, html, flags=re.IGNORECASE)
+
+
+
 
 
 
