@@ -6565,6 +6565,53 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_sbs_card(
+        cls,
+        title: str,
+        fiber_length_km: float,
+        effective_area_um2: float,
+        laser_linewidth_mhz: float,
+        sbs_threshold_mw: float,
+        sbs_threshold_dbm: float,
+        brillouin_shift_ghz: float,
+        sbs_risk: str,
+        is_safe: bool
+    ) -> str:
+        """
+        Renders an optical fiber Stimulated Brillouin Scattering (SBS) threshold card
+        displaying nonlinear power limits, linewidth broadening factor, and acoustic phonon shift.
+        """
+        badge_bg = "#ecfdf5" if is_safe else "#fef2f2"
+        badge_color = "#047857" if is_safe else "#b91c1c"
+        border_color = "#10b981" if is_safe else "#ef4444"
+
+        return f"""    <div class="tu-optical-sbs-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase;">Stimulated Brillouin Scattering (SBS) Telemetry</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{sbs_risk}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Panjang Fiber &amp; Luas Efektif Aeff</span>
+          <strong style="color: #0f172a;">{fiber_length_km:.1f} km</strong> &bull; <strong>{effective_area_um2:.1f} &mu;m&sup2;</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Laser Linewidth &amp; Pergeseran Brillouin</span>
+          <strong style="color: #0f172a;">{laser_linewidth_mhz:.1f} MHz</strong> &bull; <strong>{brillouin_shift_ghz:.2f} GHz</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Ambang Batas Daya SBS (Pth)</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{sbs_threshold_mw:.2f} mW</strong> ({sbs_threshold_dbm:.2f} dBm)
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Integritas Transmisi DWDM</span>
+          <strong style="color: #0284c7;">{'Aman (Daya Terkendali)' if is_safe else 'Rentan Backscatter'}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
