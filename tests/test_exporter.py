@@ -1138,6 +1138,42 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("ssr: true", res)
         self.assertIn("<p>Arsitektur type-safe fullstack SSR dengan TanStack Start.</p>", res)
 
+    def test_generate_student_competition_json_ld(self):
+        payload = ArticleExporter.generate_student_competition_json_ld(
+            competition_name="Innovillage 2026 Socio-Tech Challenge",
+            description="Kompetisi sociopreneurship berbasis teknologi IoT dan Telekomunikasi pedesaan.",
+            organizer="PT Telkom Indonesia",
+            start_date="2026-10-01",
+            end_date="2026-12-15",
+            prize_amount_idr=75000000.0,
+            event_mode="Hybrid",
+            location="Telkom University Landmark Tower",
+            url="https://innovillage.id"
+        )
+        self.assertEqual(payload["@context"], "https://schema.org")
+        self.assertEqual(payload["@type"], "Event")
+        self.assertEqual(payload["name"], "Innovillage 2026 Socio-Tech Challenge")
+        self.assertEqual(payload["organizer"]["name"], "PT Telkom Indonesia")
+        self.assertEqual(payload["offers"]["price"], "75000000.0")
+        self.assertEqual(payload["offers"]["priceCurrency"], "IDR")
+        self.assertEqual(payload["url"], "https://innovillage.id")
+
+    def test_to_solidstart_mdx(self):
+        meta = {
+            "seo_title": "Panduan SolidStart Framework",
+            "meta_description": "Dokumentasi reactive meta-framework dengan SolidStart.",
+            "slug": "panduan-solidstart",
+            "publish_date": "2026-11-01",
+            "tags": ["solidjs", "solidstart", "reactive"]
+        }
+        res = ArticleExporter.to_solidstart_mdx(meta, "<p>Fine-grained reactivity dengan SolidStart.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan SolidStart Framework"', res)
+        self.assertIn('framework: "solidstart"', res)
+        self.assertIn("solid: true", res)
+        self.assertIn("ssr: true", res)
+        self.assertIn("<p>Fine-grained reactivity dengan SolidStart.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
