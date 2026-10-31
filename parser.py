@@ -6689,6 +6689,81 @@ def calculate_satellite_tropospheric_scintillation(
     }
 
 
+def parse_ppk_ormawa_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student organization community development proposals in Program Peningkatan Kapasitas
+    Organisasi Kemahasiswaan (PPK Ormawa) Belmawa Kemendikbudristek for village development & SKS recognition.
+    """
+    student_leader = str(data.get("student_leader", "Ketua Tim Ormawa")).strip()
+    nim = str(data.get("nim", "")).strip()
+    ormawa_name = str(data.get("ormawa_name", "HMTT / UKM")).strip()
+    village_target = str(data.get("village_target", "Desa Binaan")).strip()
+    title = str(data.get("proposal_title", "Pemberdayaan Desa Cerdas")).strip()
+
+    score_prob = max(0.0, min(100.0, float(data.get("problem_analysis_score", 85.0))))
+    score_tech = max(0.0, min(100.0, float(data.get("tech_solution_score", 85.0))))
+    score_road = max(0.0, min(100.0, float(data.get("roadmap_partnership_score", 85.0))))
+    score_budg = max(0.0, min(100.0, float(data.get("budget_governance_score", 85.0))))
+
+    # Composite: 25% Analisis Masalah Desa, 35% Solusi Rekayasa/IoT, 25% Roadmap & Mitra, 15% Tata Kelola RAB
+    composite = round((0.25 * score_prob) + (0.35 * score_tech) + (0.25 * score_road) + (0.15 * score_budg), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+    elif composite >= 78.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+    elif composite >= 68.0:
+        letter_grade = "B"
+        grade_point = 3.00
+    elif composite >= 60.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+    elif composite >= 50.0:
+        letter_grade = "C"
+        grade_point = 2.00
+    else:
+        letter_grade = "D"
+        grade_point = 1.00
+
+    if composite >= 82.0:
+        funding_status = f"Lolos Pendanaan Belmawa (Kategori Ormawa Unggul) - {village_target}"
+        converted_sks = 4
+        is_funded = True
+    elif composite >= 72.0:
+        funding_status = f"Lolos Pendanaan Belmawa PPK Ormawa - {village_target}"
+        converted_sks = 3
+        is_funded = True
+    elif composite >= 60.0:
+        funding_status = f"Insentif Internal Binaan Kampus - {village_target}"
+        converted_sks = 2
+        is_funded = False
+    else:
+        funding_status = "Belum Memenuhi Ambang Batas Kelulusan PPK Ormawa"
+        converted_sks = 0
+        is_funded = False
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "ormawa_name": ormawa_name,
+        "village_target": village_target,
+        "proposal_title": title,
+        "problem_analysis_score": score_prob,
+        "tech_solution_score": score_tech,
+        "roadmap_partnership_score": score_road,
+        "budget_governance_score": score_budg,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
+
 
 
 
