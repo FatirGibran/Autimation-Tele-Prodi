@@ -6541,6 +6541,67 @@ def calculate_optical_fwm_phase_matching(
     }
 
 
+def calculate_5g_nr_comp_joint_transmission(
+    serving_cell_rsrp_dbm: float = -85.0,
+    coord_cells_rsrp_dbm: Optional[List[float]] = None,
+    interference_noise_dbm: float = -95.0,
+    coordination_efficiency: float = 0.85,
+    bandwidth_mhz: float = 20.0
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP Coordinated Multi-Point (CoMP) Joint Transmission (JT) SINR improvement,
+    cell-edge spectral efficiency boost, and aggregate data rate according to 3GPP TS 36.819 / TS 38.300.
+    """
+    p_serving_dbm = float(serving_cell_rsrp_dbm)
+    p_noise_dbm = float(interference_noise_dbm)
+    eta_comp = max(0.1, min(1.0, float(coordination_efficiency)))
+    bw_mhz = max(1.4, float(bandwidth_mhz))
+
+    coords = coord_cells_rsrp_dbm if coord_cells_rsrp_dbm is not None else [-88.0, -92.0]
+    coords = [float(p) for p in coords]
+
+    # Convert dBm to mW: P(mW) = 10^(P_dBm / 10)
+    p_serv_mw = 10.0 ** (p_serving_dbm / 10.0)
+    noise_mw = 10.0 ** (p_noise_dbm / 10.0)
+    coord_powers_mw = [10.0 ** (p / 10.0) for p in coords]
+    sum_coord_mw = sum(coord_powers_mw)
+
+    # 1. Non-CoMP Baseline: Neighbor cells act as strong co-channel interferers
+    sinr_non_comp_linear = p_serv_mw / (sum_coord_mw + noise_mw)
+    sinr_non_comp_db = 10.0 * math.log10(sinr_non_comp_linear)
+    shannon_eff_non_comp = math.log2(1.0 + sinr_non_comp_linear)
+    throughput_non_comp_mbps = bw_mhz * shannon_eff_non_comp * 0.75  # Practical implementation efficiency
+
+    # 2. CoMP Joint Transmission: Coordinated cells transmit constructively, converting interference to signal
+    p_sig_comp_mw = p_serv_mw + (eta_comp * sum_coord_mw)
+    residual_interf_mw = (1.0 - eta_comp) * sum_coord_mw
+    sinr_comp_linear = p_sig_comp_mw / (residual_interf_mw + noise_mw)
+    sinr_comp_db = 10.0 * math.log10(sinr_comp_linear)
+    shannon_eff_comp = math.log2(1.0 + sinr_comp_linear)
+    throughput_comp_mbps = bw_mhz * shannon_eff_comp * 0.75
+
+    sinr_gain_db = sinr_comp_db - sinr_non_comp_db
+    throughput_gain_percent = ((throughput_comp_mbps - throughput_non_comp_mbps) / throughput_non_comp_mbps) * 100.0 if throughput_non_comp_mbps > 0 else 0.0
+
+    return {
+        "serving_cell_rsrp_dbm": round(p_serving_dbm, 2),
+        "coordinating_cells_count": len(coords),
+        "coordinating_cells_rsrp_dbm": coords,
+        "coordination_efficiency": round(eta_comp, 2),
+        "bandwidth_mhz": round(bw_mhz, 1),
+        "sinr_non_comp_db": round(sinr_non_comp_db, 2),
+        "sinr_comp_db": round(sinr_comp_db, 2),
+        "sinr_gain_db": round(sinr_gain_db, 2),
+        "spectral_efficiency_non_comp_bps_hz": round(shannon_eff_non_comp, 2),
+        "spectral_efficiency_comp_bps_hz": round(shannon_eff_comp, 2),
+        "throughput_non_comp_mbps": round(throughput_non_comp_mbps, 2),
+        "throughput_comp_mbps": round(throughput_comp_mbps, 2),
+        "throughput_gain_percent": round(throughput_gain_percent, 2),
+        "is_comp_beneficial": sinr_gain_db >= 2.0
+    }
+
+
+
 
 
 
