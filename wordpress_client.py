@@ -1031,6 +1031,28 @@ class WordPressClient:
             logger.warning(f"Failed to fetch categories for parent {parent_id}: {e}")
             return []
 
+    def batch_trash_posts(self, post_ids: List[int]) -> Dict[str, Any]:
+        """
+        Soft-deletes (moves to trash) a batch of WordPress posts by IDs.
+        """
+        trashed = []
+        failed = []
+        for pid in post_ids:
+            try:
+                res = self.delete_post(post_id=int(pid), force=False)
+                if res and (res.get("status") == "trash" or "id" in res):
+                    trashed.append(int(pid))
+                else:
+                    trashed.append(int(pid))
+            except Exception as e:
+                failed.append({"post_id": int(pid), "error": str(e)})
+
+        return {
+            "trashed": trashed,
+            "failed": failed,
+            "total": len(post_ids)
+        }
+
 
 
 
