@@ -2095,6 +2095,59 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_about_contact_page_json_ld(page_data: Dict[str, Any]) -> str:
+        """
+        Generates Schema.org AboutPage or ContactPage JSON-LD structured data script
+        with hierarchical website, organization, and contact point definitions.
+        """
+        page_type = page_data.get("page_type", "AboutPage")
+        schema: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": page_type,
+            "name": page_data.get("name", "Tentang Program Studi Teknik Telekomunikasi"),
+            "description": page_data.get("description", "Profil akademik dan kontak Program Studi"),
+            "url": page_data.get("url", "https://telecom.telkomuniversity.ac.id/about"),
+            "inLanguage": page_data.get("in_language", "id-ID"),
+            "isPartOf": {
+                "@type": "WebSite",
+                "name": page_data.get("site_name", "Teknik Telekomunikasi Telkom University"),
+                "url": page_data.get("site_url", "https://telecom.telkomuniversity.ac.id")
+            },
+            "about": {
+                "@type": "EducationalOrganization",
+                "name": page_data.get("org_name", "Program Studi S1 Teknik Telekomunikasi"),
+                "parentOrganization": {
+                    "@type": "CollegeOrUniversity",
+                    "name": "Telkom University"
+                }
+            }
+        }
+
+        if page_data.get("email") or page_data.get("telephone"):
+            schema["contactPoint"] = {
+                "@type": "ContactPoint",
+                "contactType": page_data.get("contact_type", "customer support"),
+                "email": page_data.get("email", "telecom@telkomuniversity.ac.id"),
+                "telephone": page_data.get("telephone", "+62-22-7564108")
+            }
+
+        if page_data.get("breadcrumbs"):
+            elements = []
+            for idx, bc in enumerate(page_data["breadcrumbs"], 1):
+                elements.append({
+                    "@type": "ListItem",
+                    "position": idx,
+                    "name": bc.get("name", ""),
+                    "item": bc.get("item", "")
+                })
+            schema["breadcrumb"] = {
+                "@type": "BreadcrumbList",
+                "itemListElement": elements
+            }
+
+        return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2, ensure_ascii=False)}\n</script>'
+
 
 
 
