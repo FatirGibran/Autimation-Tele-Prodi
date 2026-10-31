@@ -5743,6 +5743,83 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_webpage_schema_markup(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Schema.org WebPage, AboutPage, ContactPage, and specialized page schema metadata
+        in JSON-LD format to optimize structured breadcrumbs and page hierarchy classification.
+        """
+        if not html_content:
+            return {
+                "has_webpage_schema": False,
+                "is_valid": False,
+                "schema_types": [],
+                "page_count": 0,
+                "pages": [],
+                "issues": ["Konten HTML kosong."],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        valid_page_types = {
+            "WebPage", "AboutPage", "ContactPage", "ProfilePage",
+            "ItemPage", "CollectionPage", "FAQPage", "CheckoutPage", "QAPage", "MedicalWebPage"
+        }
+
+        detected_pages = []
+        detected_types = set()
+
+        for script in soup.find_all("script", type="application/ld+json"):
+            try:
+                data = json.loads(script.string or "{}")
+                items = data if isinstance(data, list) else data.get("@graph", [data])
+                for item in items:
+                    if not isinstance(item, dict):
+                        continue
+                    stype = item.get("@type", "")
+                    stypes = stype if isinstance(stype, list) else [stype]
+                    matched = [t for t in stypes if t in valid_page_types]
+                    if matched:
+                        for m in matched:
+                            detected_types.add(m)
+                        page_entry = {
+                            "type": matched[0],
+                            "types": matched,
+                            "id": item.get("@id", ""),
+                            "name": item.get("name") or item.get("headline", ""),
+                            "description": item.get("description", ""),
+                            "url": item.get("url", ""),
+                            "in_language": item.get("inLanguage", ""),
+                            "has_breadcrumb": "breadcrumb" in item,
+                            "has_publisher": ("publisher" in item or "isPartOf" in item)
+                        }
+                        detected_pages.append(page_entry)
+
+                        if not page_entry["name"]:
+                            issues.append(f"Schema {matched[0]} tidak memiliki atribut 'name' atau 'headline'.")
+                        if not page_entry["description"]:
+                            warnings.append(f"Schema {matched[0]} sebaiknya menyertakan atribut 'description'.")
+                        if not page_entry["url"]:
+                            warnings.append(f"Schema {matched[0]} tidak memuat kanonikal 'url'.")
+            except (json.JSONDecodeError, AttributeError):
+                continue
+
+        if not detected_pages:
+            issues.append("Tidak ditemukan markup Schema.org WebPage / AboutPage / ContactPage berformat JSON-LD.")
+
+        return {
+            "has_webpage_schema": len(detected_pages) > 0,
+            "is_valid": len(detected_pages) > 0 and len(issues) == 0,
+            "schema_types": sorted(list(detected_types)),
+            "page_count": len(detected_pages),
+            "pages": detected_pages,
+            "issues": issues,
+            "warnings": warnings
+        }
+
+
 
 
 
