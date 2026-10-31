@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 895+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 945+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 872 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 899 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -1086,6 +1086,50 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 906. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Penyelarasan catatan rilis, penambahan seksi 36, dan pembaruan metrik proyek.
 907. **Ekspansi Suite Pengujian Unit Terpadu (872 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 872 unit test terverifikasi (100% pass rate).
 908. **Finalisasi Milestone v4.8.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
+---
+
+## 37. Ekspansi Arsitektur v4.9.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+909. **Sanitasi Elemen Kontak Semantik `<address>` (`sanitizer.py`)**: Sanitasi elemen informasi kontak semantik `<address>`, validasi skema surel (`mailto:`) dan telepon (`tel:`), filtrasi atribut style, dan pencegahan injeksi event listener.
+910. **Sanitasi Atribut Kutipan `cite` pada Elemen `<blockquote>` & `<q>` (`sanitizer.py`)**: Sanitasi atribut URL rujukan `cite` pada kutipan blok dan sebaris, pembatasan skema aman (`http`, `https`), dan pemblokiran skema berbahaya (`javascript:`, `data:`).
+911. **Sanitasi Binding Form Input Datalist `list` (`sanitizer.py`)**: Sanitasi atribut keterikatan `list` pada form input dengan elemen rekomendasi `<datalist>`, validasi token pengenal identitas, dan pencegahan DOM clobbering.
+912. **Unit Test Sanitasi Address, Blockquote, dan Input Datalist (`tests/test_sanitizer.py`)**: Penambahan unit test verifikasi sterilisasi elemen `<address>`, atribut `cite`, dan binding `list` `<datalist>`.
+913. **Kalkulator Four-Wave Mixing (FWM) Phase-Matching DWDM (`parser.py`)**: Perhitungan parameter dispersi $\beta_2$, ketidakcocokan fase $\Delta\beta$, panjang koherensi interaksi $L_c = \frac{2\pi}{|\Delta\beta|}$, efisiensi pembentukan gelombang nonlinier $\eta_{\text{FWM}}$, daya crosstalk FWM (dBm), dan klasifikasi risiko transmisi DWDM menurut teori Agrawal.
+914. **Kalkulator 3GPP 5G NR CoMP Joint Transmission (`parser.py`)**: Perhitungan konversi daya sel koordinasi dari interferensi menjadi sinyal koheren konstruktif menurut 3GPP TS 36.819 / TS 38.300, gain margin SINR CoMP, efisiensi spektral Shannon, dan throughput pengguna di tepi sel (cell-edge UE).
+915. **Kalkulator Redaman Sintilasi Troposferik Satelit ITU-R P.618-13 (`parser.py`)**: Perhitungan parameter refraktivitas radio basah $N_{\text{wet}}$, deviasi fluktuasi sinyal $\sigma_x$, faktor perata apertura antena $g(x)$, kedalaman redaman pudar sintilasi (fade depth $A_s(p)$ dB), dan penguatan fokus troposferik.
+916. **Evaluator Proposal Pemberdayaan Desa PPK Ormawa Belmawa Dikti (`parser.py`)**: Evaluasi kelayakan proposal Program Penguatan Kapasitas Organisasi Kemahasiswaan berdasarkan bobot penilaian nasional (masalah desa 25%, solusi rekayasa/IoT 35%, roadmap 25%, tata kelola RAB 15%), penentuan status pendanaan Belmawa, dan konversi SKS kurikulum prodi.
+917. **Unit Test FWM Phase Matching, 5G CoMP, Sintilasi, dan PPK Ormawa (`tests/test_parser.py`)**: Penambahan rangkaian pengujian komputasi dispersi optik nonlinier, koordinasi multi-sel CoMP JT, propagasi ruang angkasa, dan evaluasi proposal kemahasiswaan.
+918. **Auditor Skema WebPage, AboutPage, ContactPage Schema.org (`seo_validator.py`)**: Audit data terstruktur JSON-LD untuk halaman profil institusional, halaman tentang prodi, dan kontak prodi, memastikan kehadiran atribut wajib `name`, `description`, `url`, `isPartOf`, dan `breadcrumb`.
+919. **Auditor Direktif Keamanan Browser Permissions-Policy (`seo_validator.py`)**: Audit keberadaan meta header `Permissions-Policy` dan kompatibilitas mundur `Feature-Policy` guna memastikan sensor privasi peramban (kamera, mikrofon, geolokasi) terkunci dari eksfiltrasi iframe pihak ketiga.
+920. **Auditor Aksesibilitas Autocomplete Formulir WCAG 2.1 SC 1.3.5 (`seo_validator.py`)**: Pemeriksaan elemen form input terhadap keberadaan atribut `autocomplete` standar HTML5 (`name`, `email`, `tel`, `street-address`, dll.) untuk mendukung navigasi pengguna dengan disabilitas.
+921. **Auditor Petunjuk Telemetri Resource Timing & Server-Timing (`seo_validator.py`)**: Audit meta header `Timing-Allow-Origin` untuk observasi waterfall aset lintas asal, serta penguraian durasi metrik `Server-Timing` untuk profiling latensi server backend.
+922. **Unit Test WebPage Schema, Permissions Policy, Autocomplete, dan Timing Hints (`tests/test_seo_validator.py`)**: Penambahan unit test komprehensif untuk pengujian validitas skema web, kebijakan peramban, aksesibilitas input, dan telemetri Core Web Vitals.
+923. **Komponen Telemetri FWM Phase Matching & Efisiensi DWDM (`components.py`)**: Kartu visual Elementor panjang bentang serat, spasi kanal GHz, parameter $\beta_2$, ketidakcocokan fase $\Delta\beta$, panjang koherensi $L_c$, efisiensi pembentukan FWM %, dan daya crosstalk dBm.
+924. **Komponen Throughput 5G NR CoMP Joint Transmission (`components.py`)**: Kartu visual Elementor daya terima RSRP serving cell, jumlah sel kooperatif, nilai SINR CoMP JT, gain margin dB, dan persentase akselerasi throughput pengguna cell-edge.
+925. **Komponen Redaman Sintilasi Troposfer Satelit ITU-R P.618 (`components.py`)**: Kartu visual Elementor frekuensi carrier GHz, sudut elevasi antena stasiun bumi, diameter dish antena, refraktivitas $N_{\text{wet}}$, dan kedalaman pudar sintilasi dB.
+926. **Komponen Capaian Seleksi & Pendanaan PPK Ormawa Belmawa Dikti (`components.py`)**: Kartu visual Elementor nama organisasi kemahasiswaan, topik binaan, lokasi desa target, skor evaluasi komposit, grade mutu, dan alokasi dana hibah Kemendikbudristek.
+927. **Komponen Diagram Topologi Jaringan 5G NR CoMP Inline SVG (`components.py`)**: Kartu visualisasi representasi grafis topologi koordinasi seluler multi-point menampilkan gNodeB serving, cooperating transmission points, mesh backhaul fiber Xn/eXn C-RAN, dan konvergensi berkas koheren pada Cell-Edge UE berbasis inline SVG responsif.
+928. **Unit Test Komponen FWM, CoMP, Sintilasi, PPK Ormawa, dan Topologi SVG (`tests/test_components.py`)**: Penambahan unit test untuk memastikan seluruh komponen semantik dan grafis SVG ter-render secara utuh dan valid.
+929. **Formatter Telegram Laporan DWDM FWM Phase-Matching (`formatters.py`)**: Format buletin Telegram resmi audit transmisi serat optik DWDM multi-kanal dan telemetri mitigasi nonlinieritas Four-Wave Mixing.
+930. **Formatter Telegram Pengumuman Pendanaan PPK Ormawa Belmawa Dikti (`formatters.py`)**: Format buletin Telegram resmi pengumuman kelulusan pendanaan organisasi kemahasiswaan program pengabdian dan pemberdayaan desa binaan.
+931. **Unit Test Formatter Telegram FWM dan PPK Ormawa (`tests/test_formatters.py`)**: Penambahan unit test integritas template dan sanitasi tautan telemetri Telegram.
+932. **Manajer Rekam DWDM FWM Phase Matching (`storage.py`)**: Skema tabel SQLite `optical_fwm_phase_records` dan fungsi `record_optical_fwm_phase`, `list_optical_fwm_phases`, `get_optical_fwm_phase_by_id`.
+933. **Manajer Rekam 5G NR CoMP Joint Transmission (`storage.py`)**: Skema tabel SQLite `nr_comp_records` dan fungsi `record_nr_comp`, `list_nr_comps`, `get_nr_comp_by_id`.
+934. **Manajer Rekam Evaluasi & Pendanaan Proposal PPK Ormawa (`storage.py`)**: Skema tabel SQLite `ppk_ormawa_records` dan fungsi `record_ppk_ormawa`, `list_ppk_ormawa`, `get_ppk_ormawa_by_id`.
+935. **Unit Test Storage FWM Phase, 5G CoMP, dan PPK Ormawa (`tests/test_storage.py`)**: Penambahan unit test operasi CRUD terisolasi dan pengujian integritas foreign index.
+936. **Helper WordPress Get Comments by Author Email (`wordpress_client.py`)**: Metode `get_comments_by_author_email` untuk membaca komentar terfilter surel penulis via REST API (`/wp/v2/comments?author_email=...`).
+937. **Helper WordPress Batch Delete Comments (`wordpress_client.py`)**: Metode `batch_delete_comments` untuk menghapus sekumpulan ID komentar editorial secara massal via REST API (`/wp/v2/comments/{id}?force=...`).
+938. **Unit Test WordPress Client Comments by Author Email & Batch Delete (`tests/test_wordpress_client.py`)**: Penambahan unit test mocked HTTP requests untuk pengambilan dan penghapusan batch komentar.
+939. **Generator Schema.org AboutPage & ContactPage JSON-LD (`exporter.py`)**: Metode `generate_about_contact_page_json_ld` menghasilkan struktur metadata standar Google Knowledge Graph untuk profil prodi, titik kontak resmi, dan struktur breadcrumb institusional.
+940. **Eksportir Dokumentasi MDX TanStack Start Full-Stack SSR (`exporter.py`)**: Metode `to_tanstack_start_mdx` mengonversi artikel editorial ke format dokumentasi full-stack type-safe framework TanStack Start MDX dengan frontmatter YAML terintegrasi.
+941. **Unit Test Exporter About/Contact JSON-LD & TanStack Start MDX (`tests/test_exporter.py`)**: Penambahan unit test verifikasi integritas penanda Schema.org dan frontmatter rute SSR.
+942. **Subcommand CLI `fwm_phase`, `comp`, dan `ormawa` (`cli.py`)**: Perintah konsol CLI baru untuk operasionalisasi telemetri DWDM FWM, koordinasi seluler 5G CoMP, dan evaluasi proposal PPK Ormawa.
+943. **Unit Test CLI Subcommand `fwm_phase`, `comp`, dan `ormawa` (`tests/test_cli.py`)**: Penambahan unit test penanganan argumen baris perintah terminal.
+944. **Dokumentasi Perubahan Arsitektur v4.9.0 (`docs/changes/86_v4_9_feature_expansions.md`)**: Dokumentasi komprehensif seluruh fitur dan pengujian pada rilis v4.9.0.
+945. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Sinkronisasi catatan rilis, penambahan seksi 37, dan pembaharuan metrik proyek.
+946. **Ekspansi Suite Pengujian Unit Terpadu (899 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 899 unit test terverifikasi (100% pass rate).
+947. **Finalisasi Milestone v4.9.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
 
 
 
