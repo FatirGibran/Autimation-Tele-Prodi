@@ -1016,6 +1016,21 @@ class WordPressClient:
             "force": force
         }
 
+    def get_categories_by_parent(self, parent_id: int, page: int = 1, per_page: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves all child categories belonging to a specified parent category ID.
+        """
+        endpoint = f"{self.api_url}/categories?parent={int(parent_id)}&page={max(1, int(page))}&per_page={max(1, min(100, int(per_page)))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            if isinstance(res, list):
+                return res
+            return []
+        except Exception as e:
+            logger.warning(f"Failed to fetch categories for parent {parent_id}: {e}")
+            return []
+
 
 
 
