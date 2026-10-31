@@ -1505,6 +1505,35 @@ class TelegramFormatter:
             f"✨ *Evaluasi ambang daya nonlinier transmisi serat optik DWDM terverifikasi!*"
         )
 
+    @staticmethod
+    def format_innovillage_telegram(
+        proposal_title: str,
+        student_leader: str,
+        nim: str,
+        focus_field: str,
+        village_location: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an Innovillage Telkom Indonesia social technopreneurship funding bulletin for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Innovillage Telkom:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🚀 **Pengumuman Pendanaan Innovillage Telkom Indonesia**\n\n"
+            f"💡 **Judul Inovasi Sosial:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🎯 **Bidang Fokus:** {focus_field.strip()}\n"
+            f"📍 **Desa Sasaran:** {village_location.strip()}\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Mutu: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Implementasi:** `Rp {allocated_budget_idr:,}`\n"
+            f"📊 **Status:** `{funding_status.strip()}`{portal_link}\n\n"
+            f"🎉 *Selamat kepada tim mahasiswa! Teruslah berinovasi memberi dampak nyata bagi masyarakat pedesaan!*"
+        )
+
 
 
 
