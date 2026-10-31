@@ -2567,6 +2567,73 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["village_location"], "Desa Sukapura")
         self.assertIsNone(self.storage.get_ppk_ormawa_by_id(99999))
 
+    def test_optical_sbs_storage(self):
+        rec_id = self.storage.record_optical_sbs(
+            span_name="Span-Bandung-Garut",
+            fiber_length_km=45.0,
+            effective_area_um2=80.0,
+            laser_linewidth_mhz=100.0,
+            sbs_threshold_mw=26.3,
+            sbs_threshold_dbm=14.2,
+            brillouin_shift_ghz=10.8,
+            sbs_risk="LOW",
+            is_safe=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_sbs()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["span_name"], "Span-Bandung-Garut")
+        self.assertEqual(items[0]["is_safe"], 1)
+
+        single = self.storage.get_optical_sbs_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["sbs_risk"], "LOW")
+        self.assertIsNone(self.storage.get_optical_sbs_by_id(99999))
+
+    def test_nr_daps_storage(self):
+        rec_id = self.storage.record_nr_daps(
+            handover_id="HO-DAPS-9912",
+            serving_sinr_db=14.5,
+            target_sinr_db=18.2,
+            traditional_interruption_ms=35.0,
+            daps_interruption_ms=0.0,
+            pdcp_buffer_kb=24.5,
+            handover_reliability_percent=99.999
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_daps()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["handover_id"], "HO-DAPS-9912")
+        self.assertEqual(items[0]["daps_interruption_ms"], 0.0)
+
+        single = self.storage.get_nr_daps_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["handover_reliability_percent"], 99.999)
+        self.assertIsNone(self.storage.get_nr_daps_by_id(99999))
+
+    def test_innovillage_proposal_storage(self):
+        rec_id = self.storage.record_innovillage_proposal(
+            student_leader="Siti Rahma",
+            nim="1101210045",
+            proposal_title="IoT Solar Agri Sensor Desa Cisitu",
+            village_location="Desa Cisitu, Sumedang",
+            focus_field="Smart Agriculture & Renewable Energy",
+            composite_score=87.5,
+            letter_grade="A",
+            allocated_budget_idr=25000000.0,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_innovillage_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Siti Rahma")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_innovillage_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["village_location"], "Desa Cisitu, Sumedang")
+        self.assertIsNone(self.storage.get_innovillage_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
