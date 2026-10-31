@@ -1253,6 +1253,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_daps_id ON nr_daps_records(handover_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS innovillage_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    village_location TEXT NOT NULL,
+                    focus_field TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    allocated_budget_idr REAL NOT NULL,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_innovillage_nim ON innovillage_proposal_records(nim);")
 
 
 
@@ -5766,6 +5782,58 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM nr_daps_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_innovillage_proposal(
+        self,
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        village_location: str,
+        focus_field: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: float,
+        is_funded: bool
+    ) -> int:
+        """
+        Stores an Innovillage student community development proposal evaluation record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO innovillage_proposal_records (
+                    student_leader, nim, proposal_title, village_location,
+                    focus_field, composite_score, letter_grade,
+                    allocated_budget_idr, is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_leader.strip(), nim.strip(), proposal_title.strip(),
+                village_location.strip(), focus_field.strip(), float(composite_score),
+                letter_grade.strip(), float(allocated_budget_idr), 1 if is_funded else 0
+            ))
+            return cursor.lastrowid
+
+    def list_innovillage_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored Innovillage proposal evaluation records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM innovillage_proposal_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_innovillage_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an Innovillage proposal evaluation record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM innovillage_proposal_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
