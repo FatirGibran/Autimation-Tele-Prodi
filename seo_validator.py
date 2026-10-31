@@ -6171,6 +6171,66 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_html_lang_and_dir_attributes(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits root <html> language and text direction attributes according to WCAG 2.1 SC 3.1.1 (Language of Page).
+        Ensures screen readers correctly select speech synthesizers and pronunciation dictionaries.
+        """
+        if not html_content:
+            return {
+                "has_html_element": False,
+                "has_lang_attr": False,
+                "lang_code": "",
+                "is_valid_lang_code": False,
+                "dir_attr": "",
+                "is_compliant": False,
+                "issues": ["Konten HTML kosong."],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        html_tag = soup.find("html")
+        issues = []
+        warnings = []
+
+        if not html_tag:
+            return {
+                "has_html_element": False,
+                "has_lang_attr": False,
+                "lang_code": "",
+                "is_valid_lang_code": False,
+                "dir_attr": "",
+                "is_compliant": True,
+                "issues": [],
+                "warnings": ["Dokumen merupakan cuplikan (fragment) tanpa elemen <html> root."]
+            }
+
+        lang = (html_tag.get("lang") or "").strip()
+        dir_val = (html_tag.get("dir") or "").strip().lower()
+
+        # Validate BCP 47 language code: 2-3 lowercase letters, optionally hyphen + region
+        is_valid_lang = bool(re.match(r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})*$', lang))
+
+        if not lang:
+            issues.append("Elemen root <html> tidak memiliki atribut 'lang' (WCAG 2.1 SC 3.1.1).")
+        elif not is_valid_lang:
+            issues.append(f"Format atribut lang='{lang}' tidak valid menurut konvensi BCP 47.")
+
+        if dir_val and dir_val not in ("ltr", "rtl", "auto"):
+            warnings.append(f"Nilai atribut dir='{dir_val}' tidak standar (disarankan 'ltr', 'rtl', atau 'auto').")
+
+        return {
+            "has_html_element": True,
+            "has_lang_attr": bool(lang),
+            "lang_code": lang,
+            "is_valid_lang_code": is_valid_lang,
+            "dir_attr": dir_val or "ltr",
+            "is_compliant": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
