@@ -2019,6 +2019,31 @@ def sanitize_html5_address_elements(html: str) -> str:
     return re.sub(r'<address\b[^>]*>.*?</address>', fix_address, html, flags=re.DOTALL | re.IGNORECASE)
 
 
+def sanitize_html5_blockquote_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <blockquote> elements by scrubbing inline event handlers,
+    contenteditable/style attributes, and neutralizing unsafe cite URL schemes (javascript:, data:).
+    """
+    if not html or "<blockquote" not in html.lower():
+        return html
+
+    def fix_blockquote(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        cite_m = re.search(r'\bcite=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if cite_m:
+            url = cite_m.group(1).strip().lower()
+            if url.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', url):
+                tag = re.sub(r'\s+cite=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<blockquote\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_blockquote, html, flags=re.IGNORECASE)
+
+
+
 
 
 
