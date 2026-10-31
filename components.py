@@ -6743,6 +6743,65 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_daps_protocol_stack_svg_card(
+        cls,
+        title: str,
+        source_gnb: str,
+        target_gnb: str,
+        pdcp_buffer_kb: float,
+        interruption_ms: float = 0.0
+    ) -> str:
+        """
+        Renders an interactive SVG architectural diagram of the 3GPP Rel-16 DAPS Dual Active Protocol Stack,
+        illustrating parallel RLC/MAC/PHY lower layers bound to a common PDCP duplication entity for zero interruption.
+        """
+        return f"""    <div class="tu-5g-daps-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">3GPP Rel-16 DAPS Architecture</span>
+        <span style="font-size: 11px; background: #0369a1; color: #e0f2fe; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Interruption: {interruption_ms:.1f} ms</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 500 210" width="100%" height="210" style="max-width: 540px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- gNB Base Station Icons -->
+          <rect x="70" y="20" width="120" height="36" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="130" y="42" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Source: {source_gnb}</text>
+
+          <rect x="310" y="20" width="120" height="36" rx="4" fill="#0f766e" stroke="#2dd4bf" stroke-width="1.5" />
+          <text x="370" y="42" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Target: {target_gnb}</text>
+
+          <!-- Inter-gNB Xn-C / Xn-U interface link -->
+          <line x1="190" y1="38" x2="310" y2="38" stroke="#f59e0b" stroke-dasharray="3,3" stroke-width="2" />
+          <text x="250" y="32" fill="#fbbf24" font-size="9" text-anchor="middle">Xn Interconnect</text>
+
+          <!-- Parallel Dual RF Links to UE -->
+          <line x1="130" y1="56" x2="160" y2="120" stroke="#38bdf8" stroke-width="2" />
+          <line x1="370" y1="56" x2="340" y2="120" stroke="#2dd4bf" stroke-width="2" />
+
+          <!-- UE Protocol Stack Container -->
+          <rect x="60" y="110" width="380" height="85" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5" />
+          <text x="250" y="126" fill="#94a3b8" font-size="10" font-weight="bold" text-anchor="middle">UE Dual Active Protocol Stack (DAPS)</text>
+
+          <!-- Common DAPS PDCP Layer -->
+          <rect x="130" y="132" width="240" height="24" rx="3" fill="#4338ca" stroke="#818cf8" stroke-width="1.5" />
+          <text x="250" y="148" fill="#e0e7ff" font-size="10" font-weight="bold" text-anchor="middle">DAPS PDCP (Buffer: {pdcp_buffer_kb:.1f} KB)</text>
+
+          <!-- Dual Lower Layer Branches -->
+          <rect x="80" y="162" width="160" height="22" rx="3" fill="#0284c7" stroke="#38bdf8" stroke-width="1" />
+          <text x="160" y="177" fill="#ffffff" font-size="9" text-anchor="middle">Source RLC / MAC / PHY</text>
+
+          <rect x="260" y="162" width="160" height="22" rx="3" fill="#0d9488" stroke="#2dd4bf" stroke-width="1" />
+          <text x="340" y="177" fill="#ffffff" font-size="9" text-anchor="middle">Target RLC / MAC / PHY</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Handover Mode: <strong style="color: #38bdf8;">Simultaneous DAPS</strong></div>
+        <div>PDCP Buffer: <strong style="color: #818cf8;">{pdcp_buffer_kb:.2f} KB</strong></div>
+        <div>Interruption: <strong style="color: #34d399;">{interruption_ms:.1f} ms (0 Loss)</strong></div>
+      </div>
+    </div>"""
+
 
 
 
