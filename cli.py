@@ -2542,7 +2542,7 @@ def cmd_comp(args):
         rec_id = storage.record_nr_comp(
             cluster_name=cluster,
             serving_cell_rsrp_dbm=res["serving_cell_rsrp_dbm"],
-            cooperating_cells_count=res["cooperating_cells_count"],
+            cooperating_cells_count=res.get("coordinating_cells_count", len(coord_cells)),
             sinr_comp_db=res["sinr_comp_db"],
             sinr_gain_db=res["sinr_gain_db"],
             throughput_comp_mbps=res["throughput_comp_mbps"],
@@ -2575,25 +2575,26 @@ def cmd_ormawa(args):
         res = parse_ppk_ormawa_evaluation({
             "ormawa_name": name,
             "proposal_title": title,
-            "topic": topic,
-            "village_location": village,
-            "urgency_score": urgency,
-            "roadmap_score": roadmap,
-            "budget_score": budget,
-            "sustainability_score": sustainability
+            "village_target": village,
+            "problem_analysis_score": urgency,
+            "tech_solution_score": roadmap,
+            "roadmap_partnership_score": sustainability,
+            "budget_governance_score": budget
         })
+        is_funded = res["is_funded"]
+        allocated = 40000000 if is_funded else 0
         rec_id = storage.record_ppk_ormawa(
-            ormawa_name=res["ormawa_name"],
-            proposal_title=res["proposal_title"],
-            topic=res["topic"],
-            village_location=res["village_location"],
-            total_score=res["total_score"],
+            ormawa_name=name,
+            proposal_title=title,
+            topic=topic,
+            village_location=village,
+            total_score=res["composite_score"],
             letter_grade=res["letter_grade"],
-            funding_approved=res["funding_approved"],
-            allocated_budget_idr=res["allocated_budget_idr"]
+            funding_approved=is_funded,
+            allocated_budget_idr=allocated
         )
-        status_label = "DIDANAI" if res["funding_approved"] else "TIDAK_LOLOS"
-        print(f"Catatan Evaluasi PPK Ormawa berhasil disimpan dengan ID: {rec_id} (Skor: {res['total_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+        status_label = "DIDANAI" if is_funded else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PPK Ormawa berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {allocated:,})")
     else:
         records = storage.list_ppk_ormawa(limit=args.limit or 50)
         if not records:

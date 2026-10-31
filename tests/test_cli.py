@@ -2584,6 +2584,79 @@ class TestCLI(unittest.TestCase):
             self.assertIn("1201210034", out)
             self.assertIn("PKM-KC", out)
 
+    def test_cmd_fwm_phase(self):
+        class ArgsAdd:
+            action = "add"
+            span = "Span-Jawa-Bali"
+            length = 75.0
+            spacing = 100.0
+            dispersion = 17.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fwm_phase(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan DWDM FWM Phase-Matching berhasil disimpan", out)
+            self.assertIn("Lc:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fwm_phase(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Span-Jawa-Bali", out)
+
+    def test_cmd_comp(self):
+        class ArgsAdd:
+            action = "add"
+            cluster = "Cluster-TelU"
+            serving = -85.0
+            coord = "-88.0,-90.0"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_comp(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR CoMP JT berhasil disimpan", out)
+            self.assertIn("SINR Boost:", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_comp(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Cluster-TelU", out)
+
+    def test_cmd_ormawa(self):
+        class ArgsAdd:
+            action = "add"
+            name = "HMTT Telkom University"
+            title = "Proposal Desa Cerdas LoRaWAN"
+            topic = "Smart Agriculture"
+            village = "Desa Sukapura"
+            urgency = 90.0
+            roadmap = 88.0
+            budget = 85.0
+            sustainability = 87.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ormawa(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PPK Ormawa berhasil disimpan", out)
+            self.assertIn("DIDANAI", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ormawa(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("HMTT Telkom University", out)
+            self.assertIn("Desa Sukapura", out)
+
 
 if __name__ == "__main__":
     unittest.main()
