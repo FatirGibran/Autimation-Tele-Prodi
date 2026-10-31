@@ -886,6 +886,32 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["failed"][0]["comment_id"], 999)
         self.assertEqual(res["total"], 3)
 
+    @patch("urllib.request.urlopen")
+    def test_get_comments_by_author_email(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 501, "author_name": "Budi", "author_email": "budi@example.com"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        comments = self.client.get_comments_by_author_email("budi@example.com", page=1, per_page=15)
+        self.assertEqual(len(comments), 1)
+        self.assertEqual(comments[0]["id"], 501)
+        self.assertEqual(comments[0]["author_email"], "budi@example.com")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("author_email=budi%40example.com", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_delete_comments(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"deleted": true, "previous": {"id": 101}}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.batch_delete_comments([101, 102], force=True)
+        self.assertEqual(res["deleted"], [101, 102])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertTrue(res["force"])
+
 
 if __name__ == "__main__":
     unittest.main()
