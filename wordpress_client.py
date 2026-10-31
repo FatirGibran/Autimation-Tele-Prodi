@@ -975,6 +975,21 @@ class WordPressClient:
             "status": status.strip()
         }
 
+    def get_comments_by_author_email(
+        self,
+        author_email: str,
+        page: int = 1,
+        per_page: int = 20
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves comments filtered by author email via REST API (/wp/v2/comments?author_email=...).
+        """
+        clean_email = urllib.parse.quote(author_email.strip())
+        endpoint = f"{self.api_url}/comments?author_email={clean_email}&page={max(1, int(page))}&per_page={max(1, min(100, int(per_page)))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        return results if isinstance(results, list) else []
+
 
 
 
