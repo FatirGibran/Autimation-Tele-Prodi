@@ -42,7 +42,10 @@ from sanitizer import (
     sanitize_html5_list_attributes,
     sanitize_html5_address_elements,
     sanitize_html5_blockquote_attributes,
-    sanitize_html5_input_list_binding
+    sanitize_html5_input_list_binding,
+    sanitize_html5_time_attributes,
+    sanitize_html5_picture_attributes,
+    sanitize_html5_dialog_attributes
 )
 
 
@@ -1161,6 +1164,31 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("onfocus=", cleaned)
         self.assertNotIn("style=", cleaned)
         self.assertNotIn('list="javascript:bad()"', cleaned)
+
+    def test_sanitize_html5_time_attributes(self):
+        raw = '<time datetime="2026-11-01T08:00:00Z" onclick="bad()" style="color:red">1 November 2026</time><time datetime="javascript:hack()">Invalid</time>'
+        cleaned = sanitize_html5_time_attributes(raw)
+        self.assertIn('datetime="2026-11-01T08:00:00Z"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:hack()", cleaned)
+
+    def test_sanitize_html5_picture_attributes(self):
+        raw = '<picture onclick="bad()"><source srcset="/img/arch.webp" type="image/webp" media="(min-width: 800px)"><source srcset="javascript:alert(1)" type="application/x-evil"></picture>'
+        cleaned = sanitize_html5_picture_attributes(raw)
+        self.assertIn('srcset="/img/arch.webp"', cleaned)
+        self.assertIn('type="image/webp"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertNotIn("application/x-evil", cleaned)
+
+    def test_sanitize_html5_dialog_attributes(self):
+        raw = '<dialog open aria-modal="true" onclose="bad()" style="border:1px solid red"><p>Dialog Content</p></dialog>'
+        cleaned = sanitize_html5_dialog_attributes(raw)
+        self.assertIn("open", cleaned)
+        self.assertIn('aria-modal="true"', cleaned)
+        self.assertNotIn("onclose=", cleaned)
+        self.assertNotIn("style=", cleaned)
 
 
 if __name__ == "__main__":
