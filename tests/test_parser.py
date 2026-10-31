@@ -2141,6 +2141,77 @@ Status: Granted
         self.assertEqual(res_funded["converted_sks"], 3)
         self.assertTrue(res_funded["is_funded"])
 
+    def test_calculate_optical_fwm_phase_matching(self):
+        from parser import calculate_optical_fwm_phase_matching
+        res = calculate_optical_fwm_phase_matching(
+            fiber_length_km=50.0,
+            channel_spacing_ghz=100.0,
+            chromatic_dispersion_ps_nm_km=17.0
+        )
+        self.assertGreater(res["phase_mismatch_per_km"], 0.0)
+        self.assertGreater(res["coherence_length_km"], 0.0)
+        self.assertLess(res["fwm_efficiency"], 0.5)
+        self.assertTrue(res["is_acceptable"])
+
+    def test_calculate_5g_nr_comp_joint_transmission(self):
+        from parser import calculate_5g_nr_comp_joint_transmission
+        res = calculate_5g_nr_comp_joint_transmission(
+            serving_cell_rsrp_dbm=-85.0,
+            coord_cells_rsrp_dbm=[-88.0, -90.0],
+            interference_noise_dbm=-96.0,
+            coordination_efficiency=0.85
+        )
+        self.assertGreater(res["sinr_gain_db"], 1.0)
+        self.assertGreater(res["throughput_comp_mbps"], res["throughput_non_comp_mbps"])
+        self.assertTrue(res["is_comp_beneficial"])
+
+    def test_calculate_satellite_tropospheric_scintillation(self):
+        from parser import calculate_satellite_tropospheric_scintillation
+        res = calculate_satellite_tropospheric_scintillation(
+            frequency_ghz=14.0,
+            elevation_angle_deg=25.0,
+            antenna_diameter_m=1.8,
+            surface_temp_c=27.0,
+            relative_humidity_percent=80.0
+        )
+        self.assertGreater(res["n_wet"], 0.0)
+        self.assertGreater(res["fade_depth_db"], 0.0)
+        self.assertTrue(res["is_viable"])
+
+    def test_parse_ppk_ormawa_evaluation(self):
+        from parser import parse_ppk_ormawa_evaluation
+        # High score qualifying Ormawa Unggul
+        res_unggul = parse_ppk_ormawa_evaluation({
+            "student_leader": "Fajar Nugraha",
+            "nim": "1201210040",
+            "ormawa_name": "HMTT Tel-U Purwokerto",
+            "village_target": "Desa Karangsalam",
+            "proposal_title": "Implementasi IoT Irigasi Tetes dan Telemetri Lahan Pertanian",
+            "problem_analysis_score": 90.0,
+            "tech_solution_score": 88.0,
+            "roadmap_partnership_score": 85.0,
+            "budget_governance_score": 86.0
+        })
+        self.assertEqual(res_unggul["letter_grade"], "A")
+        self.assertEqual(res_unggul["converted_sks"], 4)
+        self.assertTrue(res_unggul["is_funded"])
+        self.assertIn("Ormawa Unggul", res_unggul["funding_status"])
+
+        # Moderate score
+        res_funded = parse_ppk_ormawa_evaluation({
+            "student_leader": "Intan Permata",
+            "nim": "1201210041",
+            "ormawa_name": "UKM Robotika",
+            "village_target": "Desa Limpakuwus",
+            "proposal_title": "Sistem Peringatan Dini Bencana Longsor",
+            "problem_analysis_score": 75.0,
+            "tech_solution_score": 74.0,
+            "roadmap_partnership_score": 72.0,
+            "budget_governance_score": 70.0
+        })
+        self.assertEqual(res_funded["converted_sks"], 3)
+        self.assertTrue(res_funded["is_funded"])
+
 
 if __name__ == "__main__":
     unittest.main()

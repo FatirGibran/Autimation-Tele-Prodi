@@ -6491,8 +6491,9 @@ def calculate_optical_fwm_phase_matching(
     # beta2 = - (lambda^2 / (2 * pi * c)) * D
     # With D in ps/(nm*km), beta2_ps2_km = - (lambda_nm^2 * 1e-18 / (2 * pi * c)) * (D * 1e-3 * 1e9 * 1e-12 / 1e-3)
     # Standard formula: beta2 (ps^2/km) = - (lambda_nm^2 / (2 * pi * c_nm_ps)) * D
-    # At 1550nm and D=17 ps/nm/km: beta2 ~ -21.7 ps^2/km
-    beta2_ps2_km = - ((lambda_nm ** 2) / (2.0 * math.pi * 0.299792458)) * d_coeff * 1e-3
+    # At 1550nm and D=17 ps/nm/km: beta2 ~ -21.68 ps^2/km
+    c_nm_ps = 299792.458  # speed of light in nm/ps
+    beta2_ps2_km = - ((lambda_nm ** 2) / (2.0 * math.pi * c_nm_ps)) * d_coeff
 
     # Phase mismatch delta_beta = beta2 * (2 * pi * delta_f)^2 (in 1/km)
     omega_rad_ps = 2.0 * math.pi * (delta_f_ghz * 1e-3)  # rad/ps
@@ -6532,7 +6533,7 @@ def calculate_optical_fwm_phase_matching(
         "chromatic_dispersion_ps_nm_km": round(d_coeff, 2),
         "beta2_ps2_km": round(beta2_ps2_km, 3),
         "phase_mismatch_per_km": round(delta_beta_per_km, 4),
-        "coherence_length_km": round(coherence_length_km, 2),
+        "coherence_length_km": round(coherence_length_km, 3),
         "fwm_efficiency": round(fwm_efficiency, 5),
         "fwm_efficiency_percent": round(fwm_efficiency * 100.0, 3),
         "fwm_power_dbm": round(p_fwm_dbm, 2),
