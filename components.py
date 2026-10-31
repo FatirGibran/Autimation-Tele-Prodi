@@ -6369,6 +6369,51 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_comp_card(
+        cls,
+        title: str,
+        serving_rsrp_dbm: float,
+        comp_cells_count: int,
+        sinr_comp_db: float,
+        sinr_gain_db: float,
+        throughput_comp_mbps: float,
+        throughput_gain_percent: float,
+        coordination_type: str = "Joint Transmission (JT)"
+    ) -> str:
+        """
+        Renders a 3GPP 5G NR Coordinated Multi-Point (CoMP) Joint Transmission performance card
+        displaying cooperating transmission points, SINR improvement, and cell-edge throughput boost.
+        """
+        gain_badge_bg = "#ecfdf5" if sinr_gain_db > 0 else "#f8fafc"
+        gain_badge_color = "#047857" if sinr_gain_db > 0 else "#64748b"
+
+        return f"""    <div class="tu-5g-comp-card" style="border: 1px solid #0284c7; border-radius: 8px; padding: 18px; margin: 16px 0; background: #f0f9ff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0369a1; font-size: 13px; text-transform: uppercase;">5G NR CoMP Coordinated Multi-Point ({coordination_type})</span>
+        <span style="font-size: 11px; background: {gain_badge_bg}; color: {gain_badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Gain +{sinr_gain_db:.1f} dB</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0c4a6e; font-size: 16px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Serving Cell RSRP &amp; Sel Kooperatif</span>
+          <strong style="color: #0369a1;">{serving_rsrp_dbm:.1f} dBm</strong> &bull; <strong>{comp_cells_count} Cooperating TPs</strong>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">CoMP Joint SINR</span>
+          <strong style="color: #0f172a;">{sinr_comp_db:.2f} dB</strong> <span style="color: #10b981; font-size: 11px;">(+{sinr_gain_db:.2f} dB margin)</span>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Throughput CoMP JT</span>
+          <strong style="color: #0284c7; font-size: 15px;">{throughput_comp_mbps:.1f} Mbps</strong>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Peningkatan Throughput Cell-Edge</span>
+          <strong style="color: #16a34a; font-size: 15px;">+{throughput_gain_percent:.1f}%</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
