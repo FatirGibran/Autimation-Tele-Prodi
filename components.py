@@ -6699,6 +6699,50 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_innovillage_proposal_card(
+        cls,
+        title: str,
+        student_leader: str,
+        village_location: str,
+        focus_field: str,
+        total_score: float,
+        allocated_budget_idr: int,
+        letter_grade: str,
+        funding_status: str
+    ) -> str:
+        """
+        Renders an Innovillage Telkom Indonesia social technopreneurship funding milestone card
+        showcasing rural IoT digital transformation, community impact, review score, and grant funding.
+        """
+        is_funded = allocated_budget_idr > 0
+        badge_bg = "#ecfdf5" if is_funded else "#fef2f2"
+        badge_color = "#047857" if is_funded else "#b91c1c"
+        border_color = "#10b981" if is_funded else "#ef4444"
+
+        return f"""    <div class="tu-innovillage-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase;">Innovillage Telkom Indonesia</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{funding_status}</span>
+      </div>
+      <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px;">Ketua: <strong style="color: #0284c7;">{student_leader}</strong> &bull; Fokus: {focus_field}</p>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Lokasi Desa Sasaran</span>
+          <strong style="color: #0f172a;">{village_location}</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Skor Komposit &amp; Predikat Mutu</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{total_score:.1f} / 100.0</strong> ({letter_grade})
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; grid-column: span 2;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Alokasi Dana Implementasi Proyek</span>
+          <strong style="color: #059669; font-size: 16px;">Rp {allocated_budget_idr:,}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
