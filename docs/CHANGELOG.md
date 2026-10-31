@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 945+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 983+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 899 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 925 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -1130,6 +1130,48 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 945. **Pembaruan Log Perkembangan Proyek (`docs/CHANGELOG.md`)**: Sinkronisasi catatan rilis, penambahan seksi 37, dan pembaharuan metrik proyek.
 946. **Ekspansi Suite Pengujian Unit Terpadu (899 Tests Passing)**: Peningkatan cakupan pengujian unit hingga mencapai 899 unit test terverifikasi (100% pass rate).
 947. **Finalisasi Milestone v4.9.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
+
+---
+
+## 38. Ekspansi Arsitektur v5.0.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+948. **Sanitasi Atribut Waktu HTML5 `<time>` (`datetime` & `pubdate`) (`sanitizer.py`)**: Sanitasi elemen waktu semantik HTML5 `<time>`, validasi atribut format tanggal waktu ISO 8601 (`YYYY-MM-DD`, `YYYY-MM-DDThh:mm:ss`), pemfilteran atribut boolean `pubdate`, dan pencegahan injeksi payload.
+949. **Sanitasi Elemen Gambar Responsif HTML5 `<picture>` & `<source>` (`sanitizer.py`)**: Sanitasi elemen kontainer media `<picture>` dan anak elemen `<source>`, validasi URL `srcset`, filtrasi media query atribut `media`, validasi MIME type atribut `type` (seperti `image/webp`, `image/avif`), dan pemfilteran ukuran atribut `sizes`.
+950. **Sanitasi Atribut Dialog HTML5 `<dialog>` & Binding Aksesibilitas ARIA (`sanitizer.py`)**: Sanitasi elemen dialog modal `<dialog>`, penanganan atribut boolean `open`, sterilisasi atribut aksesibilitas ARIA (`aria-modal`, `aria-labelledby`, `aria-describedby`), dan pencegahan modal entrapment / clickjacking.
+951. **Unit Test Sanitasi Time, Picture, dan Dialog HTML5 (`tests/test_sanitizer.py`)**: Penambahan unit test verifikasi sterilisasi elemen `<time>`, kontainer gambar responsif `<picture>`, dan elemen modal `<dialog>`.
+952. **Kalkulator Ambang Hamburan Balik SBS Fiber Optik (`parser.py`)**: Perhitungan daya ambang Stimulated Brillouin Scattering (SBS) $P_{th} \approx \frac{21 A_{eff}}{g_B L_{eff}} (1 + \frac{\Delta\nu_L}{\Delta\nu_B})$ menurut teori optika nonlinier Agrawal, panjang efektif serat $L_{eff}$, pergeseran frekuensi Brillouin $\Omega_B \approx 11$ GHz, konversi daya mW ke dBm, dan evaluasi keselamatan peluncuran daya DWDM.
+953. **Penganalisis Handover 5G NR DAPS (Dual Active Protocol Stack) 3GPP Rel-16 (`parser.py`)**: Analisis mekanisme zero-interruption handover menurut spesifikasi 3GPP TS 38.300 / TS 38.323, perbandingan latensi interupsi tradisional (30-50 ms) vs DAPS (0 ms), estimasi kebutuhan ukuran buffer PDCP lapisan protokol ganda, dan keandalan handover (99.999%).
+954. **Kalkulator Indeks Sintilasi Ionosferik $S_4$ & Kedalaman Pudar Satelit ITU-R P.531 (`parser.py`)**: Perhitungan fluktuasi intensitas radio antariksa frekuensi UHF/L-band/C-band akibat turbulensi plasma ionosferik fajar/senja, deviasi fluktuasi $\sigma_I$, estimasi kedalaman pudar (fade depth dB) menurut model distribusi Nakagami-m, dan evaluasi margin transmisi tautan satelit.
+955. **Evaluator Proposal Sosio-Teknologi Mahasiswa Innovillage Telkom (`parser.py`)**: Evaluasi kelayakan proposal program sociopreneurship mahasiswa berbasis IoT dan transformasi digital pedesaan Innovillage Telkom Indonesia (rumusan masalah sosial 25%, kelayakan solusi digital/IoT 30%, keberlanjutan & stakeholder 25%, efisiensi RAB 20%), penentuan status pendanaan, alokasi dana hibah, dan penyetaraan SKS MBKM.
+956. **Unit Test Ambang SBS, DAPS Handover, Sintilasi Ionosferik, dan Innovillage (`tests/test_parser.py`)**: Penambahan unit test untuk komputasi optik nonlinier SBS, protokol handover seluler 5G NR DAPS, propagasi antariksa gelombang radio, dan sistem seleksi proposal mahasiswa.
+957. **Auditor Aksesibilitas Tabel HTML `<caption>` & `<th scope>` WCAG 2.1 SC 1.3.1 (`seo_validator.py`)**: Audit semantik struktur data tabel dalam konten editorial guna memastikan keberadaan judul tabel `<caption>` dan penetapan atribut cakupan header `scope="col"` atau `scope="row"` untuk kompatibilitas pembaca layar (screen reader).
+958. **Auditor Direktif Delegasi Browser Client Hints (`seo_validator.py`)**: Audit keberadaan meta header peramban `Accept-CH` (seperti `Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-Width`, `Sec-CH-Viewport-Width`) dan header delegasi izin fitur `Permissions-Policy` untuk optimasi aset responsif Core Web Vitals.
+959. **Auditor Atribut Bahasa Dokumen & Pengarah Teks WCAG 2.1 SC 3.1.1 (`seo_validator.py`)**: Audit kelengkapan atribut bahasa ISO (`lang`) dan arah pembacaan (`dir="ltr"` / `dir="rtl"`) pada elemen dokumen pembungkus semantik utama guna menjamin akurasi sintesis ucapan pembaca layar dan perenderan peramban.
+960. **Auditor Pemuatan Spekulatif DNS-Prefetch & Prerender W3C Speculation Rules (`seo_validator.py`)**: Audit optimasi kecepatan muat halaman peramban melalui inspeksi tautan pemanasan resolusi DNS (`rel="dns-prefetch"`), prapemuatan koneksi (`rel="preconnect"`), serta aturan pemuatan spekulatif modern JSON `<script type="speculationrules">`.
+961. **Unit Test Aksesibilitas Tabel, Client Hints, Atribut Bahasa/Arah, dan Spekulatif Pemuatan (`tests/test_seo_validator.py`)**: Penambahan rangkaian unit test komprehensif untuk pengujian kepatuhan aksesibilitas WCAG 2.1, Core Web Vitals, dan optimasi arsitektur peramban web modern.
+962. **Komponen Kartu Telemetri Ambang SBS Fiber Optik (`components.py`)**: Kartu visual Elementor metrik panjang bentang transmisi serat optik km, luas area efektif $A_{eff}$, linewidth pemancar laser MHz, daya ambang $P_{th}$ mW dan dBm, pergeseran frekuensi Brillouin GHz, serta status keselamatan peluncuran kanal optik DWDM.
+963. **Komponen Kartu Handover Zero-Interruption 5G NR DAPS (`components.py`)**: Kartu visual Elementor metrik ID handover, perbandingan durasi interupsi tradisional vs DAPS (0.0 ms), estimasi buffer PDCP dual stack KB, margin kualitas SINR melintasi sel target, dan persentase reliabilitas transmisi data kritis (99.999%).
+964. **Komponen Kartu Redaman Sintilasi Ionosferik Satelit $S_4$ ITU-R P.531 (`components.py`)**: Kartu visual Elementor metrik frekuensi carrier downlink/uplink satelit GHz, indeks sintilasi fluktuasi $S_4$, tingkat keparahan turbulensi ionosfer (Strong/Moderate/Weak), estimasi kedalaman redaman pudar dB, dan rekomendasi margin daya tautan bumi-antariksa.
+965. **Komponen Kartu Capaian Pendanaan Proposal Mahasiswa Innovillage Telkom (`components.py`)**: Kartu visual Elementor identitas ketua tim mahasiswa pengusul, NIM, judul solusi rekayasa, lokasi desa binaan, bidang fokus tematik, skor komposit evaluasi dewan juri, grade capaian, status kelulusan pendanaan, dan jumlah alokasi dana implementasi.
+966. **Komponen Diagram Arsitektur Protokol Ganda 5G NR DAPS Inline SVG Responsif (`components.py`)**: Kartu visualisasi teknis diagram arsitektur stack protokol ganda 3GPP Rel-16 DAPS menampilkan pemisahan entitas PDCP Serving dan Target gNodeB, koordinasi RLC/MAC dual carrier, zero-data-loss packet forwarding interface Xn-C/Xn-U, dan buffer decoupling berbasis inline SVG responsif.
+967. **Unit Test Komponen SBS, DAPS, Sintilasi Ionosferik, Innovillage, dan Diagram SVG DAPS (`tests/test_components.py`)**: Penambahan unit test untuk memastikan seluruh komponen semantik Elementor dan visualisasi grafis SVG ter-render secara utuh dan valid.
+968. **Formatter Telegram Peringatan Ambang SBS Fiber Optik (`formatters.py`)**: Format buletin Telegram resmi audit transmisi serat optik DWDM multi-panjang gelombang dan telemetri ambang batas daya nonlinear SBS.
+969. **Formatter Telegram Pengumuman Kelulusan Pendanaan Innovillage Telkom (`formatters.py`)**: Format buletin Telegram resmi pengumuman kelulusan pendanaan proposal sociopreneurship mahasiswa program akselerasi transformasi digital pedesaan.
+970. **Unit Test Formatter Telegram SBS dan Innovillage (`tests/test_formatters.py`)**: Penambahan unit test integritas template dan sanitasi tautan telemetri Telegram.
+971. **Manajer Rekam Ambang SBS Fiber Optik (`storage.py`)**: Skema tabel SQLite `optical_sbs_records` dan fungsi `record_optical_sbs`, `list_optical_sbs`, `get_optical_sbs_by_id`.
+972. **Manajer Rekam Handover 5G NR DAPS Rel-16 (`storage.py`)**: Skema tabel SQLite `nr_daps_records` dan fungsi `record_nr_daps`, `list_nr_daps`, `get_nr_daps_by_id`.
+973. **Manajer Rekam Evaluasi & Pendanaan Proposal Innovillage Telkom (`storage.py`)**: Skema tabel SQLite `innovillage_proposal_records` dan fungsi `record_innovillage_proposal`, `list_innovillage_proposals`, `get_innovillage_proposal_by_id`.
+974. **Unit Test Storage Ambang SBS, 5G DAPS, dan Proposal Innovillage (`tests/test_storage.py`)**: Penambahan unit test operasi CRUD terisolasi dan pengujian integritas tabel database.
+975. **Helper WordPress Get Categories by Parent ID (`wordpress_client.py`)**: Metode `get_categories_by_parent` untuk membaca sub-kategori berdasarkan ID kategori induk via REST API (`/wp/v2/categories?parent=...`).
+976. **Helper WordPress Batch Trash Posts (`wordpress_client.py`)**: Metode `batch_trash_posts` untuk memindahkan sekumpulan ID pos editorial ke tempat sampah (soft delete trash) secara massal via REST API (`DELETE /wp/v2/posts/{id}`).
+977. **Unit Test WordPress Client Categories by Parent & Batch Trash Posts (`tests/test_wordpress_client.py`)**: Penambahan unit test mocked HTTP requests untuk pengambilan subkategori berelasi dan pemindahan pos ke tong sampah.
+978. **Generator Schema.org Event/Hackathon JSON-LD untuk Kompetisi Mahasiswa (`exporter.py`)**: Metode `generate_student_competition_json_ld` menghasilkan struktur metadata Google Event/Hackathon untuk perlombaan inovasi, hadiah hibah kompetisi, dan status pelaksanaan hybrid/luring/daring.
+979. **Eksportir Dokumentasi MDX SolidStart Reactive Meta-Framework (`exporter.py`)**: Metode `to_solidstart_mdx` mengonversi artikel editorial ke format dokumentasi fine-grained reactivity SolidStart MDX dengan frontmatter YAML terintegrasi.
+980. **Unit Test Exporter Student Competition JSON-LD & SolidStart MDX (`tests/test_exporter.py`)**: Penambahan unit test verifikasi integritas penanda Schema.org Event kompetisi dan frontmatter rute SolidStart MDX.
+981. **Subcommand CLI `sbs`, `daps`, dan `innovillage` (`cli.py`)**: Perintah konsol CLI baru untuk operasionalisasi telemetri ambang SBS optik, analisis performa handover 5G NR DAPS, dan evaluasi proposal kompetisi Innovillage.
+982. **Unit Test CLI Subcommand `sbs`, `daps`, dan `innovillage` (`tests/test_cli.py`)**: Penambahan unit test penanganan argumen baris perintah terminal.
+983. **Dokumentasi Perubahan Arsitektur v5.0.0 (`docs/changes/87_v5_0_feature_expansions.md`) & Pembaruan Log CHANGELOG.md**: Dokumentasi komprehensif seluruh fitur, sinkronisasi catatan rilis, penambahan seksi 38, dan pembaharuan metrik proyek dengan 925 unit test passing (100% pass rate).
+984. **Finalisasi Milestone v5.0.0 & Sinkronisasi Repositori Remote `origin/main`**: Verifikasi konsistensi kode dan sinkronisasi git push remote `origin/main`.
 
 
 
