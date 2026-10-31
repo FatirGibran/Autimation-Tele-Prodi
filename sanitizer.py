@@ -2043,6 +2043,31 @@ def sanitize_html5_blockquote_attributes(html: str) -> str:
     return re.sub(r'<blockquote\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_blockquote, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_input_list_binding(html: str) -> str:
+    """
+    Sanitizes HTML5 <input> elements with datalist bindings ('list' attribute) by stripping
+    inline event handlers, contenteditable/styles, and validating the list ID token against script injection.
+    """
+    if not html or "<input" not in html.lower():
+        return html
+
+    def fix_input(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        list_m = re.search(r'\blist=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if list_m:
+            list_val = list_m.group(1).strip()
+            if not re.match(r'^[A-Za-z0-9_\-]+$', list_val):
+                tag = re.sub(r'\s+list=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<input\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_input, html, flags=re.IGNORECASE)
+
+
+
 
 
 
