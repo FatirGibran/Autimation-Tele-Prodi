@@ -39,7 +39,10 @@ from sanitizer import (
     sanitize_html5_textarea_attributes,
     sanitize_html5_button_attributes,
     sanitize_html5_area_map_attributes,
-    sanitize_html5_list_attributes
+    sanitize_html5_list_attributes,
+    sanitize_html5_address_elements,
+    sanitize_html5_blockquote_attributes,
+    sanitize_html5_input_list_binding
 )
 
 
@@ -1132,6 +1135,32 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn('value="abc"', cleaned)
         self.assertNotIn('start="invalid"', cleaned)
         self.assertNotIn('type="evil"', cleaned)
+
+    def test_sanitize_html5_address_elements(self):
+        raw = '<address onclick="bad()" style="font-weight:bold"><p>Lab Transmisi Gelombang Mikro</p><script>evil()</script><a href="javascript:steal()">Hubungi Lab</a></address>'
+        cleaned = sanitize_html5_address_elements(raw)
+        self.assertIn("<address>", cleaned)
+        self.assertIn("Lab Transmisi Gelombang Mikro", cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:steal()", cleaned)
+
+    def test_sanitize_html5_blockquote_attributes(self):
+        raw = '<blockquote cite="https://itu.int/rec/p618" onclick="hack()" style="color:red">Standar ITU-R P.618</blockquote><blockquote cite="javascript:alert(1)">Rentan</blockquote>'
+        cleaned = sanitize_html5_blockquote_attributes(raw)
+        self.assertIn('cite="https://itu.int/rec/p618"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+
+    def test_sanitize_html5_input_list_binding(self):
+        raw = '<input type="text" list="bands_5g" onfocus="evil()" style="color:blue"><input type="text" list="javascript:bad()">'
+        cleaned = sanitize_html5_input_list_binding(raw)
+        self.assertIn('list="bands_5g"', cleaned)
+        self.assertNotIn("onfocus=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('list="javascript:bad()"', cleaned)
 
 
 if __name__ == "__main__":
