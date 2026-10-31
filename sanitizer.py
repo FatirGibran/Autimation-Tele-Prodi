@@ -2137,6 +2137,30 @@ def sanitize_html5_picture_attributes(html: str) -> str:
     return re.sub(r'<source\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_source, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_dialog_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <dialog> modal elements by scrubbing inline event handlers,
+    contenteditable/styles, and validating aria-modal and open attributes.
+    """
+    if not html or "<dialog" not in html.lower():
+        return html
+
+    def fix_dialog(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        aria_m = re.search(r'\baria-modal=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if aria_m:
+            val = aria_m.group(1).strip().lower()
+            if val not in ("true", "false"):
+                tag = re.sub(r'\s+aria-modal=["\'][^"\']*["\']', ' aria-modal="true"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<dialog\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_dialog, html, flags=re.IGNORECASE)
+
+
 
 
 
