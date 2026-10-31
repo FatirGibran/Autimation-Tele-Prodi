@@ -33,7 +33,10 @@ from parser import (
     parse_p2mw_evaluation,
     calculate_satellite_gaseous_attenuation_itu_r_p676,
     calculate_5g_nr_massive_mimo_gain,
-    parse_pkm_proposal_evaluation
+    parse_pkm_proposal_evaluation,
+    calculate_optical_fwm_phase_matching,
+    calculate_5g_nr_comp_joint_transmission,
+    parse_ppk_ormawa_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2488,6 +2491,122 @@ def cmd_pkm_proposal(args):
             print(f"{r['id']:<4} | {r['nim']:<10} | {r['scheme']:<8} | {r['composite_score']:<6.1f} | {r['converted_sks']:<4} | {r['funding_status']}")
 
 
+def cmd_fwm_phase(args):
+    if args.action == "add":
+        span = args.span or "Span-1"
+        length = float(args.length) if args.length is not None else 50.0
+        spacing = float(args.spacing) if args.spacing is not None else 100.0
+        dispersion = float(args.dispersion) if args.dispersion is not None else 17.0
+
+        res = calculate_optical_fwm_phase_matching(
+            fiber_length_km=length,
+            channel_spacing_ghz=spacing,
+            chromatic_dispersion_ps_nm_km=dispersion
+        )
+        rec_id = storage.record_optical_fwm_phase(
+            span_name=span,
+            fiber_length_km=res["fiber_length_km"],
+            channel_spacing_ghz=res["channel_spacing_ghz"],
+            chromatic_dispersion=res["chromatic_dispersion_ps_nm_km"],
+            beta2=res["beta2_ps2_km"],
+            phase_mismatch=res["phase_mismatch_per_km"],
+            coherence_length_km=res["coherence_length_km"],
+            efficiency_percent=res["fwm_efficiency_percent"],
+            fwm_power_dbm=res["fwm_power_dbm"],
+            fwm_risk=res["fwm_risk"],
+            is_acceptable=res["is_acceptable"]
+        )
+        print(f"Catatan DWDM FWM Phase-Matching berhasil disimpan dengan ID: {rec_id} (Lc: {res['coherence_length_km']} km, Efisiensi: {res['fwm_efficiency_percent']}%)")
+    else:
+        records = storage.list_optical_fwm_phases(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan DWDM FWM phase-matching yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'SPAN':<20} | {'LENGTH':<8} | {'SPACING':<8} | {'Lc (km)':<8} | {'EFISIENSI':<10} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            status = "ACCEPTABLE" if r["is_acceptable"] else "HIGH_RISK"
+            print(f"{r['id']:<4} | {r['span_name']:<20} | {r['fiber_length_km']:<8.1f} | {r['channel_spacing_ghz']:<8.1f} | {r['coherence_length_km']:<8.3f} | {r['efficiency_percent']:<9.3f}% | {status}")
+
+
+def cmd_comp(args):
+    if args.action == "add":
+        cluster = args.cluster or "Cluster-1"
+        serving = float(args.serving) if args.serving is not None else -85.0
+        coord_cells = [float(x.strip()) for x in args.coord.split(",")] if args.coord else [-88.0, -90.0]
+
+        res = calculate_5g_nr_comp_joint_transmission(
+            serving_cell_rsrp_dbm=serving,
+            coord_cells_rsrp_dbm=coord_cells
+        )
+        rec_id = storage.record_nr_comp(
+            cluster_name=cluster,
+            serving_cell_rsrp_dbm=res["serving_cell_rsrp_dbm"],
+            cooperating_cells_count=res["cooperating_cells_count"],
+            sinr_comp_db=res["sinr_comp_db"],
+            sinr_gain_db=res["sinr_gain_db"],
+            throughput_comp_mbps=res["throughput_comp_mbps"],
+            throughput_gain_percent=res["throughput_gain_percent"],
+            coordination_type="Joint Transmission (JT)"
+        )
+        print(f"Catatan 5G NR CoMP JT berhasil disimpan dengan ID: {rec_id} (SINR Boost: +{res['sinr_gain_db']} dB, Throughput: {res['throughput_comp_mbps']} Mbps)")
+    else:
+        records = storage.list_nr_comps(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR CoMP yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CLUSTER':<20} | {'SERV RSRP':<10} | {'TPs':<4} | {'SINR (dB)':<10} | {'GAIN (dB)':<10} | {'THROUGHPUT'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cluster_name']:<20} | {r['serving_cell_rsrp_dbm']:<10.1f} | {r['cooperating_cells_count']:<4} | {r['sinr_comp_db']:<10.2f} | +{r['sinr_gain_db']:<9.2f} | {r['throughput_comp_mbps']:.1f} Mbps")
+
+
+def cmd_ormawa(args):
+    if args.action == "add":
+        name = args.name or "HMTT Telkom University"
+        title = args.title or "Proposal Desa Cerdas"
+        topic = args.topic or "Smart Village"
+        village = args.village or "Desa Sukapura"
+        urgency = float(args.urgency) if args.urgency is not None else 85.0
+        roadmap = float(args.roadmap) if args.roadmap is not None else 85.0
+        budget = float(args.budget) if args.budget is not None else 85.0
+        sustainability = float(args.sustainability) if args.sustainability is not None else 85.0
+
+        res = parse_ppk_ormawa_evaluation({
+            "ormawa_name": name,
+            "proposal_title": title,
+            "topic": topic,
+            "village_location": village,
+            "urgency_score": urgency,
+            "roadmap_score": roadmap,
+            "budget_score": budget,
+            "sustainability_score": sustainability
+        })
+        rec_id = storage.record_ppk_ormawa(
+            ormawa_name=res["ormawa_name"],
+            proposal_title=res["proposal_title"],
+            topic=res["topic"],
+            village_location=res["village_location"],
+            total_score=res["total_score"],
+            letter_grade=res["letter_grade"],
+            funding_approved=res["funding_approved"],
+            allocated_budget_idr=res["allocated_budget_idr"]
+        )
+        status_label = "DIDANAI" if res["funding_approved"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PPK Ormawa berhasil disimpan dengan ID: {rec_id} (Skor: {res['total_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_ppk_ormawa(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan evaluasi PPK Ormawa yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'ORMAWA':<20} | {'LOKASI':<15} | {'SKOR':<6} | {'GRADE':<6} | {'DANA HIBAH':<15} | {'STATUS'}")
+        print("-" * 85)
+        for r in records:
+            status = "DIDANAI" if r["funding_approved"] else "TIDAK_LOLOS"
+            print(f"{r['id']:<4} | {r['ormawa_name']:<20} | {r['village_location']:<15} | {r['total_score']:<6.1f} | {r['letter_grade']:<6} | Rp {r['allocated_budget_idr']:<12,} | {status}")
+
+
+
 
 
 def main():
@@ -3398,6 +3517,39 @@ def main():
     pkm_prop_parser.add_argument("--budget", type=float, default=85.0, help="Skor kelayakan RAB (0-100)")
     pkm_prop_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkm_prop_parser.set_defaults(func=cmd_pkm_proposal)
+
+    # FWM Phase Matching command
+    fwm_phase_parser = subparsers.add_parser("fwm_phase", help="Kelola kalkulasi DWDM FWM phase-matching & efisiensi (list, add)")
+    fwm_phase_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan FWM phase matching")
+    fwm_phase_parser.add_argument("--span", default="Span-1", help="Nama span link fiber optik")
+    fwm_phase_parser.add_argument("--length", type=float, default=50.0, help="Panjang bentang fiber (km)")
+    fwm_phase_parser.add_argument("--spacing", type=float, default=100.0, help="Spasi kanal DWDM (GHz)")
+    fwm_phase_parser.add_argument("--dispersion", type=float, default=17.0, help="Koefisien dispersi kromatik (ps/nm/km)")
+    fwm_phase_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    fwm_phase_parser.set_defaults(func=cmd_fwm_phase)
+
+    # 5G NR CoMP command
+    comp_parser = subparsers.add_parser("comp", help="Kelola performansi 5G NR CoMP Joint Transmission (list, add)")
+    comp_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi CoMP")
+    comp_parser.add_argument("--cluster", default="Cluster-1", help="Nama cluster koordinasi multi-sel")
+    comp_parser.add_argument("--serving", type=float, default=-85.0, help="RSRP sel utama serving (dBm)")
+    comp_parser.add_argument("--coord", default="-88.0,-90.0", help="Daftar RSRP sel koordinasi dipisah koma (dBm)")
+    comp_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    comp_parser.set_defaults(func=cmd_comp)
+
+    # PPK Ormawa command
+    ormawa_parser = subparsers.add_parser("ormawa", help="Kelola evaluasi & rekognisi proposal PPK Ormawa Belmawa (list, add)")
+    ormawa_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PPK Ormawa")
+    ormawa_parser.add_argument("--name", default="HMTT Telkom University", help="Nama organisasi kemahasiswaan")
+    ormawa_parser.add_argument("--title", default="Proposal Desa Cerdas", help="Judul proposal pemberdayaan")
+    ormawa_parser.add_argument("--topic", default="Smart Village", help="Topik atau fokus kegiatan")
+    ormawa_parser.add_argument("--village", default="Desa Sukapura", help="Lokasi desa/komunitas binaan")
+    ormawa_parser.add_argument("--urgency", type=float, default=85.0, help="Skor urgensi permasalahan (0-100)")
+    ormawa_parser.add_argument("--roadmap", type=float, default=85.0, help="Skor peta jalan pembinaan (0-100)")
+    ormawa_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran anggaran (0-100)")
+    ormawa_parser.add_argument("--sustainability", type=float, default=85.0, help="Skor keberlanjutan program (0-100)")
+    ormawa_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    ormawa_parser.set_defaults(func=cmd_ormawa)
 
 
 
