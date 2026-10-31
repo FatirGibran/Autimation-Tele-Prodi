@@ -2498,6 +2498,75 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["scheme"], "PKM-KC")
         self.assertIsNone(self.storage.get_pkm_proposal_by_id(99999))
 
+    def test_optical_fwm_phase_storage(self):
+        rec_id = self.storage.record_optical_fwm_phase(
+            span_name="Span Jawa-Bali SMF-28",
+            fiber_length_km=75.0,
+            channel_spacing_ghz=100.0,
+            chromatic_dispersion=17.0,
+            beta2=-21.68,
+            phase_mismatch=8.56,
+            coherence_length_km=0.734,
+            efficiency_percent=0.012,
+            fwm_power_dbm=-52.4,
+            fwm_risk="Sangat Rendah",
+            is_acceptable=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_fwm_phases()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["span_name"], "Span Jawa-Bali SMF-28")
+        self.assertEqual(items[0]["is_acceptable"], 1)
+
+        single = self.storage.get_optical_fwm_phase_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["fiber_length_km"], 75.0)
+        self.assertIsNone(self.storage.get_optical_fwm_phase_by_id(99999))
+
+    def test_nr_comp_storage(self):
+        rec_id = self.storage.record_nr_comp(
+            cluster_name="Cluster TelU Urban Hotspot",
+            serving_cell_rsrp_dbm=-85.0,
+            cooperating_cells_count=3,
+            sinr_comp_db=15.4,
+            sinr_gain_db=4.8,
+            throughput_comp_mbps=192.5,
+            throughput_gain_percent=45.2,
+            coordination_type="Joint Transmission (JT)"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_comps()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cluster_name"], "Cluster TelU Urban Hotspot")
+        self.assertEqual(items[0]["cooperating_cells_count"], 3)
+
+        single = self.storage.get_nr_comp_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["sinr_comp_db"], 15.4)
+        self.assertIsNone(self.storage.get_nr_comp_by_id(99999))
+
+    def test_ppk_ormawa_storage(self):
+        rec_id = self.storage.record_ppk_ormawa(
+            ormawa_name="HMTT Telkom University",
+            proposal_title="Pemberdayaan IoT Desa Cerdas",
+            topic="Smart Agriculture",
+            village_location="Desa Sukapura",
+            total_score=89.5,
+            letter_grade="A",
+            funding_approved=True,
+            allocated_budget_idr=38000000
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_ppk_ormawa()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["ormawa_name"], "HMTT Telkom University")
+        self.assertEqual(items[0]["funding_approved"], 1)
+
+        single = self.storage.get_ppk_ormawa_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["village_location"], "Desa Sukapura")
+        self.assertIsNone(self.storage.get_ppk_ormawa_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
