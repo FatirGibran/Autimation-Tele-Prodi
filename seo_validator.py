@@ -5819,6 +5819,89 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_permissions_policy_directive(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits browser Permissions-Policy (and legacy Feature-Policy) meta declarations
+        to verify that privacy-critical browser hardware capabilities (camera, microphone, geolocation)
+        are restricted against unauthorized third-party iframe exfiltration.
+        """
+        if not html_content:
+            return {
+                "has_permissions_policy": False,
+                "policy_type": "None",
+                "directives": {},
+                "restricted_features": [],
+                "is_compliant": False,
+                "issues": ["Konten HTML kosong."],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        policy_type = "None"
+        raw_content = ""
+
+        # Search for <meta http-equiv="Permissions-Policy" content="..."> or Feature-Policy
+        meta_perm = soup.find("meta", attrs={"http-equiv": re.compile(r"^permissions-policy$", re.I)})
+        if meta_perm and meta_perm.get("content"):
+            policy_type = "Permissions-Policy"
+            raw_content = meta_perm["content"]
+        else:
+            meta_feat = soup.find("meta", attrs={"http-equiv": re.compile(r"^feature-policy$", re.I)})
+            if meta_feat and meta_feat.get("content"):
+                policy_type = "Feature-Policy"
+                raw_content = meta_feat["content"]
+                warnings.append("Direktif menggunakan 'Feature-Policy' lama. Disarankan bermigrasi ke 'Permissions-Policy'.")
+
+        if not raw_content:
+            issues.append("Tag meta Permissions-Policy atau Feature-Policy tidak ditemukan dalam dokumen.")
+            return {
+                "has_permissions_policy": False,
+                "policy_type": "None",
+                "directives": {},
+                "restricted_features": [],
+                "is_compliant": False,
+                "issues": issues,
+                "warnings": warnings
+            }
+
+        directives = {}
+        if policy_type == "Permissions-Policy":
+            parts = [p.strip() for p in raw_content.split(",") if p.strip()]
+            for part in parts:
+                if "=" in part:
+                    k, v = part.split("=", 1)
+                    directives[k.strip().lower()] = v.strip()
+                else:
+                    directives[part.lower()] = "()"
+        else:
+            parts = [p.strip() for p in raw_content.split(";") if p.strip()]
+            for part in parts:
+                tokens = part.split(None, 1)
+                k = tokens[0].lower()
+                v = tokens[1] if len(tokens) > 1 else "'none'"
+                directives[k] = v
+
+        critical_features = ["camera", "microphone", "geolocation"]
+        restricted_features = []
+        for feat in critical_features:
+            if feat in directives:
+                restricted_features.append(feat)
+            else:
+                warnings.append(f"Fitur privasi berisiko tinggi '{feat}' belum dideklarasikan eksplisit pada Permissions-Policy.")
+
+        return {
+            "has_permissions_policy": True,
+            "policy_type": policy_type,
+            "directives": directives,
+            "restricted_features": restricted_features,
+            "is_compliant": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
