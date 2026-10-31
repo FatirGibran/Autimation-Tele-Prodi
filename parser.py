@@ -6933,6 +6933,81 @@ def calculate_satellite_ionospheric_scintillation_s4(
     }
 
 
+def parse_innovillage_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates student social technopreneurship proposals in the Innovillage Telkom Indonesia competition
+    focused on rural digital transformation, IoT smart solutions, community empowerment, and MBKM SKS equivalence.
+    """
+    student_leader = str(data.get("student_leader", "Ketua Tim Innovillage")).strip()
+    nim = str(data.get("nim", "")).strip()
+    proposal_title = str(data.get("proposal_title", "Digitalisasi Desa Cerdas")).strip()
+    village_location = str(data.get("village_location", "Desa Sasaran")).strip()
+    focus_field = str(data.get("focus_field", "Smart Agriculture / IoT Lingkungan")).strip()
+
+    s_prob = max(0.0, min(100.0, float(data.get("social_problem_score", 85.0))))
+    s_sol = max(0.0, min(100.0, float(data.get("digital_solution_score", 85.0))))
+    s_sus = max(0.0, min(100.0, float(data.get("sustainability_score", 85.0))))
+    s_eff = max(0.0, min(100.0, float(data.get("budget_efficiency_score", 85.0))))
+
+    # Composite: 25% Masalah Sosial, 35% Solusi Digital/IoT, 25% Keberlanjutan Komunitas, 15% Efisiensi Anggaran
+    composite = round((0.25 * s_prob) + (0.35 * s_sol) + (0.25 * s_sus) + (0.15 * s_eff), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.00
+        funding_status = f"Lolos Pendanaan Top Innovillage Telkom - {village_location}"
+        allocated_budget_idr = 25000000
+        converted_sks = 4
+        is_funded = True
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.50
+        funding_status = f"Lolos Pendanaan Implementasi Aksi Sosial - {village_location}"
+        allocated_budget_idr = 15000000
+        converted_sks = 3
+        is_funded = True
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.00
+        funding_status = f"Lolos Pendanaan Tahap Inkubasi Desa - {village_location}"
+        allocated_budget_idr = 10000000
+        converted_sks = 2
+        is_funded = True
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.50
+        funding_status = f"Insentif Desa Binaan Internal Kampus - {village_location}"
+        allocated_budget_idr = 5000000
+        converted_sks = 1
+        is_funded = False
+    else:
+        letter_grade = "C"
+        grade_point = 2.00
+        funding_status = "Belum Memenuhi Kriteria Pendanaan Innovillage"
+        allocated_budget_idr = 0
+        converted_sks = 0
+        is_funded = False
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "village_location": village_location,
+        "focus_field": focus_field,
+        "social_problem_score": s_prob,
+        "digital_solution_score": s_sol,
+        "sustainability_score": s_sus,
+        "budget_efficiency_score": s_eff,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "allocated_budget_idr": allocated_budget_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
 
 
 
