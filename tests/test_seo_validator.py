@@ -1958,6 +1958,84 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(res_bad["compliant_links"], 0)
         self.assertFalse(res_bad["is_compliant"])
 
+    def test_audit_webpage_schema_markup(self):
+        html_ok = (
+            '<html><head><script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "AboutPage", "name": "Profil Prodi", '
+            '"description": "Program Studi Teknik Telekomunikasi", "url": "https://telecom.ac.id/about"}'
+            '</script></head><body>Content</body></html>'
+        )
+        res_ok = YoastSEOValidator.audit_webpage_schema_markup(html_ok)
+        self.assertTrue(res_ok["has_webpage_schema"])
+        self.assertTrue(res_ok["is_valid"])
+        self.assertIn("AboutPage", res_ok["schema_types"])
+        self.assertEqual(res_ok["page_count"], 1)
+
+        html_none = '<html><body>No schema here</body></html>'
+        res_none = YoastSEOValidator.audit_webpage_schema_markup(html_none)
+        self.assertFalse(res_none["has_webpage_schema"])
+        self.assertFalse(res_none["is_valid"])
+
+    def test_audit_permissions_policy_directive(self):
+        html_perm = (
+            '<html><head>'
+            '<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(self)">'
+            '</head><body></body></html>'
+        )
+        res_perm = YoastSEOValidator.audit_permissions_policy_directive(html_perm)
+        self.assertTrue(res_perm["has_permissions_policy"])
+        self.assertEqual(res_perm["policy_type"], "Permissions-Policy")
+        self.assertEqual(len(res_perm["restricted_features"]), 3)
+        self.assertTrue(res_perm["is_compliant"])
+
+        html_feat = (
+            '<html><head>'
+            '<meta http-equiv="Feature-Policy" content="camera \'none\'; geolocation \'self\'">'
+            '</head><body></body></html>'
+        )
+        res_feat = YoastSEOValidator.audit_permissions_policy_directive(html_feat)
+        self.assertTrue(res_feat["has_permissions_policy"])
+        self.assertEqual(res_feat["policy_type"], "Feature-Policy")
+
+    def test_audit_form_autocomplete_accessibility(self):
+        html_ok = (
+            '<form>'
+            '<input type="text" id="full_name" autocomplete="name" />'
+            '<input type="email" id="user_email" autocomplete="email" />'
+            '<button type="submit">Submit</button>'
+            '</form>'
+        )
+        res_ok = YoastSEOValidator.audit_form_autocomplete_accessibility(html_ok)
+        self.assertEqual(res_ok["candidate_inputs"], 2)
+        self.assertEqual(res_ok["autocomplete_compliant"], 2)
+        self.assertTrue(res_ok["is_compliant"])
+
+        html_bad = (
+            '<form>'
+            '<input type="text" name="nama" />'
+            '<input type="tel" name="phone" />'
+            '</form>'
+        )
+        res_bad = YoastSEOValidator.audit_form_autocomplete_accessibility(html_bad)
+        self.assertEqual(res_bad["candidate_inputs"], 2)
+        self.assertEqual(res_bad["autocomplete_compliant"], 0)
+        self.assertFalse(res_bad["is_compliant"])
+
+    def test_audit_resource_timing_hints(self):
+        html_timing = (
+            '<html><head>'
+            '<meta http-equiv="Timing-Allow-Origin" content="*">'
+            '<meta http-equiv="Server-Timing" content=\'db;dur=53.2;desc="Database Query", cache;dur=4.1\'>'
+            '</head><body></body></html>'
+        )
+        res = YoastSEOValidator.audit_resource_timing_hints(html_timing)
+        self.assertTrue(res["has_timing_allow_origin"])
+        self.assertEqual(res["timing_allow_origin"], "*")
+        self.assertTrue(res["has_server_timing"])
+        self.assertEqual(res["server_timing_count"], 2)
+        self.assertEqual(res["server_timing_entries"][0]["duration_ms"], 53.2)
+        self.assertTrue(res["is_compliant"])
+
 
 if __name__ == "__main__":
     unittest.main()
