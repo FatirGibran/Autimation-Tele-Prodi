@@ -6612,6 +6612,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_daps_handover_card(
+        cls,
+        title: str,
+        serving_sinr_db: float,
+        target_sinr_db: float,
+        traditional_interruption_ms: float,
+        daps_interruption_ms: float,
+        pdcp_buffer_kb: float,
+        handover_reliability_percent: float
+    ) -> str:
+        """
+        Renders a 3GPP Rel-16 Dual Active Protocol Stack (DAPS) handover performance card
+        demonstrating zero-interruption latency, zero packet loss, and PDCP dual stack buffer requirements.
+        """
+        return f"""    <div class="tu-5g-daps-card" style="border: 1px solid #0284c7; border-radius: 8px; padding: 18px; margin: 16px 0; background: #f0f9ff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0369a1; font-size: 13px; text-transform: uppercase;">3GPP Rel-16 5G NR DAPS Handover</span>
+        <span style="font-size: 11px; background: #ecfdf5; color: #047857; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Interruption: {daps_interruption_ms:.1f} ms (Zero Latency)</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0c4a6e; font-size: 16px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Serving vs Target SINR</span>
+          <strong style="color: #0f172a;">{serving_sinr_db:.1f} dB</strong> &rarr; <strong style="color: #16a34a;">{target_sinr_db:.1f} dB</strong>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">BBM vs DAPS Interruption Delay</span>
+          <span style="text-decoration: line-through; color: #94a3b8;">{traditional_interruption_ms:.1f} ms</span> &bull; <strong style="color: #10b981; font-size: 15px;">{daps_interruption_ms:.1f} ms</strong>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Alokasi Buffer PDCP Duplikasi</span>
+          <strong style="color: #0284c7; font-size: 15px;">{pdcp_buffer_kb:.2f} KB</strong>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Handover Reliability SLA</span>
+          <strong style="color: #047857; font-size: 15px;">{handover_reliability_percent:.3f}%</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
