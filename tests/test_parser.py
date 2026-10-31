@@ -2212,6 +2212,81 @@ Status: Granted
         self.assertEqual(res_funded["converted_sks"], 3)
         self.assertTrue(res_funded["is_funded"])
 
+    def test_calculate_optical_sbs_threshold(self):
+        from parser import calculate_optical_sbs_threshold
+        # Unbroadened narrowband laser (10 MHz) has low threshold < 6 mW
+        res_narrow = calculate_optical_sbs_threshold(
+            fiber_length_km=50.0,
+            effective_area_um2=80.0,
+            laser_linewidth_mhz=10.0
+        )
+        self.assertGreater(res_narrow["sbs_threshold_mw"], 0.0)
+        self.assertGreater(res_narrow["sbs_threshold_dbm"], 0.0)
+        self.assertGreater(res_narrow["brillouin_shift_ghz"], 10.0)
+        self.assertFalse(res_narrow["is_safe_for_dwdm"])
+
+        # Broadened laser (100 MHz dither) raises threshold to > 10 mW
+        res_broad = calculate_optical_sbs_threshold(
+            fiber_length_km=50.0,
+            effective_area_um2=80.0,
+            laser_linewidth_mhz=100.0
+        )
+        self.assertTrue(res_broad["is_safe_for_dwdm"])
+        self.assertGreater(res_broad["sbs_threshold_mw"], 10.0)
+
+    def test_calculate_5g_nr_daps_handover(self):
+        from parser import calculate_5g_nr_daps_handover
+        res = calculate_5g_nr_daps_handover(
+            serving_sinr_db=6.0,
+            target_sinr_db=14.0,
+            daps_buffer_duration_ms=40.0,
+            packet_arrival_rate_kbps=1500.0
+        )
+        self.assertEqual(res["daps_interruption_ms"], 0.0)
+        self.assertEqual(res["daps_packet_loss_kb"], 0.0)
+        self.assertGreater(res["traditional_interruption_ms"], 20.0)
+        self.assertGreater(res["traditional_packet_loss_kb"], 0.0)
+        self.assertGreater(res["pdcp_buffer_kb"], 0.0)
+        self.assertTrue(res["is_daps_supported"])
+
+    def test_calculate_satellite_ionospheric_scintillation_s4(self):
+        from parser import calculate_satellite_ionospheric_scintillation_s4
+        res = calculate_satellite_ionospheric_scintillation_s4(
+            frequency_mhz=1575.42,
+            s4_index=0.35,
+            elevation_deg=30.0
+        )
+        self.assertGreater(res["peak_fluctuation_db"], 0.0)
+        self.assertGreater(res["fade_margin_db"], 0.0)
+        self.assertGreaterEqual(res["s4_index_effective"], 0.35)
+
+    def test_parse_innovillage_proposal_evaluation(self):
+        from parser import parse_innovillage_proposal_evaluation
+        res_top = parse_innovillage_proposal_evaluation({
+            "student_leader": "Ahmad Fauzan",
+            "nim": "1201210088",
+            "proposal_title": "IoT Smart Agriculture & Early Pest Detection",
+            "village_location": "Desa Karangsalam",
+            "social_problem_score": 90.0,
+            "digital_solution_score": 92.0,
+            "sustainability_score": 88.0,
+            "budget_efficiency_score": 85.0
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 25000000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_funded"])
+
+        res_low = parse_innovillage_proposal_evaluation({
+            "social_problem_score": 45.0,
+            "digital_solution_score": 50.0,
+            "sustainability_score": 40.0,
+            "budget_efficiency_score": 50.0
+        })
+        self.assertEqual(res_low["letter_grade"], "C")
+        self.assertFalse(res_low["is_funded"])
+        self.assertEqual(res_low["converted_sks"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
