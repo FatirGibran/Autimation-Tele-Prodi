@@ -6462,6 +6462,86 @@ def parse_pkm_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_fwm_phase_matching(
+    fiber_length_km: float,
+    channel_spacing_ghz: float = 100.0,
+    chromatic_dispersion_ps_nm_km: float = 17.0,
+    center_wavelength_nm: float = 1550.0,
+    attenuation_db_km: float = 0.2,
+    non_linear_coeff_gamma: float = 1.3,
+    channel_power_mw: float = 10.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical Four-Wave Mixing (FWM) phase-mismatch, coherence length,
+    and efficiency factor in DWDM dense optical transmission (Agrawal Nonlinear Fiber Optics).
+    """
+    l_km = max(0.1, float(fiber_length_km))
+    delta_f_ghz = max(1.0, float(channel_spacing_ghz))
+    d_coeff = float(chromatic_dispersion_ps_nm_km)
+    lambda_nm = max(1200.0, float(center_wavelength_nm))
+    alpha_db = max(0.01, float(attenuation_db_km))
+    gamma = max(0.1, float(non_linear_coeff_gamma))
+    p_ch_mw = max(0.01, float(channel_power_mw))
+
+    c_light = 299792458.0  # m/s
+    lambda_m = lambda_nm * 1e-9
+    delta_f_hz = delta_f_ghz * 1e9
+
+    # Group velocity dispersion parameter beta2 (ps^2/km)
+    # beta2 = - (lambda^2 / (2 * pi * c)) * D
+    # With D in ps/(nm*km), beta2_ps2_km = - (lambda_nm^2 * 1e-18 / (2 * pi * c)) * (D * 1e-3 * 1e9 * 1e-12 / 1e-3)
+    # Standard formula: beta2 (ps^2/km) = - (lambda_nm^2 / (2 * pi * c_nm_ps)) * D
+    # At 1550nm and D=17 ps/nm/km: beta2 ~ -21.7 ps^2/km
+    beta2_ps2_km = - ((lambda_nm ** 2) / (2.0 * math.pi * 0.299792458)) * d_coeff * 1e-3
+
+    # Phase mismatch delta_beta = beta2 * (2 * pi * delta_f)^2 (in 1/km)
+    omega_rad_ps = 2.0 * math.pi * (delta_f_ghz * 1e-3)  # rad/ps
+    delta_beta_per_km = abs(beta2_ps2_km * (omega_rad_ps ** 2))
+
+    # Attenuation coefficient in 1/km
+    alpha_km = alpha_db / 4.3429448
+    l_eff_km = (1.0 - math.exp(-alpha_km * l_km)) / alpha_km
+
+    # Coherence length L_c = 2*pi / |delta_beta| (km)
+    coherence_length_km = (2.0 * math.pi) / delta_beta_per_km if delta_beta_per_km > 1e-6 else 1000.0
+
+    # FWM efficiency factor eta
+    denom = (alpha_km ** 2) + (delta_beta_per_km ** 2)
+    bracket = 1.0 + (4.0 * math.exp(-alpha_km * l_km) * (math.sin(delta_beta_per_km * l_km / 2.0) ** 2)) / ((1.0 - math.exp(-alpha_km * l_km)) ** 2)
+    fwm_efficiency = ((alpha_km ** 2) / denom) * bracket
+    fwm_efficiency = min(1.0, max(0.0001, fwm_efficiency))
+
+    # Approximate generated FWM cross-talk power in dBm
+    p_w = p_ch_mw * 1e-3
+    p_fwm_w = fwm_efficiency * (gamma ** 2) * (p_w ** 3) * (l_eff_km ** 2) * math.exp(-alpha_km * l_km)
+    p_fwm_dbm = 10.0 * math.log10(p_fwm_w * 1e3) if p_fwm_w > 0 else -100.0
+
+    if fwm_efficiency < 0.01:
+        fwm_risk = "Sangat Rendah (Dispersi Kromatik Menekan Efisiensi FWM)"
+        is_acceptable = True
+    elif fwm_efficiency <= 0.15:
+        fwm_risk = "Moderat (Interferensi Kanal Terkendali Grid DWDM)"
+        is_acceptable = True
+    else:
+        fwm_risk = "Tinggi (Phase-Matching Terjadi, Efisiensi FWM Signifikan)"
+        is_acceptable = False
+
+    return {
+        "fiber_length_km": round(l_km, 2),
+        "channel_spacing_ghz": round(delta_f_ghz, 1),
+        "chromatic_dispersion_ps_nm_km": round(d_coeff, 2),
+        "beta2_ps2_km": round(beta2_ps2_km, 3),
+        "phase_mismatch_per_km": round(delta_beta_per_km, 4),
+        "coherence_length_km": round(coherence_length_km, 2),
+        "fwm_efficiency": round(fwm_efficiency, 5),
+        "fwm_efficiency_percent": round(fwm_efficiency * 100.0, 3),
+        "fwm_power_dbm": round(p_fwm_dbm, 2),
+        "fwm_risk": fwm_risk,
+        "is_acceptable": is_acceptable
+    }
+
+
+
 
 
 
