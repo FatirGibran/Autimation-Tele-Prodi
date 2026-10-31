@@ -1477,6 +1477,34 @@ class TelegramFormatter:
             f"🎉 *Selamat kepada tim organisasi kemahasiswaan! Semangat mengabdi memajukan desa nusantara!*"
         )
 
+    @staticmethod
+    def format_optical_sbs_telegram(
+        fiber_title: str,
+        fiber_length_km: float,
+        effective_area_um2: float,
+        laser_linewidth_mhz: float,
+        sbs_threshold_mw: float,
+        sbs_threshold_dbm: float,
+        brillouin_shift_ghz: float,
+        sbs_risk: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an optical Stimulated Brillouin Scattering (SBS) nonlinear threshold bulletin announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Telemetri Optik:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🔬 **Laporan Audit Ambang Nonlinier SBS Serat Optik (Smith Model)**\n\n"
+            f"🌐 **Span Fiber:** {fiber_title.strip()}\n"
+            f"📏 **Panjang Bentang:** `{float(fiber_length_km):.1f} km`\n"
+            f"🔘 **Luas Efektif Inti (Aeff):** `{float(effective_area_um2):.1f} μm²`\n"
+            f"🎚️ **Lebar Spektral Laser (Δν):** `{float(laser_linewidth_mhz):.1f} MHz`\n"
+            f"⚡ **Ambang Batas Daya SBS (Pth):** `{float(sbs_threshold_mw):.2f} mW` (`{float(sbs_threshold_dbm):.2f} dBm`)\n"
+            f"🎵 **Pergeseran Frekuensi Fonon Akustik (νB):** `{float(brillouin_shift_ghz):.2f} GHz`\n"
+            f"📊 **Kondisi Margis Kanal:** `{sbs_risk.strip()}`{portal_link}\n\n"
+            f"✨ *Evaluasi ambang daya nonlinier transmisi serat optik DWDM terverifikasi!*"
+        )
+
 
 
 
