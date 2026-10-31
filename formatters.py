@@ -1449,6 +1449,34 @@ class TelegramFormatter:
             f"✨ *Evaluasi nonlinieritas transmisi optik DWDM multi-kanal tervalidasi!*"
         )
 
+    @staticmethod
+    def format_ppk_ormawa_telegram(
+        proposal_title: str,
+        ormawa_name: str,
+        topic: str,
+        village_location: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa Kemendikbudristek PPK Ormawa community empowerment milestone bulletin for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Belmawa Kemendikbudristek:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🌿 **Pengumuman Pendanaan PPK Ormawa Belmawa Kemendikbudristek**\n\n"
+            f"💡 **Judul Proposal:**\n_{proposal_title.strip()}_\n\n"
+            f"🏛️ **Organisasi Mahasiswa:** {ormawa_name.strip()}\n"
+            f"🎯 **Fokus/Topik:** {topic.strip()}\n"
+            f"📍 **Desa/Komunitas Binaan:** {village_location.strip()}\n"
+            f"📈 **Skor Evaluasi:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Alokasi Dana Hibah:** `Rp {allocated_budget_idr:,}`\n"
+            f"📊 **Status:** `{funding_status.strip()}`{portal_link}\n\n"
+            f"🎉 *Selamat kepada tim organisasi kemahasiswaan! Semangat mengabdi memajukan desa nusantara!*"
+        )
+
 
 
 
