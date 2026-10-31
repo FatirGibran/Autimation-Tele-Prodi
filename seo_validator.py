@@ -6231,6 +6231,69 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_speculative_loading_rules(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits W3C Speculation Rules API scripts (<script type="speculationrules">) and
+        resource hints (<link rel="dns-prefetch">) for predictive navigation acceleration and Core Web Vitals (INP/LCP).
+        """
+        if not html_content:
+            return {
+                "has_speculation_rules": False,
+                "has_dns_prefetch": False,
+                "prefetch_urls": [],
+                "prerender_urls": [],
+                "dns_prefetch_domains": [],
+                "is_compliant": False,
+                "issues": ["Konten HTML kosong."],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+        prefetch_urls = []
+        prerender_urls = []
+        dns_domains = []
+
+        # 1. Speculation Rules JSON
+        spec_scripts = soup.find_all("script", type="speculationrules")
+        for s in spec_scripts:
+            try:
+                data = json.loads(s.string or "{}")
+                if "prerender" in data:
+                    for rule in data["prerender"]:
+                        urls = rule.get("urls", [])
+                        prerender_urls.extend(urls)
+                if "prefetch" in data:
+                    for rule in data["prefetch"]:
+                        urls = rule.get("urls", [])
+                        prefetch_urls.extend(urls)
+            except json.JSONDecodeError:
+                issues.append("Tag <script type='speculationrules'> memuat sintaks JSON yang tidak valid.")
+
+        # 2. DNS Prefetch links
+        dns_links = soup.find_all("link", rel=lambda r: r and "dns-prefetch" in r.lower())
+        for l in dns_links:
+            href = l.get("href", "").strip()
+            if href:
+                dns_domains.append(href)
+
+        has_spec = len(spec_scripts) > 0 and len(issues) == 0
+        has_dns = len(dns_domains) > 0
+
+        return {
+            "has_speculation_rules": has_spec,
+            "has_dns_prefetch": has_dns,
+            "prefetch_urls": prefetch_urls,
+            "prerender_urls": prerender_urls,
+            "dns_prefetch_domains": dns_domains,
+            "speculation_rules_count": len(prerender_urls) + len(prefetch_urls),
+            "is_compliant": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
