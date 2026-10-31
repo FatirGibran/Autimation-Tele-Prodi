@@ -1223,6 +1223,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_ppk_ormawa_name ON ppk_ormawa_records(ormawa_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_sbs_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    span_name TEXT NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    effective_area_um2 REAL NOT NULL,
+                    laser_linewidth_mhz REAL NOT NULL,
+                    sbs_threshold_mw REAL NOT NULL,
+                    sbs_threshold_dbm REAL NOT NULL,
+                    brillouin_shift_ghz REAL NOT NULL,
+                    sbs_risk TEXT NOT NULL,
+                    is_safe INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sbs_span ON optical_sbs_records(span_name);")
 
 
 
@@ -5634,6 +5650,58 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM ppk_ormawa_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_sbs(
+        self,
+        span_name: str,
+        fiber_length_km: float,
+        effective_area_um2: float,
+        laser_linewidth_mhz: float,
+        sbs_threshold_mw: float,
+        sbs_threshold_dbm: float,
+        brillouin_shift_ghz: float,
+        sbs_risk: str,
+        is_safe: bool = True
+    ) -> int:
+        """
+        Stores an optical fiber Stimulated Brillouin Scattering (SBS) power threshold and shift record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_sbs_records (
+                    span_name, fiber_length_km, effective_area_um2,
+                    laser_linewidth_mhz, sbs_threshold_mw, sbs_threshold_dbm,
+                    brillouin_shift_ghz, sbs_risk, is_safe
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                span_name.strip(), float(fiber_length_km), float(effective_area_um2),
+                float(laser_linewidth_mhz), float(sbs_threshold_mw), float(sbs_threshold_dbm),
+                float(brillouin_shift_ghz), sbs_risk.strip(), 1 if is_safe else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_sbs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored optical SBS records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_sbs_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_sbs_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical SBS record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_sbs_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
