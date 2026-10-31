@@ -1418,6 +1418,37 @@ class TelegramFormatter:
             f"🎉 *Selamat kepada tim mahasiswa pengusul! Teruslah berkarya dan berprestasi menuju PIMNAS!*"
         )
 
+    @staticmethod
+    def format_optical_fwm_telegram(
+        fiber_title: str,
+        fiber_length_km: float,
+        channel_spacing_ghz: float,
+        chromatic_dispersion: float,
+        phase_mismatch: float,
+        coherence_length_km: float,
+        fwm_efficiency_percent: float,
+        fwm_power_dbm: float,
+        fwm_risk: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders an optical DWDM Four-Wave Mixing (FWM) phase-matching bulletin announcement for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Telemetri Optik:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"🔬 **Laporan Audit DWDM Four-Wave Mixing (FWM) Phase-Matching**\n\n"
+            f"🌐 **Span Fiber:** {fiber_title.strip()}\n"
+            f"📏 **Panjang Rentang:** `{float(fiber_length_km):.1f} km`\n"
+            f"🎚️ **Grid Spacing DWDM:** `{float(channel_spacing_ghz):.1f} GHz`\n"
+            f"🌈 **Dispersi Kromatik (D):** `{float(chromatic_dispersion):.2f} ps/(nm·km)`\n"
+            f"🔄 **Phase-Mismatch (Δβ):** `{float(phase_mismatch):.4f} km⁻¹`\n"
+            f"📏 **Coherence Length (Lc):** `{float(coherence_length_km):.3f} km`\n"
+            f"⚡ **Efisiensi FWM (η):** `{float(fwm_efficiency_percent):.3f}%`\n"
+            f"📶 **FWM Crosstalk Power:** `{float(fwm_power_dbm):.2f} dBm`\n"
+            f"📊 **Tingkat Risiko:** `{fwm_risk.strip()}`{portal_link}\n\n"
+            f"✨ *Evaluasi nonlinieritas transmisi optik DWDM multi-kanal tervalidasi!*"
+        )
+
 
 
 
