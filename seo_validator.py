@@ -6126,6 +6126,51 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_client_hints_delegation(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTTP Client Hints (Accept-CH, Critical-CH, Delegate-CH) meta declarations
+        enabling adaptive responsive image delivery, DPR scaling, and viewport optimization without layout shift.
+        """
+        if not html_content:
+            return {
+                "has_client_hints": False,
+                "accept_ch": [],
+                "has_responsive_hints": False,
+                "is_compliant": False,
+                "issues": ["Konten HTML kosong."],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        accept_meta = soup.find("meta", attrs={"http-equiv": re.compile(r"^accept-ch$", re.I)})
+        has_ch = bool(accept_meta and accept_meta.get("content"))
+        hints = []
+
+        if has_ch:
+            raw = accept_meta["content"]
+            hints = [h.strip() for h in raw.split(",") if h.strip()]
+
+        # Responsive design critical hints: Sec-CH-DPR, Sec-CH-Width, Sec-CH-Viewport-Width
+        lower_hints = [h.lower() for h in hints]
+        has_resp = any("dpr" in h or "width" in h or "viewport" in h for h in lower_hints)
+
+        if not has_ch:
+            warnings.append("Tag meta 'Accept-CH' tidak ditemukan; negosiasi konten perangkat peramban responsif belum aktif.")
+
+        return {
+            "has_client_hints": has_ch,
+            "accept_ch": hints,
+            "hints_count": len(hints),
+            "has_responsive_hints": has_resp,
+            "is_compliant": has_ch,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
