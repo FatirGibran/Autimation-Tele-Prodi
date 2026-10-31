@@ -1102,6 +1102,42 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("island: true", res)
         self.assertIn("<p>Penjelasan konsep islands pada Deno Fresh.</p>", res)
 
+    def test_generate_about_contact_page_json_ld(self):
+        page = {
+            "page_type": "AboutPage",
+            "name": "Tentang Program Studi S1 Teknik Telekomunikasi",
+            "description": "Profil keunggulan riset dan kurikulum Prodi S1 Teknik Telekomunikasi",
+            "url": "https://telecom.telkomuniversity.ac.id/about",
+            "email": "telecom@telkomuniversity.ac.id",
+            "telephone": "+62-22-7564108",
+            "breadcrumbs": [
+                {"name": "Beranda", "item": "https://telecom.telkomuniversity.ac.id"},
+                {"name": "Tentang Kami", "item": "https://telecom.telkomuniversity.ac.id/about"}
+            ]
+        }
+        res = ArticleExporter.generate_about_contact_page_json_ld(page)
+        self.assertIn('<script type="application/ld+json">', res)
+        self.assertIn("AboutPage", res)
+        self.assertIn("Tentang Program Studi S1 Teknik Telekomunikasi", res)
+        self.assertIn("ContactPoint", res)
+        self.assertIn("BreadcrumbList", res)
+
+    def test_to_tanstack_start_mdx(self):
+        meta = {
+            "seo_title": "Panduan TanStack Start Full-Stack",
+            "meta_description": "Dokumentasi type-safe route menggunakan TanStack Start.",
+            "slug": "panduan-tanstack-start",
+            "publish_date": "2026-10-31",
+            "tags": ["tanstack", "react", "ssr"]
+        }
+        res = ArticleExporter.to_tanstack_start_mdx(meta, "<p>Arsitektur type-safe fullstack SSR dengan TanStack Start.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan TanStack Start Full-Stack"', res)
+        self.assertIn('framework: "tanstack-start"', res)
+        self.assertIn("loader: true", res)
+        self.assertIn("ssr: true", res)
+        self.assertIn("<p>Arsitektur type-safe fullstack SSR dengan TanStack Start.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
