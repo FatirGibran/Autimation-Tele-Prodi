@@ -6875,6 +6875,64 @@ def calculate_5g_nr_daps_handover(
     }
 
 
+def calculate_satellite_ionospheric_scintillation_s4(
+    frequency_mhz: float = 1575.42,
+    s4_index: float = 0.35,
+    elevation_deg: float = 30.0,
+    geomagnetic_latitude_deg: float = -7.0
+) -> Dict[str, Any]:
+    """
+    Calculates equatorial and low-latitude ionospheric scintillation fade depth and signal fluctuation
+    based on the S4 scintillation index according to ITU-R P.531-14 (critical for GNSS, L-band and UHF satellites).
+    """
+    f_mhz = max(100.0, float(frequency_mhz))
+    s4 = max(0.01, min(1.2, float(s4_index)))
+    theta_deg = max(5.0, min(90.0, float(elevation_deg)))
+    geo_lat = float(geomagnetic_latitude_deg)
+
+    theta_rad = math.radians(theta_deg)
+    # Slant path obliquity factor through ionospheric F-layer (~350 km altitude)
+    r_earth = 6371.0
+    h_iono = 350.0
+    obliquity_sec_theta = 1.0 / math.sqrt(1.0 - ((r_earth / (r_earth + h_iono)) * math.cos(theta_rad)) ** 2)
+
+    # Effective S4 taking into account elevation angle: S4_slant ~ S4_zenith * (sec(theta))^0.75
+    s4_effective = min(1.2, s4 * (obliquity_sec_theta ** 0.75))
+
+    # Peak-to-peak signal fluctuation P_fluc (dB) ~ 27.5 * S4^1.26
+    p_fluc_db = 27.5 * (s4_effective ** 1.26)
+
+    # Deep fade margin (dB) required for 99% link availability: A_fade ~ 13.5 * S4^1.30
+    fade_margin_db = 13.5 * (s4_effective ** 1.30)
+
+    # Signal enhancement (+p) due to caustic focusing
+    enhancement_db = 3.0 * (s4_effective ** 1.1)
+
+    if s4_effective < 0.3:
+        scint_level = "Ringan (Tracking Receiver Stabil, Margin Aman)"
+        is_acceptable = True
+    elif s4_effective <= 0.6:
+        scint_level = "Moderat (Fluktuasi Terasa, Kompensasi AGC Diperlukan)"
+        is_acceptable = True
+    else:
+        scint_level = "Kritis (Deep Fade Sering Terjadi, Risiko Cycle Slip GNSS)"
+        is_acceptable = False
+
+    return {
+        "frequency_mhz": round(f_mhz, 2),
+        "s4_index_zenith": round(s4, 3),
+        "s4_index_effective": round(s4_effective, 3),
+        "elevation_deg": round(theta_deg, 1),
+        "geomagnetic_latitude_deg": round(geo_lat, 1),
+        "obliquity_factor": round(obliquity_sec_theta, 3),
+        "peak_fluctuation_db": round(p_fluc_db, 2),
+        "fade_margin_db": round(fade_margin_db, 2),
+        "signal_enhancement_db": round(enhancement_db, 2),
+        "scintillation_level": scint_level,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
