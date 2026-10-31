@@ -2178,6 +2178,56 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_student_competition_json_ld(
+        competition_name: str,
+        description: str,
+        organizer: str,
+        start_date: str,
+        end_date: str,
+        prize_amount_idr: float = 0.0,
+        event_mode: str = "Hybrid",
+        location: str = "Telkom University Purwokerto",
+        url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org Event/Hackathon structured JSON-LD metadata for student competitions and socio-tech challenges.
+        """
+        mode_map = {
+            "online": "https://schema.org/OnlineEventAttendanceMode",
+            "offline": "https://schema.org/OfflineEventAttendanceMode",
+            "hybrid": "https://schema.org/MixedEventAttendanceMode"
+        }
+        att_mode = mode_map.get(event_mode.lower(), "https://schema.org/MixedEventAttendanceMode")
+        payload: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "Event",
+            "name": competition_name.strip(),
+            "description": description.strip(),
+            "startDate": start_date.strip(),
+            "endDate": end_date.strip(),
+            "eventAttendanceMode": att_mode,
+            "eventStatus": "https://schema.org/EventScheduled",
+            "organizer": {
+                "@type": "Organization",
+                "name": organizer.strip()
+            },
+            "location": {
+                "@type": "Place",
+                "name": location.strip()
+            }
+        }
+        if prize_amount_idr > 0:
+            payload["offers"] = {
+                "@type": "Offer",
+                "price": str(prize_amount_idr),
+                "priceCurrency": "IDR",
+                "category": "Competition Prize Pool"
+            }
+        if url:
+            payload["url"] = url.strip()
+        return payload
+
 
 
 
