@@ -6827,6 +6827,54 @@ def calculate_optical_sbs_threshold(
     }
 
 
+def calculate_5g_nr_daps_handover(
+    serving_sinr_db: float = 6.0,
+    target_sinr_db: float = 14.0,
+    daps_buffer_duration_ms: float = 40.0,
+    packet_arrival_rate_kbps: float = 1500.0,
+    target_execution_delay_ms: float = 15.0
+) -> Dict[str, Any]:
+    """
+    Analyzes 3GPP Rel-16 Dual Active Protocol Stack (DAPS) handover performance,
+    demonstrating 0 ms user-plane interruption delay, PDCP buffer overhead, and zero packet loss.
+    """
+    sinr_serv = float(serving_sinr_db)
+    sinr_targ = float(target_sinr_db)
+    buf_dur_ms = max(5.0, float(daps_buffer_duration_ms))
+    rate_kbps = max(100.0, float(packet_arrival_rate_kbps))
+    exec_delay_ms = max(1.0, float(target_execution_delay_ms))
+
+    # Traditional Break-Before-Make (BBM) handover interruption is typically 30-50 ms
+    traditional_interruption_ms = 35.0
+    traditional_packet_loss_kb = (rate_kbps / 1000.0) * traditional_interruption_ms
+
+    # DAPS maintains simultaneous active transmission/reception with source and target gNBs
+    daps_interruption_ms = 0.0
+    daps_packet_loss_kb = 0.0
+
+    # Required PDCP duplicate buffer memory at UE (in Kilobytes)
+    pdcp_buffer_kb = (rate_kbps * buf_dur_ms) / (8.0 * 1000.0)
+
+    # Handover reliability and power split
+    sinr_delta = sinr_targ - sinr_serv
+    reliability = 99.999 if sinr_targ >= 10.0 else 99.95
+
+    return {
+        "serving_sinr_db": round(sinr_serv, 2),
+        "target_sinr_db": round(sinr_targ, 2),
+        "sinr_delta_db": round(sinr_delta, 2),
+        "traditional_interruption_ms": round(traditional_interruption_ms, 1),
+        "daps_interruption_ms": round(daps_interruption_ms, 1),
+        "traditional_packet_loss_kb": round(traditional_packet_loss_kb, 2),
+        "daps_packet_loss_kb": round(daps_packet_loss_kb, 2),
+        "pdcp_buffer_kb": round(pdcp_buffer_kb, 2),
+        "target_execution_delay_ms": round(exec_delay_ms, 1),
+        "handover_reliability_percent": reliability,
+        "is_daps_supported": True,
+        "handover_mode": "3GPP Rel-16 DAPS Zero-Interruption Handover"
+    }
+
+
 
 
 
