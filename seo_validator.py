@@ -5902,6 +5902,89 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_form_autocomplete_accessibility(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits form input elements according to WCAG 2.1 Success Criterion 1.3.5 (Identify Input Purpose).
+        Verifies that user information input fields (name, email, telephone, address, credentials)
+        declare explicit HTML5 autocomplete attributes to support assistive technologies and password managers.
+        """
+        if not html_content:
+            return {
+                "total_inputs": 0,
+                "candidate_inputs": 0,
+                "autocomplete_compliant": 0,
+                "is_compliant": True,
+                "inputs_detail": [],
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        # Find all interactive inputs excluding hidden and action buttons
+        input_elements = soup.find_all(["input", "textarea", "select"])
+        candidate_keywords = {
+            "name": "name", "nama": "name", "first_name": "given-name", "last_name": "family-name",
+            "email": "email", "surel": "email", "tel": "tel", "phone": "tel", "telepon": "tel", "hp": "tel",
+            "street": "street-address", "address": "street-address", "alamat": "street-address",
+            "city": "address-level2", "kota": "address-level2",
+            "postal": "postal-code", "zip": "postal-code", "kodepos": "postal-code",
+            "country": "country-name", "negara": "country-name",
+            "username": "username", "user": "username", "password": "current-password", "sandi": "current-password"
+        }
+
+        candidate_count = 0
+        compliant_count = 0
+        details = []
+
+        for inp in input_elements:
+            itype = inp.get("type", "text").lower()
+            if itype in ("hidden", "submit", "button", "reset", "image"):
+                continue
+
+            field_id = (inp.get("id") or "").lower()
+            field_name = (inp.get("name") or "").lower()
+            autocomplete_val = inp.get("autocomplete", "").strip().lower()
+
+            # Determine if this input serves a user personal purpose
+            matched_purpose = None
+            for key, expected_token in candidate_keywords.items():
+                if key in field_id or key in field_name or (itype in ("email", "tel", "password") and key == itype):
+                    matched_purpose = expected_token
+                    break
+
+            if matched_purpose:
+                candidate_count += 1
+                is_valid = bool(autocomplete_val and autocomplete_val != "off")
+                if is_valid:
+                    compliant_count += 1
+                else:
+                    field_label = inp.get("name") or inp.get("id") or f"type={itype}"
+                    issues.append(f"Input '{field_label}' bertujuan identitas/kontak tetapi belum mendeklarasikan atribut autocomplete (disarankan 'autocomplete=\"{matched_purpose}\"').")
+
+                details.append({
+                    "element": inp.name,
+                    "type": itype,
+                    "name": inp.get("name", ""),
+                    "id": inp.get("id", ""),
+                    "autocomplete": autocomplete_val,
+                    "suggested_autocomplete": matched_purpose,
+                    "is_compliant": is_valid
+                })
+
+        return {
+            "total_inputs": len(input_elements),
+            "candidate_inputs": candidate_count,
+            "autocomplete_compliant": compliant_count,
+            "is_compliant": len(issues) == 0,
+            "inputs_detail": details,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
