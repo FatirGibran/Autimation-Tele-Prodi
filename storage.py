@@ -1239,6 +1239,20 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sbs_span ON optical_sbs_records(span_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_daps_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    handover_id TEXT NOT NULL,
+                    serving_sinr_db REAL NOT NULL,
+                    target_sinr_db REAL NOT NULL,
+                    traditional_interruption_ms REAL NOT NULL,
+                    daps_interruption_ms REAL NOT NULL,
+                    pdcp_buffer_kb REAL NOT NULL,
+                    handover_reliability_percent REAL NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_daps_id ON nr_daps_records(handover_id);")
 
 
 
@@ -5702,6 +5716,56 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_sbs_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_nr_daps(
+        self,
+        handover_id: str,
+        serving_sinr_db: float,
+        target_sinr_db: float,
+        traditional_interruption_ms: float,
+        daps_interruption_ms: float,
+        pdcp_buffer_kb: float,
+        handover_reliability_percent: float
+    ) -> int:
+        """
+        Stores a 3GPP Rel-16 5G NR DAPS zero-interruption handover performance record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_daps_records (
+                    handover_id, serving_sinr_db, target_sinr_db,
+                    traditional_interruption_ms, daps_interruption_ms,
+                    pdcp_buffer_kb, handover_reliability_percent
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                handover_id.strip(), float(serving_sinr_db), float(target_sinr_db),
+                float(traditional_interruption_ms), float(daps_interruption_ms),
+                float(pdcp_buffer_kb), float(handover_reliability_percent)
+            ))
+            return cursor.lastrowid
+
+    def list_nr_daps(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored 5G NR DAPS handover records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_daps_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_daps_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR DAPS handover record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_daps_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
