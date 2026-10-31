@@ -990,6 +990,32 @@ class WordPressClient:
         results = self._send_request(req)
         return results if isinstance(results, list) else []
 
+    def batch_delete_comments(
+        self,
+        comment_ids: List[int],
+        force: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Batch deletes multiple comments permanently or moves them to trash via REST API (/wp/v2/comments/{id}?force=...).
+        """
+        deleted = []
+        failed = []
+        for cid in comment_ids:
+            try:
+                endpoint = f"{self.api_url}/comments/{int(cid)}?force={'true' if force else 'false'}"
+                req = urllib.request.Request(endpoint, headers=self._get_headers(), method="DELETE")
+                self._send_request(req)
+                deleted.append(int(cid))
+            except Exception as e:
+                failed.append({"comment_id": int(cid), "error": str(e)})
+
+        return {
+            "deleted": deleted,
+            "failed": failed,
+            "total": len(comment_ids),
+            "force": force
+        }
+
 
 
 
