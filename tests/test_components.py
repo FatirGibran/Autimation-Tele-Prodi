@@ -2426,6 +2426,85 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Cell-Edge UE", html)
         self.assertIn("<svg", html)
 
+    def test_render_optical_sbs_card(self):
+        html = EditorialComponents.render_optical_sbs_card(
+            title="Transmisi DWDM SMF-28",
+            fiber_length_km=50.0,
+            effective_area_um2=80.0,
+            laser_linewidth_mhz=100.0,
+            sbs_threshold_mw=10.32,
+            sbs_threshold_dbm=10.13,
+            brillouin_shift_ghz=11.15,
+            sbs_risk="Moderat",
+            is_safe=True
+        )
+        self.assertIn("tu-optical-sbs-card", html)
+        self.assertIn("Transmisi DWDM SMF-28", html)
+        self.assertIn("10.32 mW", html)
+        self.assertIn("11.15 GHz", html)
+
+    def test_render_5g_nr_daps_handover_card(self):
+        html = EditorialComponents.render_5g_nr_daps_handover_card(
+            title="Handover Tol Jagorawi 5G High-Speed Train",
+            serving_sinr_db=6.0,
+            target_sinr_db=14.0,
+            traditional_interruption_ms=35.0,
+            daps_interruption_ms=0.0,
+            pdcp_buffer_kb=7.5,
+            handover_reliability_percent=99.999
+        )
+        self.assertIn("tu-5g-daps-card", html)
+        self.assertIn("0.0 ms", html)
+        self.assertIn("7.50 KB", html)
+        self.assertIn("99.999%", html)
+
+    def test_render_satellite_ionospheric_s4_card(self):
+        html = EditorialComponents.render_satellite_ionospheric_s4_card(
+            title="Sintilasi Ionosfer Ekuator GNSS L1",
+            frequency_mhz=1575.42,
+            s4_index=0.35,
+            elevation_deg=30.0,
+            peak_fluctuation_db=7.2,
+            fade_margin_db=3.5,
+            scint_level="Moderat",
+            is_acceptable=True
+        )
+        self.assertIn("tu-satellite-s4-card", html)
+        self.assertIn("1575.42 MHz", html)
+        self.assertIn("S4 = 0.350", html)
+        self.assertIn("-3.50 dB", html)
+
+    def test_render_innovillage_proposal_card(self):
+        html = EditorialComponents.render_innovillage_proposal_card(
+            title="IoT Smart Agriculture & Early Pest Detection",
+            student_leader="Ahmad Fauzan",
+            village_location="Desa Karangsalam",
+            focus_field="Smart Agriculture",
+            total_score=89.5,
+            allocated_budget_idr=25000000,
+            letter_grade="A",
+            funding_status="Lolos Pendanaan Top Innovillage"
+        )
+        self.assertIn("tu-innovillage-card", html)
+        self.assertIn("Ahmad Fauzan", html)
+        self.assertIn("Desa Karangsalam", html)
+        self.assertIn("25,000,000", html)
+        self.assertIn("Top Innovillage", html)
+
+    def test_render_5g_nr_daps_protocol_stack_svg_card(self):
+        html = EditorialComponents.render_5g_nr_daps_protocol_stack_svg_card(
+            title="Diagram Arsitektur DAPS Dual Active Protocol Stack",
+            source_gnb="gNB-Jkt-01",
+            target_gnb="gNB-Jkt-02",
+            pdcp_buffer_kb=7.5,
+            interruption_ms=0.0
+        )
+        self.assertIn("tu-5g-daps-svg-card", html)
+        self.assertIn("gNB-Jkt-01", html)
+        self.assertIn("gNB-Jkt-02", html)
+        self.assertIn("DAPS PDCP", html)
+        self.assertIn("<svg", html)
+
 
 if __name__ == "__main__":
     unittest.main()
