@@ -5985,6 +5985,80 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_resource_timing_hints(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits Resource Timing (Timing-Allow-Origin) and Server-Timing hints embedded in HTML meta tags
+        to ensure synthetic telemetry, Core Web Vitals profiling, and cross-origin asset diagnostics are enabled.
+        """
+        if not html_content:
+            return {
+                "has_timing_allow_origin": False,
+                "timing_allow_origin": "",
+                "has_server_timing": False,
+                "server_timing_entries": [],
+                "is_compliant": False,
+                "issues": ["Konten HTML kosong."],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        # Check Timing-Allow-Origin meta
+        tao_meta = soup.find("meta", attrs={"http-equiv": re.compile(r"^timing-allow-origin$", re.I)})
+        has_tao = bool(tao_meta and tao_meta.get("content"))
+        tao_val = tao_meta["content"].strip() if has_tao else ""
+
+        # Check Server-Timing meta
+        st_meta = soup.find("meta", attrs={"http-equiv": re.compile(r"^server-timing$", re.I)})
+        has_st = bool(st_meta and st_meta.get("content"))
+        st_entries = []
+
+        if has_st:
+            raw_st = st_meta["content"]
+            # Format: metric;dur=123.4;desc="Description", metric2;dur=45.6
+            for chunk in raw_st.split(","):
+                chunk = chunk.strip()
+                if not chunk:
+                    continue
+                parts = chunk.split(";")
+                metric_name = parts[0].strip()
+                duration = 0.0
+                description = ""
+                for p in parts[1:]:
+                    if "=" in p:
+                        k, v = p.split("=", 1)
+                        k = k.strip().lower()
+                        v = v.strip().strip('"\'')
+                        if k == "dur":
+                            try:
+                                duration = float(v)
+                            except ValueError:
+                                pass
+                        elif k == "desc":
+                            description = v
+                st_entries.append({
+                    "name": metric_name,
+                    "duration_ms": duration,
+                    "description": description
+                })
+
+        if not has_tao:
+            warnings.append("Tag meta 'Timing-Allow-Origin' tidak terdeteksi; metrik resource waterfall pihak ketiga mungkin dibatasi peramban.")
+
+        return {
+            "has_timing_allow_origin": has_tao,
+            "timing_allow_origin": tao_val,
+            "has_server_timing": has_st,
+            "server_timing_entries": st_entries,
+            "server_timing_count": len(st_entries),
+            "is_compliant": has_tao or has_st,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
