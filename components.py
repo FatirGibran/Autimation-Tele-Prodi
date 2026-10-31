@@ -6320,6 +6320,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_fwm_card(
+        cls,
+        title: str,
+        fiber_length_km: float,
+        channel_spacing_ghz: float,
+        chromatic_dispersion: float,
+        beta2: float,
+        phase_mismatch: float,
+        coherence_length_km: float,
+        efficiency_percent: float,
+        fwm_power_dbm: float,
+        risk: str,
+        is_acceptable: bool
+    ) -> str:
+        """
+        Renders an optical DWDM Four-Wave Mixing (FWM) phase-matching and efficiency telemetry card
+        illustrating group velocity dispersion, coherence length, and inter-channel nonlinear crosstalk.
+        """
+        badge_bg = "#ecfdf5" if is_acceptable else "#fef2f2"
+        badge_color = "#047857" if is_acceptable else "#b91c1c"
+        border_color = "#10b981" if is_acceptable else "#ef4444"
+
+        return f"""    <div class="tu-optical-fwm-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+      <div class="tu-optical-fwm-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase;">DWDM FWM Phase-Matching &amp; Efficiency</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{risk}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Panjang Fiber &amp; Grid Spacing</span>
+          <strong style="color: #0f172a;">{fiber_length_km:.1f} km</strong> &bull; <strong>{channel_spacing_ghz:.1f} GHz</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Dispersi D &amp; Parameter &beta;2</span>
+          <strong style="color: #0f172a;">{chromatic_dispersion:.1f} ps/(nm&middot;km)</strong> &bull; <strong>{beta2:.2f} ps&sup2;/km</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Phase-Mismatch &Delta;&beta; &amp; Coherence Length Lc</span>
+          <strong style="color: #0284c7;">{phase_mismatch:.4f} km&minus;&sup1;</strong> &bull; <strong>{coherence_length_km:.2f} km</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">FWM Efficiency &eta; &amp; Crosstalk Power</span>
+          <strong style="color: {badge_color};">{efficiency_percent:.3f}%</strong> &bull; <strong>{fwm_power_dbm:.1f} dBm</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
