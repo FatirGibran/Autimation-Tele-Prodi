@@ -6505,6 +6505,66 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_comp_topology_svg_card(
+        cls,
+        title: str,
+        num_coop_nodes: int,
+        serving_rsrp_dbm: float,
+        coord_rsrp_avg_dbm: float,
+        sinr_boost_db: float
+    ) -> str:
+        """
+        Renders an interactive SVG architectural topology diagram of 5G NR CoMP Joint Transmission,
+        illustrating inter-gNB Xn fiber coordination backhaul and coherent RF beam convergence on a cell-edge UE.
+        """
+        return f"""    <div class="tu-5g-comp-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR CoMP Network Topology</span>
+        <span style="font-size: 11px; background: #0369a1; color: #e0f2fe; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{num_coop_nodes} Coordinated TPs</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 500 200" width="100%" height="200" style="max-width: 540px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Xn Fiber Backhaul Interconnect Mesh -->
+          <line x1="90" y1="80" x2="250" y2="40" stroke="#f59e0b" stroke-dasharray="4,4" stroke-width="2" />
+          <line x1="250" y1="40" x2="410" y2="80" stroke="#f59e0b" stroke-dasharray="4,4" stroke-width="2" />
+          <line x1="90" y1="80" x2="410" y2="80" stroke="#f59e0b" stroke-dasharray="2,4" stroke-width="1.5" />
+          <text x="160" y="52" fill="#fbbf24" font-size="10" font-weight="bold">Xn / eXn C-RAN</text>
+
+          <!-- Serving gNodeB Tower 1 -->
+          <circle cx="90" cy="80" r="18" fill="#0284c7" stroke="#38bdf8" stroke-width="2" />
+          <text x="90" y="84" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">gNB-1</text>
+          <text x="90" y="112" fill="#94a3b8" font-size="9" text-anchor="middle">Serving TP</text>
+
+          <!-- Cooperating gNodeB Tower 2 -->
+          <circle cx="250" cy="40" r="16" fill="#0f766e" stroke="#2dd4bf" stroke-width="2" />
+          <text x="250" y="44" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">gNB-2</text>
+          <text x="250" y="24" fill="#94a3b8" font-size="9" text-anchor="middle">Coord TP</text>
+
+          <!-- Cooperating gNodeB Tower 3 -->
+          <circle cx="410" cy="80" r="16" fill="#0f766e" stroke="#2dd4bf" stroke-width="2" />
+          <text x="410" y="84" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">gNB-3</text>
+          <text x="410" y="112" fill="#94a3b8" font-size="9" text-anchor="middle">Coord TP</text>
+
+          <!-- Coordinated RF Beams converging on Cell-Edge UE -->
+          <path d="M 90,80 Q 150,140 240,155" fill="none" stroke="#38bdf8" stroke-width="3" />
+          <path d="M 250,40 Q 250,110 250,155" fill="none" stroke="#2dd4bf" stroke-width="2.5" />
+          <path d="M 410,80 Q 350,140 260,155" fill="none" stroke="#2dd4bf" stroke-width="2.5" />
+
+          <!-- Cell-Edge User Equipment (UE) -->
+          <rect x="238" y="152" width="24" height="32" rx="4" fill="#1e293b" stroke="#f43f5e" stroke-width="2" />
+          <circle cx="250" cy="164" r="4" fill="#f43f5e" />
+          <text x="250" y="196" fill="#fda4af" font-size="10" font-weight="bold" text-anchor="middle">Cell-Edge UE</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Serving RSRP: <strong style="color: #38bdf8;">{serving_rsrp_dbm:.1f} dBm</strong></div>
+        <div>Coord RSRP Avg: <strong style="color: #2dd4bf;">{coord_rsrp_avg_dbm:.1f} dBm</strong></div>
+        <div>SINR Boost: <strong style="color: #34d399;">+{sinr_boost_db:.2f} dB</strong></div>
+      </div>
+    </div>"""
+
 
 
 
