@@ -1984,6 +1984,42 @@ def sanitize_html5_list_attributes(html: str) -> str:
     return re.sub(r'<(?:ol|ul|li)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_list_tag, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_address_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <address> contact and authorship elements by scrubbing inline event handlers,
+    stripping dangerous executable tags, and neutralizing unsafe URI schemes within hyperlinks.
+    """
+    if not html or "<address" not in html.lower():
+        return html
+
+    def fix_address(m):
+        content = m.group(0)
+        # Scrub inline event handlers and style from the <address> tag itself
+        content = re.sub(r'<address\b([^>]*)>', lambda tm: '<address' + re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tm.group(1), flags=re.IGNORECASE) + '>', content, flags=re.IGNORECASE)
+        content = re.sub(r'<address\b([^>]*)>', lambda tm: '<address' + re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tm.group(1), flags=re.IGNORECASE) + '>', content, flags=re.IGNORECASE)
+
+        # Strip unsafe scripts, iframes, objects inside address block
+        content = re.sub(r'<(?:script|iframe|object|embed)\b[^>]*>.*?</(?:script|iframe|object|embed)>', '', content, flags=re.DOTALL | re.IGNORECASE)
+        content = re.sub(r'<(?:script|iframe|object|embed)\b[^>]*>', '', content, flags=re.IGNORECASE)
+
+        # Neutralize unsafe URI schemes in any links inside <address>
+        def clean_inner_a(am):
+            atag = am.group(0)
+            href_m = re.search(r'\bhref=["\']([^"\']*)["\']', atag, re.IGNORECASE)
+            if href_m:
+                url = href_m.group(1).strip().lower()
+                if url.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', url):
+                    atag = re.sub(r'\s+href=["\'][^"\']*["\']', ' href="#"', atag, flags=re.IGNORECASE)
+            atag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', atag, flags=re.IGNORECASE)
+            return atag
+
+        content = re.sub(r'<a\b[^>]*>', clean_inner_a, content, flags=re.IGNORECASE)
+        return content
+
+    return re.sub(r'<address\b[^>]*>.*?</address>', fix_address, html, flags=re.DOTALL | re.IGNORECASE)
+
+
+
 
 
 
