@@ -2657,6 +2657,78 @@ class TestCLI(unittest.TestCase):
             self.assertIn("HMTT Telkom University", out)
             self.assertIn("Desa Sukapura", out)
 
+    def test_cmd_sbs(self):
+        class ArgsAdd:
+            action = "add"
+            span = "Span-Test"
+            length = 50.0
+            area = 80.0
+            linewidth = 10.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_sbs(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Ambang SBS Fiber Optik berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_sbs(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Span-Test", out)
+
+    def test_cmd_daps(self):
+        class ArgsAdd:
+            action = "add"
+            id = "HO-TEST-01"
+            serving = 6.0
+            target = 14.0
+            duration = 40.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_daps(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR DAPS Handover berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_daps(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("HO-TEST-01", out)
+
+    def test_cmd_innovillage(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Test Leader"
+            nim = "1101219999"
+            title = "IoT Desa Mandiri"
+            village = "Desa Cisitu"
+            field = "Smart Village"
+            prob = 85.0
+            sol = 85.0
+            sust = 85.0
+            budget = 85.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_innovillage(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi Innovillage berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_innovillage(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Test Leader", out)
+            self.assertIn("Desa Cisitu", out)
+
 
 if __name__ == "__main__":
     unittest.main()
