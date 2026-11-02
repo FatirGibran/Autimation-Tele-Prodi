@@ -2505,6 +2505,95 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("DAPS PDCP", html)
         self.assertIn("<svg", html)
 
+    def test_render_optical_spm_nonlinear_card(self):
+        html = EditorialComponents.render_optical_spm_nonlinear_card({
+            "fiber_length_km": 50.0,
+            "launch_power_mw": 5.0,
+            "launch_power_dbm": 7.0,
+            "effective_length_km": 19.5,
+            "gamma_per_w_km": 1.32,
+            "max_phase_shift_rad": 0.128,
+            "max_phase_shift_deg": 7.33,
+            "b_integral_rad": 0.128,
+            "is_safe_for_coherent": True,
+            "spm_risk": "SAFE (Linear Regime Dominant)"
+        })
+        self.assertIn("tu-optical-spm-card", html)
+        self.assertIn("DWDM SPM Nonlinear Phase Shift", html)
+        self.assertIn("50.0 km", html)
+        self.assertIn("0.1280 rad", html)
+        self.assertIn("SAFE (Linear Regime Dominant)", html)
+
+    def test_render_nr_beam_management_card(self):
+        html = EditorialComponents.render_nr_beam_management_card({
+            "ssb_beams_count": 8,
+            "csi_rs_ports": 32,
+            "subcarrier_spacing_khz": 30,
+            "baseline_snr_db": 12.0,
+            "beamforming_gain_db": 15.05,
+            "effective_sinr_db": 30.05,
+            "spectral_efficiency_bps_hz": 9.97,
+            "estimated_throughput_mbps": 3788.0,
+            "sweep_duration_ms": 0.267,
+            "beam_procedure_status": "OPTIMAL_ALIGNED"
+        })
+        self.assertIn("tu-nr-beam-card", html)
+        self.assertIn("8 berkas", html)
+        self.assertIn("+15.05 dB", html)
+        self.assertIn("30.05 dB", html)
+        self.assertIn("3788.0 Mbps", html)
+
+    def test_render_satellite_tec_delay_card(self):
+        html = EditorialComponents.render_satellite_tec_delay_card({
+            "vtec_tecu": 25.0,
+            "carrier_frequency_ghz": 1.57542,
+            "elevation_angle_deg": 45.0,
+            "obliquity_factor": 1.39,
+            "stec_tecu": 34.75,
+            "range_error_m": 5.64,
+            "group_delay_ns": 18.82,
+            "activity_level": "MODERATE_ACTIVITY"
+        })
+        self.assertIn("tu-satellite-tec-card", html)
+        self.assertIn("ITU-R P.531 Ionospheric Delay", html)
+        self.assertIn("25.0 TECU", html)
+        self.assertIn("+5.64 meter", html)
+        self.assertIn("18.82 ns", html)
+
+    def test_render_pkm_kc_proposal_card(self):
+        html = EditorialComponents.render_pkm_kc_proposal_card({
+            "student_leader": "Dewi Sartika",
+            "nim": "1101210099",
+            "proposal_title": "Sistem Radar Doppler Portabel X-Band",
+            "prototype_name": "Radar Doppler X-Band",
+            "target_trl": 4,
+            "composite_score": 88.5,
+            "letter_grade": "A",
+            "allocated_budget_idr": 8500000,
+            "converted_sks": 4,
+            "is_funded": True,
+            "funding_status": "Lolos Pendanaan Belmawa PKM-KC Unggulan"
+        })
+        self.assertIn("tu-pkm-kc-card", html)
+        self.assertIn("Dewi Sartika", html)
+        self.assertIn("Radar Doppler X-Band", html)
+        self.assertIn("8,500,000", html)
+        self.assertIn("4 SKS Rekognisi", html)
+
+    def test_render_nr_beam_sweeping_svg(self):
+        html = EditorialComponents.render_nr_beam_sweeping_svg({
+            "ssb_beams_count": 8,
+            "csi_rs_ports": 32,
+            "beamforming_gain_db": 15.05,
+            "effective_sinr_db": 30.05,
+            "estimated_throughput_mbps": 3788.0
+        })
+        self.assertIn("tu-nr-beam-svg-card", html)
+        self.assertIn("<svg", html)
+        self.assertIn("gNodeB", html)
+        self.assertIn("Targeted CSI-RS Pencil Beam", html)
+        self.assertIn("5G UE", html)
+
 
 if __name__ == "__main__":
     unittest.main()

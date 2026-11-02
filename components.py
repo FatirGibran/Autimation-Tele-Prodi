@@ -6802,275 +6802,222 @@ class EditorialComponents:
       </div>
     </div>"""
 
-
-def render_optical_spm_card(data: Dict[str, Any]) -> str:
-    """
-    Renders an Elementor-styled telemetric card displaying Self-Phase Modulation (SPM)
-    nonlinear phase shift, effective interaction length, gamma coefficient, and B-integral.
-    """
-    length = float(data.get("fiber_length_km", 50.0))
-    p_mw = float(data.get("launch_power_mw", 5.0))
-    p_dbm = float(data.get("launch_power_dbm", 7.0))
-    l_eff = float(data.get("effective_length_km", 20.0))
-    gamma = float(data.get("gamma_per_w_km", 1.3))
-    phase_rad = float(data.get("max_phase_shift_rad", 0.13))
-    phase_deg = float(data.get("max_phase_shift_deg", 7.45))
-    b_int = float(data.get("b_integral_rad", 0.13))
-    is_safe = bool(data.get("is_safe_for_coherent", True))
-    risk = str(data.get("spm_risk", "SAFE"))
-
-    badge_bg = "#059669" if is_safe else "#dc2626"
-    badge_label = "SAFE (Linear)" if is_safe else "HIGH (Nonlinear Chirp)"
-
-    return f"""<div class="tu-optical-spm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
-    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">DWDM SPM Nonlinear Phase Shift</span>
-    <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
-    <div>Panjang Bentang: <strong style="color: #f1f5f9;">{length:.1f} km</strong></div>
-    <div>Daya Luncur (P0): <strong style="color: #f1f5f9;">{p_mw:.2f} mW ({p_dbm:.2f} dBm)</strong></div>
-    <div>Panjang Efektif (Leff): <strong style="color: #38bdf8;">{l_eff:.2f} km</strong></div>
-    <div>Koefisien Nonlinear (&gamma;): <strong style="color: #38bdf8;">{gamma:.3f} W⁻¹·km⁻¹</strong></div>
-    <div>Pergeseran Fase (&Phi;NL): <strong style="color: #facc15;">{phase_rad:.4f} rad ({phase_deg:.1f}&deg;)</strong></div>
-    <div>B-Integral: <strong style="color: #facc15;">{b_int:.4f} rad</strong></div>
-  </div>
-  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8;">
-    Status Kanal: <span style="color: {'#34d399' if is_safe else '#f87171'}; font-weight: 600;">{risk}</span>
-  </div>
-</div>"""
-
-
-def render_nr_beam_management_card(data: Dict[str, Any]) -> str:
-    """
-    Renders an Elementor-styled card displaying 5G NR Beam Management metrics,
-    including SSB/CSI-RS sweep time, array beamforming gain, effective SINR, and throughput.
-    """
-    ssb_count = int(data.get("ssb_beams_count", 8))
-    ports = int(data.get("csi_rs_ports", 32))
-    scs = int(data.get("subcarrier_spacing_khz", 30))
-    snr_base = float(data.get("baseline_snr_db", 12.0))
-    bf_gain = float(data.get("beamforming_gain_db", 15.05))
-    sinr_eff = float(data.get("effective_sinr_db", 30.05))
-    se = float(data.get("spectral_efficiency_bps_hz", 9.97))
-    tput = float(data.get("estimated_throughput_mbps", 3788.0))
-    sweep_ms = float(data.get("sweep_duration_ms", 0.267))
-    status = str(data.get("beam_procedure_status", "OPTIMAL_ALIGNED"))
-
-    return f"""<div class="tu-nr-beam-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
-    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Beam Management (Rel-16)</span>
-    <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{ports} TXRU Ports</span>
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
-    <div>SSB Beams (P1): <strong style="color: #f1f5f9;">{ssb_count} berkas</strong></div>
-    <div>SCS Numerologi: <strong style="color: #f1f5f9;">{scs} kHz</strong></div>
-    <div>Gain Beamforming: <strong style="color: #38bdf8;">+{bf_gain:.2f} dB</strong></div>
-    <div>Effective SINR: <strong style="color: #34d399;">{sinr_eff:.2f} dB (Base: {snr_base:.1f} dB)</strong></div>
-    <div>Spektral Efisiensi: <strong style="color: #facc15;">{se:.2f} bps/Hz</strong></div>
-    <div>Throughput 100MHz: <strong style="color: #38bdf8;">{tput:.1f} Mbps</strong></div>
-  </div>
-  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;">
-    <span>Durasi Sweeping: <strong style="color: #f1f5f9;">{sweep_ms:.3f} ms</strong></span>
-    <span>Status: <strong style="color: #34d399;">{status}</strong></span>
-  </div>
-</div>"""
-
-
-def render_satellite_tec_delay_card(data: Dict[str, Any]) -> str:
-    """
-    Renders an Elementor-styled card displaying Satellite Ionospheric Total Electron Content (TEC),
-    slant path obliquity factor, excess range error, and nano-second group delay according to ITU-R P.531.
-    """
-    vtec = float(data.get("vtec_tecu", 25.0))
-    freq = float(data.get("carrier_frequency_ghz", 1.57542))
-    elev = float(data.get("elevation_angle_deg", 45.0))
-    obliq = float(data.get("obliquity_factor", 1.39))
-    stec = float(data.get("stec_tecu", 34.75))
-    r_err = float(data.get("range_error_m", 5.64))
-    delay_ns = float(data.get("group_delay_ns", 18.82))
-    activity = str(data.get("activity_level", "QUIET_IONOSPHERE"))
-
-    badge_bg = "#059669" if "QUIET" in activity else ("#d97706" if "MODERATE" in activity else "#dc2626")
-
-    return f"""<div class="tu-satellite-tec-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
-    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">ITU-R P.531 Ionospheric Delay</span>
-    <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{activity}</span>
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
-    <div>Carrier Frequency: <strong style="color: #f1f5f9;">{freq:.4f} GHz</strong></div>
-    <div>Sudut Elevasi: <strong style="color: #f1f5f9;">{elev:.1f}&deg;</strong></div>
-    <div>Vertical TEC (VTEC): <strong style="color: #38bdf8;">{vtec:.1f} TECU</strong></div>
-    <div>Slant TEC (STEC): <strong style="color: #38bdf8;">{stec:.1f} TECU (M: {obliq:.2f})</strong></div>
-    <div>Error Jarak (Excess): <strong style="color: #f87171;">+{r_err:.2f} meter</strong></div>
-    <div>Group Delay Ionosfer: <strong style="color: #facc15;">{delay_ns:.2f} ns</strong></div>
-  </div>
-  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8;">
-    Dampak Propagasi: <span style="color: #38bdf8; font-weight: 600;">Carrier Phase Advance: -{r_err:.2f} m | Dispersi Sinyal Terkelola</span>
-  </div>
-</div>"""
-
-
-def render_pkm_kc_proposal_card(data: Dict[str, Any]) -> str:
-    """
-    Renders an Elementor-styled card displaying PKM Karsa Cipta (PKM-KC) student prototype
-    evaluation metrics, funding qualification, Belmawa budget grant, and MBKM SKS equivalence.
-    """
-    leader = str(data.get("student_leader", "Ketua Tim PKM-KC"))
-    nim = str(data.get("nim", "-"))
-    title = str(data.get("proposal_title", "Prototipe Karsa Cipta"))
-    proto = str(data.get("prototype_name", "Perangkat Karsa Cipta"))
-    trl = int(data.get("target_trl", 3))
-    score = float(data.get("composite_score", 85.0))
-    grade = str(data.get("letter_grade", "A"))
-    budget = float(data.get("allocated_budget_idr", 8500000))
-    sks = int(data.get("converted_sks", 4))
-    is_funded = bool(data.get("is_funded", True))
-    status = str(data.get("funding_status", "Lolos Pendanaan"))
-
-    badge_bg = "#059669" if is_funded else "#dc2626"
-    badge_label = "LOLOS PENDANAAN" if is_funded else "TIDAK LOLOS"
-
-    return f"""<div class="tu-pkm-kc-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
-    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Belmawa PKM-KC Rekayasa Prototipe</span>
-    <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
-  </div>
-  <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
-  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
-    <div>Ketua Tim: <strong style="color: #f1f5f9;">{leader} ({nim})</strong></div>
-    <div>Nama Prototipe: <strong style="color: #38bdf8;">{proto} (TRL {trl})</strong></div>
-    <div>Skor Komposit: <strong style="color: #facc15;">{score:.2f} (Grade: {grade})</strong></div>
-    <div>Konversi MBKM: <strong style="color: #34d399;">{sks} SKS Rekognisi</strong></div>
-    <div>Dana Hibah Belmawa: <strong style="color: #38bdf8;">Rp {budget:,.0f}</strong></div>
-    <div>Status Seleksi: <strong style="color: {'#34d399' if is_funded else '#f87171'};">{status}</strong></div>
-  </div>
-</div>"""
-
-
-def render_nr_beam_sweeping_svg(data: Dict[str, Any], title: str = "5G NR Massive MIMO Beam Sweeping & Tracking") -> str:
-    """
-    Renders an interactive SVG architectural diagram illustrating 5G NR Beam Sweeping (P1 SSB broad beams)
-    and narrow dedicated tracking (P2/P3 CSI-RS pencil beams) aligned toward the User Equipment (UE).
-    """
-    ssb_count = int(data.get("ssb_beams_count", 8))
-    ports = int(data.get("csi_rs_ports", 32))
-    gain_db = float(data.get("beamforming_gain_db", 15.05))
-    sinr_db = float(data.get("effective_sinr_db", 30.05))
-    tput = float(data.get("estimated_throughput_mbps", 3788.0))
-
-    return f"""<div class="tu-nr-beam-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
-    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">3GPP Rel-16 Beam Management</span>
-    <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Gain: +{gain_db:.1f} dB</span>
-  </div>
-  <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
-  <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
-    <svg viewBox="0 0 520 220" width="100%" height="220" style="max-width: 560px; display: block;" xmlns="http://www.w3.org/2000/svg">
-      <!-- gNodeB Phased Array Antenna Tower -->
-      <rect x="40" y="30" width="50" height="150" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
-      <text x="65" y="55" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">gNodeB</text>
-      <text x="65" y="70" fill="#93c5fd" font-size="9" text-anchor="middle">{ports} TXRU</text>
-
-      <!-- Antenna Array Elements -->
-      <circle cx="65" cy="95" r="4" fill="#38bdf8" />
-      <circle cx="65" cy="115" r="4" fill="#38bdf8" />
-      <circle cx="65" cy="135" r="4" fill="#38bdf8" />
-      <circle cx="65" cy="155" r="4" fill="#38bdf8" />
-
-      <!-- P1 SSB Sweeping Broad Beams Fan -->
-      <path d="M 90 95 L 260 25 L 260 65 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
-      <text x="210" y="45" fill="#93c5fd" font-size="9">SSB Beam #0</text>
-
-      <path d="M 90 115 L 280 75 L 280 115 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
-      <text x="230" y="95" fill="#93c5fd" font-size="9">SSB Beam #1</text>
-
-      <!-- P2/P3 Narrow Dedicated Tracking CSI-RS Beam to UE -->
-      <polygon points="90,135 410,135 390,165 90,140" fill="#059669" fill-opacity="0.55" stroke="#34d399" stroke-width="2" />
-      <text x="240" y="145" fill="#6ee7b7" font-size="10" font-weight="bold">Targeted CSI-RS Pencil Beam</text>
-
-      <path d="M 90 155 L 270 175 L 270 215 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
-      <text x="220" y="195" fill="#93c5fd" font-size="9">SSB Beam #{ssb_count-1}</text>
-
-      <!-- User Equipment (UE) Receiver -->
-      <rect x="410" y="125" width="80" height="50" rx="5" fill="#1e293b" stroke="#34d399" stroke-width="2" />
-      <text x="450" y="145" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">5G UE</text>
-      <text x="450" y="162" fill="#34d399" font-size="9" text-anchor="middle">SINR: {sinr_db:.1f} dB</text>
-    </svg>
-  </div>
-  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
-    <div>SSB Sweeping: <strong style="color: #38bdf8;">{ssb_count} Broad Beams</strong></div>
-    <div>Tracking Gain: <strong style="color: #34d399;">+{gain_db:.2f} dB</strong></div>
-    <div>Throughput: <strong style="color: #facc15;">{tput:.1f} Mbps</strong></div>
-  </div>
-</div>"""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @classmethod
+    def render_optical_spm_nonlinear_card(cls, data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """
+        Renders an Elementor-styled telemetric card displaying Self-Phase Modulation (SPM)
+        nonlinear phase shift, effective interaction length, gamma coefficient, and B-integral.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        length = float(d.get("fiber_length_km", 50.0))
+        p_mw = float(d.get("launch_power_mw", 5.0))
+        p_dbm = float(d.get("launch_power_dbm", 7.0))
+        l_eff = float(d.get("effective_length_km", 20.0))
+        gamma = float(d.get("gamma_per_w_km", 1.3))
+        phase_rad = float(d.get("max_phase_shift_rad", 0.13))
+        phase_deg = float(d.get("max_phase_shift_deg", 7.45))
+        b_int = float(d.get("b_integral_rad", 0.13))
+        is_safe = bool(d.get("is_safe_for_coherent", True))
+        risk = str(d.get("spm_risk", "SAFE"))
+
+        badge_bg = "#059669" if is_safe else "#dc2626"
+        badge_label = "SAFE (Linear)" if is_safe else "HIGH (Nonlinear Chirp)"
+
+        return f"""    <div class="tu-optical-spm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">DWDM SPM Nonlinear Phase Shift</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div>Panjang Bentang: <strong style="color: #f1f5f9;">{length:.1f} km</strong></div>
+        <div>Daya Luncur (P0): <strong style="color: #f1f5f9;">{p_mw:.2f} mW ({p_dbm:.2f} dBm)</strong></div>
+        <div>Panjang Efektif (Leff): <strong style="color: #38bdf8;">{l_eff:.2f} km</strong></div>
+        <div>Koefisien Nonlinear (&gamma;): <strong style="color: #38bdf8;">{gamma:.3f} W⁻¹·km⁻¹</strong></div>
+        <div>Pergeseran Fase (&Phi;NL): <strong style="color: #facc15;">{phase_rad:.4f} rad ({phase_deg:.1f}&deg;)</strong></div>
+        <div>B-Integral: <strong style="color: #facc15;">{b_int:.4f} rad</strong></div>
+      </div>
+      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8;">
+        Status Kanal: <span style="color: {'#34d399' if is_safe else '#f87171'}; font-weight: 600;">{risk}</span>
+      </div>
+    </div>"""
+
+    @classmethod
+    def render_nr_beam_management_card(cls, data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """
+        Renders an Elementor-styled card displaying 5G NR Beam Management metrics,
+        including SSB/CSI-RS sweep time, array beamforming gain, effective SINR, and throughput.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        ssb_count = int(d.get("ssb_beams_count", 8))
+        ports = int(d.get("csi_rs_ports", 32))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        snr_base = float(d.get("baseline_snr_db", 12.0))
+        bf_gain = float(d.get("beamforming_gain_db", 15.05))
+        sinr_eff = float(d.get("effective_sinr_db", 30.05))
+        se = float(d.get("spectral_efficiency_bps_hz", 9.97))
+        tput = float(d.get("estimated_throughput_mbps", 3788.0))
+        sweep_ms = float(d.get("sweep_duration_ms", 0.267))
+        status = str(d.get("beam_procedure_status", "OPTIMAL_ALIGNED"))
+
+        return f"""    <div class="tu-nr-beam-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Beam Management (Rel-16)</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{ports} TXRU Ports</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div>SSB Beams (P1): <strong style="color: #f1f5f9;">{ssb_count} berkas</strong></div>
+        <div>SCS Numerologi: <strong style="color: #f1f5f9;">{scs} kHz</strong></div>
+        <div>Gain Beamforming: <strong style="color: #38bdf8;">+{bf_gain:.2f} dB</strong></div>
+        <div>Effective SINR: <strong style="color: #34d399;">{sinr_eff:.2f} dB (Base: {snr_base:.1f} dB)</strong></div>
+        <div>Spektral Efisiensi: <strong style="color: #facc15;">{se:.2f} bps/Hz</strong></div>
+        <div>Throughput 100MHz: <strong style="color: #38bdf8;">{tput:.1f} Mbps</strong></div>
+      </div>
+      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;">
+        <span>Durasi Sweeping: <strong style="color: #f1f5f9;">{sweep_ms:.3f} ms</strong></span>
+        <span>Status: <strong style="color: #34d399;">{status}</strong></span>
+      </div>
+    </div>"""
+
+    @classmethod
+    def render_satellite_tec_delay_card(cls, data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """
+        Renders an Elementor-styled card displaying Satellite Ionospheric Total Electron Content (TEC),
+        slant path obliquity factor, excess range error, and nano-second group delay according to ITU-R P.531.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        vtec = float(d.get("vtec_tecu", 25.0))
+        freq = float(d.get("carrier_frequency_ghz", 1.57542))
+        elev = float(d.get("elevation_angle_deg", 45.0))
+        obliq = float(d.get("obliquity_factor", 1.39))
+        stec = float(d.get("stec_tecu", 34.75))
+        r_err = float(d.get("range_error_m", 5.64))
+        delay_ns = float(d.get("group_delay_ns", 18.82))
+        activity = str(d.get("activity_level", "QUIET_IONOSPHERE"))
+
+        badge_bg = "#059669" if "QUIET" in activity else ("#d97706" if "MODERATE" in activity else "#dc2626")
+
+        return f"""    <div class="tu-satellite-tec-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">ITU-R P.531 Ionospheric Delay</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{activity}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div>Carrier Frequency: <strong style="color: #f1f5f9;">{freq:.4f} GHz</strong></div>
+        <div>Sudut Elevasi: <strong style="color: #f1f5f9;">{elev:.1f}&deg;</strong></div>
+        <div>Vertical TEC (VTEC): <strong style="color: #38bdf8;">{vtec:.1f} TECU</strong></div>
+        <div>Slant TEC (STEC): <strong style="color: #38bdf8;">{stec:.1f} TECU (M: {obliq:.2f})</strong></div>
+        <div>Error Jarak (Excess): <strong style="color: #f87171;">+{r_err:.2f} meter</strong></div>
+        <div>Group Delay Ionosfer: <strong style="color: #facc15;">{delay_ns:.2f} ns</strong></div>
+      </div>
+      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8;">
+        Dampak Propagasi: <span style="color: #38bdf8; font-weight: 600;">Carrier Phase Advance: -{r_err:.2f} m | Dispersi Sinyal Terkelola</span>
+      </div>
+    </div>"""
+
+    @classmethod
+    def render_pkm_kc_proposal_card(cls, data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """
+        Renders an Elementor-styled card displaying PKM Karsa Cipta (PKM-KC) student prototype
+        evaluation metrics, funding qualification, Belmawa budget grant, and MBKM SKS equivalence.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        leader = str(d.get("student_leader", "Ketua Tim PKM-KC"))
+        nim = str(d.get("nim", "-"))
+        title = str(d.get("proposal_title", "Prototipe Karsa Cipta"))
+        proto = str(d.get("prototype_name", "Perangkat Karsa Cipta"))
+        trl = int(d.get("target_trl", 3))
+        score = float(d.get("composite_score", 85.0))
+        grade = str(d.get("letter_grade", "A"))
+        budget = float(d.get("allocated_budget_idr", 8500000))
+        sks = int(d.get("converted_sks", 4))
+        is_funded = bool(d.get("is_funded", True))
+        status = str(d.get("funding_status", "Lolos Pendanaan"))
+
+        badge_bg = "#059669" if is_funded else "#dc2626"
+        badge_label = "LOLOS PENDANAAN" if is_funded else "TIDAK LOLOS"
+
+        return f"""    <div class="tu-pkm-kc-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Belmawa PKM-KC Rekayasa Prototipe</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div>Ketua Tim: <strong style="color: #f1f5f9;">{leader} ({nim})</strong></div>
+        <div>Nama Prototipe: <strong style="color: #38bdf8;">{proto} (TRL {trl})</strong></div>
+        <div>Skor Komposit: <strong style="color: #facc15;">{score:.2f} (Grade: {grade})</strong></div>
+        <div>Konversi MBKM: <strong style="color: #34d399;">{sks} SKS Rekognisi</strong></div>
+        <div>Dana Hibah Belmawa: <strong style="color: #38bdf8;">Rp {budget:,.0f}</strong></div>
+        <div>Status Seleksi: <strong style="color: {'#34d399' if is_funded else '#f87171'};">{status}</strong></div>
+      </div>
+    </div>"""
+
+    @classmethod
+    def render_nr_beam_sweeping_svg(cls, data: Optional[Dict[str, Any]] = None, title: str = "5G NR Massive MIMO Beam Sweeping & Tracking", **kwargs) -> str:
+        """
+        Renders an interactive SVG architectural diagram illustrating 5G NR Beam Sweeping (P1 SSB broad beams)
+        and narrow dedicated tracking (P2/P3 CSI-RS pencil beams) aligned toward the User Equipment (UE).
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        ssb_count = int(d.get("ssb_beams_count", 8))
+        ports = int(d.get("csi_rs_ports", 32))
+        gain_db = float(d.get("beamforming_gain_db", 15.05))
+        sinr_db = float(d.get("effective_sinr_db", 30.05))
+        tput = float(d.get("estimated_throughput_mbps", 3788.0))
+
+        return f"""    <div class="tu-nr-beam-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">3GPP Rel-16 Beam Management</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Gain: +{gain_db:.1f} dB</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 520 220" width="100%" height="220" style="max-width: 560px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- gNodeB Phased Array Antenna Tower -->
+          <rect x="40" y="30" width="50" height="150" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="65" y="55" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">gNodeB</text>
+          <text x="65" y="70" fill="#93c5fd" font-size="9" text-anchor="middle">{ports} TXRU</text>
+
+          <!-- Antenna Array Elements -->
+          <circle cx="65" cy="95" r="4" fill="#38bdf8" />
+          <circle cx="65" cy="115" r="4" fill="#38bdf8" />
+          <circle cx="65" cy="135" r="4" fill="#38bdf8" />
+          <circle cx="65" cy="155" r="4" fill="#38bdf8" />
+
+          <!-- P1 SSB Sweeping Broad Beams Fan -->
+          <path d="M 90 95 L 260 25 L 260 65 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
+          <text x="210" y="45" fill="#93c5fd" font-size="9">SSB Beam #0</text>
+
+          <path d="M 90 115 L 280 75 L 280 115 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
+          <text x="230" y="95" fill="#93c5fd" font-size="9">SSB Beam #1</text>
+
+          <!-- P2/P3 Narrow Dedicated Tracking CSI-RS Beam to UE -->
+          <polygon points="90,135 410,135 390,165 90,140" fill="#059669" fill-opacity="0.55" stroke="#34d399" stroke-width="2" />
+          <text x="240" y="145" fill="#6ee7b7" font-size="10" font-weight="bold">Targeted CSI-RS Pencil Beam</text>
+
+          <path d="M 90 155 L 270 175 L 270 215 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
+          <text x="220" y="195" fill="#93c5fd" font-size="9">SSB Beam #{ssb_count-1}</text>
+
+          <!-- User Equipment (UE) Receiver -->
+          <rect x="410" y="125" width="80" height="50" rx="5" fill="#1e293b" stroke="#34d399" stroke-width="2" />
+          <text x="450" y="145" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">5G UE</text>
+          <text x="450" y="162" fill="#34d399" font-size="9" text-anchor="middle">SINR: {sinr_db:.1f} dB</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>SSB Sweeping: <strong style="color: #38bdf8;">{ssb_count} Broad Beams</strong></div>
+        <div>Tracking Gain: <strong style="color: #34d399;">+{gain_db:.2f} dB</strong></div>
+        <div>Throughput: <strong style="color: #facc15;">{tput:.1f} Mbps</strong></div>
+      </div>
+    </div>"""
+
+render_optical_spm_nonlinear_card = EditorialComponents.render_optical_spm_nonlinear_card
+render_nr_beam_management_card = EditorialComponents.render_nr_beam_management_card
+render_satellite_tec_delay_card = EditorialComponents.render_satellite_tec_delay_card
+render_pkm_kc_proposal_card = EditorialComponents.render_pkm_kc_proposal_card
+render_nr_beam_sweeping_svg = EditorialComponents.render_nr_beam_sweeping_svg
