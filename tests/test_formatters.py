@@ -1064,6 +1064,45 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Rp 25,000,000", msg)
         self.assertIn("https://innovillage.id/project/2026-088", msg)
 
+    def test_format_optical_spm_telegram(self):
+        msg = TelegramFormatter.format_optical_spm_telegram(
+            span_name="Span-Bandung-Tasik",
+            fiber_length_km=60.0,
+            launch_power_mw=8.0,
+            effective_length_km=20.5,
+            max_phase_shift_rad=0.216,
+            b_integral_rad=0.216,
+            is_safe=True,
+            spm_risk="SAFE (Linear)",
+            dashboard_url="https://nms.telkomuniversity.ac.id/spm"
+        )
+        self.assertIn("Audit DWDM Nonlinieritas: Self-Phase Modulation (SPM)", msg)
+        self.assertIn("Span-Bandung-Tasik", msg)
+        self.assertIn("60.0 km", msg)
+        self.assertIn("0.2160 rad", msg)
+        self.assertIn("AMAN (Regim Linier)", msg)
+        self.assertIn("https://nms.telkomuniversity.ac.id/spm", msg)
+
+    def test_format_pkm_kc_telegram(self):
+        msg = TelegramFormatter.format_pkm_kc_telegram(
+            student_leader="Dewi Sartika",
+            nim="1101210099",
+            proposal_title="Sistem Radar Doppler Portabel X-Band",
+            prototype_name="Radar Doppler X-Band",
+            target_trl=4,
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=8500000,
+            funding_status="Lolos Pendanaan Belmawa PKM-KC Unggulan",
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/kc/99"
+        )
+        self.assertIn("Pengumuman Pendanaan Belmawa PKM Karsa Cipta", msg)
+        self.assertIn("Dewi Sartika", msg)
+        self.assertIn("1101210099", msg)
+        self.assertIn("Radar Doppler X-Band", msg)
+        self.assertIn("Rp 8,500,000", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/kc/99", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
