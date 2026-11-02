@@ -1299,6 +1299,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_beam_cluster ON nr_beam_management_records(cluster_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_kc_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    prototype_name TEXT NOT NULL,
+                    target_trl INTEGER NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    allocated_budget_idr REAL NOT NULL,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_kc_nim ON pkm_kc_proposal_records(nim);")
 
 
 
@@ -5968,6 +5984,58 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM nr_beam_management_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_pkm_kc_proposal(
+        self,
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        prototype_name: str,
+        target_trl: int,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: float,
+        is_funded: bool
+    ) -> int:
+        """
+        Stores a Belmawa PKM Karsa Cipta (PKM-KC) student engineering prototype evaluation record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_kc_proposal_records (
+                    student_leader, nim, proposal_title, prototype_name,
+                    target_trl, composite_score, letter_grade,
+                    allocated_budget_idr, is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                student_leader.strip(), nim.strip(), proposal_title.strip(),
+                prototype_name.strip(), int(target_trl), float(composite_score),
+                letter_grade.strip(), float(allocated_budget_idr), 1 if is_funded else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_kc_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored PKM-KC proposal evaluation records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_kc_proposal_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_kc_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a PKM-KC proposal evaluation record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_kc_proposal_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
