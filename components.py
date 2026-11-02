@@ -6912,6 +6912,43 @@ def render_satellite_tec_delay_card(data: Dict[str, Any]) -> str:
 </div>"""
 
 
+def render_pkm_kc_proposal_card(data: Dict[str, Any]) -> str:
+    """
+    Renders an Elementor-styled card displaying PKM Karsa Cipta (PKM-KC) student prototype
+    evaluation metrics, funding qualification, Belmawa budget grant, and MBKM SKS equivalence.
+    """
+    leader = str(data.get("student_leader", "Ketua Tim PKM-KC"))
+    nim = str(data.get("nim", "-"))
+    title = str(data.get("proposal_title", "Prototipe Karsa Cipta"))
+    proto = str(data.get("prototype_name", "Perangkat Karsa Cipta"))
+    trl = int(data.get("target_trl", 3))
+    score = float(data.get("composite_score", 85.0))
+    grade = str(data.get("letter_grade", "A"))
+    budget = float(data.get("allocated_budget_idr", 8500000))
+    sks = int(data.get("converted_sks", 4))
+    is_funded = bool(data.get("is_funded", True))
+    status = str(data.get("funding_status", "Lolos Pendanaan"))
+
+    badge_bg = "#059669" if is_funded else "#dc2626"
+    badge_label = "LOLOS PENDANAAN" if is_funded else "TIDAK LOLOS"
+
+    return f"""<div class="tu-pkm-kc-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Belmawa PKM-KC Rekayasa Prototipe</span>
+    <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
+  </div>
+  <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+    <div>Ketua Tim: <strong style="color: #f1f5f9;">{leader} ({nim})</strong></div>
+    <div>Nama Prototipe: <strong style="color: #38bdf8;">{proto} (TRL {trl})</strong></div>
+    <div>Skor Komposit: <strong style="color: #facc15;">{score:.2f} (Grade: {grade})</strong></div>
+    <div>Konversi MBKM: <strong style="color: #34d399;">{sks} SKS Rekognisi</strong></div>
+    <div>Dana Hibah Belmawa: <strong style="color: #38bdf8;">Rp {budget:,.0f}</strong></div>
+    <div>Status Seleksi: <strong style="color: {'#34d399' if is_funded else '#f87171'};">{status}</strong></div>
+  </div>
+</div>"""
+
+
 
 
 
