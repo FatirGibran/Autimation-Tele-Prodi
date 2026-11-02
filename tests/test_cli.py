@@ -2729,6 +2729,79 @@ class TestCLI(unittest.TestCase):
             self.assertIn("Test Leader", out)
             self.assertIn("Desa Cisitu", out)
 
+    def test_cmd_beam(self):
+        class ArgsAdd:
+            action = "add"
+            cluster = "Cluster-Test-01"
+            beams = 8
+            ports = 32
+            scs = 30
+            snr = 12.0
+            switch_delay = 100.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_beam(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR Beam Management berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_beam(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Cluster-Test-01", out)
+
+    def test_cmd_tec(self):
+        class ArgsAdd:
+            action = "add"
+            satellite = "Satelit-Test-1"
+            tec = 30.0
+            freq = 1.57542
+            elev = 45.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_tec(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Satellite TEC Delay berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_tec(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Satelit-Test-1", out)
+
+    def test_cmd_pkmkc(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Ketua Test"
+            nim = "1101218888"
+            title = "UAV Antena"
+            prototype = "Antena Radar"
+            trl = 4
+            nov = 85.0
+            eng = 85.0
+            feas = 85.0
+            budget = 85.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmkc(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-KC berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmkc(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Ketua Test", out)
+
 
 if __name__ == "__main__":
     unittest.main()
