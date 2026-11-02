@@ -1269,6 +1269,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_innovillage_nim ON innovillage_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS satellite_tec_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    satellite_name TEXT NOT NULL,
+                    vtec_tecu REAL NOT NULL,
+                    carrier_frequency_ghz REAL NOT NULL,
+                    elevation_angle_deg REAL NOT NULL,
+                    stec_tecu REAL NOT NULL,
+                    range_error_m REAL NOT NULL,
+                    group_delay_ns REAL NOT NULL,
+                    activity_level TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_satellite_tec_name ON satellite_tec_records(satellite_name);")
 
 
 
@@ -5834,6 +5849,57 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM innovillage_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_satellite_tec(
+        self,
+        satellite_name: str,
+        vtec_tecu: float,
+        carrier_frequency_ghz: float,
+        elevation_angle_deg: float,
+        stec_tecu: float,
+        range_error_m: float,
+        group_delay_ns: float,
+        activity_level: str
+    ) -> int:
+        """
+        Stores an ITU-R P.531 satellite ionospheric Total Electron Content (TEC) delay record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO satellite_tec_records (
+                    satellite_name, vtec_tecu, carrier_frequency_ghz,
+                    elevation_angle_deg, stec_tecu, range_error_m,
+                    group_delay_ns, activity_level
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                satellite_name.strip(), float(vtec_tecu), float(carrier_frequency_ghz),
+                float(elevation_angle_deg), float(stec_tecu), float(range_error_m),
+                float(group_delay_ns), activity_level.strip()
+            ))
+            return cursor.lastrowid
+
+    def list_satellite_tec(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored satellite ionospheric TEC records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_tec_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_satellite_tec_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a satellite ionospheric TEC record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_tec_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
