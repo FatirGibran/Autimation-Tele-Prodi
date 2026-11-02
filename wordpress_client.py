@@ -1,10 +1,13 @@
 import base64
 import json
+import logging
 import time
 import urllib.request
 import urllib.error
 import urllib.parse
 from typing import Dict, Any, Optional, List
+
+logger = logging.getLogger(__name__)
 
 
 class WordPressClient:
@@ -1052,6 +1055,25 @@ class WordPressClient:
             "failed": failed,
             "total": len(post_ids)
         }
+
+    def get_tags_by_ids(self, tag_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress tags by a list of numeric tag IDs via /wp/v2/tags?include=...
+        """
+        if not tag_ids:
+            return []
+        valid_ids = [str(int(t)) for t in tag_ids if int(t) > 0]
+        if not valid_ids:
+            return []
+        include_str = ",".join(valid_ids)
+        endpoint = f"{self.api_url}/tags?include={include_str}&per_page={len(valid_ids)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            return res if isinstance(res, list) else []
+        except Exception as e:
+            logger.warning(f"Failed to fetch tags for ids {include_str}: {e}")
+            return []
 
 
 
