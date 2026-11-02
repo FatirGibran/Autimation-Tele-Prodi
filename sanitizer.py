@@ -2218,6 +2218,52 @@ def sanitize_html5_audio_attributes(html: str) -> str:
     return re.sub(r'<source\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_source, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_progress_meter_ranges(html: str) -> str:
+    """
+    Sanitizes HTML5 <progress> and <meter> measurement elements by removing inline event handlers,
+    styles, and enforcing strict numeric validation for range boundaries (min, max, value, low, high, optimum).
+    """
+    if not html or ("<progress" not in html.lower() and "<meter" not in html.lower()):
+        return html
+
+    def fix_progress(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        for attr in ("value", "max"):
+            attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if attr_m:
+                val = attr_m.group(1).strip()
+                try:
+                    num = float(val)
+                    if num < 0:
+                        tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', f' {attr}="0"', tag, flags=re.IGNORECASE)
+                except ValueError:
+                    tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_meter(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        for attr in ("value", "min", "max", "low", "high", "optimum"):
+            attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if attr_m:
+                val = attr_m.group(1).strip()
+                try:
+                    float(val)
+                except ValueError:
+                    tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    html = re.sub(r'<progress\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_progress, html, flags=re.IGNORECASE)
+    return re.sub(r'<meter\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_meter, html, flags=re.IGNORECASE)
+
+
 
 
 
