@@ -937,6 +937,38 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(len(res["failed"]), 0)
         self.assertEqual(res["total"], 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_tags_by_ids(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 12, "name": "5G"}, {"id": 15, "name": "Fiber"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        # Empty list test
+        self.assertEqual(self.client.get_tags_by_ids([]), [])
+        self.assertEqual(mock_urlopen.call_count, 0)
+
+        # Non-empty list test
+        tags = self.client.get_tags_by_ids([12, 15])
+        self.assertEqual(len(tags), 2)
+        self.assertEqual(tags[0]["name"], "5G")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("include=12,15", req.full_url)
+        self.assertIn("per_page=2", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_restore_posts(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 201, "status": "draft"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        res = self.client.batch_restore_posts([201, 202], target_status="draft")
+        self.assertEqual(res["restored"], [201, 202])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(res["target_status"], "draft")
+        self.assertEqual(mock_urlopen.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
