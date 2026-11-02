@@ -45,7 +45,10 @@ from sanitizer import (
     sanitize_html5_input_list_binding,
     sanitize_html5_time_attributes,
     sanitize_html5_picture_attributes,
-    sanitize_html5_dialog_attributes
+    sanitize_html5_dialog_attributes,
+    sanitize_html5_audio_attributes,
+    sanitize_html5_progress_meter_ranges,
+    sanitize_html5_fieldset_legend_grouping
 )
 
 
@@ -1189,6 +1192,37 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn('aria-modal="true"', cleaned)
         self.assertNotIn("onclose=", cleaned)
         self.assertNotIn("style=", cleaned)
+
+    def test_sanitize_html5_audio_attributes(self):
+        raw = '<audio controls autoplay preload="auto" onplay="track()"><source src="/media/audio.mp3" type="audio/mp3"><source src="javascript:evil()" type="application/x-bad"></audio>'
+        cleaned = sanitize_html5_audio_attributes(raw)
+        self.assertIn("controls", cleaned)
+        self.assertIn('preload="auto"', cleaned)
+        self.assertIn('src="/media/audio.mp3"', cleaned)
+        self.assertNotIn("autoplay", cleaned)
+        self.assertNotIn("onplay=", cleaned)
+        self.assertNotIn("javascript:evil()", cleaned)
+        self.assertNotIn("application/x-bad", cleaned)
+
+    def test_sanitize_html5_progress_meter_ranges(self):
+        raw = '<progress value="75" max="100" onclick="bad()"></progress><progress value="invalid" max="100"></progress><meter value="0.7" min="0" max="1" optimum="0.8" style="color:red"></meter><meter value="bad"></meter>'
+        cleaned = sanitize_html5_progress_meter_ranges(raw)
+        self.assertIn('value="75"', cleaned)
+        self.assertIn('max="100"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn('value="invalid"', cleaned)
+        self.assertIn('value="0.7"', cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('value="bad"', cleaned)
+
+    def test_sanitize_html5_fieldset_legend_grouping(self):
+        raw = '<fieldset disabled name="personal_info" onsubmit="bad()"><legend style="font-weight:bold">Profil</legend></fieldset><fieldset name="submit"></fieldset>'
+        cleaned = sanitize_html5_fieldset_legend_grouping(raw)
+        self.assertIn("disabled", cleaned)
+        self.assertIn('name="personal_info"', cleaned)
+        self.assertNotIn("onsubmit=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('name="submit"', cleaned)
 
 
 if __name__ == "__main__":
