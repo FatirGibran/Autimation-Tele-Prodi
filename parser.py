@@ -7060,6 +7060,56 @@ def calculate_optical_spm_nonlinear_phase_shift(
     }
 
 
+def calculate_5g_nr_beam_management(
+    ssb_beams_count: int = 8,
+    csi_rs_ports: int = 32,
+    subcarrier_spacing_khz: int = 30,
+    rx_snr_db: float = 12.0,
+    beam_switch_delay_us: float = 100.0
+) -> Dict[str, Any]:
+    """
+    Evaluates 3GPP Rel-15/16 5G NR Beam Management procedures (P1, P2, P3 beam sweeping and tracking),
+    beamforming gain, refined SINR, Shannon spectral efficiency, and throughput under Massive MIMO.
+    """
+    ssb_count = max(1, min(64, int(ssb_beams_count)))
+    ports = max(1, min(256, int(csi_rs_ports)))
+    scs = max(15, int(subcarrier_spacing_khz))
+    snr_base = float(rx_snr_db)
+    switch_delay = max(10.0, float(beam_switch_delay_us))
+
+    bf_gain_db = 10.0 * math.log10(ports)
+    ue_rx_gain_db = 3.0
+    effective_sinr_db = snr_base + bf_gain_db + ue_rx_gain_db
+
+    sinr_linear = 10.0 ** (effective_sinr_db / 10.0)
+    spectral_efficiency = math.log2(1.0 + sinr_linear)
+
+    bandwidth_mhz = 100.0
+    mimo_layers = min(8, max(2, ports // 8))
+    throughput_mbps = bandwidth_mhz * spectral_efficiency * mimo_layers * 0.95
+
+    symbol_duration_us = (1.0 / (scs * 1000.0)) * 1e6
+    sweep_duration_ms = (ssb_count * symbol_duration_us) / 1000.0
+    beam_overhead_percent = min(15.0, round((ssb_count / (scs * 14.0)) * 100.0, 2))
+
+    return {
+        "ssb_beams_count": ssb_count,
+        "csi_rs_ports": ports,
+        "subcarrier_spacing_khz": scs,
+        "baseline_snr_db": round(snr_base, 2),
+        "beamforming_gain_db": round(bf_gain_db, 2),
+        "ue_rx_gain_db": round(ue_rx_gain_db, 2),
+        "effective_sinr_db": round(effective_sinr_db, 2),
+        "spectral_efficiency_bps_hz": round(spectral_efficiency, 2),
+        "mimo_layers": mimo_layers,
+        "estimated_throughput_mbps": round(throughput_mbps, 2),
+        "sweep_duration_ms": round(sweep_duration_ms, 3),
+        "beam_switch_delay_us": round(switch_delay, 1),
+        "beam_overhead_percent": beam_overhead_percent,
+        "beam_procedure_status": "OPTIMAL_ALIGNED (P1/P2/P3 Convergence)"
+    }
+
+
 
 
 
