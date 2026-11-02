@@ -7008,6 +7008,58 @@ def parse_innovillage_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any
     }
 
 
+def calculate_optical_spm_nonlinear_phase_shift(
+    fiber_length_km: float,
+    launch_power_mw: float,
+    effective_area_um2: float = 80.0,
+    attenuation_db_km: float = 0.2,
+    nonlinear_index_n2: float = 2.6e-20,
+    wavelength_nm: float = 1550.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical fiber Self-Phase Modulation (SPM) nonlinear phase shift,
+    nonlinear coefficient gamma, effective interaction length, and B-integral
+    according to Govind P. Agrawal's Nonlinear Fiber Optics principles.
+    """
+    length = max(0.1, float(fiber_length_km))
+    power_mw = max(0.01, float(launch_power_mw))
+    area_um2 = max(10.0, float(effective_area_um2))
+    atten_db = max(0.01, float(attenuation_db_km))
+    n2 = float(nonlinear_index_n2)
+    wl_nm = max(800.0, float(wavelength_nm))
+
+    p0_watts = power_mw / 1000.0
+    alpha_per_km = atten_db / 4.343
+    eff_length_km = (1.0 - math.exp(-alpha_per_km * length)) / alpha_per_km
+
+    wl_m = wl_nm * 1e-9
+    area_m2 = area_um2 * 1e-12
+
+    gamma_per_w_m = (2.0 * math.pi * n2) / (wl_m * area_m2)
+    gamma_per_w_km = gamma_per_w_m * 1000.0
+
+    max_phase_shift_rad = gamma_per_w_km * p0_watts * eff_length_km
+    max_phase_shift_deg = max_phase_shift_rad * (180.0 / math.pi)
+    b_integral_rad = max_phase_shift_rad
+
+    is_safe = max_phase_shift_rad < 1.0
+    spm_risk = "SAFE (Linear Regime Dominant)" if is_safe else "HIGH (Severe Nonlinear Phase Noise & Chirp)"
+
+    return {
+        "fiber_length_km": round(length, 2),
+        "launch_power_mw": round(power_mw, 2),
+        "launch_power_dbm": round(10.0 * math.log10(power_mw), 2),
+        "effective_length_km": round(eff_length_km, 2),
+        "effective_area_um2": round(area_um2, 1),
+        "gamma_per_w_km": round(gamma_per_w_km, 3),
+        "max_phase_shift_rad": round(max_phase_shift_rad, 4),
+        "max_phase_shift_deg": round(max_phase_shift_deg, 2),
+        "b_integral_rad": round(b_integral_rad, 4),
+        "is_safe_for_coherent": is_safe,
+        "spm_risk": spm_risk
+    }
+
+
 
 
 
