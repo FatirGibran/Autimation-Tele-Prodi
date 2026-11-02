@@ -6803,6 +6803,44 @@ class EditorialComponents:
     </div>"""
 
 
+def render_optical_spm_card(data: Dict[str, Any]) -> str:
+    """
+    Renders an Elementor-styled telemetric card displaying Self-Phase Modulation (SPM)
+    nonlinear phase shift, effective interaction length, gamma coefficient, and B-integral.
+    """
+    length = float(data.get("fiber_length_km", 50.0))
+    p_mw = float(data.get("launch_power_mw", 5.0))
+    p_dbm = float(data.get("launch_power_dbm", 7.0))
+    l_eff = float(data.get("effective_length_km", 20.0))
+    gamma = float(data.get("gamma_per_w_km", 1.3))
+    phase_rad = float(data.get("max_phase_shift_rad", 0.13))
+    phase_deg = float(data.get("max_phase_shift_deg", 7.45))
+    b_int = float(data.get("b_integral_rad", 0.13))
+    is_safe = bool(data.get("is_safe_for_coherent", True))
+    risk = str(data.get("spm_risk", "SAFE"))
+
+    badge_bg = "#059669" if is_safe else "#dc2626"
+    badge_label = "SAFE (Linear)" if is_safe else "HIGH (Nonlinear Chirp)"
+
+    return f"""<div class="tu-optical-spm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">DWDM SPM Nonlinear Phase Shift</span>
+    <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+    <div>Panjang Bentang: <strong style="color: #f1f5f9;">{length:.1f} km</strong></div>
+    <div>Daya Luncur (P0): <strong style="color: #f1f5f9;">{p_mw:.2f} mW ({p_dbm:.2f} dBm)</strong></div>
+    <div>Panjang Efektif (Leff): <strong style="color: #38bdf8;">{l_eff:.2f} km</strong></div>
+    <div>Koefisien Nonlinear (&gamma;): <strong style="color: #38bdf8;">{gamma:.3f} W⁻¹·km⁻¹</strong></div>
+    <div>Pergeseran Fase (&Phi;NL): <strong style="color: #facc15;">{phase_rad:.4f} rad ({phase_deg:.1f}&deg;)</strong></div>
+    <div>B-Integral: <strong style="color: #facc15;">{b_int:.4f} rad</strong></div>
+  </div>
+  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8;">
+    Status Kanal: <span style="color: {'#34d399' if is_safe else '#f87171'}; font-weight: 600;">{risk}</span>
+  </div>
+</div>"""
+
+
 
 
 
