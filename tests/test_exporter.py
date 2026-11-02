@@ -1174,6 +1174,42 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("ssr: true", res)
         self.assertIn("<p>Fine-grained reactivity dengan SolidStart.</p>", res)
 
+    def test_generate_prototype_patent_json_ld(self):
+        data = {
+            "prototype_title": "Antena Mikrostrip Fraktal Minkowski 5G NR",
+            "lead_student": "Dimas Aryo",
+            "institution": "Telkom University Purwokerto",
+            "patent_readiness_status": "Ready for Filing",
+            "trl_level": 7,
+            "description": "Prototipe antena mikrostrip fraktal rekonfigurasi frekuensi 3.5 GHz untuk base station 5G."
+        }
+        res = ArticleExporter.generate_prototype_patent_json_ld(data)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "TechArticle")
+        self.assertEqual(res["name"], "Antena Mikrostrip Fraktal Minkowski 5G NR")
+        self.assertEqual(res["author"]["name"], "Dimas Aryo")
+        self.assertEqual(res["sourceOrganization"]["name"], "Telkom University Purwokerto")
+        self.assertEqual(res["about"]["@type"], "Product")
+        props = {p["name"]: p["value"] for p in res["about"]["additionalProperty"]}
+        self.assertEqual(props["TechnologyReadinessLevel"], "7")
+        self.assertEqual(props["PatentReadinessStatus"], "Ready for Filing")
+
+    def test_to_sveltekit_mdx(self):
+        meta = {
+            "seo_title": "Panduan SvelteKit MDSveX",
+            "meta_description": "Dokumentasi integrasi SvelteKit dengan MDSveX markdown component.",
+            "slug": "panduan-sveltekit-mdsvex",
+            "publish_date": "2026-11-02",
+            "tags": ["svelte", "sveltekit", "mdsvex"]
+        }
+        res = ArticleExporter.to_sveltekit_mdx(meta, "<p>Prerendered reactive content in SvelteKit.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan SvelteKit MDSveX"', res)
+        self.assertIn('framework: "sveltekit"', res)
+        self.assertIn("mdsvex: true", res)
+        self.assertIn("prerender: true", res)
+        self.assertIn("<p>Prerendered reactive content in SvelteKit.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
