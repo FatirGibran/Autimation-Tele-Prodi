@@ -2634,6 +2634,73 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["village_location"], "Desa Cisitu, Sumedang")
         self.assertIsNone(self.storage.get_innovillage_proposal_by_id(99999))
 
+    def test_satellite_tec_storage(self):
+        rec_id = self.storage.record_satellite_tec(
+            satellite_name="Telkom-4 (Merah Putih)",
+            vtec_tecu=25.0,
+            carrier_frequency_ghz=1.57542,
+            elevation_angle_deg=45.0,
+            stec_tecu=34.75,
+            range_error_m=5.64,
+            group_delay_ns=18.82,
+            activity_level="MODERATE_ACTIVITY"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_satellite_tec()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["satellite_name"], "Telkom-4 (Merah Putih)")
+        self.assertEqual(items[0]["vtec_tecu"], 25.0)
+
+        single = self.storage.get_satellite_tec_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["activity_level"], "MODERATE_ACTIVITY")
+        self.assertIsNone(self.storage.get_satellite_tec_by_id(99999))
+
+    def test_nr_beam_management_storage(self):
+        rec_id = self.storage.record_nr_beam_management(
+            cluster_name="Cluster-TelU-FR2",
+            ssb_beams_count=8,
+            csi_rs_ports=32,
+            subcarrier_spacing_khz=30,
+            beamforming_gain_db=15.05,
+            effective_sinr_db=30.05,
+            estimated_throughput_mbps=3788.0,
+            sweep_duration_ms=0.267
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_beam_management()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cluster_name"], "Cluster-TelU-FR2")
+        self.assertEqual(items[0]["csi_rs_ports"], 32)
+
+        single = self.storage.get_nr_beam_management_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["beamforming_gain_db"], 15.05)
+        self.assertIsNone(self.storage.get_nr_beam_management_by_id(99999))
+
+    def test_pkm_kc_proposal_storage(self):
+        rec_id = self.storage.record_pkm_kc_proposal(
+            student_leader="Dewi Sartika",
+            nim="1101210099",
+            proposal_title="Sistem Radar Doppler Portabel X-Band",
+            prototype_name="Radar Doppler X-Band",
+            target_trl=4,
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=8500000.0,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_kc_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Dewi Sartika")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_pkm_kc_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["prototype_name"], "Radar Doppler X-Band")
+        self.assertIsNone(self.storage.get_pkm_kc_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
