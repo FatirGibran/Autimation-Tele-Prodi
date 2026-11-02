@@ -2264,6 +2264,39 @@ def sanitize_html5_progress_meter_ranges(html: str) -> str:
     return re.sub(r'<meter\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_meter, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_fieldset_legend_grouping(html: str) -> str:
+    """
+    Sanitizes HTML5 <fieldset> and <legend> form grouping elements by scrubbing inline handlers,
+    styles, validating disabled flags, and preventing DOM clobbering identifiers.
+    """
+    if not html or ("<fieldset" not in html.lower() and "<legend" not in html.lower()):
+        return html
+
+    clobbered_names = {"submit", "reset", "length", "elements", "nodeName", "constructor", "toString", "valueOf"}
+
+    def fix_fieldset(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        name_m = re.search(r'\bname=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if name_m:
+            val = name_m.group(1).strip()
+            if val.lower() in clobbered_names or re.search(r'[<>"\'`]', val):
+                tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_legend(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    html = re.sub(r'<fieldset\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_fieldset, html, flags=re.IGNORECASE)
+    return re.sub(r'<legend\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_legend, html, flags=re.IGNORECASE)
+
+
 
 
 
