@@ -1284,6 +1284,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_satellite_tec_name ON satellite_tec_records(satellite_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_beam_management_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cluster_name TEXT NOT NULL,
+                    ssb_beams_count INTEGER NOT NULL,
+                    csi_rs_ports INTEGER NOT NULL,
+                    subcarrier_spacing_khz INTEGER NOT NULL,
+                    beamforming_gain_db REAL NOT NULL,
+                    effective_sinr_db REAL NOT NULL,
+                    estimated_throughput_mbps REAL NOT NULL,
+                    sweep_duration_ms REAL NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_beam_cluster ON nr_beam_management_records(cluster_name);")
 
 
 
@@ -5900,6 +5915,59 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM satellite_tec_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_nr_beam_management(
+        self,
+        cluster_name: str,
+        ssb_beams_count: int,
+        csi_rs_ports: int,
+        subcarrier_spacing_khz: int,
+        beamforming_gain_db: float,
+        effective_sinr_db: float,
+        estimated_throughput_mbps: float,
+        sweep_duration_ms: float
+    ) -> int:
+        """
+        Stores a 5G NR Beam Management sweeping and tracking telemetry record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_beam_management_records (
+                    cluster_name, ssb_beams_count, csi_rs_ports,
+                    subcarrier_spacing_khz, beamforming_gain_db,
+                    effective_sinr_db, estimated_throughput_mbps,
+                    sweep_duration_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                cluster_name.strip(), int(ssb_beams_count), int(csi_rs_ports),
+                int(subcarrier_spacing_khz), float(beamforming_gain_db),
+                float(effective_sinr_db), float(estimated_throughput_mbps),
+                float(sweep_duration_ms)
+            ))
+            return cursor.lastrowid
+
+    def list_nr_beam_management(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Lists stored 5G NR beam management records ordered by id descending.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_beam_management_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_beam_management_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR beam management record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_beam_management_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
