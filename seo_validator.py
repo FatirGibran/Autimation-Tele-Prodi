@@ -6294,7 +6294,8 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
-    def audit_button_and_link_accessible_names(self, html_content: str) -> Dict[str, Any]:
+    @classmethod
+    def audit_button_and_link_accessible_names(cls, html_content: str) -> Dict[str, Any]:
         """
         Audits buttons and interactive hyperlinks for discernible accessible names
         according to WCAG 2.1 SC 4.1.2 (Name, Role, Value) and SC 2.4.4 (Link Purpose).
@@ -6363,7 +6364,8 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
-    def audit_image_aspect_ratio_cls(self, html_content: str) -> Dict[str, Any]:
+    @classmethod
+    def audit_image_aspect_ratio_cls(cls, html_content: str) -> Dict[str, Any]:
         """
         Audits images for explicit dimension attributes (width/height) or CSS aspect-ratio
         to prevent Cumulative Layout Shift (CLS) Core Web Vitals degradation.
@@ -6410,7 +6412,8 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
-    def audit_microdata_attributes(self, html_content: str) -> Dict[str, Any]:
+    @classmethod
+    def audit_microdata_attributes(cls, html_content: str) -> Dict[str, Any]:
         """
         Audits W3C HTML Microdata markup (itemscope, itemtype, itemprop) to ensure correct
         semantic nesting and valid Schema.org vocabulary references.
@@ -6456,7 +6459,8 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
-    def audit_referral_policy_and_noopener(self, html_content: str, site_domain: str = "telkomuniversity.ac.id") -> Dict[str, Any]:
+    @classmethod
+    def audit_referral_policy_and_noopener(cls, html_content: str, site_domain: str = "telkomuniversity.ac.id") -> Dict[str, Any]:
         """
         Audits external hyperlinks configured with target='_blank' for safe rel attributes
         ('noopener' / 'noreferrer') and checks document referrer policy directives.
