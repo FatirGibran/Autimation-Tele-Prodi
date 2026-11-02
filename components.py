@@ -6841,6 +6841,42 @@ def render_optical_spm_card(data: Dict[str, Any]) -> str:
 </div>"""
 
 
+def render_nr_beam_management_card(data: Dict[str, Any]) -> str:
+    """
+    Renders an Elementor-styled card displaying 5G NR Beam Management metrics,
+    including SSB/CSI-RS sweep time, array beamforming gain, effective SINR, and throughput.
+    """
+    ssb_count = int(data.get("ssb_beams_count", 8))
+    ports = int(data.get("csi_rs_ports", 32))
+    scs = int(data.get("subcarrier_spacing_khz", 30))
+    snr_base = float(data.get("baseline_snr_db", 12.0))
+    bf_gain = float(data.get("beamforming_gain_db", 15.05))
+    sinr_eff = float(data.get("effective_sinr_db", 30.05))
+    se = float(data.get("spectral_efficiency_bps_hz", 9.97))
+    tput = float(data.get("estimated_throughput_mbps", 3788.0))
+    sweep_ms = float(data.get("sweep_duration_ms", 0.267))
+    status = str(data.get("beam_procedure_status", "OPTIMAL_ALIGNED"))
+
+    return f"""<div class="tu-nr-beam-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Beam Management (Rel-16)</span>
+    <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{ports} TXRU Ports</span>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+    <div>SSB Beams (P1): <strong style="color: #f1f5f9;">{ssb_count} berkas</strong></div>
+    <div>SCS Numerologi: <strong style="color: #f1f5f9;">{scs} kHz</strong></div>
+    <div>Gain Beamforming: <strong style="color: #38bdf8;">+{bf_gain:.2f} dB</strong></div>
+    <div>Effective SINR: <strong style="color: #34d399;">{sinr_eff:.2f} dB (Base: {snr_base:.1f} dB)</strong></div>
+    <div>Spektral Efisiensi: <strong style="color: #facc15;">{se:.2f} bps/Hz</strong></div>
+    <div>Throughput 100MHz: <strong style="color: #38bdf8;">{tput:.1f} Mbps</strong></div>
+  </div>
+  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between;">
+    <span>Durasi Sweeping: <strong style="color: #f1f5f9;">{sweep_ms:.3f} ms</strong></span>
+    <span>Status: <strong style="color: #34d399;">{status}</strong></span>
+  </div>
+</div>"""
+
+
 
 
 
