@@ -2098,6 +2098,60 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertIn("//cdn.telkomuniversity.ac.id", res["dns_prefetch_domains"])
         self.assertTrue(res["is_compliant"])
 
+    def test_audit_button_and_link_accessible_names(self):
+        html_ok = '<div><button type="submit">Kirim Berkas</button><a href="/panduan" aria-label="Lihat Panduan">Selengkapnya</a></div>'
+        res_ok = YoastSEOValidator.audit_button_and_link_accessible_names(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["empty_buttons_count"], 0)
+        self.assertEqual(res_ok["empty_links_count"], 0)
+
+        html_bad = '<div><button type="button"></button><a href="https://example.com"></a></div>'
+        res_bad = YoastSEOValidator.audit_button_and_link_accessible_names(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["empty_buttons_count"], 1)
+        self.assertEqual(res_bad["empty_links_count"], 1)
+
+    def test_audit_image_aspect_ratio_cls(self):
+        html_ok = '<div><img src="/img/lab.webp" width="1200" height="800" alt="Lab Tele"><img src="/img/tower.webp" style="aspect-ratio: 16/9" alt="Tower"></div>'
+        res_ok = YoastSEOValidator.audit_image_aspect_ratio_cls(html_ok)
+        self.assertTrue(res_ok["is_cls_safe"])
+        self.assertEqual(res_ok["dimensioned_images_count"], 2)
+        self.assertEqual(res_ok["missing_dimensions_count"], 0)
+
+        html_bad = '<div><img src="/img/no-size.png" alt="No size"></div>'
+        res_bad = YoastSEOValidator.audit_image_aspect_ratio_cls(html_bad)
+        self.assertFalse(res_bad["is_cls_safe"])
+        self.assertEqual(res_bad["missing_dimensions_count"], 1)
+
+    def test_audit_microdata_attributes(self):
+        html_ok = '<div itemscope itemtype="https://schema.org/Article"><h1 itemprop="headline">Inovasi 5G NR</h1></div>'
+        res_ok = YoastSEOValidator.audit_microdata_attributes(html_ok)
+        self.assertTrue(res_ok["has_microdata"])
+        self.assertEqual(res_ok["items_count"], 1)
+        self.assertEqual(res_ok["item_types"], ["https://schema.org/Article"])
+        self.assertTrue(res_ok["is_valid"])
+
+        html_bad = '<div itemscope><span itemprop="name">Tanpa Itemtype</span></div>'
+        res_bad = YoastSEOValidator.audit_microdata_attributes(html_bad)
+        self.assertFalse(res_bad["is_valid"])
+        self.assertIn("tanpa menyertakan 'itemtype'", res_bad["issues"][0])
+
+    def test_audit_referral_policy_and_noopener(self):
+        html_ok = (
+            '<html><head><meta name="referrer" content="strict-origin-when-cross-origin"></head>'
+            '<body><a href="https://external-partner.org" target="_blank" rel="noopener noreferrer">Mitra</a></body></html>'
+        )
+        res_ok = YoastSEOValidator.audit_referral_policy_and_noopener(html_ok)
+        self.assertTrue(res_ok["is_secure"])
+        self.assertEqual(res_ok["total_external_blank_links"], 1)
+        self.assertEqual(res_ok["secure_links_count"], 1)
+        self.assertEqual(res_ok["insecure_links_count"], 0)
+
+        html_bad = '<body><a href="https://insecure-thirdparty.com" target="_blank">Target Riskan</a></body>'
+        res_bad = YoastSEOValidator.audit_referral_policy_and_noopener(html_bad)
+        self.assertFalse(res_bad["is_secure"])
+        self.assertEqual(res_bad["insecure_links_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
