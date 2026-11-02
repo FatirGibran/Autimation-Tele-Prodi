@@ -6363,6 +6363,53 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    def audit_image_aspect_ratio_cls(self, html_content: str) -> Dict[str, Any]:
+        """
+        Audits images for explicit dimension attributes (width/height) or CSS aspect-ratio
+        to prevent Cumulative Layout Shift (CLS) Core Web Vitals degradation.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_images": 0,
+                "dimensioned_images_count": 0,
+                "missing_dimensions_count": 0,
+                "is_cls_safe": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        images = soup.find_all("img")
+        missing_count = 0
+        dimensioned_count = 0
+
+        for img in images:
+            src = img.get("src", "unknown")
+            has_w = bool(img.get("width"))
+            has_h = bool(img.get("height"))
+            style = (img.get("style") or "").lower()
+            has_aspect_ratio = "aspect-ratio" in style
+
+            if (has_w and has_h) or has_aspect_ratio:
+                dimensioned_count += 1
+            else:
+                missing_count += 1
+                issues.append(f"Elemen <img> ({src}) tidak memiliki dimensi eksplisit (width/height) atau CSS aspect-ratio.")
+
+        is_cls_safe = (missing_count == 0)
+
+        return {
+            "total_images": len(images),
+            "dimensioned_images_count": dimensioned_count,
+            "missing_dimensions_count": missing_count,
+            "is_cls_safe": is_cls_safe,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
