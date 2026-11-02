@@ -6949,6 +6949,64 @@ def render_pkm_kc_proposal_card(data: Dict[str, Any]) -> str:
 </div>"""
 
 
+def render_nr_beam_sweeping_svg(data: Dict[str, Any], title: str = "5G NR Massive MIMO Beam Sweeping & Tracking") -> str:
+    """
+    Renders an interactive SVG architectural diagram illustrating 5G NR Beam Sweeping (P1 SSB broad beams)
+    and narrow dedicated tracking (P2/P3 CSI-RS pencil beams) aligned toward the User Equipment (UE).
+    """
+    ssb_count = int(data.get("ssb_beams_count", 8))
+    ports = int(data.get("csi_rs_ports", 32))
+    gain_db = float(data.get("beamforming_gain_db", 15.05))
+    sinr_db = float(data.get("effective_sinr_db", 30.05))
+    tput = float(data.get("estimated_throughput_mbps", 3788.0))
+
+    return f"""<div class="tu-nr-beam-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">3GPP Rel-16 Beam Management</span>
+    <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Gain: +{gain_db:.1f} dB</span>
+  </div>
+  <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+  <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+    <svg viewBox="0 0 520 220" width="100%" height="220" style="max-width: 560px; display: block;" xmlns="http://www.w3.org/2000/svg">
+      <!-- gNodeB Phased Array Antenna Tower -->
+      <rect x="40" y="30" width="50" height="150" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
+      <text x="65" y="55" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">gNodeB</text>
+      <text x="65" y="70" fill="#93c5fd" font-size="9" text-anchor="middle">{ports} TXRU</text>
+
+      <!-- Antenna Array Elements -->
+      <circle cx="65" cy="95" r="4" fill="#38bdf8" />
+      <circle cx="65" cy="115" r="4" fill="#38bdf8" />
+      <circle cx="65" cy="135" r="4" fill="#38bdf8" />
+      <circle cx="65" cy="155" r="4" fill="#38bdf8" />
+
+      <!-- P1 SSB Sweeping Broad Beams Fan -->
+      <path d="M 90 95 L 260 25 L 260 65 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
+      <text x="210" y="45" fill="#93c5fd" font-size="9">SSB Beam #0</text>
+
+      <path d="M 90 115 L 280 75 L 280 115 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
+      <text x="230" y="95" fill="#93c5fd" font-size="9">SSB Beam #1</text>
+
+      <!-- P2/P3 Narrow Dedicated Tracking CSI-RS Beam to UE -->
+      <polygon points="90,135 410,135 390,165 90,140" fill="#059669" fill-opacity="0.55" stroke="#34d399" stroke-width="2" />
+      <text x="240" y="145" fill="#6ee7b7" font-size="10" font-weight="bold">Targeted CSI-RS Pencil Beam</text>
+
+      <path d="M 90 155 L 270 175 L 270 215 Z" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="1" />
+      <text x="220" y="195" fill="#93c5fd" font-size="9">SSB Beam #{ssb_count-1}</text>
+
+      <!-- User Equipment (UE) Receiver -->
+      <rect x="410" y="125" width="80" height="50" rx="5" fill="#1e293b" stroke="#34d399" stroke-width="2" />
+      <text x="450" y="145" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">5G UE</text>
+      <text x="450" y="162" fill="#34d399" font-size="9" text-anchor="middle">SINR: {sinr_db:.1f} dB</text>
+    </svg>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+    <div>SSB Sweeping: <strong style="color: #38bdf8;">{ssb_count} Broad Beams</strong></div>
+    <div>Tracking Gain: <strong style="color: #34d399;">+{gain_db:.2f} dB</strong></div>
+    <div>Throughput: <strong style="color: #facc15;">{tput:.1f} Mbps</strong></div>
+  </div>
+</div>"""
+
+
 
 
 
