@@ -2303,6 +2303,35 @@ navigation: true
             }
         }
 
+    @staticmethod
+    def to_sveltekit_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports content as SvelteKit MDX / MDSveX document format with YAML frontmatter.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        pub_date = metadata.get("publish_date", "2026-10-01")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'slug: "{slug}"',
+            f'published: "{pub_date}"',
+            f'tags: {json.dumps(tags)}',
+            'framework: "sveltekit"',
+            "mdsvex: true",
+            "prerender: true",
+            "---",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
