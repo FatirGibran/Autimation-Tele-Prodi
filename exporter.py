@@ -2257,6 +2257,52 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_prototype_patent_json_ld(prototype_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org/TechArticle or Patent/Product metadata for PKM-KC prototypes
+        and student engineering patent filings.
+        """
+        title = prototype_data.get("prototype_title") or prototype_data.get("title", "")
+        lead_student = prototype_data.get("lead_student") or prototype_data.get("inventor", "")
+        institution = prototype_data.get("institution", "Telkom University Purwokerto")
+        patent_status = prototype_data.get("patent_readiness_status", "Draft")
+        trl_level = prototype_data.get("trl_level", 6)
+        description = prototype_data.get("description", f"Prototipe PKM-KC: {title}")
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            "name": title.strip(),
+            "headline": title.strip(),
+            "description": description.strip(),
+            "author": {
+                "@type": "Person",
+                "name": lead_student.strip()
+            },
+            "sourceOrganization": {
+                "@type": "EducationalOrganization",
+                "name": institution.strip()
+            },
+            "about": {
+                "@type": "Product",
+                "name": title.strip(),
+                "category": "Engineering Prototype",
+                "additionalProperty": [
+                    {
+                        "@type": "PropertyValue",
+                        "name": "TechnologyReadinessLevel",
+                        "value": str(trl_level)
+                    },
+                    {
+                        "@type": "PropertyValue",
+                        "name": "PatentReadinessStatus",
+                        "value": str(patent_status)
+                    }
+                ]
+            }
+        }
+
 
 
 
