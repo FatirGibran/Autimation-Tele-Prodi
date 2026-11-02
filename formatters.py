@@ -1534,6 +1534,37 @@ class TelegramFormatter:
             f"🎉 *Selamat kepada tim mahasiswa! Teruslah berinovasi memberi dampak nyata bagi masyarakat pedesaan!*"
         )
 
+    @staticmethod
+    def format_optical_spm_telegram(
+        span_name: str,
+        fiber_length_km: float,
+        launch_power_mw: float,
+        effective_length_km: float,
+        max_phase_shift_rad: float,
+        b_integral_rad: float,
+        is_safe: bool,
+        spm_risk: str,
+        dashboard_url: str = ""
+    ) -> str:
+        """
+        Renders an optical fiber Self-Phase Modulation (SPM) nonlinear phase shift bulletin for Telegram broadcast.
+        """
+        status_icon = "🟢" if is_safe else "🔴"
+        status_label = "AMAN (Regim Linier)" if is_safe else "KRITIS (Chirp Nonlinier Berat)"
+        dashboard_link = f"\n🔗 **Dashboard NMS Optik:** {dashboard_url.strip()}" if dashboard_url else ""
+
+        return (
+            f"⚡ **Audit DWDM Nonlinieritas: Self-Phase Modulation (SPM)**\n\n"
+            f"🏷️ **Nama Span Fiber:** `{span_name.strip()}`\n"
+            f"📏 **Panjang Bentang (L):** `{float(fiber_length_km):.1f} km` (`Leff: {float(effective_length_km):.2f} km`)\n"
+            f"💡 **Daya Luncur (P0):** `{float(launch_power_mw):.2f} mW`\n"
+            f"📐 **Pergeseran Fase (ΦNL):** `{float(max_phase_shift_rad):.4f} rad`\n"
+            f"📊 **B-Integral:** `{float(b_integral_rad):.4f} rad`\n"
+            f"{status_icon} **Status Kanal:** `{status_label}`\n"
+            f"🛡️ **Mitigasi:** `{spm_risk.strip()}`{dashboard_link}\n\n"
+            f"📡 *Portal Monitoring Transmisi Jaringan Serat Optik Prodi S1 Teknik Telekomunikasi*"
+        )
+
 
 
 
