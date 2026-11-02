@@ -7110,6 +7110,55 @@ def calculate_5g_nr_beam_management(
     }
 
 
+def calculate_satellite_ionospheric_tec_delay(
+    tec_tecu: float,
+    carrier_frequency_ghz: float = 1.57542,
+    elevation_angle_deg: float = 45.0
+) -> Dict[str, Any]:
+    """
+    Calculates satellite-to-earth ionospheric Total Electron Content (TEC) group delay,
+    excess range error (meters), and carrier phase advance according to ITU-R P.531.
+    """
+    vtec = max(0.1, float(tec_tecu))
+    freq_ghz = max(0.1, float(carrier_frequency_ghz))
+    elev_deg = max(5.0, min(90.0, float(elevation_angle_deg)))
+
+    freq_hz = freq_ghz * 1e9
+    elev_rad = math.radians(elev_deg)
+
+    r_earth = 6371.0
+    h_iono = 350.0
+    cos_el = math.cos(elev_rad)
+    obliquity_factor = 1.0 / math.sqrt(1.0 - ((r_earth / (r_earth + h_iono)) * cos_el) ** 2)
+
+    stec = vtec * obliquity_factor
+    n_e = stec * 1e16
+    c = 2.99792458e8
+
+    range_error_m = (40.3 * n_e) / (freq_hz ** 2)
+    group_delay_ns = (range_error_m / c) * 1e9
+    phase_advance_m = -range_error_m
+
+    if vtec < 20.0:
+        activity_level = "QUIET_IONOSPHERE"
+    elif vtec <= 50.0:
+        activity_level = "MODERATE_ACTIVITY"
+    else:
+        activity_level = "STORM_ENHANCED_DISTURBANCE"
+
+    return {
+        "vtec_tecu": round(vtec, 2),
+        "carrier_frequency_ghz": round(freq_ghz, 4),
+        "elevation_angle_deg": round(elev_deg, 1),
+        "obliquity_factor": round(obliquity_factor, 3),
+        "stec_tecu": round(stec, 2),
+        "range_error_m": round(range_error_m, 3),
+        "group_delay_ns": round(group_delay_ns, 2),
+        "phase_advance_m": round(phase_advance_m, 3),
+        "activity_level": activity_level
+    }
+
+
 
 
 
