@@ -6456,6 +6456,72 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    def audit_referral_policy_and_noopener(self, html_content: str, site_domain: str = "telkomuniversity.ac.id") -> Dict[str, Any]:
+        """
+        Audits external hyperlinks configured with target='_blank' for safe rel attributes
+        ('noopener' / 'noreferrer') and checks document referrer policy directives.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_external_blank_links": 0,
+                "secure_links_count": 0,
+                "insecure_links_count": 0,
+                "referrer_policy": None,
+                "is_secure": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        ref_meta = soup.find("meta", attrs={"name": re.compile(r"^referrer$", re.I)})
+        referrer_policy = ref_meta.get("content").strip() if ref_meta and ref_meta.get("content") else None
+
+        valid_policies = {
+            "no-referrer", "no-referrer-when-downgrade", "origin", "origin-when-cross-origin",
+            "same-origin", "strict-origin", "strict-origin-when-cross-origin", "unsafe-url"
+        }
+        if referrer_policy and referrer_policy.lower() not in valid_policies:
+            issues.append(f"Direktif <meta name='referrer'> memuat kebijakan tidak dikenal: '{referrer_policy}'")
+        elif referrer_policy and referrer_policy.lower() == "unsafe-url":
+            warnings.append("Kebijakan referrer 'unsafe-url' membocorkan seluruh parameter URL sensitif ke pihak ketiga.")
+
+        external_blank_links = []
+        insecure_count = 0
+        secure_count = 0
+
+        for a in soup.find_all("a", href=True):
+            href = a.get("href", "").strip()
+            target = (a.get("target") or "").strip().lower()
+            rel = (a.get("rel") or [])
+            if isinstance(rel, str):
+                rel = rel.split()
+            rel_tokens = {r.strip().lower() for r in rel}
+
+            is_external = href.startswith(("http://", "https://", "//")) and site_domain.lower() not in href.lower()
+
+            if is_external and target == "_blank":
+                external_blank_links.append(href)
+                if "noopener" in rel_tokens or "noreferrer" in rel_tokens:
+                    secure_count += 1
+                else:
+                    insecure_count += 1
+                    issues.append(f"Tautan eksternal '{href}' dengan target='_blank' tidak memiliki rel='noopener' atau rel='noreferrer'.")
+
+        is_secure = (insecure_count == 0 and len(issues) == 0)
+
+        return {
+            "total_external_blank_links": len(external_blank_links),
+            "secure_links_count": secure_count,
+            "insecure_links_count": insecure_count,
+            "referrer_policy": referrer_policy,
+            "is_secure": is_secure,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
