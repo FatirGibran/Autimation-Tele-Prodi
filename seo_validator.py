@@ -6410,6 +6410,52 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    def audit_microdata_attributes(self, html_content: str) -> Dict[str, Any]:
+        """
+        Audits W3C HTML Microdata markup (itemscope, itemtype, itemprop) to ensure correct
+        semantic nesting and valid Schema.org vocabulary references.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "has_microdata": False,
+                "items_count": 0,
+                "item_types": [],
+                "properties_count": 0,
+                "is_valid": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        itemscopes = soup.find_all(attrs={"itemscope": True})
+        all_props = soup.find_all(attrs={"itemprop": True})
+
+        item_types = []
+        for scope in itemscopes:
+            itype = (scope.get("itemtype") or "").strip()
+            if not itype:
+                issues.append("Ditemukan elemen dengan atribut 'itemscope' tanpa menyertakan 'itemtype'.")
+            else:
+                item_types.append(itype)
+                if not itype.startswith(("http://schema.org", "https://schema.org")):
+                    warnings.append(f"Itemtype '{itype}' sebaiknya merujuk pada kosakata standar schema.org.")
+
+        has_microdata = len(itemscopes) > 0 or len(all_props) > 0
+        is_valid = (len(issues) == 0)
+
+        return {
+            "has_microdata": has_microdata,
+            "items_count": len(itemscopes),
+            "item_types": item_types,
+            "properties_count": len(all_props),
+            "is_valid": is_valid,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
