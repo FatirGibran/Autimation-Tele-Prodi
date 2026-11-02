@@ -6294,6 +6294,75 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    def audit_button_and_link_accessible_names(self, html_content: str) -> Dict[str, Any]:
+        """
+        Audits buttons and interactive hyperlinks for discernible accessible names
+        according to WCAG 2.1 SC 4.1.2 (Name, Role, Value) and SC 2.4.4 (Link Purpose).
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_buttons": 0,
+                "total_links": 0,
+                "empty_buttons_count": 0,
+                "empty_links_count": 0,
+                "is_accessible": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        buttons = soup.find_all("button")
+        links = soup.find_all("a")
+
+        empty_buttons = 0
+        empty_links = 0
+
+        for btn in buttons:
+            label = (btn.get("aria-label") or "").strip()
+            labelledby = (btn.get("aria-labelledby") or "").strip()
+            title = (btn.get("title") or "").strip()
+            text = btn.get_text(strip=True)
+            img_alt = "".join([img.get("alt", "").strip() for img in btn.find_all("img")])
+            svg_title = "".join([t.get_text(strip=True) for t in btn.find_all("title")])
+
+            accessible_name = label or labelledby or text or title or img_alt or svg_title
+            if not accessible_name:
+                empty_buttons += 1
+                issues.append(f"Elemen <button> tidak memiliki accessible name yang terbaca oleh assistive technology: '{str(btn)[:60]}'")
+
+        for link in links:
+            if not link.get("href"):
+                continue
+
+            label = (link.get("aria-label") or "").strip()
+            labelledby = (link.get("aria-labelledby") or "").strip()
+            title = (link.get("title") or "").strip()
+            text = link.get_text(strip=True)
+            img_alt = "".join([img.get("alt", "").strip() for img in link.find_all("img")])
+            svg_title = "".join([t.get_text(strip=True) for t in link.find_all("title")])
+
+            accessible_name = label or labelledby or text or title or img_alt or svg_title
+            if not accessible_name:
+                empty_links += 1
+                issues.append(f"Elemen <a> ({link.get('href')}) tidak memiliki nama atau teks yang dapat dibaca.")
+            elif accessible_name.lower() in ("klik di sini", "click here", "read more", "baca", "link"):
+                warnings.append(f"Anchor text '{accessible_name}' terlalu generik; sebaiknya deskripsikan target tujuan link.")
+
+        is_accessible = (empty_buttons == 0 and empty_links == 0)
+
+        return {
+            "total_buttons": len(buttons),
+            "total_links": len(links),
+            "empty_buttons_count": empty_buttons,
+            "empty_links_count": empty_links,
+            "is_accessible": is_accessible,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
