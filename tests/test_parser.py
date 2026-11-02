@@ -2287,6 +2287,78 @@ Status: Granted
         self.assertFalse(res_low["is_funded"])
         self.assertEqual(res_low["converted_sks"], 0)
 
+    def test_calculate_optical_spm_nonlinear_phase_shift(self):
+        from parser import calculate_optical_spm_nonlinear_phase_shift
+        res_safe = calculate_optical_spm_nonlinear_phase_shift(
+            fiber_length_km=50.0,
+            launch_power_mw=5.0,
+            effective_area_um2=80.0
+        )
+        self.assertGreater(res_safe["effective_length_km"], 0.0)
+        self.assertLess(res_safe["max_phase_shift_rad"], 1.0)
+        self.assertTrue(res_safe["is_safe_for_coherent"])
+
+        res_high = calculate_optical_spm_nonlinear_phase_shift(
+            fiber_length_km=100.0,
+            launch_power_mw=500.0,
+            effective_area_um2=50.0
+        )
+        self.assertGreater(res_high["max_phase_shift_rad"], 1.0)
+        self.assertFalse(res_high["is_safe_for_coherent"])
+
+    def test_calculate_5g_nr_beam_management(self):
+        from parser import calculate_5g_nr_beam_management
+        res = calculate_5g_nr_beam_management(
+            ssb_beams_count=8,
+            csi_rs_ports=32,
+            subcarrier_spacing_khz=30,
+            rx_snr_db=12.0
+        )
+        self.assertGreater(res["beamforming_gain_db"], 10.0)
+        self.assertGreater(res["effective_sinr_db"], 20.0)
+        self.assertGreater(res["spectral_efficiency_bps_hz"], 5.0)
+        self.assertGreater(res["estimated_throughput_mbps"], 1000.0)
+        self.assertIn("OPTIMAL_ALIGNED", res["beam_procedure_status"])
+
+    def test_calculate_satellite_ionospheric_tec_delay(self):
+        from parser import calculate_satellite_ionospheric_tec_delay
+        res = calculate_satellite_ionospheric_tec_delay(
+            tec_tecu=25.0,
+            carrier_frequency_ghz=1.57542,
+            elevation_angle_deg=45.0
+        )
+        self.assertGreater(res["range_error_m"], 0.0)
+        self.assertGreater(res["group_delay_ns"], 0.0)
+        self.assertLess(res["phase_advance_m"], 0.0)
+        self.assertEqual(res["activity_level"], "MODERATE_ACTIVITY")
+
+    def test_parse_pkm_kc_proposal_evaluation(self):
+        from parser import parse_pkm_kc_proposal_evaluation
+        res_top = parse_pkm_kc_proposal_evaluation({
+            "student_leader": "Dewi Sartika",
+            "nim": "1101210099",
+            "proposal_title": "Sistem Radar Doppler Portabel X-Band",
+            "prototype_name": "Radar Doppler X-Band",
+            "creativity_novelty_score": 90.0,
+            "engineering_design_score": 92.0,
+            "prototype_feasibility_score": 88.0,
+            "budget_schedule_score": 85.0
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 8500000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_funded"])
+
+        res_low = parse_pkm_kc_proposal_evaluation({
+            "creativity_novelty_score": 50.0,
+            "engineering_design_score": 50.0,
+            "prototype_feasibility_score": 50.0,
+            "budget_schedule_score": 50.0
+        })
+        self.assertEqual(res_low["letter_grade"], "C")
+        self.assertFalse(res_low["is_funded"])
+        self.assertEqual(res_low["converted_sks"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
