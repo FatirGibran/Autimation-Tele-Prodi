@@ -1565,6 +1565,34 @@ class TelegramFormatter:
             f"📡 *Portal Monitoring Transmisi Jaringan Serat Optik Prodi S1 Teknik Telekomunikasi*"
         )
 
+    @staticmethod
+    def format_pkm_kc_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        prototype_name: str,
+        target_trl: int,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Karsa Cipta (PKM-KC) student engineering prototype funding announcement for Telegram broadcast.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"🛠️ **Pengumuman Pendanaan Belmawa PKM Karsa Cipta (PKM-KC)**\n\n"
+            f"💡 **Judul Prototipe Rekayasa:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"⚙️ **Perangkat:** `{prototype_name.strip()}` (`Target TRL: {int(target_trl)}`)\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Hibah:** `Rp {allocated_budget_idr:,}`\n"
+            f"🎯 **Status:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"🏆 *Selamat atas prestasi riset prototipe rekayasa! Wujudkan inovasi teknologi bagi bangsa!*"
+        )
+
 
 
 
