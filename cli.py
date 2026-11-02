@@ -39,7 +39,10 @@ from parser import (
     parse_ppk_ormawa_evaluation,
     calculate_optical_sbs_threshold,
     calculate_5g_nr_daps_handover,
-    parse_innovillage_proposal_evaluation
+    parse_innovillage_proposal_evaluation,
+    calculate_5g_nr_beam_management,
+    calculate_satellite_ionospheric_tec_delay,
+    parse_pkm_kc_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2728,6 +2731,126 @@ def cmd_innovillage(args):
             print(f"{r['id']:<4} | {r['student_leader']:<18} | {r['nim']:<12} | {r['village_location']:<16} | {r['composite_score']:<6.1f} | Rp {r['allocated_budget_idr']:<12,} | {status}")
 
 
+def cmd_beam(args):
+    if args.action == "add":
+        cluster = args.cluster or "Cluster-Beam-01"
+        beams = int(args.beams) if args.beams is not None else 8
+        ports = int(args.ports) if args.ports is not None else 32
+        scs = int(args.scs) if args.scs is not None else 30
+        snr = float(args.snr) if args.snr is not None else 12.0
+        switch_delay = float(args.switch_delay) if args.switch_delay is not None else 100.0
+
+        res = calculate_5g_nr_beam_management(
+            ssb_beams_count=beams,
+            csi_rs_ports=ports,
+            subcarrier_spacing_khz=scs,
+            rx_snr_db=snr,
+            beam_switch_delay_us=switch_delay
+        )
+        rec_id = storage.record_nr_beam_management(
+            cluster_name=cluster,
+            ssb_beams_count=res["ssb_beams_count"],
+            csi_rs_ports=res["csi_rs_ports"],
+            subcarrier_spacing_khz=res["subcarrier_spacing_khz"],
+            beamforming_gain_db=res["beamforming_gain_db"],
+            effective_sinr_db=res["effective_sinr_db"],
+            estimated_throughput_mbps=res["estimated_throughput_mbps"],
+            sweep_duration_ms=res["sweep_duration_ms"]
+        )
+        print(f"Catatan 5G NR Beam Management berhasil disimpan dengan ID: {rec_id} (Gain: {res['beamforming_gain_db']} dB, SINR: {res['effective_sinr_db']} dB, Throughput: {res['estimated_throughput_mbps']} Mbps)")
+    else:
+        records = storage.list_nr_beam_management(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR Beam Management yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CLUSTER':<18} | {'BEAMS':<6} | {'PORTS':<6} | {'GAIN (dB)':<10} | {'SINR (dB)':<10} | {'THROUGHPUT'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cluster_name'][:16]:<18} | {r['ssb_beams_count']:<6} | {r['csi_rs_ports']:<6} | {r['beamforming_gain_db']:<10.2f} | {r['effective_sinr_db']:<10.2f} | {r['estimated_throughput_mbps']:.2f} Mbps")
+
+
+def cmd_tec(args):
+    if args.action == "add":
+        satellite = args.satellite or "TELKOM-4 (Merah Putih)"
+        tec = float(args.tec) if args.tec is not None else 35.0
+        freq = float(args.freq) if args.freq is not None else 1.57542
+        elev = float(args.elev) if args.elev is not None else 45.0
+
+        res = calculate_satellite_ionospheric_tec_delay(
+            tec_tecu=tec,
+            carrier_frequency_ghz=freq,
+            elevation_angle_deg=elev
+        )
+        rec_id = storage.record_satellite_tec(
+            satellite_name=satellite,
+            vtec_tecu=res["vtec_tecu"],
+            carrier_frequency_ghz=res["carrier_frequency_ghz"],
+            elevation_angle_deg=res["elevation_angle_deg"],
+            stec_tecu=res["stec_tecu"],
+            range_error_m=res["range_error_m"],
+            group_delay_ns=res["group_delay_ns"],
+            activity_level=res["activity_level"]
+        )
+        print(f"Catatan Satellite TEC Delay berhasil disimpan dengan ID: {rec_id} (STEC: {res['stec_tecu']} TECU, Delay: {res['group_delay_ns']} ns, Error: {res['range_error_m']} m)")
+    else:
+        records = storage.list_satellite_tec(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Satellite Ionospheric TEC yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'SATELIT':<22} | {'VTEC':<8} | {'ELEV':<6} | {'DELAY (ns)':<12} | {'ERROR (m)':<10} | {'AKTIVITAS'}")
+        print("-" * 85)
+        for r in records:
+            print(f"{r['id']:<4} | {r['satellite_name'][:20]:<22} | {r['vtec_tecu']:<8.1f} | {r['elevation_angle_deg']:<6.1f} | {r['group_delay_ns']:<12.2f} | {r['range_error_m']:<10.2f} | {r['activity_level']}")
+
+
+def cmd_pkmkc(args):
+    if args.action == "add":
+        leader = args.leader or "Ketua Tim PKM-KC"
+        nim = args.nim or "1101210002"
+        title = args.title or "Prototipe Antena Reconfigurable 5G NR"
+        prototype = args.prototype or "MIMO Fractal Antenna"
+        trl = int(args.trl) if args.trl is not None else 4
+        nov = float(args.nov) if args.nov is not None else 85.0
+        eng = float(args.eng) if args.eng is not None else 85.0
+        feas = float(args.feas) if args.feas is not None else 85.0
+        budget = float(args.budget) if args.budget is not None else 85.0
+
+        res = parse_pkm_kc_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "prototype_name": prototype,
+            "target_trl": trl,
+            "creativity_novelty_score": nov,
+            "engineering_design_score": eng,
+            "prototype_feasibility_score": feas,
+            "budget_schedule_score": budget
+        })
+        rec_id = storage.record_pkm_kc_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            prototype_name=prototype,
+            target_trl=trl,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-KC berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_pkm_kc_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-KC yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'PROTOTIPE':<20} | {'TRL':<5} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 85)
+        for r in records:
+            funded_str = "Lolos" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['prototype_name'][:18]:<20} | {r['target_trl']:<5} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
+
+
 def main():
 
 
@@ -3705,7 +3828,42 @@ def main():
     innovillage_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     innovillage_parser.set_defaults(func=cmd_innovillage)
 
+    # 5G NR Beam Management command
+    beam_parser = subparsers.add_parser("beam", help="Kelola performansi 5G NR Beam Management sweeping & tracking (list, add)")
+    beam_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi beam management")
+    beam_parser.add_argument("--cluster", default="Cluster-Beam-01", help="Nama cluster/gNB")
+    beam_parser.add_argument("--beams", type=int, default=8, help="Jumlah berkas SSB (1-64)")
+    beam_parser.add_argument("--ports", type=int, default=32, help="Jumlah port antena CSI-RS (1-256)")
+    beam_parser.add_argument("--scs", type=int, default=30, help="Subcarrier Spacing (kHz)")
+    beam_parser.add_argument("--snr", type=float, default=12.0, help="Baseline SNR (dB)")
+    beam_parser.add_argument("--switch-delay", type=float, default=100.0, help="Beam switch delay (us)")
+    beam_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    beam_parser.set_defaults(func=cmd_beam)
 
+    # Satellite TEC Delay command
+    tec_parser = subparsers.add_parser("tec", help="Kelola kalkulasi ionospheric TEC delay satelit ITU-R P.531 (list, add)")
+    tec_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan kalkulasi TEC delay")
+    tec_parser.add_argument("--satellite", default="TELKOM-4 (Merah Putih)", help="Nama satelit komunikasi")
+    tec_parser.add_argument("--tec", type=float, default=35.0, help="Vertical TEC (TECU)")
+    tec_parser.add_argument("--freq", type=float, default=1.57542, help="Frekuensi pembawa (GHz)")
+    tec_parser.add_argument("--elev", type=float, default=45.0, help="Sudut elevasi antena bumi (derajat)")
+    tec_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    tec_parser.set_defaults(func=cmd_tec)
+
+    # PKM-KC Proposal command
+    pkmkc_parser = subparsers.add_parser("pkmkc", help="Kelola evaluasi proposal Belmawa PKM Karsa Cipta (list, add)")
+    pkmkc_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-KC")
+    pkmkc_parser.add_argument("--leader", default="Ketua Tim PKM-KC", help="Nama ketua mahasiswa pengusul")
+    pkmkc_parser.add_argument("--nim", default="1101210002", help="NIM ketua mahasiswa")
+    pkmkc_parser.add_argument("--title", default="Prototipe Antena Reconfigurable 5G NR", help="Judul proposal PKM-KC")
+    pkmkc_parser.add_argument("--prototype", default="MIMO Fractal Antenna", help="Nama prototipe produk karsa cipta")
+    pkmkc_parser.add_argument("--trl", type=int, default=4, help="Target Technology Readiness Level (1-7)")
+    pkmkc_parser.add_argument("--nov", type=float, default=85.0, help="Skor kreativitas dan kebaruan (0-100)")
+    pkmkc_parser.add_argument("--eng", type=float, default=85.0, help="Skor ketepatan desain keteknikan (0-100)")
+    pkmkc_parser.add_argument("--feas", type=float, default=85.0, help="Skor kelayakan prototipe & fungsionalitas (0-100)")
+    pkmkc_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
+    pkmkc_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmkc_parser.set_defaults(func=cmd_pkmkc)
 
     args = parser.parse_args()
 
