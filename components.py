@@ -6877,6 +6877,41 @@ def render_nr_beam_management_card(data: Dict[str, Any]) -> str:
 </div>"""
 
 
+def render_satellite_tec_delay_card(data: Dict[str, Any]) -> str:
+    """
+    Renders an Elementor-styled card displaying Satellite Ionospheric Total Electron Content (TEC),
+    slant path obliquity factor, excess range error, and nano-second group delay according to ITU-R P.531.
+    """
+    vtec = float(data.get("vtec_tecu", 25.0))
+    freq = float(data.get("carrier_frequency_ghz", 1.57542))
+    elev = float(data.get("elevation_angle_deg", 45.0))
+    obliq = float(data.get("obliquity_factor", 1.39))
+    stec = float(data.get("stec_tecu", 34.75))
+    r_err = float(data.get("range_error_m", 5.64))
+    delay_ns = float(data.get("group_delay_ns", 18.82))
+    activity = str(data.get("activity_level", "QUIET_IONOSPHERE"))
+
+    badge_bg = "#059669" if "QUIET" in activity else ("#d97706" if "MODERATE" in activity else "#dc2626")
+
+    return f"""<div class="tu-satellite-tec-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+    <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">ITU-R P.531 Ionospheric Delay</span>
+    <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{activity}</span>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+    <div>Carrier Frequency: <strong style="color: #f1f5f9;">{freq:.4f} GHz</strong></div>
+    <div>Sudut Elevasi: <strong style="color: #f1f5f9;">{elev:.1f}&deg;</strong></div>
+    <div>Vertical TEC (VTEC): <strong style="color: #38bdf8;">{vtec:.1f} TECU</strong></div>
+    <div>Slant TEC (STEC): <strong style="color: #38bdf8;">{stec:.1f} TECU (M: {obliq:.2f})</strong></div>
+    <div>Error Jarak (Excess): <strong style="color: #f87171;">+{r_err:.2f} meter</strong></div>
+    <div>Group Delay Ionosfer: <strong style="color: #facc15;">{delay_ns:.2f} ns</strong></div>
+  </div>
+  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #334155; font-size: 12px; color: #94a3b8;">
+    Dampak Propagasi: <span style="color: #38bdf8; font-weight: 600;">Carrier Phase Advance: -{r_err:.2f} m | Dispersi Sinyal Terkelola</span>
+  </div>
+</div>"""
+
+
 
 
 
