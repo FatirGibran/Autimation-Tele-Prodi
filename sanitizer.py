@@ -2161,6 +2161,63 @@ def sanitize_html5_dialog_attributes(html: str) -> str:
     return re.sub(r'<dialog\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_dialog, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_audio_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <audio> elements and nested <source> tags by scrubbing event handlers,
+    stripping intrusive autoplay, validating preload directives, and enforcing safe audio MIME types.
+    """
+    if not html or ("<audio" not in html.lower() and "<source" not in html.lower()):
+        return html
+
+    valid_audio_types = {
+        "audio/mpeg", "audio/mp3", "audio/ogg", "audio/wav", "audio/aac",
+        "audio/webm", "audio/flac", "audio/mp4", "audio/x-m4a"
+    }
+
+    def fix_audio(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+autoplay(?:\s*=\s*["\'][^"\']*["\']|\b)', '', tag, flags=re.IGNORECASE)
+
+        preload_m = re.search(r'\bpreload=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if preload_m:
+            val = preload_m.group(1).strip().lower()
+            if val not in ("none", "metadata", "auto"):
+                tag = re.sub(r'\s+preload=["\'][^"\']*["\']', ' preload="metadata"', tag, flags=re.IGNORECASE)
+
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            s_val = src_m.group(1).strip().lower()
+            if s_val.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', s_val):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_source(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if type_m:
+            t_val = type_m.group(1).strip().lower()
+            base_type = t_val.split(";")[0].strip()
+            if base_type not in valid_audio_types and not base_type.startswith("audio/"):
+                tag = re.sub(r'\s+type=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            s_val = src_m.group(1).strip().lower()
+            if s_val.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', s_val):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    html = re.sub(r'<audio\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_audio, html, flags=re.IGNORECASE)
+    return re.sub(r'<source\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_source, html, flags=re.IGNORECASE)
+
+
 
 
 
