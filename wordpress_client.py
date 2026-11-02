@@ -1075,6 +1075,29 @@ class WordPressClient:
             logger.warning(f"Failed to fetch tags for ids {include_str}: {e}")
             return []
 
+    def batch_restore_posts(self, post_ids: List[int], target_status: str = "draft") -> Dict[str, Any]:
+        """
+        Restores a batch of trashed posts back to draft or published state.
+        """
+        restored = []
+        failed = []
+        for pid in post_ids:
+            try:
+                endpoint = f"{self.api_url}/posts/{int(pid)}"
+                payload = json.dumps({"status": target_status}).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=payload, headers=self._get_headers(), method="POST")
+                res = self._send_request(req)
+                restored.append(int(pid))
+            except Exception as e:
+                failed.append({"post_id": int(pid), "error": str(e)})
+
+        return {
+            "restored": restored,
+            "failed": failed,
+            "total": len(post_ids),
+            "target_status": target_status
+        }
+
 
 
 
