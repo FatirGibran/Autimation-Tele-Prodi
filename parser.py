@@ -7159,6 +7159,80 @@ def calculate_satellite_ionospheric_tec_delay(
     }
 
 
+def parse_pkm_kc_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates Belmawa PKM Karsa Cipta (PKM-KC) student engineering prototype proposals
+    focused on hardware systems, IoT sensors, embedded firmware, and MBKM SKS equivalence.
+    """
+    student_leader = str(data.get("student_leader", "Ketua Tim PKM-KC")).strip()
+    nim = str(data.get("nim", "")).strip()
+    proposal_title = str(data.get("proposal_title", "Prototipe Rekayasa Karsa Cipta")).strip()
+    prototype_name = str(data.get("prototype_name", "Perangkat Karsa Cipta")).strip()
+    target_trl = max(1, min(7, int(data.get("target_trl", 3))))
+
+    s_nov = max(0.0, min(100.0, float(data.get("creativity_novelty_score", 85.0))))
+    s_eng = max(0.0, min(100.0, float(data.get("engineering_design_score", 85.0))))
+    s_feas = max(0.0, min(100.0, float(data.get("prototype_feasibility_score", 85.0))))
+    s_bud = max(0.0, min(100.0, float(data.get("budget_schedule_score", 85.0))))
+
+    composite = round(
+        (0.30 * s_nov) +
+        (0.35 * s_eng) +
+        (0.20 * s_feas) +
+        (0.15 * s_bud),
+        2
+    )
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        allocated_budget_idr = 8500000
+        funding_status = "Lolos Pendanaan Belmawa PKM-KC Unggulan"
+        converted_sks = 4
+    elif is_funded:
+        allocated_budget_idr = 7000000
+        funding_status = "Lolos Pendanaan Belmawa PKM-KC Reguler"
+        converted_sks = 3
+    else:
+        allocated_budget_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "prototype_name": prototype_name,
+        "target_trl": target_trl,
+        "creativity_novelty_score": s_nov,
+        "engineering_design_score": s_eng,
+        "prototype_feasibility_score": s_feas,
+        "budget_schedule_score": s_bud,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "allocated_budget_idr": allocated_budget_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
 
 
 
