@@ -1098,6 +1098,25 @@ class WordPressClient:
             "target_status": target_status
         }
 
+    def get_media_by_ids(self, media_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress media attachments by a list of numeric media IDs via /wp/v2/media?include=...
+        """
+        if not media_ids:
+            return []
+        valid_ids = [str(int(m)) for m in media_ids if int(m) > 0]
+        if not valid_ids:
+            return []
+        include_str = ",".join(valid_ids)
+        endpoint = f"{self.api_url}/media?include={include_str}&per_page={len(valid_ids)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            return res if isinstance(res, list) else []
+        except Exception as e:
+            logger.warning(f"Failed to fetch media for ids {include_str}: {e}")
+            return []
+
 
 
 
