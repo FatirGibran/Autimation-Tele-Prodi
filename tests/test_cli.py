@@ -2802,6 +2802,79 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Ketua Test", out)
 
+    def test_cmd_wss(self):
+        class ArgsAdd:
+            action = "add"
+            node = "ROADM-Test-01"
+            degrees = 4
+            channels = 96
+            loss = 6.5
+            isolation = 35.0
+            pdl = 0.4
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_wss(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Optical WSS/OXC berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_wss(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("ROADM-Test-01", out)
+
+    def test_cmd_ta(self):
+        class ArgsAdd:
+            action = "add"
+            ue = "UE-Test-5G"
+            ta_idx = 32
+            scs = 30
+            offset = 0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ta(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR Timing Advance berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ta(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("UE-Test-5G", out)
+
+    def test_cmd_pkmre(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Ketua Riset Test"
+            nim = "1101217777"
+            title = "Riset Komponen Metamaterial"
+            topic = "Teknik Komunikasi Nirkabel"
+            lab = "Lab Antena Eksakta"
+            nov = 88.0
+            meth = 85.0
+            out = 84.0
+            budget = 86.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmre(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-RE berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmre(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Ketua Riset Test", out)
+
 
 if __name__ == "__main__":
     unittest.main()
