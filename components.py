@@ -7153,10 +7153,65 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_timing_advance_svg(cls, data: Optional[Dict[str, Any]] = None, title: str = "Diagram Propagasi 5G NR Timing Advance & RTT", **kwargs) -> str:
+        """
+        Renders an Elementor card with an inline SVG diagram visualizing 3GPP Timing Advance propagation,
+        uplink/downlink frame alignment wavefronts, and UE distance mapping.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        ta_idx = int(d.get("ta_command_index", 32))
+        rtt = float(d.get("round_trip_time_us", 16.276))
+        dist_m = float(d.get("ue_distance_m", 2439.69))
+        dist_km = float(d.get("ue_distance_km", 2.44))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+
+        return f"""    <div class="tu-nr-ta-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Frame Alignment & Propagation</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">TA #{ta_idx}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 540 200" width="100%" height="200" style="max-width: 580px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- gNodeB Cell Tower Base -->
+          <rect x="30" y="40" width="45" height="120" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
+          <polygon points="52,15 30,40 75,40" fill="#0284c7" />
+          <text x="52" y="70" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">gNodeB</text>
+          <text x="52" y="85" fill="#93c5fd" font-size="8" text-anchor="middle">Rx/Tx Ref</text>
+
+          <!-- Downlink Propagation Wave (Yellow) -->
+          <path d="M 80 65 Q 260 50 430 65" fill="none" stroke="#facc15" stroke-width="2" stroke-dasharray="4,4" />
+          <text x="240" y="55" fill="#fde047" font-size="9">Downlink Frame (DL)</text>
+
+          <!-- Uplink Timing Advance Wave (Green, Advanced by T_TA) -->
+          <path d="M 430 115 Q 260 130 80 115" fill="none" stroke="#34d399" stroke-width="2.5" />
+          <text x="220" y="145" fill="#6ee7b7" font-size="9" font-weight="bold">Uplink Advance: T_TA = {rtt:.2f} μs</text>
+
+          <!-- Target UE Device -->
+          <rect x="430" y="55" width="70" height="75" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+          <text x="465" y="80" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">5G UE</text>
+          <text x="465" y="98" fill="#38bdf8" font-size="8" text-anchor="middle">{dist_m:.0f} m</text>
+          <text x="465" y="112" fill="#94a3b8" font-size="8" text-anchor="middle">SCS {scs}k</text>
+
+          <!-- Propagation Distance Axis -->
+          <line x1="80" y1="175" x2="430" y2="175" stroke="#64748b" stroke-width="1" />
+          <text x="255" y="190" fill="#94a3b8" font-size="9" text-anchor="middle">Jarak Propagasi: {dist_km:.2f} km</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>TA Command: <strong style="color: #38bdf8;">Index #{ta_idx}</strong></div>
+        <div>Round-Trip Time: <strong style="color: #34d399;">{rtt:.3f} μs</strong></div>
+        <div>Jarak UE: <strong style="color: #facc15;">{dist_km:.2f} km</strong></div>
+      </div>
+    </div>"""
+
 render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
 render_nr_timing_advance_card = EditorialComponents.render_5g_nr_timing_advance_card
 render_satellite_rain_attenuation_card = EditorialComponents.render_satellite_rain_attenuation_card
 render_pkm_re_proposal_card = EditorialComponents.render_pkm_re_proposal_card
+render_nr_timing_advance_svg = EditorialComponents.render_5g_nr_timing_advance_svg
 
 render_optical_spm_nonlinear_card = EditorialComponents.render_optical_spm_nonlinear_card
 render_nr_beam_management_card = EditorialComponents.render_nr_beam_management_card
