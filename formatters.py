@@ -1593,6 +1593,33 @@ class TelegramFormatter:
             f"🏆 *Selamat atas prestasi riset prototipe rekayasa! Wujudkan inovasi teknologi bagi bangsa!*"
         )
 
+    @staticmethod
+    def format_wss_oxc_telegram(
+        node_name: str,
+        roadm_degrees: int,
+        channel_count: int,
+        total_insertion_loss_db: float,
+        isolation_db: float,
+        pdl_db: float,
+        osnr_penalty_db: float,
+        health_status: str,
+        dashboard_url: str = ""
+    ) -> str:
+        """
+        Renders a ROADM Wavelength Selective Switch (WSS) and Optical Cross-Connect (OXC) node status alert for Telegram broadcast.
+        """
+        dashboard_link = f"\n🔗 **NMS Optical Link:** {dashboard_url.strip()}" if dashboard_url else ""
+        return (
+            f"🌐 **Notifikasi Telemetri ROADM WSS & OXC Node**\n\n"
+            f"🏢 **Node Name:** `{node_name.strip()}`\n"
+            f"🔄 **ROADM Degrees:** `{int(roadm_degrees)} Degrees` (`{int(channel_count)} Channels DWDM`)\n"
+            f"📉 **Total Insertion Loss:** `{float(total_insertion_loss_db):.2f} dB`\n"
+            f"🛡️ **Port Isolation:** `{float(isolation_db):.1f} dB` (`PDL: {float(pdl_db):.2f} dB`)\n"
+            f"⚡ **OSNR Penalty:** `{float(osnr_penalty_db):.2f} dB`\n"
+            f"📊 **Status:** `{health_status.strip()}`{dashboard_link}\n\n"
+            f"📡 *Sistem Monitoring Jaringan DWDM/ROADM Prodi S1 Teknik Telekomunikasi*"
+        )
+
 
 
 
