@@ -6714,6 +6714,64 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_font_display_and_preload_origins(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits web font preload directives (<link rel="preload" as="font">), verifying
+        the mandatory 'crossorigin' attribute according to W3C Preload specification,
+        and verifies font-display: swap directives in stylesheet links to prevent CLS/FOIT.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "font_preloads_count": 0,
+                "missing_crossorigin_count": 0,
+                "google_fonts_count": 0,
+                "missing_swap_count": 0,
+                "is_optimized": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        preload_links = soup.find_all("link", rel=lambda r: r and "preload" in r)
+        font_preloads = []
+        missing_crossorigin = 0
+
+        for link in preload_links:
+            as_attr = (link.get("as") or "").strip().lower()
+            if as_attr == "font":
+                font_preloads.append(link)
+                if not link.has_attr("crossorigin"):
+                    missing_crossorigin += 1
+                    issues.append(f"Elemen <link rel='preload' as='font' href='{link.get('href', '')}'> wajib menyertakan atribut 'crossorigin'.")
+
+        css_links = soup.find_all("link", rel=lambda r: r and "stylesheet" in r)
+        google_fonts = 0
+        missing_swap = 0
+
+        for link in css_links:
+            href = (link.get("href") or "").strip()
+            if "fonts.googleapis.com" in href.lower():
+                google_fonts += 1
+                if "display=swap" not in href.lower():
+                    missing_swap += 1
+                    warnings.append(f"Tautan Google Fonts '{href}' sebaiknya menyertakan parameter '&display=swap' untuk mencegah FOIT.")
+
+        is_optimized = (missing_crossorigin == 0 and len(issues) == 0)
+
+        return {
+            "font_preloads_count": len(font_preloads),
+            "missing_crossorigin_count": missing_crossorigin,
+            "google_fonts_count": google_fonts,
+            "missing_swap_count": missing_swap,
+            "is_optimized": is_optimized,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
