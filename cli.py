@@ -42,7 +42,10 @@ from parser import (
     parse_innovillage_proposal_evaluation,
     calculate_5g_nr_beam_management,
     calculate_satellite_ionospheric_tec_delay,
-    parse_pkm_kc_proposal_evaluation
+    parse_pkm_kc_proposal_evaluation,
+    calculate_optical_wss_oxc_insertion_loss,
+    calculate_5g_nr_timing_advance_distance,
+    parse_pkm_re_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2851,6 +2854,126 @@ def cmd_pkmkc(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['prototype_name'][:18]:<20} | {r['target_trl']:<5} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
 
 
+def cmd_wss(args):
+    if args.action == "add":
+        node = args.node or "ROADM-Node-A"
+        degrees = int(args.degrees) if args.degrees is not None else 4
+        channels = int(args.channels) if args.channels is not None else 96
+        base_loss = float(args.loss) if args.loss is not None else 6.5
+        isolation = float(args.isolation) if args.isolation is not None else 35.0
+        pdl = float(args.pdl) if args.pdl is not None else 0.4
+
+        res = calculate_optical_wss_oxc_insertion_loss(
+            roadm_degrees=degrees,
+            channel_count=channels,
+            wss_passband_ghz=50.0,
+            base_insertion_loss_db=base_loss,
+            pdl_db=pdl,
+            isolation_db=isolation
+        )
+        rec_id = storage.record_optical_wss_oxc(
+            node_name=node,
+            roadm_degrees=res["roadm_degrees"],
+            channel_count=res["channel_count"],
+            total_insertion_loss_db=res["total_insertion_loss_db"],
+            isolation_db=res["isolation_db"],
+            pdl_db=res["pdl_db"],
+            osnr_penalty_db=res["osnr_penalty_db"],
+            health_status=res["health_status"]
+        )
+        print(f"Catatan Optical WSS/OXC berhasil disimpan dengan ID: {rec_id} (Node: {node}, Loss: {res['total_insertion_loss_db']} dB, Status: {res['health_status']})")
+    else:
+        records = storage.list_optical_wss_oxc(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Optical WSS/OXC yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'NODE':<20} | {'DERAJAT':<8} | {'KANAL':<6} | {'LOSS (dB)':<10} | {'ISOLASI':<8} | {'STATUS'}")
+        print("-" * 85)
+        for r in records:
+            print(f"{r['id']:<4} | {r['node_name'][:18]:<20} | {r['roadm_degrees']:<8} | {r['channel_count']:<6} | {r['total_insertion_loss_db']:<10.2f} | {r['isolation_db']:<8.1f} | {r['health_status']}")
+
+
+def cmd_ta(args):
+    if args.action == "add":
+        ue = args.ue or "UE-5G-001"
+        ta_idx = int(args.ta_idx) if args.ta_idx is not None else 32
+        scs = int(args.scs) if args.scs is not None else 30
+        offset = int(args.offset) if args.offset is not None else 0
+
+        res = calculate_5g_nr_timing_advance_distance(
+            ta_command_index=ta_idx,
+            subcarrier_spacing_khz=scs,
+            ta_offset=offset
+        )
+        rec_id = storage.record_nr_timing_advance(
+            ue_identifier=ue,
+            ta_command_index=ta_idx,
+            subcarrier_spacing_khz=scs,
+            round_trip_time_us=res["round_trip_time_us"],
+            ue_distance_m=res["ue_distance_m"],
+            ue_distance_km=res["ue_distance_km"],
+            cell_deployment_zone=res["cell_deployment_zone"]
+        )
+        print(f"Catatan 5G NR Timing Advance berhasil disimpan dengan ID: {rec_id} (UE: {ue}, Jarak: {res['ue_distance_km']} km, Zona: {res['cell_deployment_zone']})")
+    else:
+        records = storage.list_nr_timing_advance(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR Timing Advance yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'UE IDENTIFIER':<20} | {'TA IDX':<8} | {'SCS (kHz)':<10} | {'JARAK (km)':<12} | {'RTT (us)':<10} | {'ZONA'}")
+        print("-" * 85)
+        for r in records:
+            print(f"{r['id']:<4} | {r['ue_identifier'][:18]:<20} | {r['ta_command_index']:<8} | {r['subcarrier_spacing_khz']:<10} | {r['ue_distance_km']:<12.3f} | {r['round_trip_time_us']:<10.2f} | {r['cell_deployment_zone']}")
+
+
+def cmd_pkmre(args):
+    if args.action == "add":
+        leader = args.leader or "Ketua Tim PKM-RE"
+        nim = args.nim or "1101210003"
+        title = args.title or "Fabrikasi Komponen Metamaterial 5G NR"
+        topic = args.topic or "Teknik Transmisi & Gelombang Mikro"
+        lab = args.lab or "Laboratorium Antena & Propagasi"
+        nov = float(args.nov) if args.nov is not None else 85.0
+        meth = float(args.meth) if args.meth is not None else 85.0
+        out = float(args.out) if args.out is not None else 85.0
+        budget = float(args.budget) if args.budget is not None else 85.0
+
+        res = parse_pkm_re_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "research_topic": topic,
+            "lab_center": lab,
+            "novelty_score": nov,
+            "methodology_score": meth,
+            "output_feasibility_score": out,
+            "budget_efficiency_score": budget
+        })
+        rec_id = storage.record_pkm_re_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            research_topic=topic,
+            lab_center=lab,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-RE berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_pkm_re_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-RE yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'LAB':<20} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            funded_str = "Lolos" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['lab_center'][:18]:<20} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
+
+
 def main():
 
 
@@ -3864,6 +3987,43 @@ def main():
     pkmkc_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
     pkmkc_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmkc_parser.set_defaults(func=cmd_pkmkc)
+
+    # Optical WSS / OXC command
+    wss_parser = subparsers.add_parser("wss", help="Kelola kalkulasi rugi-rugi optical ROADM WSS / OXC (list, add)")
+    wss_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi WSS OXC")
+    wss_parser.add_argument("--node", default="ROADM-Node-A", help="Identifier node ROADM")
+    wss_parser.add_argument("--degrees", type=int, default=4, help="Jumlah degree/arah ROADM (2-32)")
+    wss_parser.add_argument("--channels", type=int, default=96, help="Jumlah kanal DWDM (1-160)")
+    wss_parser.add_argument("--loss", type=float, default=6.5, help="Base insertion loss WSS matrix (dB)")
+    wss_parser.add_argument("--isolation", type=float, default=35.0, help="Inter-port isolation crosstalk (dB)")
+    wss_parser.add_argument("--pdl", type=float, default=0.4, help="Polarization dependent loss (dB)")
+    wss_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    wss_parser.set_defaults(func=cmd_wss)
+
+    # 5G NR Timing Advance command
+    ta_parser = subparsers.add_parser("ta", help="Kelola kalkulasi 5G NR Timing Advance & UE propagation distance (list, add)")
+    ta_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi Timing Advance")
+    ta_parser.add_argument("--ue", default="UE-5G-001", help="Identifier perangkat UE")
+    ta_parser.add_argument("--ta-idx", type=int, default=32, help="Timing Advance command index (0-3846)")
+    ta_parser.add_argument("--scs", type=int, default=30, help="Subcarrier Spacing SCS (15, 30, 60, 120 kHz)")
+    ta_parser.add_argument("--offset", type=int, default=0, help="N_TA,offset kompensasi dupleks TDD")
+    ta_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    ta_parser.set_defaults(func=cmd_ta)
+
+    # PKM-RE Proposal command
+    pkmre_parser = subparsers.add_parser("pkmre", help="Kelola evaluasi proposal Belmawa PKM Riset Eksakta (list, add)")
+    pkmre_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-RE")
+    pkmre_parser.add_argument("--leader", default="Ketua Tim PKM-RE", help="Nama ketua mahasiswa pengusul")
+    pkmre_parser.add_argument("--nim", default="1101210003", help="NIM ketua mahasiswa")
+    pkmre_parser.add_argument("--title", default="Fabrikasi Komponen Metamaterial 5G NR", help="Judul proposal riset eksakta")
+    pkmre_parser.add_argument("--topic", default="Teknik Transmisi & Gelombang Mikro", help="Topik fokus riset")
+    pkmre_parser.add_argument("--lab", default="Laboratorium Antena & Propagasi", help="Pusat riset / laboratorium")
+    pkmre_parser.add_argument("--nov", type=float, default=85.0, help="Skor kebaruan & landasan teori riset (0-100)")
+    pkmre_parser.add_argument("--meth", type=float, default=85.0, help="Skor ketepatan metodologi & desain eksperimen (0-100)")
+    pkmre_parser.add_argument("--out", type=float, default=85.0, help="Skor kelayakan luaran publikasi ilmiah/prototipe (0-100)")
+    pkmre_parser.add_argument("--budget", type=float, default=85.0, help="Skor efisiensi RAB & jadwal riset (0-100)")
+    pkmre_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmre_parser.set_defaults(func=cmd_pkmre)
 
     args = parser.parse_args()
 
