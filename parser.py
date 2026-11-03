@@ -7344,6 +7344,79 @@ def calculate_5g_nr_timing_advance_distance(
     }
 
 
+def calculate_satellite_rain_attenuation_itu_r_p618(
+    rain_rate_001_mm_hr: float = 60.0,
+    carrier_frequency_ghz: float = 12.0,
+    elevation_angle_deg: float = 45.0,
+    station_altitude_km: float = 0.1,
+    polarization: str = "circular"
+) -> Dict[str, Any]:
+    """
+    Calculates satellite slant path tropospheric rain attenuation according to ITU-R P.618-13
+    and ITU-R P.838-3 specific rain attenuation regression power law.
+    """
+    r_001 = max(0.1, min(250.0, float(rain_rate_001_mm_hr)))
+    freq = max(1.0, min(100.0, float(carrier_frequency_ghz)))
+    elev = max(5.0, min(90.0, float(elevation_angle_deg)))
+    h_s = max(0.0, min(4.0, float(station_altitude_km)))
+    pol = polarization.strip().lower() if polarization else "circular"
+
+    if freq < 15.0:
+        k = 0.0215
+        alpha = 1.14
+    elif freq < 25.0:
+        k = 0.095
+        alpha = 1.05
+    else:
+        k = 0.22
+        alpha = 0.96
+
+    if pol == "horizontal":
+        k *= 1.12
+    elif pol == "vertical":
+        k *= 0.88
+
+    gamma_r = round(k * (r_001 ** alpha), 3)
+
+    h_r = 4.5
+    theta_rad = math.radians(elev)
+
+    l_s = max(0.1, (h_r - h_s) / math.sin(theta_rad))
+    l_g = l_s * math.cos(theta_rad)
+
+    denom = 1.0 + 0.78 * math.sqrt(l_g * gamma_r / freq) - 0.38 * (1.0 - math.exp(-2.0 * l_g))
+    r_factor = 1.0 / max(0.1, denom) if denom > 0 else 0.5
+    r_factor = min(1.0, max(0.1, r_factor))
+
+    l_e = round(l_s * r_factor, 3)
+    a_001 = round(gamma_r * l_e, 2)
+
+    if a_001 <= 4.0:
+        fade_margin_risk = "LOW_RAIN_FADE"
+        is_acceptable = True
+    elif a_001 <= 10.0:
+        fade_margin_risk = "MODERATE_FADE_UPC_REQUIRED"
+        is_acceptable = True
+    else:
+        fade_margin_risk = "SEVERE_RAIN_FADE_SITE_DIVERSITY_RECOMMENDED"
+        is_acceptable = False
+
+    return {
+        "rain_rate_001_mm_hr": round(r_001, 1),
+        "carrier_frequency_ghz": round(freq, 2),
+        "elevation_angle_deg": round(elev, 1),
+        "station_altitude_km": round(h_s, 2),
+        "polarization": pol,
+        "specific_attenuation_db_km": gamma_r,
+        "slant_path_km": round(l_s, 3),
+        "effective_path_length_km": l_e,
+        "path_reduction_factor": round(r_factor, 3),
+        "total_rain_attenuation_db": a_001,
+        "fade_margin_risk": fade_margin_risk,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
