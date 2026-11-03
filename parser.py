@@ -7284,6 +7284,66 @@ def calculate_optical_wss_oxc_insertion_loss(
     }
 
 
+def calculate_5g_nr_timing_advance_distance(
+    ta_command_index: int = 32,
+    subcarrier_spacing_khz: int = 30,
+    frequency_range: str = "FR1",
+    ta_offset: int = 0
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP Rel-15/16 5G NR Timing Advance (TA) duration, round-trip time (RTT),
+    one-way radio propagation delay, estimated UE distance from gNodeB, and cell radius compliance.
+    """
+    ta_idx = max(0, min(3846, int(ta_command_index)))
+    scs = max(15, min(120, int(subcarrier_spacing_khz)))
+    fr = frequency_range.strip().upper() if frequency_range else "FR1"
+    offset = max(0, int(ta_offset))
+
+    t_c = 1.0 / (480000.0 * 4096.0)
+    scs_to_mu = {15: 0, 30: 1, 60: 2, 120: 3}
+    mu = scs_to_mu.get(scs, 1)
+
+    n_ta = int(round(ta_idx * 16 * (64 / (2 ** mu))))
+    total_n_ta = n_ta + offset
+
+    t_ta_sec = total_n_ta * t_c
+    rtt_us = t_ta_sec * 1e6
+    one_way_delay_us = rtt_us / 2.0
+
+    c = 299792458.0
+    ue_distance_m = round(c * (t_ta_sec / 2.0), 2)
+    ue_distance_km = round(ue_distance_m / 1000.0, 3)
+
+    if ue_distance_km <= 5.0:
+        cell_deployment_zone = "URBAN_MICRO_CELL"
+        is_acceptable = True
+    elif ue_distance_km <= 35.0:
+        cell_deployment_zone = "SUBURBAN_MACRO_CELL"
+        is_acceptable = True
+    elif ue_distance_km <= 100.0:
+        cell_deployment_zone = "RURAL_EXTENDED_CELL"
+        is_acceptable = True
+    else:
+        cell_deployment_zone = "NON_TERRESTRIAL_NTN_OUT_OF_BOUNDS"
+        is_acceptable = False
+
+    return {
+        "ta_command_index": ta_idx,
+        "subcarrier_spacing_khz": scs,
+        "frequency_range": fr,
+        "numerology_mu": mu,
+        "n_ta": n_ta,
+        "ta_offset": offset,
+        "total_n_ta": total_n_ta,
+        "round_trip_time_us": round(rtt_us, 3),
+        "one_way_delay_us": round(one_way_delay_us, 3),
+        "ue_distance_m": ue_distance_m,
+        "ue_distance_km": ue_distance_km,
+        "cell_deployment_zone": cell_deployment_zone,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
