@@ -1210,6 +1210,39 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("prerender: true", res)
         self.assertIn("<p>Prerendered reactive content in SvelteKit.</p>", res)
 
+    def test_generate_scholarly_article_json_ld(self):
+        meta = {
+            "title": "Optimasi Jaringan 5G NR Menggunakan Array Metamaterial",
+            "author": "Ahmad Fauzi",
+            "institution": "Telkom University Purwokerto",
+            "journal_name": "Jurnal Rekayasa Telekomunikasi",
+            "publish_date": "2026-11-03",
+            "doi": "10.1109/TCOMM.2026.001",
+            "keywords": ["5G NR", "Metamaterial", "Beamforming"]
+        }
+        res = ArticleExporter.generate_scholarly_article_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "ScholarlyArticle")
+        self.assertEqual(res["headline"], "Optimasi Jaringan 5G NR Menggunakan Array Metamaterial")
+        self.assertEqual(res["author"]["name"], "Ahmad Fauzi")
+        self.assertIn("https://doi.org/10.1109/TCOMM.2026.001", res["identifier"])
+
+    def test_to_angular_analog_mdx(self):
+        meta = {
+            "seo_title": "Panduan AnalogJS Fullstack Angular",
+            "meta_description": "Dokumentasi integrasi AnalogJS dengan Angular server-side rendering.",
+            "slug": "panduan-analogjs-angular",
+            "publish_date": "2026-11-03",
+            "tags": ["angular", "analogjs", "ssr"]
+        }
+        res = ArticleExporter.to_angular_analog_mdx(meta, "<p>Prerendered Angular content.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan AnalogJS Fullstack Angular"', res)
+        self.assertIn('framework: "analogjs"', res)
+        self.assertIn("analog: true", res)
+        self.assertIn("ssr: true", res)
+        self.assertIn("<p>Prerendered Angular content.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
