@@ -1315,6 +1315,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_kc_nim ON pkm_kc_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_wss_oxc_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    node_name TEXT NOT NULL,
+                    roadm_degrees INTEGER NOT NULL,
+                    channel_count INTEGER NOT NULL,
+                    total_insertion_loss_db REAL NOT NULL,
+                    isolation_db REAL NOT NULL,
+                    pdl_db REAL NOT NULL,
+                    osnr_penalty_db REAL NOT NULL,
+                    health_status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_wss_oxc_node ON optical_wss_oxc_records(node_name);")
 
 
 
@@ -6036,6 +6051,62 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM pkm_kc_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_wss_oxc(
+        self,
+        node_name: str,
+        roadm_degrees: int,
+        channel_count: int,
+        total_insertion_loss_db: float,
+        isolation_db: float,
+        pdl_db: float,
+        osnr_penalty_db: float,
+        health_status: str
+    ) -> int:
+        """
+        Stores an optical ROADM WSS / OXC matrix insertion loss telemetry record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_wss_oxc_records (
+                    node_name, roadm_degrees, channel_count,
+                    total_insertion_loss_db, isolation_db, pdl_db,
+                    osnr_penalty_db, health_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(node_name).strip(),
+                int(roadm_degrees),
+                int(channel_count),
+                float(total_insertion_loss_db),
+                float(isolation_db),
+                float(pdl_db),
+                float(osnr_penalty_db),
+                str(health_status).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_optical_wss_oxc(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent optical ROADM WSS/OXC records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_wss_oxc_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_wss_oxc_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical WSS/OXC record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_wss_oxc_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
