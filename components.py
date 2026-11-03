@@ -7080,8 +7080,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_rain_attenuation_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Prediksi Redaman Hujan Satelit ITU-R P.618", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying ITU-R P.618 satellite tropospheric rain fade margin telemetry.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        r001 = float(d.get("rain_rate_001_mm_hr", 25.0))
+        freq = float(d.get("carrier_frequency_ghz", 12.0))
+        elev = float(d.get("elevation_angle_deg", 45.0))
+        gamma = float(d.get("specific_attenuation_db_km", 0.844))
+        le = float(d.get("effective_path_length_km", 5.904))
+        a001 = float(d.get("total_rain_attenuation_db", 4.98))
+        risk = str(d.get("fade_margin_risk", "MODERATE_FADE_UPC_REQUIRED"))
+
+        badge_color = "#10b981" if "LOW" in risk else ("#f59e0b" if "MODERATE" in risk else "#ef4444")
+
+        return f"""    <div class="tu-satellite-rain-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">ITU-R P.618 Rain Attenuation</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{risk}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 13px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Curah Hujan R0.01: <strong>{r001:.1f} mm/jam</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Frekuensi Tautan: <strong>{freq:.1f} GHz</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Elevasi Antena: <strong>{elev:.1f}°</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Redaman Spesifik: <strong>{gamma:.3f} dB/km</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Panjang Efektif LE: <strong>{le:.3f} km</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Total Fade Margin: <strong>{a001:.2f} dB</strong></div>
+      </div>
+    </div>"""
+
 render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
 render_nr_timing_advance_card = EditorialComponents.render_5g_nr_timing_advance_card
+render_satellite_rain_attenuation_card = EditorialComponents.render_satellite_rain_attenuation_card
 
 render_optical_spm_nonlinear_card = EditorialComponents.render_optical_spm_nonlinear_card
 render_nr_beam_management_card = EditorialComponents.render_nr_beam_management_card
