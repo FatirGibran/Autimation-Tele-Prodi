@@ -2297,6 +2297,56 @@ def sanitize_html5_fieldset_legend_grouping(html: str) -> str:
     return re.sub(r'<legend\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_legend, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_video_track_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <track> timed text track elements (subtitles, captions, descriptions)
+    by stripping event handlers, validating track kind, validating BCP 47 srclang,
+    blocking dangerous URI schemes on src, and sanitizing user-facing track labels.
+    """
+    if not html or "<track" not in html.lower():
+        return html
+
+    valid_kinds = {"subtitles", "captions", "descriptions", "chapters", "metadata"}
+
+    def fix_track(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate kind
+        kind_m = re.search(r'\bkind=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if kind_m:
+            val = kind_m.group(1).strip().lower()
+            if val not in valid_kinds:
+                tag = re.sub(r'\bkind=["\'][^"\']*["\']', 'kind="subtitles"', tag, flags=re.IGNORECASE)
+
+        # Validate src URI
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            val = src_m.group(1).strip().lower()
+            if val.startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', val):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate srclang (alphanumeric and hyphens only, e.g. en, id-ID)
+        lang_m = re.search(r'\bsrclang=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if lang_m:
+            val = lang_m.group(1).strip()
+            if not re.match(r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]+)*$', val):
+                tag = re.sub(r'\s+srclang=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize label against HTML tags
+        label_m = re.search(r'\blabel=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if label_m:
+            val = label_m.group(1).strip()
+            if re.search(r'[<>]', val):
+                clean_label = re.sub(r'[<>]', '', val)
+                tag = re.sub(r'\blabel=["\'][^"\']*["\']', f'label="{clean_label}"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<track\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_track, html, flags=re.IGNORECASE)
+
+
 
 
 
