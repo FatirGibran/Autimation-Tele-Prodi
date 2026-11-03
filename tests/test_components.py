@@ -2594,6 +2594,85 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Targeted CSI-RS Pencil Beam", html)
         self.assertIn("5G UE", html)
 
+    def test_render_optical_wss_oxc_card(self):
+        html = EditorialComponents.render_optical_wss_oxc_card({
+            "roadm_degrees": 4,
+            "channel_count": 96,
+            "total_insertion_loss_db": 7.0,
+            "isolation_db": 35.0,
+            "pdl_db": 0.4,
+            "osnr_penalty_db": 1.08,
+            "health_status": "OPTIMAL_LOW_LOSS"
+        })
+        self.assertIn("tu-wss-oxc-card", html)
+        self.assertIn("4 Degrees", html)
+        self.assertIn("96 DWDM", html)
+        self.assertIn("7.00 dB", html)
+        self.assertIn("35.0 dB", html)
+
+    def test_render_5g_nr_timing_advance_card(self):
+        html = EditorialComponents.render_5g_nr_timing_advance_card({
+            "ta_command_index": 32,
+            "subcarrier_spacing_khz": 30,
+            "round_trip_time_us": 16.276,
+            "one_way_delay_us": 8.138,
+            "ue_distance_m": 2439.69,
+            "ue_distance_km": 2.44,
+            "cell_deployment_zone": "URBAN_MICRO_CELL"
+        })
+        self.assertIn("tu-nr-timing-advance-card", html)
+        self.assertIn("#32", html)
+        self.assertIn("30 kHz", html)
+        self.assertIn("2439.7 m", html)
+        self.assertIn("2.44 km", html)
+
+    def test_render_satellite_rain_attenuation_card(self):
+        html = EditorialComponents.render_satellite_rain_attenuation_card({
+            "rain_rate_001_mm_hr": 25.0,
+            "carrier_frequency_ghz": 12.0,
+            "elevation_angle_deg": 45.0,
+            "specific_attenuation_db_km": 0.844,
+            "effective_path_length_km": 5.904,
+            "total_rain_attenuation_db": 4.98,
+            "fade_margin_risk": "MODERATE_FADE_UPC_REQUIRED"
+        })
+        self.assertIn("tu-satellite-rain-card", html)
+        self.assertIn("25.0 mm/jam", html)
+        self.assertIn("12.0 GHz", html)
+        self.assertIn("4.98 dB", html)
+
+    def test_render_pkm_re_proposal_card(self):
+        html = EditorialComponents.render_pkm_re_proposal_card({
+            "student_leader": "Ahmad Fauzi",
+            "nim": "1101210088",
+            "proposal_title": "Riset Fabrikasi Metamaterial 28 GHz",
+            "research_topic": "Rekayasa Komunikasi Gelombang Mikro",
+            "lab_center": "Laboratorium Komunikasi Nirkabel",
+            "composite_score": 88.5,
+            "letter_grade": "A",
+            "allocated_budget_idr": 9000000,
+            "converted_sks": 4,
+            "funding_status": "Lolos Pendanaan Belmawa PKM-RE Unggulan"
+        })
+        self.assertIn("tu-pkm-re-card", html)
+        self.assertIn("Ahmad Fauzi", html)
+        self.assertIn("9,000,000", html)
+        self.assertIn("4 SKS MBKM", html)
+
+    def test_render_5g_nr_timing_advance_svg(self):
+        html = EditorialComponents.render_5g_nr_timing_advance_svg({
+            "ta_command_index": 32,
+            "round_trip_time_us": 16.276,
+            "ue_distance_m": 2439.69,
+            "ue_distance_km": 2.44,
+            "subcarrier_spacing_khz": 30
+        })
+        self.assertIn("tu-nr-ta-svg-card", html)
+        self.assertIn("<svg", html)
+        self.assertIn("gNodeB", html)
+        self.assertIn("Downlink Frame (DL)", html)
+        self.assertIn("Uplink Advance", html)
+
 
 if __name__ == "__main__":
     unittest.main()
