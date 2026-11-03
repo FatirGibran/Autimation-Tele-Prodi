@@ -7417,6 +7417,80 @@ def calculate_satellite_rain_attenuation_itu_r_p618(
     }
 
 
+def parse_pkm_re_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates Belmawa PKM Riset Eksakta (PKM-RE) undergraduate science & engineering research proposals
+    focused on laboratory experimentation, advanced telecommunications, and SINTA journal outputs.
+    """
+    student_leader = str(data.get("student_leader", "Ketua Tim PKM-RE")).strip()
+    nim = str(data.get("nim", "")).strip()
+    proposal_title = str(data.get("proposal_title", "Riset Eksakta Telekomunikasi")).strip()
+    research_topic = str(data.get("research_topic", "Rekayasa Perangkat Komunikasi")).strip()
+    lab_center = str(data.get("lab_center", "Laboratorium Transmisi & Komunikasi Nirkabel")).strip()
+
+    s_nov = max(0.0, min(100.0, float(data.get("novelty_score", 85.0))))
+    s_meth = max(0.0, min(100.0, float(data.get("methodology_score", 85.0))))
+    s_out = max(0.0, min(100.0, float(data.get("output_feasibility_score", 85.0))))
+    s_bud = max(0.0, min(100.0, float(data.get("budget_efficiency_score", 85.0))))
+
+    composite = round(
+        (0.30 * s_nov) +
+        (0.35 * s_meth) +
+        (0.20 * s_out) +
+        (0.15 * s_bud),
+        2
+    )
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        allocated_budget_idr = 9000000
+        funding_status = "Lolos Pendanaan Belmawa PKM-RE Unggulan"
+        converted_sks = 4
+    elif is_funded:
+        allocated_budget_idr = 7500000
+        funding_status = "Lolos Pendanaan Belmawa PKM-RE Reguler"
+        converted_sks = 3
+    else:
+        allocated_budget_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "research_topic": research_topic,
+        "lab_center": lab_center,
+        "novelty_score": s_nov,
+        "methodology_score": s_meth,
+        "output_feasibility_score": s_out,
+        "budget_efficiency_score": s_bud,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "allocated_budget_idr": allocated_budget_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
 
 
 
