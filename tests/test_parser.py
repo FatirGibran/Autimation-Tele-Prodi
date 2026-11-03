@@ -2359,6 +2359,80 @@ Status: Granted
         self.assertFalse(res_low["is_funded"])
         self.assertEqual(res_low["converted_sks"], 2)
 
+    def test_calculate_optical_wss_oxc_insertion_loss(self):
+        from parser import calculate_optical_wss_oxc_insertion_loss
+        res = calculate_optical_wss_oxc_insertion_loss(
+            roadm_degrees=4,
+            channel_count=96,
+            base_insertion_loss_db=6.5,
+            pdl_db=0.4,
+            isolation_db=35.0
+        )
+        self.assertEqual(res["total_insertion_loss_db"], 7.0)
+        self.assertEqual(res["health_status"], "OPTIMAL_LOW_LOSS")
+        self.assertTrue(res["is_acceptable"])
+        self.assertGreater(res["osnr_penalty_db"], 0.0)
+
+    def test_calculate_5g_nr_timing_advance_distance(self):
+        from parser import calculate_5g_nr_timing_advance_distance
+        res = calculate_5g_nr_timing_advance_distance(
+            ta_command_index=32,
+            subcarrier_spacing_khz=30
+        )
+        self.assertEqual(res["numerology_mu"], 1)
+        self.assertGreater(res["round_trip_time_us"], 0.0)
+        self.assertGreater(res["ue_distance_m"], 0.0)
+        self.assertEqual(res["cell_deployment_zone"], "URBAN_MICRO_CELL")
+        self.assertTrue(res["is_acceptable"])
+
+    def test_calculate_satellite_rain_attenuation_itu_r_p618(self):
+        from parser import calculate_satellite_rain_attenuation_itu_r_p618
+        res = calculate_satellite_rain_attenuation_itu_r_p618(
+            rain_rate_001_mm_hr=25.0,
+            carrier_frequency_ghz=12.0,
+            elevation_angle_deg=45.0
+        )
+        self.assertGreater(res["specific_attenuation_db_km"], 0.0)
+        self.assertGreater(res["slant_path_km"], 0.0)
+        self.assertGreater(res["total_rain_attenuation_db"], 0.0)
+        self.assertEqual(res["fade_margin_risk"], "MODERATE_FADE_UPC_REQUIRED")
+        self.assertTrue(res["is_acceptable"])
+
+        # Severe rain test
+        res_severe = calculate_satellite_rain_attenuation_itu_r_p618(
+            rain_rate_001_mm_hr=60.0,
+            carrier_frequency_ghz=12.0,
+            elevation_angle_deg=45.0
+        )
+        self.assertEqual(res_severe["fade_margin_risk"], "SEVERE_RAIN_FADE_SITE_DIVERSITY_RECOMMENDED")
+        self.assertFalse(res_severe["is_acceptable"])
+
+    def test_parse_pkm_re_proposal_evaluation(self):
+        from parser import parse_pkm_re_proposal_evaluation
+        res_top = parse_pkm_re_proposal_evaluation({
+            "student_leader": "Ahmad Fauzi",
+            "nim": "1101210088",
+            "proposal_title": "Fabrikasi Metamaterial Cloaking Reconfigurable 28 GHz",
+            "novelty_score": 90.0,
+            "methodology_score": 92.0,
+            "output_feasibility_score": 88.0,
+            "budget_efficiency_score": 85.0
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 9000000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_funded"])
+
+        res_low = parse_pkm_re_proposal_evaluation({
+            "novelty_score": 50.0,
+            "methodology_score": 50.0,
+            "output_feasibility_score": 50.0,
+            "budget_efficiency_score": 50.0
+        })
+        self.assertEqual(res_low["letter_grade"], "C")
+        self.assertFalse(res_low["is_funded"])
+        self.assertEqual(res_low["converted_sks"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
