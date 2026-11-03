@@ -6646,6 +6646,74 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_media_transcript_and_captions(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML5 <video> and <audio> elements for accessibility compliance according to
+        WCAG 2.1 SC 1.2.1 (Audio-only and Video-only) and SC 1.2.2 (Captions Prerecorded),
+        verifying presence of subtitles/captions tracks and text transcripts.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_videos": 0,
+                "videos_with_captions": 0,
+                "total_audios": 0,
+                "audios_with_transcripts": 0,
+                "is_accessible": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        videos = soup.find_all("video")
+        audios = soup.find_all("audio")
+
+        videos_with_captions = 0
+        for vid in videos:
+            tracks = vid.find_all("track")
+            has_captions = False
+            for t in tracks:
+                kind = (t.get("kind") or "subtitles").strip().lower()
+                if kind in ("captions", "subtitles"):
+                    has_captions = True
+                    break
+            if has_captions:
+                videos_with_captions += 1
+            else:
+                issues.append("Elemen <video> tidak menyertakan elemen <track> dengan kind='subtitles' atau 'captions'.")
+
+        audios_with_transcripts = 0
+        for aud in audios:
+            parent = aud.find_parent()
+            has_transcript = False
+            if aud.get("aria-describedby"):
+                has_transcript = True
+            elif parent:
+                trans_link = parent.find(["a", "div", "p"], string=re.compile(r"transkrip|transcript", re.IGNORECASE))
+                trans_class = parent.find(class_=re.compile(r"transcript", re.IGNORECASE))
+                if trans_link or trans_class:
+                    has_transcript = True
+
+            if has_transcript:
+                audios_with_transcripts += 1
+            else:
+                warnings.append("Elemen <audio> sebaiknya disertai tautan transkrip teks untuk aksesibilitas tunarungu.")
+
+        is_accessible = (len(issues) == 0)
+
+        return {
+            "total_videos": len(videos),
+            "videos_with_captions": videos_with_captions,
+            "total_audios": len(audios),
+            "audios_with_transcripts": audios_with_transcripts,
+            "is_accessible": is_accessible,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
