@@ -969,6 +969,38 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["target_status"], "draft")
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_ids(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 501, "source_url": "https://img.org/1.jpg"}, {"id": 502, "source_url": "https://img.org/2.jpg"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        self.assertEqual(self.client.get_media_by_ids([]), [])
+        self.assertEqual(mock_urlopen.call_count, 0)
+
+        media = self.client.get_media_by_ids([501, 502])
+        self.assertEqual(len(media), 2)
+        self.assertEqual(media[0]["id"], 501)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("include=501,502", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_update_media_captions(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 501, "alt_text": "Tower 5G"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        updates = [
+            {"id": 501, "alt_text": "Tower 5G"},
+            {"id": 502, "caption": "Antena MIMO"}
+        ]
+        res = self.client.batch_update_media_captions(updates)
+        self.assertEqual(res["updated"], [501, 502])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(mock_urlopen.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
