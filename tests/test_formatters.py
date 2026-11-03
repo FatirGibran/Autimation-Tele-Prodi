@@ -1103,6 +1103,48 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Rp 8,500,000", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/kc/99", msg)
 
+    def test_format_wss_oxc_telegram(self):
+        msg = TelegramFormatter.format_wss_oxc_telegram(
+            node_name="ROADM-PWT-01",
+            roadm_degrees=4,
+            channel_count=96,
+            total_insertion_loss_db=7.0,
+            isolation_db=35.0,
+            pdl_db=0.4,
+            osnr_penalty_db=1.08,
+            health_status="OPTIMAL_LOW_LOSS",
+            dashboard_url="https://nms.telkomuniversity.ac.id/roadm"
+        )
+        self.assertIn("Notifikasi Telemetri ROADM WSS & OXC Node", msg)
+        self.assertIn("ROADM-PWT-01", msg)
+        self.assertIn("4 Degrees", msg)
+        self.assertIn("96 Channels DWDM", msg)
+        self.assertIn("7.00 dB", msg)
+        self.assertIn("35.0 dB", msg)
+        self.assertIn("OPTIMAL_LOW_LOSS", msg)
+        self.assertIn("https://nms.telkomuniversity.ac.id/roadm", msg)
+
+    def test_format_pkm_re_telegram(self):
+        msg = TelegramFormatter.format_pkm_re_telegram(
+            student_leader="Ahmad Fauzi",
+            nim="1101210088",
+            proposal_title="Riset Fabrikasi Metamaterial 28 GHz",
+            research_topic="Rekayasa Komunikasi Gelombang Mikro",
+            lab_center="Laboratorium Komunikasi Nirkabel",
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=9000000,
+            funding_status="Lolos Pendanaan Belmawa PKM-RE Unggulan",
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/re/88"
+        )
+        self.assertIn("Pengumuman Kelulusan Riset Belmawa PKM-RE", msg)
+        self.assertIn("Ahmad Fauzi", msg)
+        self.assertIn("1101210088", msg)
+        self.assertIn("Riset Fabrikasi Metamaterial 28 GHz", msg)
+        self.assertIn("Rp 9,000,000", msg)
+        self.assertIn("Lolos Pendanaan Belmawa PKM-RE Unggulan", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/re/88", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
