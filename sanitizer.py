@@ -2390,6 +2390,42 @@ def sanitize_html5_details_summary_attributes(html: str) -> str:
     return re.sub(r'<summary\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_summary, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_template_slot_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 Web Components <template> and <slot> elements by neutralizing
+    executable scripts embedded in dormant template markup, stripping inline event handlers,
+    and validating slot name attributes against DOM clobbering identifiers.
+    """
+    if not html or ("<template" not in html.lower() and "<slot" not in html.lower()):
+        return html
+
+    clobbered_names = {"submit", "reset", "length", "elements", "nodeName", "constructor", "toString", "valueOf"}
+
+    def fix_slot(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        name_m = re.search(r'\bname=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if name_m:
+            val = name_m.group(1).strip()
+            if val.lower() in clobbered_names or not re.match(r'^[a-zA-Z0-9_\-]+$', val):
+                tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_template(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    # Strip script tags within templates to prevent execution upon cloneNode
+    html = re.sub(r'<script\b[^>]*>[\s\S]*?<\/script>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<slot\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_slot, html, flags=re.IGNORECASE)
+    return re.sub(r'<template\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_template, html, flags=re.IGNORECASE)
+
+
 
 
 
