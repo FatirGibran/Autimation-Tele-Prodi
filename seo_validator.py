@@ -6526,6 +6526,68 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_heading_hierarchy_sequence(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML heading hierarchy (H1-H6) for logical structural sequence,
+        detecting skipped heading levels according to WCAG 2.1 SC 1.3.1 (Info and Relationships)
+        and ensuring optimal SEO outline structure.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_headings": 0,
+                "h1_count": 0,
+                "heading_sequence": [],
+                "skipped_levels_count": 0,
+                "is_hierarchical": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        headings = soup.find_all(re.compile(r"^h[1-6]$", re.IGNORECASE))
+        h1_count = 0
+        sequence = []
+        skipped_count = 0
+        prev_level = 0
+
+        for h in headings:
+            lvl = int(h.name[1])
+            text = h.get_text(strip=True)
+            sequence.append({"level": lvl, "text": text[:50]})
+
+            if not text:
+                issues.append(f"Elemen <{h.name}> ditemukan kosong tanpa teks yang dapat dibaca.")
+
+            if lvl == 1:
+                h1_count += 1
+
+            if prev_level > 0 and lvl > prev_level + 1:
+                skipped_count += 1
+                issues.append(f"Tingkat heading melompati hierarki dari <h{prev_level}> langsung ke <h{lvl}>.")
+
+            prev_level = lvl
+
+        if h1_count == 0 and len(headings) > 0:
+            issues.append("Dokumen tidak memiliki elemen <h1> utama sebagai tajuk dokumen.")
+        elif h1_count > 1:
+            warnings.append(f"Ditemukan {h1_count} elemen <h1>; sebaiknya gunakan tepat satu <h1> untuk topik utama artikel.")
+
+        is_hierarchical = (skipped_count == 0 and len(issues) == 0)
+
+        return {
+            "total_headings": len(headings),
+            "h1_count": h1_count,
+            "heading_sequence": sequence,
+            "skipped_levels_count": skipped_count,
+            "is_hierarchical": is_hierarchical,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
