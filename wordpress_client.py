@@ -1117,6 +1117,39 @@ class WordPressClient:
             logger.warning(f"Failed to fetch media for ids {include_str}: {e}")
             return []
 
+    def batch_update_media_captions(self, media_updates: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Batch updates alt text and captions for WordPress media attachments by numeric IDs.
+        """
+        updated = []
+        failed = []
+        for item in media_updates:
+            media_id = item.get("id") or item.get("media_id")
+            if not media_id:
+                continue
+            try:
+                endpoint = f"{self.api_url}/media/{int(media_id)}"
+                payload: Dict[str, Any] = {}
+                if "alt_text" in item:
+                    payload["alt_text"] = item["alt_text"]
+                if "caption" in item:
+                    payload["caption"] = item["caption"]
+                if "description" in item:
+                    payload["description"] = item["description"]
+
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                res = self._send_request(req)
+                updated.append(int(media_id))
+            except Exception as e:
+                failed.append({"media_id": int(media_id), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(media_updates)
+        }
+
 
 
 
