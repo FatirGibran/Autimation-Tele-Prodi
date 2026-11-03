@@ -1620,6 +1620,35 @@ class TelegramFormatter:
             f"📡 *Sistem Monitoring Jaringan DWDM/ROADM Prodi S1 Teknik Telekomunikasi*"
         )
 
+    @staticmethod
+    def format_pkm_re_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        research_topic: str,
+        lab_center: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Riset Eksakta (PKM-RE) student research funding announcement for Telegram broadcast.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"🔬 **Pengumuman Kelulusan Riset Belmawa PKM-RE**\n\n"
+            f"📚 **Judul Riset Eksakta:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Peneliti:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🔬 **Laboratorium/Pusat Studi:** `{lab_center.strip()}`\n"
+            f"🎯 **Topik Riset:** `{research_topic.strip()}`\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Hibah Riset:** `Rp {allocated_budget_idr:,}`\n"
+            f"🌟 **Status:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"🏆 *Selamat meneliti dan mempublikasikan karya ilmiah bereputasi bagi almamater!*"
+        )
+
 
 
 
