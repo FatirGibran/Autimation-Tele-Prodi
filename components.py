@@ -7113,9 +7113,50 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_re_proposal_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Evaluasi Proposal Riset Belmawa PKM-RE", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying Belmawa PKM-RE student research proposal evaluation and funding status.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        leader = str(d.get("student_leader", "Ahmad Fauzi"))
+        nim = str(d.get("nim", "1101210088"))
+        prop_title = str(d.get("proposal_title", "Riset Fabrikasi Metamaterial 28 GHz"))
+        topic = str(d.get("research_topic", "Rekayasa Komunikasi Gelombang Mikro"))
+        lab = str(d.get("lab_center", "Laboratorium Komunikasi Nirkabel"))
+        score = float(d.get("composite_score", 88.5))
+        grade = str(d.get("letter_grade", "A"))
+        budget = float(d.get("allocated_budget_idr", 9000000))
+        status = str(d.get("funding_status", "Lolos Pendanaan Belmawa PKM-RE Unggulan"))
+        sks = int(d.get("converted_sks", 4))
+
+        badge_color = "#10b981" if "Lolos" in status else "#ef4444"
+
+        return f"""    <div class="tu-pkm-re-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Belmawa PKM-RE Riset Eksakta</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{grade} ({score:.1f})</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Ketua Pengusul: <strong>{leader} ({nim})</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Pusat Riset/Lab: <strong>{lab}</strong></div>
+      </div>
+      <div style="background: #1e293b; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 12px;">
+        Judul Riset: <strong>{prop_title}</strong> (Fokus: {topic})
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Status: <strong style="color: {badge_color};">{status}</strong></div>
+        <div>Alokasi Dana: <strong style="color: #facc15;">Rp {budget:,.0f}</strong></div>
+        <div>Rekognisi: <strong style="color: #38bdf8;">{sks} SKS MBKM</strong></div>
+      </div>
+    </div>"""
+
 render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
 render_nr_timing_advance_card = EditorialComponents.render_5g_nr_timing_advance_card
 render_satellite_rain_attenuation_card = EditorialComponents.render_satellite_rain_attenuation_card
+render_pkm_re_proposal_card = EditorialComponents.render_pkm_re_proposal_card
 
 render_optical_spm_nonlinear_card = EditorialComponents.render_optical_spm_nonlinear_card
 render_nr_beam_management_card = EditorialComponents.render_nr_beam_management_card
