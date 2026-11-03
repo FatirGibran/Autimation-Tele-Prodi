@@ -2347,6 +2347,49 @@ def sanitize_html5_video_track_attributes(html: str) -> str:
     return re.sub(r'<track\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_track, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_details_summary_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <details> disclosure and <summary> accordion toggle elements
+    by removing inline event handlers, script bindings, validating boolean 'open'
+    and accordion 'name' attributes, and preserving safe ARIA accessibility states.
+    """
+    if not html or ("<details" not in html.lower() and "<summary" not in html.lower()):
+        return html
+
+    clobbered_names = {"submit", "reset", "length", "elements", "nodeName", "constructor", "toString", "valueOf"}
+
+    def fix_details(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate name attribute (used for exclusive accordions in HTML5)
+        name_m = re.search(r'\bname=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if name_m:
+            val = name_m.group(1).strip()
+            if val.lower() in clobbered_names or not re.match(r'^[a-zA-Z0-9_\-]+$', val):
+                tag = re.sub(r'\s+name=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_summary(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate role attribute (only button is valid if specified)
+        role_m = re.search(r'\brole=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if role_m:
+            val = role_m.group(1).strip().lower()
+            if val != "button":
+                tag = re.sub(r'\s+role=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    html = re.sub(r'<details\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_details, html, flags=re.IGNORECASE)
+    return re.sub(r'<summary\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_summary, html, flags=re.IGNORECASE)
+
+
 
 
 
