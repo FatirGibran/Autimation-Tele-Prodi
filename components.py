@@ -7016,6 +7016,41 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_wss_oxc_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Telemetri ROADM WSS & OXC", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying ROADM WSS/OXC matrix insertion loss, degree penalty, and isolation.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        degrees = int(d.get("roadm_degrees", 4))
+        channels = int(d.get("channel_count", 96))
+        total_loss = float(d.get("total_insertion_loss_db", 7.0))
+        isolation = float(d.get("isolation_db", 35.0))
+        pdl = float(d.get("pdl_db", 0.4))
+        osnr = float(d.get("osnr_penalty_db", 1.08))
+        status = str(d.get("health_status", "OPTIMAL_LOW_LOSS"))
+
+        badge_color = "#10b981" if "OPTIMAL" in status else ("#f59e0b" if "ACCEPTABLE" in status else "#ef4444")
+
+        return f"""    <div class="tu-wss-oxc-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">ROADM WSS / OXC Matrix</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 13px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">ROADM Degree: <strong>{degrees} Degrees</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Kapasitas Kanal: <strong>{channels} DWDM</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Total Insertion Loss: <strong>{total_loss:.2f} dB</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Port Isolation: <strong>{isolation:.1f} dB</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">PDL Loss: <strong>{pdl:.2f} dB</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">OSNR Penalty: <strong>{osnr:.2f} dB</strong></div>
+      </div>
+    </div>"""
+
+render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
+
 render_optical_spm_nonlinear_card = EditorialComponents.render_optical_spm_nonlinear_card
 render_nr_beam_management_card = EditorialComponents.render_nr_beam_management_card
 render_satellite_tec_delay_card = EditorialComponents.render_satellite_tec_delay_card
