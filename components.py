@@ -7049,7 +7049,39 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_timing_advance_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Telemetri 5G NR Timing Advance & Jarak UE", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying 3GPP 5G NR Timing Advance index, RTT delay, and UE distance mapping.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        ta_idx = int(d.get("ta_command_index", 32))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        rtt = float(d.get("round_trip_time_us", 16.276))
+        one_way = float(d.get("one_way_delay_us", 8.138))
+        dist_m = float(d.get("ue_distance_m", 2439.69))
+        dist_km = float(d.get("ue_distance_km", 2.44))
+        zone = str(d.get("cell_deployment_zone", "URBAN_MICRO_CELL"))
+
+        return f"""    <div class="tu-nr-timing-advance-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">3GPP Timing Advance</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{zone}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 13px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">TA Command Index: <strong>#{ta_idx}</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">SCS Numerologi: <strong>{scs} kHz</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Round-Trip Time: <strong>{rtt:.3f} μs</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">One-Way Delay: <strong>{one_way:.3f} μs</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Jarak UE: <strong>{dist_m:.1f} m</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Radius Sel: <strong>{dist_km:.2f} km</strong></div>
+      </div>
+    </div>"""
+
 render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
+render_nr_timing_advance_card = EditorialComponents.render_5g_nr_timing_advance_card
 
 render_optical_spm_nonlinear_card = EditorialComponents.render_optical_spm_nonlinear_card
 render_nr_beam_management_card = EditorialComponents.render_nr_beam_management_card
