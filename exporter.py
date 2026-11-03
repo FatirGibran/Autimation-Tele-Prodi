@@ -2332,6 +2332,53 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_scholarly_article_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org/ScholarlyArticle structured JSON-LD for student scientific research,
+        SINTA/Scopus journal papers, and laboratory technical reports.
+        """
+        title = metadata.get("title") or metadata.get("headline", "")
+        author = metadata.get("author") or metadata.get("student_leader", "Peneliti")
+        institution = metadata.get("institution", "Telkom University Purwokerto")
+        journal_name = metadata.get("journal_name", "Jurnal Rekayasa Telekomunikasi")
+        pub_date = metadata.get("publish_date", "2026-11-01")
+        doi = metadata.get("doi", "")
+        keywords = metadata.get("keywords", [])
+        if isinstance(keywords, str):
+            keywords = [k.strip() for k in keywords.split(",") if k.strip()]
+
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "ScholarlyArticle",
+            "headline": title.strip(),
+            "name": title.strip(),
+            "datePublished": pub_date.strip(),
+            "author": {
+                "@type": "Person",
+                "name": author.strip(),
+                "affiliation": {
+                    "@type": "EducationalOrganization",
+                    "name": institution.strip()
+                }
+            },
+            "publisher": {
+                "@type": "EducationalOrganization",
+                "name": institution.strip()
+            },
+            "isPartOf": {
+                "@type": "PublicationIssue",
+                "isPartOf": {
+                    "@type": "Periodical",
+                    "name": journal_name.strip()
+                }
+            },
+            "keywords": keywords
+        }
+        if doi:
+            data["identifier"] = f"https://doi.org/{doi.strip()}"
+        return data
+
 
 
 
