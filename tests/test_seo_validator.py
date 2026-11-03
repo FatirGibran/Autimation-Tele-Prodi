@@ -2152,6 +2152,58 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_secure"])
         self.assertEqual(res_bad["insecure_links_count"], 1)
 
+    def test_audit_heading_hierarchy_sequence(self):
+        html_ok = '<div><h1>Judul Utama</h1><h2>Bagian 1</h2><h3>Rincian A</h3><h2>Bagian 2</h2></div>'
+        res_ok = YoastSEOValidator.audit_heading_hierarchy_sequence(html_ok)
+        self.assertTrue(res_ok["is_hierarchical"])
+        self.assertEqual(res_ok["total_headings"], 4)
+        self.assertEqual(res_ok["h1_count"], 1)
+        self.assertEqual(res_ok["skipped_levels_count"], 0)
+
+        html_bad = '<div><h1>Judul</h1><h3>Loncat H3 Langsung</h3></div>'
+        res_bad = YoastSEOValidator.audit_heading_hierarchy_sequence(html_bad)
+        self.assertFalse(res_bad["is_hierarchical"])
+        self.assertEqual(res_bad["skipped_levels_count"], 1)
+
+    def test_audit_list_structure_semantics(self):
+        html_ok = '<ul><li>Item 1</li><li>Item 2</li></ul>'
+        res_ok = YoastSEOValidator.audit_list_structure_semantics(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["orphan_li_count"], 0)
+        self.assertEqual(res_ok["invalid_child_count"], 0)
+
+        html_bad = '<div><li>Orphan Item</li></div><ul><p>Invalid child</p><li>Item</li></ul>'
+        res_bad = YoastSEOValidator.audit_list_structure_semantics(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["orphan_li_count"], 1)
+        self.assertEqual(res_bad["invalid_child_count"], 1)
+
+    def test_audit_media_transcript_and_captions(self):
+        html_ok = '<video src="v.mp4"><track kind="subtitles" src="s.vtt"></video><div><audio src="a.mp3"></audio><a href="/transkrip">Lihat Transkrip</a></div>'
+        res_ok = YoastSEOValidator.audit_media_transcript_and_captions(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["videos_with_captions"], 1)
+        self.assertEqual(res_ok["audios_with_transcripts"], 1)
+
+        html_bad = '<video src="v.mp4"></video>'
+        res_bad = YoastSEOValidator.audit_media_transcript_and_captions(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["videos_with_captions"], 0)
+
+    def test_audit_font_display_and_preload_origins(self):
+        html_ok = '<link rel="preload" as="font" href="/f.woff2" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&display=swap">'
+        res_ok = YoastSEOValidator.audit_font_display_and_preload_origins(html_ok)
+        self.assertTrue(res_ok["is_optimized"])
+        self.assertEqual(res_ok["font_preloads_count"], 1)
+        self.assertEqual(res_ok["missing_crossorigin_count"], 0)
+        self.assertEqual(res_ok["missing_swap_count"], 0)
+
+        html_bad = '<link rel="preload" as="font" href="/f.woff2"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto">'
+        res_bad = YoastSEOValidator.audit_font_display_and_preload_origins(html_bad)
+        self.assertFalse(res_bad["is_optimized"])
+        self.assertEqual(res_bad["missing_crossorigin_count"], 1)
+        self.assertEqual(res_bad["missing_swap_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
