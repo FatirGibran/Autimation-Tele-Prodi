@@ -7233,6 +7233,57 @@ def parse_pkm_kc_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_wss_oxc_insertion_loss(
+    roadm_degrees: int = 4,
+    channel_count: int = 96,
+    wss_passband_ghz: float = 50.0,
+    base_insertion_loss_db: float = 6.5,
+    pdl_db: float = 0.4,
+    isolation_db: float = 35.0
+) -> Dict[str, Any]:
+    """
+    Calculates Reconfigurable Optical Add-Drop Multiplexer (ROADM) Wavelength Selective Switch (WSS)
+    and Optical Cross-Connect (OXC) node insertion loss, degree penalty, polarization dependent loss (PDL),
+    inter-band port isolation crosstalk, and OSNR degradation penalty.
+    """
+    degrees = max(2, min(32, int(roadm_degrees)))
+    channels = max(1, min(160, int(channel_count)))
+    passband = max(12.5, float(wss_passband_ghz))
+    base_loss = max(1.0, float(base_insertion_loss_db))
+    pdl = max(0.05, float(pdl_db))
+    isolation = max(15.0, float(isolation_db))
+
+    degree_penalty_db = round((degrees - 2) * 0.25, 2)
+    total_insertion_loss_db = round(base_loss + degree_penalty_db, 2)
+    crosstalk_leak_ratio = 10.0 ** (-isolation / 10.0)
+    osnr_penalty_db = round((0.12 * total_insertion_loss_db) + (0.6 * pdl), 2)
+
+    if total_insertion_loss_db <= 7.5 and isolation >= 30.0:
+        health_status = "OPTIMAL_LOW_LOSS"
+        is_acceptable = True
+    elif total_insertion_loss_db <= 10.0 and isolation >= 25.0:
+        health_status = "ACCEPTABLE_PASSING"
+        is_acceptable = True
+    else:
+        health_status = "HIGH_LOSS_ATTENTION"
+        is_acceptable = False
+
+    return {
+        "roadm_degrees": degrees,
+        "channel_count": channels,
+        "wss_passband_ghz": round(passband, 1),
+        "base_insertion_loss_db": round(base_loss, 2),
+        "degree_penalty_db": degree_penalty_db,
+        "total_insertion_loss_db": total_insertion_loss_db,
+        "pdl_db": round(pdl, 2),
+        "isolation_db": round(isolation, 1),
+        "crosstalk_leak_ratio": crosstalk_leak_ratio,
+        "osnr_penalty_db": osnr_penalty_db,
+        "health_status": health_status,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
