@@ -2272,7 +2272,7 @@ def sanitize_html5_fieldset_legend_grouping(html: str) -> str:
     if not html or ("<fieldset" not in html.lower() and "<legend" not in html.lower()):
         return html
 
-    clobbered_names = {"submit", "reset", "length", "elements", "nodeName", "constructor", "toString", "valueOf"}
+    clobbered_names = {"submit", "reset", "length", "elements", "nodename", "constructor", "tostring", "valueof"}
 
     def fix_fieldset(m):
         tag = m.group(0)
@@ -2356,7 +2356,7 @@ def sanitize_html5_details_summary_attributes(html: str) -> str:
     if not html or ("<details" not in html.lower() and "<summary" not in html.lower()):
         return html
 
-    clobbered_names = {"submit", "reset", "length", "elements", "nodeName", "constructor", "toString", "valueOf"}
+    clobbered_names = {"submit", "reset", "length", "elements", "nodename", "constructor", "tostring", "valueof"}
 
     def fix_details(m):
         tag = m.group(0)
@@ -2399,7 +2399,7 @@ def sanitize_html5_template_slot_elements(html: str) -> str:
     if not html or ("<template" not in html.lower() and "<slot" not in html.lower()):
         return html
 
-    clobbered_names = {"submit", "reset", "length", "elements", "nodeName", "constructor", "toString", "valueOf"}
+    clobbered_names = {"submit", "reset", "length", "elements", "nodename", "constructor", "tostring", "valueof"}
 
     def fix_slot(m):
         tag = m.group(0)

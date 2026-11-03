@@ -48,7 +48,10 @@ from sanitizer import (
     sanitize_html5_dialog_attributes,
     sanitize_html5_audio_attributes,
     sanitize_html5_progress_meter_ranges,
-    sanitize_html5_fieldset_legend_grouping
+    sanitize_html5_fieldset_legend_grouping,
+    sanitize_html5_video_track_attributes,
+    sanitize_html5_details_summary_attributes,
+    sanitize_html5_template_slot_elements
 )
 
 
@@ -1223,6 +1226,38 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("onsubmit=", cleaned)
         self.assertNotIn("style=", cleaned)
         self.assertNotIn('name="submit"', cleaned)
+
+    def test_sanitize_html5_video_track_attributes(self):
+        raw = '<track kind="subtitles" src="/subtitles.vtt" srclang="id" label="Bahasa Indonesia" default onload="bad()"><track kind="invalid" src="javascript:evil()" srclang="invalid!!!">'
+        cleaned = sanitize_html5_video_track_attributes(raw)
+        self.assertIn('kind="subtitles"', cleaned)
+        self.assertIn('src="/subtitles.vtt"', cleaned)
+        self.assertIn('srclang="id"', cleaned)
+        self.assertIn('label="Bahasa Indonesia"', cleaned)
+        self.assertIn("default", cleaned)
+        self.assertNotIn("onload=", cleaned)
+        self.assertNotIn("javascript:evil()", cleaned)
+        self.assertNotIn('srclang="invalid!!!"', cleaned)
+
+    def test_sanitize_html5_details_summary_attributes(self):
+        raw = '<details open name="faq_group" ontoggle="bad()"><summary role="button" onclick="bad()" style="color:red">Pertanyaan</summary></details><details name="submit"></details>'
+        cleaned = sanitize_html5_details_summary_attributes(raw)
+        self.assertIn("open", cleaned)
+        self.assertIn('name="faq_group"', cleaned)
+        self.assertNotIn("ontoggle=", cleaned)
+        self.assertIn('role="button"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn('name="submit"', cleaned)
+
+    def test_sanitize_html5_template_slot_elements(self):
+        raw = '<template onload="bad()"><script>alert(1)</script><slot name="header" onclick="bad()"></slot><slot name="valueOf"></slot></template>'
+        cleaned = sanitize_html5_template_slot_elements(raw)
+        self.assertIn('name="header"', cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("onload=", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn('name="valueOf"', cleaned)
 
 
 if __name__ == "__main__":
