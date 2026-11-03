@@ -6588,6 +6588,64 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_list_structure_semantics(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML list elements (<ul>, <ol>, <dl>) according to WCAG 2.1 SC 1.3.1 (Info and Relationships)
+        for valid direct children nesting, semantic grouping, and detection of orphaned <li> items.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_lists": 0,
+                "total_list_items": 0,
+                "orphan_li_count": 0,
+                "invalid_child_count": 0,
+                "is_compliant": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        lists = soup.find_all(["ul", "ol", "dl"])
+        all_lis = soup.find_all("li")
+        orphan_count = 0
+        invalid_children_count = 0
+
+        for li in all_lis:
+            parent = li.find_parent()
+            if not parent or parent.name.lower() not in ("ul", "ol", "menu"):
+                orphan_count += 1
+                issues.append(f"Elemen <li> ditemukan di luar pembungkus daftar semantik <ul/ol>: '{str(li)[:50]}'")
+
+        for lst in lists:
+            if lst.name.lower() in ("ul", "ol"):
+                for child in lst.children:
+                    if child.name is None:
+                        continue
+                    if child.name.lower() not in ("li", "script", "template"):
+                        invalid_children_count += 1
+                        issues.append(f"Elemen <{lst.name}> memuat anak langsung tidak valid <{child.name}> (harus berupa <li>).")
+            elif lst.name.lower() == "dl":
+                dts = lst.find_all("dt", recursive=False)
+                dds = lst.find_all("dd", recursive=False)
+                if len(dts) == 0 and len(dds) == 0:
+                    warnings.append("Elemen deskripsi daftar <dl> tidak memiliki anak langsung <dt> atau <dd>.")
+
+        is_compliant = (orphan_count == 0 and invalid_children_count == 0 and len(issues) == 0)
+
+        return {
+            "total_lists": len(lists),
+            "total_list_items": len(all_lis),
+            "orphan_li_count": orphan_count,
+            "invalid_child_count": invalid_children_count,
+            "is_compliant": is_compliant,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
