@@ -2701,6 +2701,72 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["prototype_name"], "Radar Doppler X-Band")
         self.assertIsNone(self.storage.get_pkm_kc_proposal_by_id(99999))
 
+    def test_optical_wss_oxc_storage(self):
+        rec_id = self.storage.record_optical_wss_oxc(
+            node_name="ROADM-PWT-01",
+            roadm_degrees=4,
+            channel_count=96,
+            total_insertion_loss_db=7.0,
+            isolation_db=35.0,
+            pdl_db=0.4,
+            osnr_penalty_db=1.08,
+            health_status="OPTIMAL_LOW_LOSS"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_wss_oxc()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["node_name"], "ROADM-PWT-01")
+        self.assertEqual(items[0]["roadm_degrees"], 4)
+
+        single = self.storage.get_optical_wss_oxc_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["health_status"], "OPTIMAL_LOW_LOSS")
+        self.assertIsNone(self.storage.get_optical_wss_oxc_by_id(99999))
+
+    def test_nr_timing_advance_storage(self):
+        rec_id = self.storage.record_nr_timing_advance(
+            ue_identifier="UE-5G-001",
+            ta_command_index=32,
+            subcarrier_spacing_khz=30,
+            round_trip_time_us=16.276,
+            ue_distance_m=2439.69,
+            ue_distance_km=2.44,
+            cell_deployment_zone="URBAN_MICRO_CELL"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_timing_advance()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["ue_identifier"], "UE-5G-001")
+        self.assertEqual(items[0]["ta_command_index"], 32)
+
+        single = self.storage.get_nr_timing_advance_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["cell_deployment_zone"], "URBAN_MICRO_CELL")
+        self.assertIsNone(self.storage.get_nr_timing_advance_by_id(99999))
+
+    def test_pkm_re_proposal_storage(self):
+        rec_id = self.storage.record_pkm_re_proposal(
+            student_leader="Ahmad Fauzi",
+            nim="1101210088",
+            proposal_title="Fabrikasi Metamaterial",
+            research_topic="Gelombang Mikro",
+            lab_center="Lab TelU",
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=9000000.0,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_re_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Ahmad Fauzi")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_pkm_re_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["research_topic"], "Gelombang Mikro")
+        self.assertIsNone(self.storage.get_pkm_re_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
