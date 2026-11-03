@@ -1330,6 +1330,20 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_wss_oxc_node ON optical_wss_oxc_records(node_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_timing_advance_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ue_identifier TEXT NOT NULL,
+                    ta_command_index INTEGER NOT NULL,
+                    subcarrier_spacing_khz INTEGER NOT NULL,
+                    round_trip_time_us REAL NOT NULL,
+                    ue_distance_m REAL NOT NULL,
+                    ue_distance_km REAL NOT NULL,
+                    cell_deployment_zone TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ta_ue ON nr_timing_advance_records(ue_identifier);")
 
 
 
@@ -6107,6 +6121,60 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_wss_oxc_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_nr_timing_advance(
+        self,
+        ue_identifier: str,
+        ta_command_index: int,
+        subcarrier_spacing_khz: int,
+        round_trip_time_us: float,
+        ue_distance_m: float,
+        ue_distance_km: float,
+        cell_deployment_zone: str
+    ) -> int:
+        """
+        Stores a 5G NR Timing Advance and UE propagation distance telemetry record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_timing_advance_records (
+                    ue_identifier, ta_command_index, subcarrier_spacing_khz,
+                    round_trip_time_us, ue_distance_m, ue_distance_km,
+                    cell_deployment_zone
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(ue_identifier).strip(),
+                int(ta_command_index),
+                int(subcarrier_spacing_khz),
+                float(round_trip_time_us),
+                float(ue_distance_m),
+                float(ue_distance_km),
+                str(cell_deployment_zone).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_timing_advance(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR Timing Advance records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_timing_advance_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_timing_advance_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR Timing Advance record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_timing_advance_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
