@@ -48,7 +48,10 @@ from parser import (
     parse_pkm_re_proposal_evaluation,
     calculate_optical_raman_amplifier_gain,
     calculate_5g_nr_bwp_switching_latency,
-    parse_pkm_pm_proposal_evaluation
+    parse_pkm_pm_proposal_evaluation,
+    calculate_optical_dwdm_osnr_ber_margin,
+    calculate_5g_nr_carrier_aggregation_throughput,
+    parse_pkm_pi_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -3104,7 +3107,133 @@ def cmd_pkmpm(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['partner_community'][:18]:<20} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
 
 
+def cmd_dwdm(args):
+    if args.action == "add":
+        w_len = float(args.wavelength) if args.wavelength is not None else 1550.12
+        sig_p = float(args.signal) if args.signal is not None else 0.0
+        ase_p = float(args.ase) if args.ase is not None else -28.0
+        fec_th = float(args.fec) if args.fec is not None else 14.5
+        baud = float(args.baud) if args.baud is not None else 32.0
+
+        res = calculate_optical_dwdm_osnr_ber_margin(
+            signal_power_dbm=sig_p,
+            ase_noise_power_dbm=ase_p,
+            fec_threshold_osnr_db=fec_th,
+            channel_wavelength_nm=w_len,
+            baud_rate_gbaud=baud
+        )
+        rec_id = storage.record_optical_dwdm(
+            channel_wavelength_nm=res["channel_wavelength_nm"],
+            signal_power_dbm=res["signal_power_dbm"],
+            ase_noise_power_dbm=res["ase_noise_power_dbm"],
+            osnr_db=res["osnr_db"],
+            osnr_margin_db=res["osnr_margin_db"],
+            q_factor_db=res["q_factor_db"],
+            pre_fec_ber=res["pre_fec_ber"],
+            health_status=res["health_status"],
+            fec_compliant=res["fec_compliant"]
+        )
+        print(f"Catatan Optical DWDM berhasil disimpan dengan ID: {rec_id} (λ: {w_len:.2f} nm, OSNR: {res['osnr_db']} dB, Margin: {res['osnr_margin_db']:+} dB, Status: {res['health_status']})")
+    else:
+        records = storage.list_optical_dwdm(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Optical DWDM yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'LAMBDA (nm)':<14} | {'SINYAL (dBm)':<14} | {'OSNR (dB)':<12} | {'MARGIN (dB)':<12} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['channel_wavelength_nm']:<14.2f} | {r['signal_power_dbm']:<14.1f} | {r['osnr_db']:<12.2f} | {r['osnr_margin_db']:<12.2f} | {r['health_status']}")
+
+
+def cmd_ca(args):
+    if args.action == "add":
+        cfg = args.name or "CA_n78_2CC_200MHz"
+        cc_count = int(args.cc) if args.cc is not None else 2
+        bw = float(args.bw) if args.bw is not None else 200.0
+
+        # Build CC list
+        cc_list = []
+        for i in range(cc_count):
+            cc_bw = bw / cc_count
+            cc_list.append({
+                "name": f"CC{i+1}",
+                "bandwidth_mhz": cc_bw,
+                "scs_khz": 30,
+                "mimo_layers": 4,
+                "modulation": "256QAM"
+            })
+
+        res = calculate_5g_nr_carrier_aggregation_throughput(component_carriers=cc_list)
+        rec_id = storage.record_nr_carrier_aggregation(
+            config_name=cfg,
+            carrier_count=res["carrier_count"],
+            total_bandwidth_mhz=res["total_bandwidth_mhz"],
+            aggregated_throughput_mbps=res["aggregated_throughput_mbps"],
+            aggregated_throughput_gbps=res["aggregated_throughput_gbps"],
+            performance_tier=res["performance_tier"]
+        )
+        print(f"Catatan 5G NR Carrier Aggregation berhasil disimpan dengan ID: {rec_id} (Config: {cfg}, Throughput: {res['aggregated_throughput_gbps']} Gbps, Status: {res['performance_tier']})")
+    else:
+        records = storage.list_nr_carrier_aggregation(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR Carrier Aggregation yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KONFIGURASI':<22} | {'JUMLAH CC':<10} | {'TOTAL BW':<12} | {'SPEED (Gbps)':<14} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['config_name'][:20]:<22} | {r['carrier_count']:<10} | {r['total_bandwidth_mhz']:<12.1f} | {r['aggregated_throughput_gbps']:<14.3f} | {r['performance_tier']}")
+
+
+def cmd_pkmpi(args):
+    if args.action == "add":
+        leader = args.leader or "Ketua Tim PKM-PI"
+        nim = args.nim or "1101210088"
+        title = args.title or "Otomasi Suhu & Kelembaban Kumbung Jamur IoT"
+        partner = args.partner or "KWT Jamur Sejahtera"
+        tech = args.tech or "Sistem IoT & Smart Climate Control"
+        diag = float(args.diag) if args.diag is not None else 85.0
+        sol = float(args.sol) if args.sol is not None else 85.0
+        prod = float(args.prod) if args.prod is not None else 85.0
+        budget = float(args.budget) if args.budget is not None else 85.0
+
+        res = parse_pkm_pi_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "partner_enterprise": partner,
+            "technology_type": tech,
+            "diagnosis_score": diag,
+            "solution_score": sol,
+            "productivity_score": prod,
+            "budget_score": budget
+        })
+        rec_id = storage.record_pkm_pi_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            partner_enterprise=partner,
+            technology_type=tech,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-PI berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_pkm_pi_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-PI yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'MITRA USAHA':<22} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            funded_str = "Lolos" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['partner_enterprise'][:20]:<22} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
+
+
 def main():
+
 
 
 
@@ -4193,6 +4322,41 @@ def main():
     pkmpm_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
     pkmpm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmpm_parser.set_defaults(func=cmd_pkmpm)
+
+    # Optical DWDM Channel command
+    dwdm_parser = subparsers.add_parser("dwdm", help="Kelola kalkulasi OSNR dan Q-factor transmisi DWDM (list, add)")
+    dwdm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi DWDM OSNR")
+    dwdm_parser.add_argument("--wavelength", type=float, default=1550.12, help="Panjang gelombang kanal optik (nm)")
+    dwdm_parser.add_argument("--signal", type=float, default=2.0, help="Daya sinyal optik kanal (dBm)")
+    dwdm_parser.add_argument("--ase", type=float, default=-26.0, help="Daya derau ASE akumulasi 0.1 nm (dBm)")
+    dwdm_parser.add_argument("--fec", type=float, default=14.5, help="Batas ambang batas FEC threshold (dB)")
+    dwdm_parser.add_argument("--baud", type=float, default=32.0, help="Kecepatan modulasi simbol (GBaud)")
+    dwdm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    dwdm_parser.set_defaults(func=cmd_dwdm)
+
+    # 5G NR Carrier Aggregation command
+    ca_parser = subparsers.add_parser("ca", help="Kelola kalkulasi 5G NR Carrier Aggregation peak throughput (list, add)")
+    ca_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi Carrier Aggregation")
+    ca_parser.add_argument("--name", default="CA_n78_2CC_200MHz", help="Nama konfigurasi Carrier Aggregation")
+    ca_parser.add_argument("--cc", type=int, default=2, help="Jumlah komponen carrier agregasi (1-5)")
+    ca_parser.add_argument("--bw", type=float, default=200.0, help="Total bandwidth gabungan (MHz)")
+    ca_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    ca_parser.set_defaults(func=cmd_ca)
+
+    # PKM-PI Proposal command
+    pkmpi_parser = subparsers.add_parser("pkmpi", help="Kelola evaluasi proposal Belmawa PKM Penerapan Iptek (list, add)")
+    pkmpi_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-PI")
+    pkmpi_parser.add_argument("--leader", default="Ketua Tim PKM-PI", help="Nama ketua mahasiswa pengusul")
+    pkmpi_parser.add_argument("--nim", default="1101210088", help="NIM ketua mahasiswa")
+    pkmpi_parser.add_argument("--title", default="Otomasi Suhu & Kelembaban Kumbung Jamur IoT", help="Judul proposal teknologi tepat guna")
+    pkmpi_parser.add_argument("--partner", default="KWT Jamur Sejahtera", help="Mitra usaha produktif")
+    pkmpi_parser.add_argument("--tech", default="Sistem IoT & Smart Climate Control", help="Teknologi diterapkan")
+    pkmpi_parser.add_argument("--diag", type=float, default=85.0, help="Skor diagnosis permasalahan mitra (0-100)")
+    pkmpi_parser.add_argument("--sol", type=float, default=85.0, help="Skor ketepatan solusi teknologi (0-100)")
+    pkmpi_parser.add_argument("--prod", type=float, default=85.0, help="Skor peningkatan produktivitas (0-100)")
+    pkmpi_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
+    pkmpi_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmpi_parser.set_defaults(func=cmd_pkmpi)
 
     args = parser.parse_args()
 
