@@ -7350,6 +7350,57 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_bwp_switching_svg(cls, data: Optional[Dict[str, Any]] = None, title: str = "Diagram Transisi 5G NR BWP Switching & Numerologi", **kwargs) -> str:
+        """
+        Renders an Elementor card with an inline SVG diagram visualizing 3GPP Bandwidth Part (BWP)
+        switching transition window, slot duration change, and bandwidth adaptation.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        act_mhz = float(d.get("active_bwp_mhz", 20.0))
+        tgt_mhz = float(d.get("target_bwp_mhz", 100.0))
+        delay_us = float(d.get("switch_delay_us", 200.0))
+        scs_src = int(d.get("scs_source_khz", 15))
+        scs_tgt = int(d.get("scs_target_khz", 30))
+        trigger = str(d.get("switch_trigger", "DCI"))
+
+        return f"""    <div class="tu-nr-bwp-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR BWP Adaptation Timeline</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Trigger: {trigger}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 540 200" width="100%" height="200" style="max-width: 580px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- BWP 1 Active Slot (Blue) -->
+          <rect x="30" y="70" width="140" height="60" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="100" y="98" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">Active BWP #1</text>
+          <text x="100" y="115" fill="#93c5fd" font-size="9" text-anchor="middle">{act_mhz:.0f} MHz (SCS {scs_src}k)</text>
+
+          <!-- Switching Transition Window (Striped Orange) -->
+          <rect x="180" y="55" width="100" height="90" rx="4" fill="#78350f" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,4" />
+          <text x="230" y="95" fill="#fde68a" font-size="9" font-weight="bold" text-anchor="middle">Switching Window</text>
+          <text x="230" y="112" fill="#facc15" font-size="10" font-weight="bold" text-anchor="middle">T_bwp = {delay_us:.0f} μs</text>
+
+          <!-- BWP 2 Target Wideband Slot (Green) -->
+          <rect x="290" y="40" width="220" height="120" rx="4" fill="#065f46" stroke="#34d399" stroke-width="2" />
+          <text x="400" y="95" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Target BWP #2 (Wideband)</text>
+          <text x="400" y="115" fill="#a7f3d0" font-size="10" text-anchor="middle">{tgt_mhz:.0f} MHz (SCS {scs_tgt}k)</text>
+
+          <!-- Time Axis -->
+          <line x1="30" y1="180" x2="510" y2="180" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" />
+          <text x="270" y="195" fill="#94a3b8" font-size="9" text-anchor="middle">Garis Waktu Transisi Slot &amp; Numerologi (t)</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>BWP Awal: <strong style="color: #38bdf8;">{act_mhz:.0f} MHz</strong></div>
+        <div>Durasi Transisi: <strong style="color: #facc15;">{delay_us:.1f} μs</strong></div>
+        <div>BWP Baru: <strong style="color: #34d399;">{tgt_mhz:.0f} MHz</strong></div>
+      </div>
+    </div>"""
+
+render_5g_bwp_switching_svg = EditorialComponents.render_5g_bwp_switching_svg
 render_pkm_pm_proposal_card = EditorialComponents.render_pkm_pm_proposal_card
 render_satellite_tropospheric_scintillation_card = EditorialComponents.render_satellite_tropospheric_scintillation_card
 render_5g_bwp_switching_card = EditorialComponents.render_5g_bwp_switching_card
