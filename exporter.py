@@ -2408,6 +2408,50 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_social_media_posting_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates schema.org SocialMediaPosting structured data (JSON-LD) for student community
+        outreach campaigns, dissemination stories, and social engagement metrics.
+        """
+        headline = metadata.get("headline") or metadata.get("title", "")
+        article_body = metadata.get("article_body") or metadata.get("description", "")
+        author = metadata.get("author") or metadata.get("student_leader", "Tim Pengabdian Masyarakat")
+        platform = metadata.get("platform", "Instagram")
+        pub_date = metadata.get("publish_date", "2026-11-04")
+        url = metadata.get("url", "")
+        image_url = metadata.get("image_url", "")
+        keywords = metadata.get("keywords", [])
+        if isinstance(keywords, str):
+            keywords = [k.strip() for k in keywords.split(",") if k.strip()]
+
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "SocialMediaPosting",
+            "headline": headline.strip(),
+            "articleBody": article_body.strip(),
+            "datePublished": pub_date.strip(),
+            "author": {
+                "@type": "Person",
+                "name": author.strip()
+            },
+            "publisher": {
+                "@type": "EducationalOrganization",
+                "name": metadata.get("institution", "Telkom University Purwokerto")
+            },
+            "keywords": keywords
+        }
+        if url:
+            data["url"] = url.strip()
+        if image_url:
+            data["image"] = image_url.strip()
+        if platform:
+            data["sharedContent"] = {
+                "@type": "WebPage",
+                "name": platform.strip()
+            }
+        return data
+
 
 
 
