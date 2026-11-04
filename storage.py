@@ -1408,6 +1408,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_pm_nim ON pkm_pm_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_dwdm_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    channel_wavelength_nm REAL NOT NULL,
+                    signal_power_dbm REAL NOT NULL,
+                    ase_noise_power_dbm REAL NOT NULL,
+                    osnr_db REAL NOT NULL,
+                    osnr_margin_db REAL NOT NULL,
+                    q_factor_db REAL NOT NULL,
+                    pre_fec_ber REAL NOT NULL,
+                    health_status TEXT NOT NULL,
+                    fec_compliant INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_dwdm_wavelength ON optical_dwdm_records(channel_wavelength_nm);")
 
 
 
@@ -6476,6 +6492,59 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_optical_dwdm(
+        self,
+        channel_wavelength_nm: float,
+        signal_power_dbm: float,
+        ase_noise_power_dbm: float,
+        osnr_db: float,
+        osnr_margin_db: float,
+        q_factor_db: float,
+        pre_fec_ber: float,
+        health_status: str,
+        fec_compliant: bool = True
+    ) -> int:
+        """
+        Records an optical DWDM channel transmission OSNR telemetry record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_dwdm_records (
+                    channel_wavelength_nm, signal_power_dbm, ase_noise_power_dbm,
+                    osnr_db, osnr_margin_db, q_factor_db, pre_fec_ber,
+                    health_status, fec_compliant
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(channel_wavelength_nm), float(signal_power_dbm), float(ase_noise_power_dbm),
+                float(osnr_db), float(osnr_margin_db), float(q_factor_db), float(pre_fec_ber),
+                str(health_status), 1 if fec_compliant else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_dwdm(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent optical DWDM channel OSNR telemetry records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_dwdm_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_dwdm_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical DWDM channel record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_dwdm_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
