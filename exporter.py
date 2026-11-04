@@ -2486,6 +2486,69 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_tech_transfer_how_to_json_ld(
+        title: str,
+        description: str,
+        student_leader: str,
+        partner_enterprise: str,
+        technology_type: str,
+        steps: Optional[List[Dict[str, str]]] = None,
+        article_url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org combined TechArticle & HowTo JSON-LD structured data for
+        student PKM Penerapan Iptek (PKM-PI) technology implementations and field guides.
+        """
+        if steps is None:
+            steps = [
+                {"name": "Diagnosis Masalah Mitra", "text": "Identifikasi kendala operasional dan kebutuhan teknologi mitra usaha produktif."},
+                {"name": "Perancangan & Fabrikasi Prototipe", "text": "Pengembangan modul perangkat keras/lunak sesuai spesifikasi industri."},
+                {"name": "Instalasi & Pengujian Lapangan", "text": "Pemasangan instrumen teknologi pada lokasi usaha mitra serta uji komisioning."},
+                {"name": "Pelatihan & Evaluasi Produktivitas", "text": "Edukasi operasional kepada karyawan mitra dan audit kenaikan kapasitas produksi."}
+            ]
+
+        step_elements = []
+        for idx, s in enumerate(steps, start=1):
+            step_elements.append({
+                "@type": "HowToStep",
+                "position": idx,
+                "name": s.get("name", f"Tahap {idx}"),
+                "text": s.get("text", "")
+            })
+
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": ["TechArticle", "HowTo"],
+            "headline": title.strip(),
+            "name": title.strip(),
+            "description": description.strip(),
+            "inLanguage": "id-ID",
+            "author": {
+                "@type": "Person",
+                "name": student_leader.strip(),
+                "affiliation": {
+                    "@type": "EducationalOrganization",
+                    "name": "Telkom University Purwokerto"
+                }
+            },
+            "about": {
+                "@type": "Product",
+                "name": technology_type.strip(),
+                "category": "Teknologi Terapan Tepat Guna"
+            },
+            "sponsor": {
+                "@type": "Organization",
+                "name": partner_enterprise.strip()
+            },
+            "step": step_elements
+        }
+        if article_url:
+            data["url"] = article_url.strip()
+
+        return data
+
+
 
 
 
