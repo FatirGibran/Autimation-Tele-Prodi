@@ -2633,6 +2633,52 @@ def sanitize_html5_datalist_elements(html: str) -> str:
     return re.sub(r'<option\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_option, cleaned, flags=re.IGNORECASE)
 
 
+def sanitize_html5_mathml_math_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 MathML mathematical formula containers (<math> and presentation tags)
+    by stripping dangerous XML annotations, neutralizing link schemes (href, xlink:href),
+    stripping non-standard executable attributes, and validating the display attribute.
+    """
+    if not html or "<math" not in html.lower():
+        return html
+
+    cleaned = html
+
+    # Neutralize dangerous annotation-xml blocks
+    if "<annotation-xml" in cleaned.lower():
+        cleaned = re.sub(r"<annotation-xml[^>]*>.*?</annotation-xml>", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+
+    # Clean <math> container tag
+    def fix_math(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:href|xlink:href|action|target)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate display attribute
+        disp_m = re.search(r'\bdisplay=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if disp_m:
+            val = disp_m.group(1).strip().lower()
+            if val not in {"block", "inline"}:
+                tag = re.sub(r'\s+display=["\'][^"\']*["\']', ' display="block"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    cleaned = re.sub(r'<math\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_math, cleaned, flags=re.IGNORECASE)
+
+    # Clean presentation MathML elements
+    mathml_tags = "mrow|mi|mo|mn|msup|msub|msubsup|mfrac|msqrt|mroot|mtable|mtr|mtd|mtext|mspace|mover|munder|munderover"
+    def fix_child(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:href|xlink:href|action|target|style)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(rf'<({mathml_tags})\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_child, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+
 
 
 
