@@ -2902,6 +2902,76 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["partner_enterprise"], "KWT Jamur Sejahtera")
         self.assertIsNone(self.storage.get_pkm_pi_proposal_by_id(99999))
 
+    def test_optical_edfa_storage(self):
+        rec_id = self.storage.record_optical_edfa(
+            amplifier_id="EDFA-C-BAND-01",
+            pump_type="980nm Co-directional",
+            pin_dbm=-20.0,
+            saturated_gain_db=27.5,
+            output_power_dbm=7.5,
+            gain_compression_db=2.5,
+            noise_figure_db=4.8,
+            operational_regime="Small-Signal Linear Regime",
+            is_saturated=False
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_edfa()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["amplifier_id"], "EDFA-C-BAND-01")
+        self.assertEqual(items[0]["saturated_gain_db"], 27.5)
+
+        single = self.storage.get_optical_edfa_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["pump_type"], "980nm Co-directional")
+        self.assertIsNone(self.storage.get_optical_edfa_by_id(99999))
+
+    def test_nr_cross_carrier_storage(self):
+        rec_id = self.storage.record_nr_cross_carrier(
+            config_name="CCS_n78_scheduling_n258",
+            scheduling_cell="PCell (n78 3.5GHz)",
+            scheduled_cell="SCell (n258 28GHz)",
+            scheduling_scs_khz=30,
+            scheduled_scs_khz=120,
+            cif_present=True,
+            downlink_scheduling_latency_ms=0.35,
+            uplink_scheduling_latency_ms=0.65,
+            latency_profile="Ultra-Reliable Low-Latency Communication (URLLC) Compliant",
+            is_urllc_capable=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_cross_carrier()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["config_name"], "CCS_n78_scheduling_n258")
+        self.assertEqual(items[0]["is_urllc_capable"], 1)
+
+        single = self.storage.get_nr_cross_carrier_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["scheduling_cell"], "PCell (n78 3.5GHz)")
+        self.assertIsNone(self.storage.get_nr_cross_carrier_by_id(99999))
+
+    def test_pkm_ki_proposal_storage(self):
+        rec_id = self.storage.record_pkm_ki_proposal(
+            student_leader="Rizky Ramadhan",
+            nim="1101210055",
+            proposal_title="Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan",
+            prototype_type="Prototipe Teruji Lapangan (TRL 5)",
+            target_user="Dinas Bina Marga & PU",
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=10000000.0,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_ki_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Rizky Ramadhan")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_pkm_ki_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["prototype_type"], "Prototipe Teruji Lapangan (TRL 5)")
+        self.assertIsNone(self.storage.get_pkm_ki_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()

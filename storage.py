@@ -6885,6 +6885,16 @@ class StorageManager:
             row = cursor.fetchone()
             return dict(row) if row else None
 
+    # Aliases for uniform naming
+    record_optical_edfa = save_optical_edfa_record
+    list_optical_edfa = list_optical_edfa_records
+    get_optical_edfa_by_id = get_optical_edfa_record_by_id
+    record_nr_cross_carrier = save_nr_cross_carrier_record
+    list_nr_cross_carrier = list_nr_cross_carrier_records
+    get_nr_cross_carrier_by_id = get_nr_cross_carrier_record_by_id
+    record_pkm_ki_proposal = save_pkm_ki_proposal
+
+
 
 
 
