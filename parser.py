@@ -7799,6 +7799,72 @@ def parse_pkm_pm_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_dwdm_osnr_ber_margin(
+    signal_power_dbm: float = 0.0,
+    ase_noise_power_dbm: float = -28.0,
+    fec_threshold_osnr_db: float = 14.5,
+    channel_wavelength_nm: float = 1550.12,
+    baud_rate_gbaud: float = 32.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical DWDM channel Optical Signal-to-Noise Ratio (OSNR) in 0.1 nm reference bandwidth,
+    OSNR margin above the forward error correction (FEC) limit, equivalent Q-factor,
+    and estimated pre-FEC Bit Error Rate (BER) according to ITU-T G.692 and G.977 standards.
+    """
+    sig_p = float(signal_power_dbm)
+    ase_p = float(ase_noise_power_dbm)
+    fec_th = float(fec_threshold_osnr_db)
+    w_len = float(channel_wavelength_nm)
+    baud = max(1.0, float(baud_rate_gbaud))
+
+    # OSNR in dB = Signal Power (dBm) - ASE Noise Power in 0.1 nm (dBm)
+    osnr_db = round(sig_p - ase_p, 2)
+    osnr_linear = 10.0 ** (osnr_db / 10.0)
+
+    # OSNR Margin relative to FEC threshold limit
+    osnr_margin_db = round(osnr_db - fec_th, 2)
+
+    # Reference optical filter bandwidth: 0.1 nm at 1550 nm corresponds to approx 12.5 GHz
+    # Q-factor approximation for coherent optical communications:
+    # Q = sqrt(OSNR_linear * (B_ref / R_baud))
+    b_ref_ghz = 12.5
+    ratio = (osnr_linear * b_ref_ghz) / baud
+    q_linear = round(math.sqrt(max(0.01, ratio)), 3)
+    q_db = round(20.0 * math.log10(max(0.01, q_linear)), 2)
+
+    # Uncorrected theoretical pre-FEC BER using complementary error function
+    # BER ≈ 0.5 * erfc(Q / sqrt(2))
+    try:
+        pre_fec_ber = round(0.5 * math.erfc(q_linear / math.sqrt(2.0)), 8)
+    except Exception:
+        pre_fec_ber = 1e-12
+
+    if osnr_margin_db >= 5.0:
+        health_status = "Optimal (Headroom Tinggi)"
+    elif osnr_margin_db >= 2.0:
+        health_status = "Memadai (Headroom Normal)"
+    elif osnr_margin_db >= 0.0:
+        health_status = "Kritis (Mendekati Batas FEC)"
+    else:
+        health_status = "Degradasi (Melampaui Batas FEC / LOS)"
+
+    return {
+        "channel_wavelength_nm": w_len,
+        "signal_power_dbm": sig_p,
+        "ase_noise_power_dbm": ase_p,
+        "fec_threshold_osnr_db": fec_th,
+        "baud_rate_gbaud": baud,
+        "osnr_db": osnr_db,
+        "osnr_margin_db": osnr_margin_db,
+        "q_factor_linear": q_linear,
+        "q_factor_db": q_db,
+        "pre_fec_ber": pre_fec_ber,
+        "health_status": health_status,
+        "fec_compliant": osnr_margin_db >= 0.0
+    }
+
+
+
 
 
 
