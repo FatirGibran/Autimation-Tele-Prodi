@@ -7626,6 +7626,48 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_cross_carrier_scheduling_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "5G NR Carrier Aggregation Cross-Carrier Scheduling (CCS) Latency", **kwargs) -> str:
+        """
+        Renders an Elementor-styled telemetric card displaying 3GPP Cross-Carrier Scheduling (CCS)
+        downlink and uplink control latencies, CIF indicator presence, and URLLC compliance status.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        sched_cell = str(d.get("scheduling_cell", "PCell (n78 3.5GHz)"))
+        target_cell = str(d.get("scheduled_cell", "SCell (n258 28GHz)"))
+        scs_sched = int(d.get("scheduling_scs_khz", 30))
+        scs_target = int(d.get("scheduled_scs_khz", 120))
+        cif = bool(d.get("cif_present", True))
+        dl_lat = float(d.get("downlink_scheduling_latency_ms", 0.35))
+        ul_lat = float(d.get("uplink_scheduling_latency_ms", 0.65))
+        profile = str(d.get("latency_profile", "Ultra-Reliable Low-Latency Communication (URLLC) Compliant"))
+        is_urllc = bool(d.get("is_urllc_capable", True))
+
+        badge_bg = "#059669" if is_urllc else "#0284c7"
+        badge_label = "URLLC READY" if is_urllc else "eMBB STANDARD"
+
+        return f"""    <div class="tu-nr-ccs-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">3GPP Rel-16 Cross-Carrier Scheduling</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Scheduling Cell: <strong>{sched_cell} ({scs_sched} kHz)</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Scheduled Cell: <strong>{target_cell} ({scs_target} kHz)</strong></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>CIF Field (3-bit): <strong style="color: {'#38bdf8' if cif else '#94a3b8'};">{'Aktif (Included)' if cif else 'Nonaktif'}</strong></div>
+        <div>Latensi DL (K0): <strong style="color: #34d399;">{dl_lat:.3f} ms</strong></div>
+        <div>Latensi UL (K2): <strong style="color: #facc15;">{ul_lat:.3f} ms</strong></div>
+      </div>
+      <div style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed #334155; font-size: 12px; color: #94a3b8;">
+        Karakteristik Latensi: <span style="color: #38bdf8; font-weight: 600;">{profile}</span>
+      </div>
+    </div>"""
+
+
 
 
 render_5g_bwp_switching_svg = EditorialComponents.render_5g_bwp_switching_svg
@@ -7650,4 +7692,6 @@ render_satellite_tec_delay_card = EditorialComponents.render_satellite_tec_delay
 render_pkm_kc_proposal_card = EditorialComponents.render_pkm_kc_proposal_card
 render_nr_beam_sweeping_svg = EditorialComponents.render_nr_beam_sweeping_svg
 render_optical_edfa_saturation_card = EditorialComponents.render_optical_edfa_saturation_card
+render_5g_cross_carrier_scheduling_card = EditorialComponents.render_5g_cross_carrier_scheduling_card
+
 
