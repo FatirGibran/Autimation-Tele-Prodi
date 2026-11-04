@@ -1191,6 +1191,34 @@ class WordPressClient:
             "total": len(post_category_map)
         }
 
+    def get_comments_by_ids(self, comment_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        Retrieves a list of WordPress comments by their numeric IDs using the /wp/v2/comments endpoint.
+        """
+        if not comment_ids:
+            return []
+
+        clean_ids = [int(cid) for cid in comment_ids if str(cid).isdigit() and int(cid) > 0]
+        if not clean_ids:
+            return []
+
+        all_comments = []
+        chunk_size = 100
+        for i in range(0, len(clean_ids), chunk_size):
+            chunk = clean_ids[i:i + chunk_size]
+            include_param = ",".join(str(cid) for cid in chunk)
+            endpoint = f"{self.api_url}/comments?include={include_param}&per_page={len(chunk)}"
+            req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+            try:
+                res = self._send_request(req)
+                if isinstance(res, list):
+                    all_comments.extend(res)
+            except Exception:
+                pass
+
+        return all_comments
+
+
 
 
 
