@@ -1145,6 +1145,48 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Lolos Pendanaan Belmawa PKM-RE Unggulan", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/re/88", msg)
 
+    def test_format_optical_raman_amplifier_telegram(self):
+        msg = TelegramFormatter.format_optical_raman_amplifier_telegram(
+            link_identifier="SPAN-PWT-BDG-01",
+            pump_power_mw=500.0,
+            fiber_length_km=50.0,
+            effective_length_km=20.0,
+            on_off_gain_db=11.2,
+            net_gain_db=1.2,
+            eq_noise_figure_db=-6.7,
+            health_status="HIGH_GAIN_DISTRIBUTED_TRANSPARENT",
+            nms_url="https://nms.telkomuniversity.ac.id/raman/1"
+        )
+        self.assertIn("Distributed Raman Amplifier (DRA)", msg)
+        self.assertIn("SPAN-PWT-BDG-01", msg)
+        self.assertIn("500.0 mW", msg)
+        self.assertIn("+11.20 dB", msg)
+        self.assertIn("+1.20 dB", msg)
+        self.assertIn("HIGH_GAIN_DISTRIBUTED_TRANSPARENT", msg)
+        self.assertIn("https://nms.telkomuniversity.ac.id/raman/1", msg)
+
+    def test_format_pkm_pm_telegram(self):
+        msg = TelegramFormatter.format_pkm_pm_telegram(
+            student_leader="Siti Nurhaliza",
+            nim="1101210099",
+            proposal_title="Pemberdayaan UMKM Pengrajin Bambu Berbasis E-Commerce & IoT",
+            partner_community="Komunitas Pengrajin Bambu Desa Sukaraja",
+            empowerment_program="Pelatihan Pemasaran Digital & Kontrol Mutu IoT",
+            composite_score=89.0,
+            letter_grade="A",
+            allocated_budget_idr=9500000,
+            funding_status="Lolos Pendanaan Belmawa PKM-PM Unggulan",
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/pm/99"
+        )
+        self.assertIn("Pengumuman Kelulusan Pengabdian Belmawa PKM-PM", msg)
+        self.assertIn("Siti Nurhaliza", msg)
+        self.assertIn("1101210099", msg)
+        self.assertIn("Pemberdayaan UMKM Pengrajin Bambu", msg)
+        self.assertIn("Komunitas Pengrajin Bambu Desa Sukaraja", msg)
+        self.assertIn("Rp 9,500,000", msg)
+        self.assertIn("Lolos Pendanaan Belmawa PKM-PM Unggulan", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/pm/99", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
