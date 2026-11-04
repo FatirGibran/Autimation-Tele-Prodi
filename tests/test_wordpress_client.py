@@ -1001,6 +1001,38 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_users_by_ids(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 10, "name": "Admin"}, {"id": 11, "name": "Editor"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        self.assertEqual(self.client.get_users_by_ids([]), [])
+        self.assertEqual(mock_urlopen.call_count, 0)
+
+        users = self.client.get_users_by_ids([10, 11])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]["id"], 10)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("include=10,11", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_update_post_categories(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 101, "categories": [1, 2]}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        updates = [
+            {"id": 101, "categories": [1, 2]},
+            {"post_id": 102, "categories": [3]}
+        ]
+        res = self.client.batch_update_post_categories(updates)
+        self.assertEqual(res["updated"], [101, 102])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(mock_urlopen.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
