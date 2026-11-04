@@ -7276,6 +7276,41 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_tropospheric_scintillation_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Redaman Sintilasi Troposferik Satelit ITU-R P.618", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying satellite link tropospheric scintillation fluctuations and fade depth.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        temp = float(d.get("surface_temperature_c", 25.0))
+        hum = float(d.get("surface_humidity_percent", 75.0))
+        freq = float(d.get("carrier_frequency_ghz", 12.0))
+        elev = float(d.get("elevation_angle_deg", 30.0))
+        n_wet = float(d.get("wet_refractivity_n_wet", 56.4))
+        sigma = float(d.get("signal_fluctuation_sigma_db", 0.35))
+        fade = float(d.get("scintillation_fade_depth_db", 1.25))
+        severity = str(d.get("fading_severity", "LOW_SCINTILLATION_ACCEPTABLE"))
+
+        badge_color = "#10b981" if "LOW" in severity else ("#f59e0b" if "MODERATE" in severity else "#ef4444")
+
+        return f"""    <div class="tu-satellite-scintillation-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">ITU-R P.618 Tropospheric Scintillation</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{severity}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 13px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Suhu &amp; Kelembapan: <strong>{temp:.1f}°C ({hum:.0f}%)</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Frekuensi &amp; Elevasi: <strong>{freq:.1f} GHz ({elev:.1f}°)</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Refraktivitas Nwet: <strong>{n_wet:.1f} N-units</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Fluktuasi Sinyal (σ): <strong style="color: #38bdf8;">{sigma:.3f} dB</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Deep Fade Depth (As): <strong style="color: #facc15;">{fade:.2f} dB</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Kondisi Propagasi: <strong style="color: #34d399;">Link Margin Ok</strong></div>
+      </div>
+    </div>"""
+
+render_satellite_tropospheric_scintillation_card = EditorialComponents.render_satellite_tropospheric_scintillation_card
 render_5g_bwp_switching_card = EditorialComponents.render_5g_bwp_switching_card
 render_optical_raman_gain_card = EditorialComponents.render_optical_raman_gain_card
 render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
