@@ -2588,6 +2588,52 @@ def sanitize_html5_picture_source_attributes(html: str) -> str:
     return re.sub(r'<source\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_source, cleaned, flags=re.IGNORECASE)
 
 
+def sanitize_html5_datalist_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <datalist> and nested <option> autocomplete elements by stripping
+    inline event handlers, preventing DOM clobbering on datalist identifier attributes,
+    and neutralizing unsafe script schemes in option values or labels.
+    """
+    if not html or "<datalist" not in html.lower():
+        return html
+
+    clobbered_names = {"submit", "reset", "action", "form", "constructor", "prototype", "length", "value"}
+
+    def fix_datalist(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize id attribute
+        id_m = re.search(r'\bid=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if id_m:
+            val = id_m.group(1).strip().lower()
+            if val in clobbered_names or not re.match(r'^[a-zA-Z0-9_\-]+$', val):
+                tag = re.sub(r'\s+id=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    cleaned = re.sub(r'<datalist\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_datalist, html, flags=re.IGNORECASE)
+
+    # Sanitize <option> inside html if datalist exists
+    def fix_option(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        for attr in ("value", "label"):
+            attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if attr_m:
+                val = attr_m.group(1)
+                if re.search(r'(?:javascript:|data:text/html|vbscript:|<script)', val, re.IGNORECASE):
+                    tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<option\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_option, cleaned, flags=re.IGNORECASE)
+
+
+
 
 
 
