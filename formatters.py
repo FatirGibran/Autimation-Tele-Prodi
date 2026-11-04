@@ -1733,6 +1733,36 @@ class TelegramFormatter:
             f"ℹ️ *Monitoring performa lapisan fisik transmisi DWDM backbone telekomunikasi.*"
         )
 
+    @staticmethod
+    def format_pkm_pi_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        partner_enterprise: str,
+        technology_type: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Penerapan Iptek (PKM-PI) technology transfer funding announcement for Telegram broadcast.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"⚙️ **Pengumuman Kelulusan Pendanaan Belmawa PKM-PI (Penerapan Iptek)**\n\n"
+            f"📖 **Judul Invensi Teknologi:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏭 **Mitra Usaha Produktif:** `{partner_enterprise.strip()}`\n"
+            f"🤖 **Teknologi Diterapkan:** `{technology_type.strip()}`\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Hibah:** `Rp {allocated_budget_idr:,}`\n"
+            f"🌟 **Status:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"🚀 *Selamat mengimplementasikan teknologi tepat guna untuk mendongkrak produktivitas mitra!*"
+        )
+
+
 
 
 
