@@ -1360,6 +1360,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_re_nim ON pkm_re_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_raman_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_identifier TEXT NOT NULL,
+                    pump_power_mw REAL NOT NULL,
+                    fiber_length_km REAL NOT NULL,
+                    effective_length_km REAL NOT NULL,
+                    on_off_gain_db REAL NOT NULL,
+                    net_gain_db REAL NOT NULL,
+                    eq_noise_figure_db REAL NOT NULL,
+                    health_status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_raman_link ON optical_raman_records(link_identifier);")
 
 
 
@@ -6249,6 +6264,62 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM pkm_re_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_optical_raman(
+        self,
+        link_identifier: str,
+        pump_power_mw: float,
+        fiber_length_km: float,
+        effective_length_km: float,
+        on_off_gain_db: float,
+        net_gain_db: float,
+        eq_noise_figure_db: float,
+        health_status: str
+    ) -> int:
+        """
+        Stores an optical distributed Raman amplifier telemetry record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_raman_records (
+                    link_identifier, pump_power_mw, fiber_length_km,
+                    effective_length_km, on_off_gain_db, net_gain_db,
+                    eq_noise_figure_db, health_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(link_identifier).strip(),
+                float(pump_power_mw),
+                float(fiber_length_km),
+                float(effective_length_km),
+                float(on_off_gain_db),
+                float(net_gain_db),
+                float(eq_noise_figure_db),
+                str(health_status).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_optical_raman(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent optical distributed Raman amplifier records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_raman_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_raman_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical Raman record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_raman_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
