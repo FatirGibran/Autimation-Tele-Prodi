@@ -1677,6 +1677,35 @@ class TelegramFormatter:
             f"📡 *Sistem Monitoring Transmisi Fiber Optik Terdistribusi DWDM Prodi*"
         )
 
+    @staticmethod
+    def format_pkm_pm_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        partner_community: str,
+        empowerment_program: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Pengabdian Kepada Masyarakat (PKM-PM) student outreach funding announcement for Telegram broadcast.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"🤝 **Pengumuman Kelulusan Pengabdian Belmawa PKM-PM**\n\n"
+            f"📚 **Judul Program Pengabdian:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏘️ **Mitra Komunitas:** `{partner_community.strip()}`\n"
+            f"💡 **Fokus Solusi:** `{empowerment_program.strip()}`\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Hibah:** `Rp {allocated_budget_idr:,}`\n"
+            f"🌟 **Status:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"👏 *Selamat mengabdi dan memberdayakan masyarakat demi dampak sosial berkelanjutan!*"
+        )
+
 
 
 
