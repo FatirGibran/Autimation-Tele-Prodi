@@ -1227,6 +1227,49 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Rp 9,500,000", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/pi/88", msg)
 
+    def test_format_optical_edfa_telegram(self):
+        msg = TelegramFormatter.format_optical_edfa_telegram(
+            amplifier_id="EDFA-C-BAND-01",
+            pump_type="980nm Co-directional",
+            pin_dbm=-20.0,
+            saturated_gain_db=27.5,
+            output_power_dbm=7.5,
+            gain_compression_db=2.5,
+            noise_figure_db=4.8,
+            operational_regime="Small-Signal Linear Regime",
+            is_saturated=False
+        )
+        self.assertIn("Telemetri Penguat Optik EDFA", msg)
+        self.assertIn("EDFA-C-BAND-01", msg)
+        self.assertIn("980nm Co-directional", msg)
+        self.assertIn("-20.00 dBm", msg)
+        self.assertIn("+7.50 dBm", msg)
+        self.assertIn("27.50 dB", msg)
+        self.assertIn("-2.50 dB", msg)
+        self.assertIn("4.80 dB", msg)
+        self.assertIn("Small-Signal Linear Regime", msg)
+
+    def test_format_pkm_ki_telegram(self):
+        msg = TelegramFormatter.format_pkm_ki_telegram(
+            student_leader="Rizky Ramadhan",
+            nim="1101210055",
+            proposal_title="Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan",
+            prototype_type="Prototipe Teruji Lapangan (TRL 5)",
+            target_user="Dinas Bina Marga & PU",
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=10000000,
+            funding_status="Lolos Pendanaan Belmawa PKM-KI Unggulan",
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/ki/55"
+        )
+        self.assertIn("Pengumuman Kelulusan Pendanaan Belmawa PKM-KI", msg)
+        self.assertIn("Rizky Ramadhan", msg)
+        self.assertIn("1101210055", msg)
+        self.assertIn("Sistem Radar Doppler Portabel", msg)
+        self.assertIn("Prototipe Teruji Lapangan", msg)
+        self.assertIn("Rp 10,000,000", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/ki/55", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
