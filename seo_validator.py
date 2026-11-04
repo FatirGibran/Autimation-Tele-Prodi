@@ -7299,6 +7299,75 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_aria_live_status_regions(html_content: str) -> Dict[str, Any]:
+        """
+        Audits dynamic status messages and live region announcements under WCAG 2.1
+        Success Criterion 4.1.3 (Status Messages).
+        Verifies correct implementation of aria-live attributes (polite, assertive, off)
+        and semantic roles (status, alert, log, timer).
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_live_regions": 0,
+                "valid_live_regions": 0,
+                "status_roles_count": 0,
+                "alert_roles_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        live_elements = soup.find_all(lambda tag: tag.has_attr("aria-live") or tag.get("role") in {"status", "alert", "log", "timer"})
+
+        if not live_elements:
+            potential_status = soup.find_all(class_=re.compile(r'\b(?:alert|status-message|feedback-msg|toast)\b', re.IGNORECASE))
+            missing_roles = [el for el in potential_status if not el.has_attr("aria-live") and el.get("role") not in {"status", "alert", "log"}]
+            issues = [f"Elemen dengan class '{' '.join(el.get('class', []))}' terdeteksi sebagai status/alert tanpa role atau aria-live semantik." for el in missing_roles]
+            return {
+                "total_live_regions": 0,
+                "valid_live_regions": 0,
+                "status_roles_count": 0,
+                "alert_roles_count": 0,
+                "is_compliant": len(issues) == 0,
+                "issues": issues
+            }
+
+        valid_live_values = {"polite", "assertive", "off"}
+        valid_regions_count = 0
+        status_roles_count = 0
+        alert_roles_count = 0
+        issues = []
+
+        for el in live_elements:
+            role = (el.get("role") or "").lower()
+            live = (el.get("aria-live") or "").lower()
+
+            if role == "status":
+                status_roles_count += 1
+            elif role == "alert":
+                alert_roles_count += 1
+
+            has_valid_live = (live in valid_live_values)
+            has_implicit_live = (role in {"status", "alert", "log"})
+
+            if live and live not in valid_live_values:
+                issues.append(f"Nilai aria-live='{live}' tidak valid. Harus 'polite', 'assertive', atau 'off'.")
+            elif has_valid_live or has_implicit_live:
+                valid_regions_count += 1
+
+        is_compliant = (valid_regions_count == len(live_elements)) and (len(issues) == 0)
+
+        return {
+            "total_live_regions": len(live_elements),
+            "valid_live_regions": valid_regions_count,
+            "status_roles_count": status_roles_count,
+            "alert_roles_count": alert_roles_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
+
 
 
 
