@@ -1243,6 +1243,40 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("ssr: true", res)
         self.assertIn("<p>Prerendered Angular content.</p>", res)
 
+    def test_generate_social_media_posting_json_ld(self):
+        meta = {
+            "headline": "Aksi Sosial Mahasiswa: Digitalisasi UMKM Pengrajin",
+            "article_body": "Tim mahasiswa teknik telekomunikasi melakukan pendampingan adopsi teknologi IoT dan pemasaran online.",
+            "author": "Siti Nurhaliza",
+            "platform": "Instagram",
+            "publish_date": "2026-11-04",
+            "url": "https://instagram.com/p/samplepost",
+            "keywords": ["PKM-PM", "UMKM", "IoT"]
+        }
+        res = ArticleExporter.generate_social_media_posting_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "SocialMediaPosting")
+        self.assertEqual(res["headline"], "Aksi Sosial Mahasiswa: Digitalisasi UMKM Pengrajin")
+        self.assertEqual(res["author"]["name"], "Siti Nurhaliza")
+        self.assertEqual(res["sharedContent"]["name"], "Instagram")
+        self.assertIn("https://instagram.com/p/samplepost", res["url"])
+
+    def test_to_remix_mdx(self):
+        meta = {
+            "seo_title": "Panduan Integrasi Remix Run MDX",
+            "meta_description": "Dokumentasi rute Remix dengan MDX.",
+            "slug": "panduan-remix-mdx",
+            "publish_date": "2026-11-04",
+            "tags": ["react", "remix", "ssr"]
+        }
+        res = ArticleExporter.to_remix_mdx(meta, "<p>Prerendered Remix content.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Integrasi Remix Run MDX"', res)
+        self.assertIn('framework: "remix"', res)
+        self.assertIn("remix: true", res)
+        self.assertIn("export const meta = () => [", res)
+        self.assertIn("<p>Prerendered Remix content.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
