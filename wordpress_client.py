@@ -1150,6 +1150,20 @@ class WordPressClient:
             "total": len(media_updates)
         }
 
+    def get_users_by_ids(self, user_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        Retrieves multiple WordPress user profiles matching a list of numeric IDs via REST API.
+        """
+        valid_ids = [int(i) for i in user_ids if str(i).isdigit() and int(i) > 0]
+        if not valid_ids:
+            return []
+
+        ids_param = ",".join(str(i) for i in sorted(list(set(valid_ids))))
+        endpoint = f"{self.api_url}/users?include={ids_param}&per_page=100"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        return results if isinstance(results, list) else []
+
 
 
 
