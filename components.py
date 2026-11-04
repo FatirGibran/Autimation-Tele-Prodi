@@ -7465,12 +7465,47 @@ class EditorialComponents:
     </div>"""
 
     @classmethod
+    def render_satellite_g_over_t_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Figure of Merit G/T Stasiun Bumi Satelit", **kwargs) -> str:
+        """
+        Renders an Elementor card showing satellite earth station G/T figure of merit, antenna gain, and system noise temperature.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        diam = float(d.get("antenna_diameter_m", 3.8))
+        freq = float(d.get("frequency_ghz", 12.5))
+        elev = float(d.get("elevation_angle_deg", 45.0))
+        gain = float(d.get("antenna_gain_dbi", 51.6))
+        t_sys = float(d.get("system_noise_temp_k", 98.4))
+        g_over_t = float(d.get("g_over_t_db_k", 31.67))
+        tier = str(d.get("station_tier", "Stasiun Bumi Hub Utama (Gateway Grade)"))
+
+        badge_color = "#22c55e" if g_over_t >= 30.0 else ("#0284c7" if g_over_t >= 22.0 else "#facc15")
+
+        return f"""    <div class="tu-sat-gt-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Satellite Ground Segment</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{tier}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #f1f5f9; font-size: 15px;">{title} (Ø = {diam:.1f} m @ {freq:.1f} GHz)</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Penguatan Antena (Gain): <strong>{gain:.2f} dBi</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Temperatur Derau Tsys: <strong>{t_sys:.1f} K</strong></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Sudut Elevasi: <strong style="color: #facc15;">{elev:.1f}°</strong></div>
+        <div>Figure of Merit (G/T): <strong style="color: #38bdf8;">{g_over_t:.2f} dB/K</strong></div>
+      </div>
+    </div>"""
+
+    @classmethod
+
 
 
 
 render_5g_bwp_switching_svg = EditorialComponents.render_5g_bwp_switching_svg
 render_optical_dwdm_osnr_card = EditorialComponents.render_optical_dwdm_osnr_card
 render_5g_carrier_aggregation_card = EditorialComponents.render_5g_carrier_aggregation_card
+render_satellite_g_over_t_card = EditorialComponents.render_satellite_g_over_t_card
 render_pkm_pm_proposal_card = EditorialComponents.render_pkm_pm_proposal_card
 render_satellite_tropospheric_scintillation_card = EditorialComponents.render_satellite_tropospheric_scintillation_card
 render_5g_bwp_switching_card = EditorialComponents.render_5g_bwp_switching_card
