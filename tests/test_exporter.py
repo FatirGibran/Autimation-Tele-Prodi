@@ -1312,6 +1312,44 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('<Title>Panduan Integrasi SolidStart MDX</Title>', res)
         self.assertIn("<p>SolidStart reactive content.</p>", res)
 
+    def test_generate_innovative_invention_json_ld(self):
+        meta = {
+            "proposal_title": "Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan",
+            "student_leader": "Rizky Ramadhan",
+            "nim": "1101210055",
+            "prototype_type": "Prototipe Fungsional Skala Lab",
+            "target_user": "Dinas Bina Marga & PU",
+            "funding_status": "Lolos Pendanaan Belmawa PKM-KI Unggulan",
+            "description": "Invensi radar microwave portabel untuk deteksi deformasi struktur beton jembatan.",
+            "url": "https://bif-pwt.telkomuniversity.ac.id/pkm-ki-radar"
+        }
+        res = ArticleExporter.generate_innovative_invention_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "CreativeWork")
+        self.assertEqual(res["name"], "Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan")
+        self.assertEqual(res["creator"]["name"], "Rizky Ramadhan")
+        self.assertEqual(res["creator"]["identifier"], "1101210055")
+        self.assertEqual(res["about"]["name"], "Prototipe Fungsional Skala Lab")
+        self.assertEqual(res["audience"]["audienceType"], "Dinas Bina Marga & PU")
+        self.assertEqual(res["url"], "https://bif-pwt.telkomuniversity.ac.id/pkm-ki-radar")
+
+    def test_to_gatsby_mdx(self):
+        meta = {
+            "seo_title": "Panduan Pengembangan Gatsby MDX",
+            "meta_description": "Dokumentasi modern menggunakan framework Gatsby React MDX.",
+            "slug": "panduan-gatsby-mdx",
+            "publish_date": "2026-11-04",
+            "tags": ["gatsby", "react", "mdx"]
+        }
+        res = ArticleExporter.to_gatsby_mdx(meta, "<p>Arsitektur Gatsby Head API dan MDX routing.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Pengembangan Gatsby MDX"', res)
+        self.assertIn('framework: "gatsby"', res)
+        self.assertIn("gatsby: true", res)
+        self.assertIn("export const Head = () => (", res)
+        self.assertIn("<title>Panduan Pengembangan Gatsby MDX</title>", res)
+        self.assertIn("<p>Arsitektur Gatsby Head API dan MDX routing.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
