@@ -45,7 +45,10 @@ from parser import (
     parse_pkm_kc_proposal_evaluation,
     calculate_optical_wss_oxc_insertion_loss,
     calculate_5g_nr_timing_advance_distance,
-    parse_pkm_re_proposal_evaluation
+    parse_pkm_re_proposal_evaluation,
+    calculate_optical_raman_amplifier_gain,
+    calculate_5g_nr_bwp_switching_latency,
+    parse_pkm_pm_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -2974,6 +2977,133 @@ def cmd_pkmre(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['lab_center'][:18]:<20} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
 
 
+def cmd_raman(args):
+    if args.action == "add":
+        link = args.link or "SPAN-PWT-BDG-01"
+        pump = float(args.pump) if args.pump is not None else 500.0
+        length = float(args.length) if args.length is not None else 50.0
+        loss = float(args.loss) if args.loss is not None else 0.2
+        area = float(args.area) if args.area is not None else 80.0
+
+        res = calculate_optical_raman_amplifier_gain(
+            pump_power_mw=pump,
+            fiber_length_km=length,
+            raman_gain_coeff_m_w=0.8e-13,
+            effective_area_um2=area,
+            fiber_loss_db_km=loss
+        )
+        rec_id = storage.record_optical_raman(
+            link_identifier=link,
+            pump_power_mw=res["pump_power_mw"],
+            fiber_length_km=res["fiber_length_km"],
+            effective_length_km=res["effective_length_km"],
+            on_off_gain_db=res["on_off_gain_db"],
+            net_gain_db=res["net_gain_db"],
+            eq_noise_figure_db=res["eq_noise_figure_db"],
+            health_status=res["health_status"]
+        )
+        print(f"Catatan Optical Raman Amplifier berhasil disimpan dengan ID: {rec_id} (Link: {link}, On-Off Gain: +{res['on_off_gain_db']} dB, Status: {res['health_status']})")
+    else:
+        records = storage.list_optical_raman(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Optical Raman Amplifier yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'LINK':<20} | {'POMPA (mW)':<12} | {'PANJANG':<10} | {'GAIN ON-OFF':<14} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['link_identifier'][:18]:<20} | {r['pump_power_mw']:<12.1f} | {r['fiber_length_km']:<10.1f} | {r['on_off_gain_db']:<14.2f} | {r['health_status']}")
+
+
+def cmd_bwp(args):
+    if args.action == "add":
+        ue = args.ue or "UE-5G-BWP-01"
+        act = float(args.active) if args.active is not None else 20.0
+        tgt = float(args.target) if args.target is not None else 100.0
+        scs_src = int(args.scs_src) if args.scs_src is not None else 15
+        scs_tgt = int(args.scs_tgt) if args.scs_tgt is not None else 30
+        trigger = args.trigger or "DCI"
+        dtype = args.type or "TYPE1"
+
+        res = calculate_5g_nr_bwp_switching_latency(
+            active_bwp_mhz=act,
+            target_bwp_mhz=tgt,
+            scs_source_khz=scs_src,
+            scs_target_khz=scs_tgt,
+            switch_trigger=trigger,
+            delay_type=dtype
+        )
+        rec_id = storage.record_nr_bwp_switching(
+            ue_identifier=ue,
+            active_bwp_mhz=res["active_bwp_mhz"],
+            target_bwp_mhz=res["target_bwp_mhz"],
+            scs_source_khz=res["scs_source_khz"],
+            scs_target_khz=res["scs_target_khz"],
+            switch_trigger=res["switch_trigger"],
+            delay_type=res["delay_type"],
+            switch_delay_us=res["switch_delay_us"],
+            interrupted_slots_target=res["interrupted_slots_target"],
+            performance_tier=res["performance_tier"]
+        )
+        print(f"Catatan 5G NR BWP Switching berhasil disimpan dengan ID: {rec_id} (UE: {ue}, Delay: {res['switch_delay_us']} us, Status: {res['performance_tier']})")
+    else:
+        records = storage.list_nr_bwp_switching(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR BWP Switching yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'UE IDENTIFIER':<18} | {'AWAL (MHz)':<12} | {'TARGET (MHz)':<14} | {'DELAY (us)':<12} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['ue_identifier'][:16]:<18} | {r['active_bwp_mhz']:<12.1f} | {r['target_bwp_mhz']:<14.1f} | {r['switch_delay_us']:<12.1f} | {r['performance_tier']}")
+
+
+def cmd_pkmpm(args):
+    if args.action == "add":
+        leader = args.leader or "Ketua Tim PKM-PM"
+        nim = args.nim or "1101210099"
+        title = args.title or "Pemberdayaan UMKM Pengrajin Bambu"
+        partner = args.partner or "Komunitas Pengrajin Bambu"
+        prog = args.program or "Pelatihan Digital & IoT"
+        diag = float(args.diag) if args.diag is not None else 85.0
+        sol = float(args.sol) if args.sol is not None else 85.0
+        sust = float(args.sust) if args.sust is not None else 85.0
+        budget = float(args.budget) if args.budget is not None else 85.0
+
+        res = parse_pkm_pm_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "partner_community": partner,
+            "empowerment_program": prog,
+            "diagnosis_score": diag,
+            "solution_score": sol,
+            "sustainability_score": sust,
+            "budget_score": budget
+        })
+        rec_id = storage.record_pkm_pm_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            partner_community=partner,
+            empowerment_program=prog,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-PM berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_pkm_pm_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-PM yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'MITRA':<20} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            funded_str = "Lolos" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['partner_community'][:18]:<20} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
+
+
 def main():
 
 
@@ -4024,6 +4154,45 @@ def main():
     pkmre_parser.add_argument("--budget", type=float, default=85.0, help="Skor efisiensi RAB & jadwal riset (0-100)")
     pkmre_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmre_parser.set_defaults(func=cmd_pkmre)
+
+    # Optical Raman Amplifier command
+    raman_parser = subparsers.add_parser("raman", help="Kelola kalkulasi penguatan Raman terdistribusi (list, add)")
+    raman_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi Raman amplifier")
+    raman_parser.add_argument("--link", default="SPAN-PWT-BDG-01", help="Identifier span fiber optik")
+    raman_parser.add_argument("--pump", type=float, default=500.0, help="Daya pompa laser (mW)")
+    raman_parser.add_argument("--length", type=float, default=50.0, help="Panjang bentang fiber (km)")
+    raman_parser.add_argument("--loss", type=float, default=0.2, help="Koefisien redaman fiber (dB/km)")
+    raman_parser.add_argument("--area", type=float, default=80.0, help="Luas area efektif Aeff (um^2)")
+    raman_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    raman_parser.set_defaults(func=cmd_raman)
+
+    # 5G NR BWP Switching command
+    bwp_parser = subparsers.add_parser("bwp", help="Kelola kalkulasi 5G NR BWP switching latency & numerologi (list, add)")
+    bwp_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi BWP switching")
+    bwp_parser.add_argument("--ue", default="UE-5G-BWP-01", help="Identifier perangkat UE")
+    bwp_parser.add_argument("--active", type=float, default=20.0, help="Bandwidth BWP aktif awal (MHz)")
+    bwp_parser.add_argument("--target", type=float, default=100.0, help="Bandwidth BWP target baru (MHz)")
+    bwp_parser.add_argument("--scs-src", type=int, default=15, help="SCS BWP awal (15, 30, 60, 120 kHz)")
+    bwp_parser.add_argument("--scs-tgt", type=int, default=30, help="SCS BWP target (15, 30, 60, 120 kHz)")
+    bwp_parser.add_argument("--trigger", choices=["DCI", "TIMER", "RRC"], default="DCI", help="Pemicu BWP switch")
+    bwp_parser.add_argument("--type", choices=["TYPE1", "TYPE2"], default="TYPE1", help="Tipe delay UE BWP retuning")
+    bwp_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    bwp_parser.set_defaults(func=cmd_bwp)
+
+    # PKM-PM Proposal command
+    pkmpm_parser = subparsers.add_parser("pkmpm", help="Kelola evaluasi proposal Belmawa PKM Pengabdian Masyarakat (list, add)")
+    pkmpm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-PM")
+    pkmpm_parser.add_argument("--leader", default="Ketua Tim PKM-PM", help="Nama ketua mahasiswa pengusul")
+    pkmpm_parser.add_argument("--nim", default="1101210099", help="NIM ketua mahasiswa")
+    pkmpm_parser.add_argument("--title", default="Pemberdayaan UMKM Pengrajin Bambu", help="Judul proposal pengabdian")
+    pkmpm_parser.add_argument("--partner", default="Komunitas Pengrajin Bambu", help="Mitra masyarakat sasaran")
+    pkmpm_parser.add_argument("--program", default="Pelatihan Digital & IoT", help="Fokus program pengabdian")
+    pkmpm_parser.add_argument("--diag", type=float, default=85.0, help="Skor ketepatan diagnosis permasalahan mitra (0-100)")
+    pkmpm_parser.add_argument("--sol", type=float, default=85.0, help="Skor ketepatan solusi pemberdayaan (0-100)")
+    pkmpm_parser.add_argument("--sust", type=float, default=85.0, help="Skor keberlanjutan & perubahan perilaku (0-100)")
+    pkmpm_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
+    pkmpm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmpm_parser.set_defaults(func=cmd_pkmpm)
 
     args = parser.parse_args()
 
