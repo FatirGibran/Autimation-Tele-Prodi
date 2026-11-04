@@ -2433,6 +2433,84 @@ Status: Granted
         self.assertFalse(res_low["is_funded"])
         self.assertEqual(res_low["converted_sks"], 2)
 
+    def test_calculate_optical_raman_amplifier_gain(self):
+        from parser import calculate_optical_raman_amplifier_gain
+        res = calculate_optical_raman_amplifier_gain(
+            pump_power_mw=500.0,
+            fiber_length_km=50.0,
+            raman_gain_coeff_m_w=0.8e-13,
+            effective_area_um2=80.0,
+            fiber_loss_db_km=0.2
+        )
+        self.assertGreater(res["effective_length_km"], 0.0)
+        self.assertGreater(res["on_off_gain_db"], 0.0)
+        self.assertIn("health_status", res)
+        self.assertIn("eq_noise_figure_db", res)
+        self.assertTrue(res["is_acceptable"])
+
+    def test_calculate_5g_nr_bwp_switching_latency(self):
+        from parser import calculate_5g_nr_bwp_switching_latency
+        res_dci = calculate_5g_nr_bwp_switching_latency(
+            active_bwp_mhz=20.0,
+            target_bwp_mhz=100.0,
+            scs_source_khz=15,
+            scs_target_khz=30,
+            switch_trigger="DCI",
+            delay_type="TYPE1"
+        )
+        self.assertEqual(res_dci["performance_tier"], "OPTIMAL_LOW_LATENCY_SWITCH")
+        self.assertEqual(res_dci["switch_delay_us"], 200.0)
+        self.assertEqual(res_dci["bandwidth_expansion_ratio"], 5.0)
+        self.assertTrue(res_dci["is_acceptable"])
+
+        res_rrc = calculate_5g_nr_bwp_switching_latency(
+            switch_trigger="RRC",
+            delay_type="TYPE2"
+        )
+        self.assertEqual(res_rrc["performance_tier"], "HIGH_LATENCY_RRC_SWITCH")
+        self.assertFalse(res_rrc["is_acceptable"])
+
+    def test_calculate_satellite_tropospheric_scintillation_itu_r_p618(self):
+        from parser import calculate_satellite_tropospheric_scintillation_itu_r_p618
+        res = calculate_satellite_tropospheric_scintillation_itu_r_p618(
+            surface_temperature_c=25.0,
+            surface_humidity_percent=75.0,
+            carrier_frequency_ghz=12.0,
+            elevation_angle_deg=30.0,
+            antenna_diameter_m=1.8,
+            time_percentage_p=0.01
+        )
+        self.assertGreater(res["wet_refractivity_n_wet"], 0.0)
+        self.assertGreater(res["signal_fluctuation_sigma_db"], 0.0)
+        self.assertGreater(res["scintillation_fade_depth_db"], 0.0)
+        self.assertIn(res["fading_severity"], ["LOW_SCINTILLATION_ACCEPTABLE", "MODERATE_SCINTILLATION_TRACKING_REQUIRED"])
+
+    def test_parse_pkm_pm_proposal_evaluation(self):
+        from parser import parse_pkm_pm_proposal_evaluation
+        res_top = parse_pkm_pm_proposal_evaluation({
+            "student_leader": "Siti Nurhaliza",
+            "nim": "1101210099",
+            "proposal_title": "Pemberdayaan UMKM Pengrajin Bambu Berbasis E-Commerce & IoT",
+            "diagnosis_score": 90.0,
+            "solution_score": 90.0,
+            "sustainability_score": 88.0,
+            "budget_score": 85.0
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 9500000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_funded"])
+
+        res_low = parse_pkm_pm_proposal_evaluation({
+            "diagnosis_score": 50.0,
+            "solution_score": 50.0,
+            "sustainability_score": 50.0,
+            "budget_score": 50.0
+        })
+        self.assertEqual(res_low["letter_grade"], "C")
+        self.assertFalse(res_low["is_funded"])
+        self.assertEqual(res_low["converted_sks"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
