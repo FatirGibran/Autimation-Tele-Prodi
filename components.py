@@ -7748,6 +7748,69 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_cross_carrier_scheduling_svg(
+        cls,
+        title: str = "Diagram Garis Waktu 5G NR Cross-Carrier Scheduling (CCS)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card featuring an inline responsive SVG diagram visualizing
+        3GPP 5G NR Carrier Aggregation Cross-Carrier Scheduling (CCS) across PCell and SCell timelines,
+        highlighting PDCCH control DCI with CIF scheduling PDSCH on the aggregated carrier.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        sched_cell = str(d.get("scheduling_cell", "PCell (n78 3.5GHz)"))
+        target_cell = str(d.get("scheduled_cell", "SCell (n258 28GHz)"))
+        dl_lat = float(d.get("downlink_scheduling_latency_ms", 0.35))
+        ul_lat = float(d.get("uplink_scheduling_latency_ms", 0.65))
+
+        return f"""    <div class="tu-nr-ccs-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR CCS Timeline Diagram</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Cross-Carrier DCI Active</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 540 220" width="100%" height="220" style="max-width: 580px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Timeline Axis -->
+          <line x1="40" y1="190" x2="500" y2="190" stroke="#64748b" stroke-width="1.5" />
+          <text x="270" y="210" fill="#94a3b8" font-size="10" text-anchor="middle">Sumbu Garis Waktu Slot Radio (t / ms)</text>
+
+          <!-- Row 1: PCell (Scheduling Cell) -->
+          <rect x="40" y="30" width="140" height="24" rx="3" fill="#0369a1" />
+          <text x="110" y="46" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">{sched_cell}</text>
+
+          <!-- PDCCH with CIF -->
+          <rect x="200" y="24" width="70" height="36" rx="4" fill="#4338ca" stroke="#818cf8" stroke-width="1.5" />
+          <text x="235" y="42" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">PDCCH DCI</text>
+          <text x="235" y="54" fill="#c7d2fe" font-size="8" text-anchor="middle">CIF: SCell ID</text>
+
+          <!-- Control Arrow from PCell PDCCH to SCell PDSCH -->
+          <path d="M 270 42 C 310 42, 290 120, 320 120" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3,3" />
+          <polygon points="320,116 328,120 320,124" fill="#f59e0b" />
+          <text x="315" y="80" fill="#f59e0b" font-size="9" text-anchor="middle">Cross-Scheduling</text>
+
+          <!-- Row 2: SCell (Scheduled Cell) -->
+          <rect x="40" y="110" width="140" height="24" rx="3" fill="#065f46" />
+          <text x="110" y="126" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">{target_cell}</text>
+
+          <!-- SCell PDSCH Data Burst -->
+          <rect x="330" y="104" width="150" height="36" rx="4" fill="#047857" stroke="#34d399" stroke-width="1.5" />
+          <text x="405" y="122" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">PDSCH Data Payload</text>
+          <text x="405" y="134" fill="#a7f3d0" font-size="8" text-anchor="middle">K0 Slot Offset Delay</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Komponen Penjadwal: <strong style="color: #38bdf8;">PCell (CIF DCI)</strong></div>
+        <div>Latensi DL (K0): <strong style="color: #34d399;">{dl_lat:.3f} ms</strong></div>
+        <div>Latensi UL (K2): <strong style="color: #facc15;">{ul_lat:.3f} ms</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -7778,6 +7841,8 @@ render_optical_edfa_saturation_card = EditorialComponents.render_optical_edfa_sa
 render_5g_cross_carrier_scheduling_card = EditorialComponents.render_5g_cross_carrier_scheduling_card
 render_satellite_cloud_attenuation_card = EditorialComponents.render_satellite_cloud_attenuation_card
 render_pkm_ki_proposal_card = EditorialComponents.render_pkm_ki_proposal_card
+render_5g_cross_carrier_scheduling_svg = EditorialComponents.render_5g_cross_carrier_scheduling_svg
+
 
 
 
