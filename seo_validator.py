@@ -7112,6 +7112,74 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_non_text_contrast_ratio(html_content: str) -> Dict[str, Any]:
+        """
+        Audits non-text UI components and graphical indicators according to WCAG 2.1 SC 1.4.11 (Non-text Contrast).
+        Enforces a minimum contrast ratio of 3.0:1 between UI component visual states / boundaries
+        and adjacent background colors.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_elements_audited": 0,
+                "low_contrast_count": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        # Target interactive UI components and custom badge/graphic elements
+        elements = soup.find_all(lambda tag: tag.has_attr("style") and ("border" in tag["style"].lower() or "background" in tag["style"].lower() or "color" in tag["style"].lower()))
+
+        def parse_hex_color(hex_str: str) -> Optional[Tuple[int, int, int]]:
+            clean = hex_str.strip().lstrip("#")
+            if len(clean) == 3:
+                clean = "".join([c * 2 for c in clean])
+            if len(clean) == 6:
+                try:
+                    return (int(clean[0:2], 16), int(clean[2:4], 16), int(clean[4:6], 16))
+                except ValueError:
+                    return None
+            return None
+
+        def rel_luminance(rgb: Tuple[int, int, int]) -> float:
+            channels = []
+            for c in rgb:
+                val = c / 255.0
+                channels.append(val / 12.92 if val <= 0.03928 else ((val + 0.055) / 1.055) ** 2.4)
+            return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2])
+
+        issues = []
+        low_contrast = 0
+        audited_count = 0
+
+        for el in elements:
+            style = el["style"].lower()
+            fg_m = re.search(r'(?:color|border(?:-color)?|stroke):\s*(#[0-9a-f]{3,6})\b', style)
+            bg_m = re.search(r'background(?:-color)?:\s*(#[0-9a-f]{3,6})\b', style)
+
+            if fg_m and bg_m:
+                fg_rgb = parse_hex_color(fg_m.group(1))
+                bg_rgb = parse_hex_color(bg_m.group(1))
+                if fg_rgb and bg_rgb:
+                    audited_count += 1
+                    l1 = rel_luminance(fg_rgb)
+                    l2 = rel_luminance(bg_rgb)
+                    ratio = (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
+                    ratio_rounded = round(ratio, 2)
+                    if ratio_rounded < 3.0:
+                        low_contrast += 1
+                        el_desc = f"<{el.name}> ({el.get('class', ['ui-el'])[0] if el.get('class') else 'unclassed'})"
+                        issues.append(f"Elemen UI {el_desc} memiliki rasio kontras non-teks {ratio_rounded}:1 (FG: {fg_m.group(1)}, BG: {bg_m.group(1)}), di bawah batas minimum WCAG 3.0:1.")
+
+        return {
+            "total_elements_audited": audited_count,
+            "low_contrast_count": low_contrast,
+            "is_accessible": low_contrast == 0,
+            "issues": issues
+        }
+
+
 
 
 
