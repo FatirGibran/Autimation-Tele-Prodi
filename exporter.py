@@ -2581,6 +2581,59 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_innovative_invention_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org CreativeWork / Invention metadata for student innovative prototypes
+        and patent disclosures under Belmawa PKM-KI and Telkom University Purwokerto IPR center.
+        """
+        title = metadata.get("proposal_title", "Prototipe Radar Doppler Portabel").strip()
+        student_leader = metadata.get("student_leader", "Mahasiswa TT").strip()
+        nim = metadata.get("nim", "1101210055").strip()
+        prototype_type = metadata.get("prototype_type", "Prototipe Fungsional Skala Lab").strip()
+        target_user = metadata.get("target_user", "Dinas Bina Marga & PU").strip()
+        funding_status = metadata.get("funding_status", "Lolos Pendanaan Belmawa PKM-KI").strip()
+        desc = metadata.get("description", f"Invensi dan prototipe inovatif {title} oleh {student_leader}.").strip()
+        article_url = metadata.get("url", "").strip()
+
+        data = {
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            "name": title,
+            "headline": title,
+            "description": desc,
+            "genre": "Invensi Teknologi & Prototipe Fungsional",
+            "creator": {
+                "@type": "Person",
+                "name": student_leader,
+                "identifier": nim,
+                "affiliation": {
+                    "@type": "EducationalOrganization",
+                    "name": "Telkom University Purwokerto"
+                }
+            },
+            "about": {
+                "@type": "Product",
+                "name": prototype_type,
+                "category": "Prototipe Teknologi Inovatif TRL 4-5"
+            },
+            "audience": {
+                "@type": "Audience",
+                "audienceType": target_user
+            },
+            "funder": {
+                "@type": "GovernmentOrganization",
+                "name": "Direktorat Pembelajaran dan Kemahasiswaan (Belmawa) Kemendikbudristek"
+            },
+            "award": funding_status,
+            "copyrightYear": 2026
+        }
+        if article_url:
+            data["url"] = article_url
+
+        return data
+
+
 
 
 
