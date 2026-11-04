@@ -1375,6 +1375,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_raman_link ON optical_raman_records(link_identifier);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_bwp_switching_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ue_identifier TEXT NOT NULL,
+                    active_bwp_mhz REAL NOT NULL,
+                    target_bwp_mhz REAL NOT NULL,
+                    scs_source_khz INTEGER NOT NULL,
+                    scs_target_khz INTEGER NOT NULL,
+                    switch_trigger TEXT NOT NULL,
+                    delay_type TEXT NOT NULL,
+                    switch_delay_us REAL NOT NULL,
+                    interrupted_slots_target INTEGER NOT NULL,
+                    performance_tier TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_bwp_ue ON nr_bwp_switching_records(ue_identifier);")
 
 
 
@@ -6320,6 +6337,67 @@ class StorageManager:
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "SELECT * FROM optical_raman_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def record_nr_bwp_switching(
+        self,
+        ue_identifier: str,
+        active_bwp_mhz: float,
+        target_bwp_mhz: float,
+        scs_source_khz: int,
+        scs_target_khz: int,
+        switch_trigger: str,
+        delay_type: str,
+        switch_delay_us: float,
+        interrupted_slots_target: int,
+        performance_tier: str
+    ) -> int:
+        """
+        Stores a 5G NR BWP switching latency and slot interruption record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_bwp_switching_records (
+                    ue_identifier, active_bwp_mhz, target_bwp_mhz,
+                    scs_source_khz, scs_target_khz, switch_trigger,
+                    delay_type, switch_delay_us, interrupted_slots_target,
+                    performance_tier
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(ue_identifier).strip(),
+                float(active_bwp_mhz),
+                float(target_bwp_mhz),
+                int(scs_source_khz),
+                int(scs_target_khz),
+                str(switch_trigger).strip(),
+                str(delay_type).strip(),
+                float(switch_delay_us),
+                int(interrupted_slots_target),
+                str(performance_tier).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_bwp_switching(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR BWP switching records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_bwp_switching_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_bwp_switching_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR BWP switching record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_bwp_switching_records WHERE id = ?",
                 (int(record_id),)
             )
             row = cursor.fetchone()
