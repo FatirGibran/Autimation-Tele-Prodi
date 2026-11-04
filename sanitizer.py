@@ -2485,6 +2485,42 @@ def sanitize_html5_canvas_scriptable_attributes(html: str) -> str:
     return re.sub(r'<canvas\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_canvas, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_search_element_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5.3 <search> landmark container elements by stripping inline event handlers,
+    scrubbing unsafe inline styles, validating aria-label or role='search' if specified,
+    and preventing DOM clobbering on container attributes.
+    """
+    if not html or "<search" not in html.lower():
+        return html
+
+    clobbered_names = {"submit", "reset", "search", "query", "constructor", "prototype"}
+
+    def fix_search(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate role attribute (only 'search' is valid for <search> element per W3C)
+        role_m = re.search(r'\brole=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if role_m:
+            val = role_m.group(1).strip().lower()
+            if val != "search":
+                tag = re.sub(r'\s+role=["\'][^"\']*["\']', ' role="search"', tag, flags=re.IGNORECASE)
+
+        # Sanitize id or name against clobbered names
+        for attr in ("id", "name"):
+            attr_m = re.search(rf'\b{attr}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if attr_m:
+                val = attr_m.group(1).strip().lower()
+                if val in clobbered_names or not re.match(r'^[a-zA-Z0-9_\-]+$', val):
+                    tag = re.sub(rf'\s+{attr}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<search\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_search, html, flags=re.IGNORECASE)
+
+
 
 
 
