@@ -1033,6 +1033,38 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_comments_by_ids(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 201, "author_name": "Student A"}, {"id": 202, "author_name": "Student B"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        self.assertEqual(self.client.get_comments_by_ids([]), [])
+        self.assertEqual(mock_urlopen.call_count, 0)
+
+        comments = self.client.get_comments_by_ids([201, 202])
+        self.assertEqual(len(comments), 2)
+        self.assertEqual(comments[0]["id"], 201)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("include=201,202", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_update_comment_status(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 201, "status": "approved"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        updates = [
+            {"id": 201, "status": "approved"},
+            {"comment_id": 202, "status": "trash"}
+        ]
+        res = self.client.batch_update_comment_status(updates)
+        self.assertEqual(res["updated"], [201, 202])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(mock_urlopen.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
