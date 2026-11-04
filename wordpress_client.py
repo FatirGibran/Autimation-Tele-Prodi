@@ -1164,6 +1164,33 @@ class WordPressClient:
         results = self._send_request(req)
         return results if isinstance(results, list) else []
 
+    def batch_update_post_categories(self, post_category_map: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Batch updates category associations for multiple WordPress posts by IDs.
+        """
+        updated = []
+        failed = []
+        for item in post_category_map:
+            post_id = item.get("id") or item.get("post_id")
+            categories = item.get("categories", [])
+            if not post_id or not isinstance(categories, list):
+                continue
+            try:
+                endpoint = f"{self.api_url}/posts/{int(post_id)}"
+                payload = {"categories": [int(c) for c in categories if str(c).isdigit()]}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(post_id))
+            except Exception as e:
+                failed.append({"post_id": int(post_id), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(post_category_map)
+        }
+
 
 
 
