@@ -1649,6 +1649,34 @@ class TelegramFormatter:
             f"🏆 *Selamat meneliti dan mempublikasikan karya ilmiah bereputasi bagi almamater!*"
         )
 
+    @staticmethod
+    def format_optical_raman_amplifier_telegram(
+        link_identifier: str,
+        pump_power_mw: float,
+        fiber_length_km: float,
+        effective_length_km: float,
+        on_off_gain_db: float,
+        net_gain_db: float,
+        eq_noise_figure_db: float,
+        health_status: str,
+        nms_url: str = ""
+    ) -> str:
+        """
+        Renders a distributed Optical Raman Amplifier (DRA) DWDM span telemetry alert for Telegram broadcast.
+        """
+        nms_link = f"\n🔗 **NMS Optical Link:** {nms_url.strip()}" if nms_url else ""
+        return (
+            f"⚡ **Notifikasi Telemetri Distributed Raman Amplifier (DRA)**\n\n"
+            f"🌐 **Span Fiber:** `{link_identifier.strip()}` (`{float(fiber_length_km):.1f} km`)\n"
+            f"🔋 **Daya Pompa Laser (Pp):** `{float(pump_power_mw):.1f} mW`\n"
+            f"📏 **Panjang Efektif (Leff):** `{float(effective_length_km):.2f} km`\n"
+            f"📈 **Gain On-Off:** `+{float(on_off_gain_db):.2f} dB`\n"
+            f"📊 **Net Span Gain:** `{float(net_gain_db):+.2f} dB`\n"
+            f"📉 **Eq. Noise Figure:** `{float(eq_noise_figure_db):.2f} dB`\n"
+            f"🛡️ **Status:** `{health_status.strip()}`{nms_link}\n\n"
+            f"📡 *Sistem Monitoring Transmisi Fiber Optik Terdistribusi DWDM Prodi*"
+        )
+
 
 
 
