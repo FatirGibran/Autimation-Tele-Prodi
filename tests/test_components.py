@@ -2837,6 +2837,96 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("CC2 (Secondary Cell - SCell)", html)
         self.assertIn("4.674 Gbps", html)
 
+    def test_render_optical_edfa_saturation_card(self):
+        html = EditorialComponents.render_optical_edfa_saturation_card({
+            "amplifier_id": "EDFA-C-BAND-01",
+            "pump_type": "980nm Co-directional",
+            "pin_dbm": -20.0,
+            "small_signal_gain_db": 30.0,
+            "saturated_gain_db": 27.5,
+            "output_power_dbm": 7.5,
+            "gain_compression_db": 2.5,
+            "noise_figure_db": 4.8,
+            "operational_regime": "Small-Signal Linear Regime",
+            "is_saturated": False
+        })
+        self.assertIn("tu-optical-edfa-card", html)
+        self.assertIn("EDFA-C-BAND-01", html)
+        self.assertIn("980nm Co-directional", html)
+        self.assertIn("27.5 dB", html)
+        self.assertIn("-2.50 dB", html)
+        self.assertIn("4.80 dB", html)
+
+    def test_render_5g_cross_carrier_scheduling_card(self):
+        html = EditorialComponents.render_5g_cross_carrier_scheduling_card({
+            "scheduling_cell": "PCell (n78 3.5GHz)",
+            "scheduled_cell": "SCell (n258 28GHz)",
+            "scheduling_scs_khz": 30,
+            "scheduled_scs_khz": 120,
+            "cif_present": True,
+            "downlink_scheduling_latency_ms": 0.35,
+            "uplink_scheduling_latency_ms": 0.65,
+            "latency_profile": "Ultra-Reliable Low-Latency Communication (URLLC) Compliant",
+            "is_urllc_capable": True
+        })
+        self.assertIn("tu-nr-ccs-card", html)
+        self.assertIn("PCell (n78 3.5GHz)", html)
+        self.assertIn("SCell (n258 28GHz)", html)
+        self.assertIn("0.350 ms", html)
+        self.assertIn("0.650 ms", html)
+        self.assertIn("URLLC READY", html)
+
+    def test_render_satellite_cloud_attenuation_card(self):
+        html = EditorialComponents.render_satellite_cloud_attenuation_card({
+            "satellite_name": "Telkom-4 / Merah Putih",
+            "frequency_ghz": 28.0,
+            "elevation_angle_deg": 45.0,
+            "liquid_water_density_gm3": 0.5,
+            "cloud_thickness_km": 1.5,
+            "slant_path_km": 2.12,
+            "total_cloud_attenuation_db": 1.45,
+            "attenuation_severity": "Moderate Attenuation (Link Margin Required)",
+            "uplink_power_control_recommended": False
+        })
+        self.assertIn("tu-satellite-cloud-card", html)
+        self.assertIn("Telkom-4 / Merah Putih", html)
+        self.assertIn("28.0 GHz", html)
+        self.assertIn("1.45 dB", html)
+        self.assertIn("MARGIN BUFFER", html)
+
+    def test_render_pkm_ki_proposal_card(self):
+        html = EditorialComponents.render_pkm_ki_proposal_card({
+            "student_leader": "Rizky Ramadhan",
+            "nim": "1101210055",
+            "proposal_title": "Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan",
+            "prototype_type": "Prototipe Fungsional Skala Lab",
+            "target_user": "Dinas Bina Marga & PU",
+            "composite_score": 88.5,
+            "letter_grade": "A",
+            "funding_status": "Lolos Pendanaan Belmawa PKM-KI Unggulan",
+            "allocated_budget_idr": 10000000,
+            "converted_sks": 4
+        })
+        self.assertIn("tu-pkm-ki-card", html)
+        self.assertIn("Rizky Ramadhan", html)
+        self.assertIn("10,000,000", html)
+        self.assertIn("4 SKS MBKM", html)
+
+    def test_render_5g_cross_carrier_scheduling_svg(self):
+        html = EditorialComponents.render_5g_cross_carrier_scheduling_svg(
+            title="Diagram Garis Waktu 5G NR Cross-Carrier Scheduling (CCS)",
+            data={
+                "scheduling_cell": "PCell (n78 3.5GHz)",
+                "scheduled_cell": "SCell (n258 28GHz)",
+                "downlink_scheduling_latency_ms": 0.35,
+                "uplink_scheduling_latency_ms": 0.65
+            }
+        )
+        self.assertIn("tu-nr-ccs-svg-card", html)
+        self.assertIn("<svg", html)
+        self.assertIn("PDCCH DCI", html)
+        self.assertIn("PDSCH Data Payload", html)
+
 
 if __name__ == "__main__":
     unittest.main()
