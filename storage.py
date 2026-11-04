@@ -1469,6 +1469,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_optical_edfa_amp_id ON optical_edfa_records(amplifier_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_cross_carrier_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    config_name TEXT NOT NULL,
+                    scheduling_cell TEXT NOT NULL,
+                    scheduled_cell TEXT NOT NULL,
+                    scheduling_scs_khz INTEGER NOT NULL,
+                    scheduled_scs_khz INTEGER NOT NULL,
+                    cif_present INTEGER NOT NULL DEFAULT 1,
+                    downlink_scheduling_latency_ms REAL NOT NULL,
+                    uplink_scheduling_latency_ms REAL NOT NULL,
+                    latency_profile TEXT NOT NULL,
+                    is_urllc_capable INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ccs_name ON nr_cross_carrier_records(config_name);")
+
 
 
 
@@ -6743,6 +6761,61 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def save_nr_cross_carrier_record(
+        self,
+        config_name: str,
+        scheduling_cell: str,
+        scheduled_cell: str,
+        scheduling_scs_khz: int,
+        scheduled_scs_khz: int,
+        cif_present: bool,
+        downlink_scheduling_latency_ms: float,
+        uplink_scheduling_latency_ms: float,
+        latency_profile: str,
+        is_urllc_capable: bool = False
+    ) -> int:
+        """
+        Stores a 5G NR cross-carrier scheduling latency record in SQLite storage.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_cross_carrier_records (
+                    config_name, scheduling_cell, scheduled_cell, scheduling_scs_khz,
+                    scheduled_scs_khz, cif_present, downlink_scheduling_latency_ms,
+                    uplink_scheduling_latency_ms, latency_profile, is_urllc_capable
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(config_name), str(scheduling_cell), str(scheduled_cell),
+                int(scheduling_scs_khz), int(scheduled_scs_khz), 1 if cif_present else 0,
+                float(downlink_scheduling_latency_ms), float(uplink_scheduling_latency_ms),
+                str(latency_profile), 1 if is_urllc_capable else 0
+            ))
+            return cursor.lastrowid
+
+    def list_nr_cross_carrier_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR cross-carrier scheduling records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_cross_carrier_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_cross_carrier_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR cross-carrier scheduling record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_cross_carrier_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
