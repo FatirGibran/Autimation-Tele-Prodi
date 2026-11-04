@@ -7014,6 +7014,55 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @staticmethod
+    def audit_video_audio_description_and_subtitles(html_content: str) -> Dict[str, Any]:
+        """
+        Audits video media elements for audio descriptions and synchronized text tracks
+        according to WCAG 2.1 SC 1.2.3 and SC 1.2.5 (Audio Description or Media Alternative).
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_videos": 0,
+                "videos_with_descriptions": 0,
+                "videos_with_captions": 0,
+                "missing_descriptions_count": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        videos = soup.find_all("video")
+        issues = []
+        with_desc = 0
+        with_captions = 0
+
+        for idx, vid in enumerate(videos, start=1):
+            tracks = vid.find_all("track")
+            has_desc = any((t.get("kind") or "").strip().lower() == "descriptions" for t in tracks)
+            has_captions = any((t.get("kind") or "").strip().lower() in {"captions", "subtitles"} for t in tracks)
+            has_aria_desc = bool((vid.get("aria-describedby") or "").strip())
+
+            if has_desc or has_aria_desc:
+                with_desc += 1
+            else:
+                issues.append(f"Video #{idx} tidak memiliki trek audio deskripsi (<track kind='descriptions'>) atau atribut 'aria-describedby'.")
+
+            if has_captions:
+                with_captions += 1
+            else:
+                issues.append(f"Video #{idx} tidak memiliki trek subtitle/caption (<track kind='captions'> atau <track kind='subtitles'>).")
+
+        missing_count = len(videos) - with_desc
+        return {
+            "total_videos": len(videos),
+            "videos_with_descriptions": with_desc,
+            "videos_with_captions": with_captions,
+            "missing_descriptions_count": missing_count,
+            "is_accessible": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
