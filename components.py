@@ -7708,6 +7708,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_ki_proposal_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Evaluasi Proposal Belmawa PKM Karya Inovatif (PKM-KI)", **kwargs) -> str:
+        """
+        Renders an Elementor card evaluating a student PKM Karya Inovatif (PKM-KI) proposal for functional prototype development.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        leader = str(d.get("student_leader", "Ketua Tim PKM-KI"))
+        nim = str(d.get("nim", "1101210055"))
+        prop_title = str(d.get("proposal_title", "Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan"))
+        proto_type = str(d.get("prototype_type", "Prototipe Fungsional Skala Lab"))
+        target = str(d.get("target_user", "Dinas Bina Marga & PU"))
+        score = float(d.get("composite_score", 88.5))
+        grade = str(d.get("letter_grade", "A"))
+        status = str(d.get("funding_status", "Lolos Pendanaan Belmawa PKM-KI Unggulan"))
+        budget = float(d.get("allocated_budget_idr", 10000000))
+        sks = int(d.get("converted_sks", 4))
+
+        badge_color = "#22c55e" if score >= 80.0 else "#facc15"
+
+        return f"""    <div class="tu-pkm-ki-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Belmawa PKM Karya Inovatif (PKM-KI)</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Skor: {score:.2f} ({grade})</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Ketua Pengusul: <strong>{leader} ({nim})</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Pengguna Target: <strong>{target}</strong></div>
+      </div>
+      <div style="background: #1e293b; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 12px;">
+        Judul Program: <strong>{prop_title}</strong> (Bentuk: {proto_type})
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Status: <strong style="color: {badge_color};">{status}</strong></div>
+        <div>Alokasi Dana: <strong style="color: #facc15;">Rp {budget:,.0f}</strong></div>
+        <div>Rekognisi: <strong style="color: #38bdf8;">{sks} SKS MBKM</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -7736,6 +7777,8 @@ render_nr_beam_sweeping_svg = EditorialComponents.render_nr_beam_sweeping_svg
 render_optical_edfa_saturation_card = EditorialComponents.render_optical_edfa_saturation_card
 render_5g_cross_carrier_scheduling_card = EditorialComponents.render_5g_cross_carrier_scheduling_card
 render_satellite_cloud_attenuation_card = EditorialComponents.render_satellite_cloud_attenuation_card
+render_pkm_ki_proposal_card = EditorialComponents.render_pkm_ki_proposal_card
+
 
 
 
