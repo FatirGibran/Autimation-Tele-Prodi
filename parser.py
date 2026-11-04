@@ -7962,6 +7962,73 @@ def calculate_5g_nr_carrier_aggregation_throughput(
     }
 
 
+def calculate_satellite_g_over_t_system_noise(
+    antenna_diameter_m: float = 3.8,
+    frequency_ghz: float = 12.5,
+    aperture_efficiency: float = 0.65,
+    elevation_angle_deg: float = 45.0,
+    lna_noise_temp_k: float = 50.0,
+    feed_loss_db: float = 0.5
+) -> Dict[str, Any]:
+    """
+    Calculates Satellite Earth Station Figure of Merit (G/T) and System Noise Temperature (Tsys)
+    under clear-sky conditions according to ITU-R S.733 recommendations.
+    """
+    diam = max(0.5, float(antenna_diameter_m))
+    freq = max(1.0, float(frequency_ghz))
+    eff = max(0.1, min(1.0, float(aperture_efficiency)))
+    elev = max(5.0, min(90.0, float(elevation_angle_deg)))
+    t_lna = max(5.0, float(lna_noise_temp_k))
+    f_loss = max(0.0, float(feed_loss_db))
+
+    # Speed of light c and wavelength in meters
+    c_speed = 299792458.0
+    wavelength_m = c_speed / (freq * 1e9)
+
+    # Parabolic dish aperture antenna gain: G = eta * (pi * D / lambda)^2
+    g_linear = eff * ((math.pi * diam) / wavelength_m) ** 2
+    antenna_gain_dbi = round(10.0 * math.log10(g_linear), 2)
+
+    # Clear-sky antenna noise temperature model as function of elevation angle
+    elev_rad = math.radians(elev)
+    antenna_noise_temp_k = round(25.0 + (35.0 / math.sin(elev_rad)), 1)
+
+    # Feed network transmission factor and thermal physical noise
+    t_feed_factor = 10.0 ** (-f_loss / 10.0)
+    feed_noise_temp_k = round(290.0 * (1.0 - t_feed_factor), 1)
+
+    # Total System Noise Temperature referred to receiver LNA input
+    # T_sys = t_feed * T_ant + T_feed + T_lna
+    system_noise_temp_k = round((t_feed_factor * antenna_noise_temp_k) + feed_noise_temp_k + t_lna, 1)
+
+    # Figure of Merit G/T in dB/K: G_dBi - 10 * log10(T_sys)
+    g_over_t_db_k = round(antenna_gain_dbi - (10.0 * math.log10(system_noise_temp_k)), 2)
+
+    if g_over_t_db_k >= 30.0:
+        station_tier = "Stasiun Bumi Hub Utama (Gateway Grade)"
+    elif g_over_t_db_k >= 22.0:
+        station_tier = "Terminal Komersial VSAT Standar"
+    elif g_over_t_db_k >= 15.0:
+        station_tier = "Terminal Portabel / Flyaway"
+    else:
+        station_tier = "Terminal IoT / Maritim Mini"
+
+    return {
+        "antenna_diameter_m": diam,
+        "frequency_ghz": freq,
+        "aperture_efficiency": eff,
+        "elevation_angle_deg": elev,
+        "antenna_gain_dbi": antenna_gain_dbi,
+        "antenna_noise_temp_k": antenna_noise_temp_k,
+        "feed_loss_db": f_loss,
+        "lna_noise_temp_k": t_lna,
+        "system_noise_temp_k": system_noise_temp_k,
+        "g_over_t_db_k": g_over_t_db_k,
+        "station_tier": station_tier
+    }
+
+
+
 
 
 
