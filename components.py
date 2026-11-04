@@ -7667,6 +7667,48 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_cloud_attenuation_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "ITU-R P.840 Earth-Space Cloud & Fog Attenuation Telemetry", **kwargs) -> str:
+        """
+        Renders an Elementor-styled telemetric card displaying ITU-R P.840 cloud and fog attenuation,
+        specific attenuation coefficient Kl, slant path, and uplink power control (UPC) recommendations.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        sat_name = str(d.get("satellite_name", "Telkom-4 / Merah Putih"))
+        freq = float(d.get("frequency_ghz", 28.0))
+        elev = float(d.get("elevation_angle_deg", 45.0))
+        w_dens = float(d.get("liquid_water_density_gm3", 0.5))
+        h_thick = float(d.get("cloud_thickness_km", 1.5))
+        slant = float(d.get("slant_path_km", 2.12))
+        total_att = float(d.get("total_cloud_attenuation_db", 1.45))
+        sev = str(d.get("attenuation_severity", "Moderate Attenuation (Link Margin Required)"))
+        upc = bool(d.get("uplink_power_control_recommended", False))
+
+        badge_bg = "#dc2626" if upc else ("#f59e0b" if total_att >= 1.0 else "#059669")
+        badge_label = "UPC REQUIRED" if upc else ("MARGIN BUFFER" if total_att >= 1.0 else "NOMINAL CLEAR")
+
+        return f"""    <div class="tu-satellite-cloud-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">ITU-R P.840 Cloud Attenuation</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{badge_label}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Satelit Target: <strong>{sat_name}</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Frekuensi / Elevasi: <strong>{freq:.1f} GHz / {elev:.1f}&deg;</strong></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Kerapatan Air (w): <strong style="color: #f1f5f9;">{w_dens:.2f} g/m³</strong></div>
+        <div>Lintasan Miring: <strong style="color: #38bdf8;">{slant:.2f} km</strong></div>
+        <div>Redaman Awan (Ac): <strong style="color: #facc15;">{total_att:.2f} dB</strong></div>
+      </div>
+      <div style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed #334155; font-size: 12px; color: #94a3b8;">
+        Tingkat Keparahan: <span style="color: #38bdf8; font-weight: 600;">{sev}</span>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -7693,5 +7735,7 @@ render_pkm_kc_proposal_card = EditorialComponents.render_pkm_kc_proposal_card
 render_nr_beam_sweeping_svg = EditorialComponents.render_nr_beam_sweeping_svg
 render_optical_edfa_saturation_card = EditorialComponents.render_optical_edfa_saturation_card
 render_5g_cross_carrier_scheduling_card = EditorialComponents.render_5g_cross_carrier_scheduling_card
+render_satellite_cloud_attenuation_card = EditorialComponents.render_satellite_cloud_attenuation_card
+
 
 
