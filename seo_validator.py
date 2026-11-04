@@ -7155,8 +7155,8 @@ class YoastSEOValidator:
 
         for el in elements:
             style = el["style"].lower()
-            fg_m = re.search(r'(?:color|border(?:-color)?|stroke):\s*(#[0-9a-f]{3,6})\b', style)
-            bg_m = re.search(r'background(?:-color)?:\s*(#[0-9a-f]{3,6})\b', style)
+            fg_m = re.search(r'(?<![a-z-])(?:color|border(?:-color)?|stroke):\s*[^;]*?(#[0-9a-f]{3,6})\b', style)
+            bg_m = re.search(r'(?<![a-z-])background(?:-color)?:\s*[^;]*?(#[0-9a-f]{3,6})\b', style)
 
             if fg_m and bg_m:
                 fg_rgb = parse_hex_color(fg_m.group(1))

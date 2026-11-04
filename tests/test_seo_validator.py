@@ -2255,6 +2255,73 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_optimized"])
         self.assertEqual(res_bad["missing_crossorigin_count"], 1)
 
+    def test_audit_video_audio_description_and_subtitles(self):
+        html_ok = (
+            '<video controls>'
+            '<source src="lecture.mp4" type="video/mp4">'
+            '<track kind="descriptions" src="desc.vtt" srclang="id" label="Deskripsi Audio">'
+            '<track kind="captions" src="cap.vtt" srclang="id" label="Takarir Indonesia">'
+            '</video>'
+        )
+        res_ok = YoastSEOValidator.audit_video_audio_description_and_subtitles(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["total_videos"], 1)
+        self.assertEqual(res_ok["videos_with_descriptions"], 1)
+        self.assertEqual(res_ok["videos_with_captions"], 1)
+
+        html_bad = '<video src="promo.mp4"></video>'
+        res_bad = YoastSEOValidator.audit_video_audio_description_and_subtitles(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["missing_descriptions_count"], 1)
+
+    def test_audit_form_error_identification_aria(self):
+        html_ok = (
+            '<form>'
+            '<input type="text" id="nim" aria-invalid="true" aria-errormessage="nim-err">'
+            '<span id="nim-err" role="alert">NIM harus terdiri dari 10 digit.</span>'
+            '</form>'
+        )
+        res_ok = YoastSEOValidator.audit_form_error_identification_aria(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["total_invalid_fields"], 1)
+        self.assertEqual(res_ok["linked_error_fields"], 1)
+
+        html_bad = '<form><input type="text" id="nim" aria-invalid="true"></form>'
+        res_bad = YoastSEOValidator.audit_form_error_identification_aria(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["missing_error_links"], 1)
+
+    def test_audit_non_text_contrast_ratio(self):
+        html_ok = '<button style="background-color: #ffffff; color: #000000; border: 2px solid #000000;">Kirim</button>'
+        res_ok = YoastSEOValidator.audit_non_text_contrast_ratio(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["low_contrast_count"], 0)
+
+        # Very low contrast button border/fg (#cccccc on #ffffff is ~1.6:1)
+        html_bad = '<button style="background-color: #ffffff; border: 1px solid #cccccc; color: #cccccc;">Batal</button>'
+        res_bad = YoastSEOValidator.audit_non_text_contrast_ratio(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertGreater(res_bad["low_contrast_count"], 0)
+
+    def test_audit_third_party_script_loading_strategy(self):
+        html_ok = (
+            '<head>'
+            '<script src="https://www.google-analytics.com/analytics.js" async></script>'
+            '<script src="https://cdn.example.com/widget.js" defer></script>'
+            '</head>'
+        )
+        res_ok = YoastSEOValidator.audit_third_party_script_loading_strategy(html_ok)
+        self.assertTrue(res_ok["is_optimized"])
+        self.assertEqual(res_ok["total_scripts"], 2)
+        self.assertEqual(res_ok["async_defer_scripts"], 2)
+        self.assertEqual(res_ok["blocking_scripts_count"], 0)
+
+        html_bad = '<head><script src="https://connect.facebook.net/sdk.js"></script></head>'
+        res_bad = YoastSEOValidator.audit_third_party_script_loading_strategy(html_bad)
+        self.assertFalse(res_bad["is_optimized"])
+        self.assertEqual(res_bad["blocking_scripts_count"], 1)
+        self.assertEqual(res_bad["third_party_scripts_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
