@@ -7639,6 +7639,91 @@ def calculate_5g_nr_bwp_switching_latency(
     }
 
 
+def calculate_satellite_tropospheric_scintillation_itu_r_p618(
+    surface_temperature_c: float = 25.0,
+    surface_humidity_percent: float = 75.0,
+    carrier_frequency_ghz: float = 12.0,
+    elevation_angle_deg: float = 30.0,
+    antenna_diameter_m: float = 1.8,
+    antenna_efficiency: float = 0.65,
+    time_percentage_p: float = 0.01
+) -> Dict[str, Any]:
+    """
+    Calculates satellite Earth-space link tropospheric scintillation signal amplitude fluctuations
+    and deep fade attenuation depth according to ITU-R P.618-13, incorporating wet refractivity Nwet,
+    effective turbulent layer slant path, antenna aperture averaging factor g(x), and time percentage p.
+    """
+    temp_c = float(surface_temperature_c)
+    temp_k = temp_c + 273.15
+    hum = max(1.0, min(100.0, float(surface_humidity_percent)))
+    freq = max(4.0, min(55.0, float(carrier_frequency_ghz)))
+    elev = max(4.0, min(90.0, float(elevation_angle_deg)))
+    diam = max(0.3, min(30.0, float(antenna_diameter_m)))
+    eta = max(0.4, min(0.85, float(antenna_efficiency)))
+    p_pct = max(0.001, min(50.0, float(time_percentage_p)))
+
+    # Saturation water vapor pressure es (hPa)
+    e_s = 6.1121 * math.exp((17.502 * temp_c) / (temp_c + 240.97))
+    e = (hum * e_s) / 100.0
+
+    # Wet term of radio refractivity Nwet
+    n_wet = round((72.0 * e / temp_k) + (3.75e5 * e / (temp_k ** 2)), 1)
+
+    # Standard deviation of signal amplitude for reference link sigma_ref (dB)
+    sigma_ref = 3.6e-3 + (1.0e-4 * n_wet)
+
+    # Effective turbulent layer height hL = 1000 m
+    h_l = 1000.0
+    theta_rad = math.radians(elev)
+    sin_theta = math.sin(theta_rad)
+    l_path = (2.0 * h_l) / (math.sqrt((sin_theta ** 2) + 2.35e-4) + sin_theta)
+
+    # Antenna aperture averaging factor g(x)
+    c_light = 299792458.0
+    wavelength_m = c_light / (freq * 1e9)
+    eff_diam = math.sqrt(eta) * diam
+    x = 0.572 * (eff_diam / math.sqrt(wavelength_m * l_path))
+
+    term1 = 3.86 * ((x ** 2 + 1.0) ** (11.0 / 12.0)) * math.sin((11.0 / 6.0) * math.atan(1.0 / max(0.001, x)))
+    term2 = 7.08 * (x ** (5.0 / 6.0))
+    g_x_sq = max(0.01, term1 - term2)
+    g_x = round(math.sqrt(g_x_sq), 3)
+
+    # Standard deviation of signal amplitude sigma (dB)
+    sigma = round(sigma_ref * (freq ** (7.0 / 12.0)) * (g_x / (sin_theta ** 1.2)), 3)
+
+    # Time percentage factor a(p)
+    log_p = math.log10(p_pct)
+    a_p = (-0.0615 * (log_p ** 3)) + (0.0771 * (log_p ** 2)) - (1.67 * log_p) - 0.0597
+    fade_depth_as_db = round(a_p * sigma, 2)
+
+    if fade_depth_as_db <= 1.5:
+        fading_severity = "LOW_SCINTILLATION_ACCEPTABLE"
+        is_acceptable = True
+    elif fade_depth_as_db <= 3.5:
+        fading_severity = "MODERATE_SCINTILLATION_TRACKING_REQUIRED"
+        is_acceptable = True
+    else:
+        fading_severity = "SEVERE_SCINTILLATION_RISK"
+        is_acceptable = False
+
+    return {
+        "surface_temperature_c": round(temp_c, 1),
+        "surface_humidity_percent": round(hum, 1),
+        "carrier_frequency_ghz": round(freq, 2),
+        "elevation_angle_deg": round(elev, 1),
+        "antenna_diameter_m": round(diam, 2),
+        "wet_refractivity_n_wet": n_wet,
+        "effective_path_length_m": round(l_path, 1),
+        "aperture_averaging_factor": g_x,
+        "signal_fluctuation_sigma_db": sigma,
+        "time_percentage_p": round(p_pct, 4),
+        "scintillation_fade_depth_db": fade_depth_as_db,
+        "fading_severity": fading_severity,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
