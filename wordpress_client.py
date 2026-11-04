@@ -1268,6 +1268,40 @@ class WordPressClient:
         res = self._send_request(req)
         return res if isinstance(res, list) else []
 
+    def batch_update_tag_descriptions(
+        self,
+        tag_descriptions_map: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Batch updates descriptions for multiple tags via POST /wp/v2/tags/{id}.
+        Each item in tag_descriptions_map should be a dict with 'id' (or 'tag_id') and 'description'.
+        """
+        updated = []
+        failed = []
+
+        for item in tag_descriptions_map:
+            tid = item.get("id") or item.get("tag_id")
+            desc = str(item.get("description", "")).strip()
+            if not tid:
+                continue
+
+            try:
+                endpoint = f"{self.api_url}/tags/{int(tid)}"
+                payload = {"description": desc}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(tid))
+            except Exception as e:
+                failed.append({"tag_id": int(tid), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(tag_descriptions_map)
+        }
+
+
 
 
 
