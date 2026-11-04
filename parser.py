@@ -7918,13 +7918,13 @@ def calculate_5g_nr_carrier_aggregation_throughput(
 
         # Numerology mu = log2(SCS / 15)
         mu = 0 if scs == 15 else (1 if scs == 30 else (2 if scs == 60 else 3))
-        # Slot duration Ts in seconds: 1e-3 / 2^mu
+        # Slot duration Ts in seconds: 1e-3 / 2^mu (each slot contains 14 OFDM symbols in standard normal CP)
         ts_sec = 1e-3 / (2 ** mu)
 
-        # Peak data rate formula per 3GPP TS 38.306:
-        # Rate = 1e-6 * layers * Qm * f * Rmax * (PRB * 12 / Ts) * (1 - OH)
+        # Peak data rate formula per 3GPP TS 38.306 Section 4.1.2:
+        # Rate = 1e-6 * layers * Qm * f * Rmax * (PRB * 12 * 14 / Ts) * (1 - OH)
         cc_rate_mbps = round(
-            1e-6 * layers * qm * scale * r_max * (prb * 12.0 / ts_sec) * (1.0 - oh),
+            1e-6 * layers * qm * scale * r_max * (prb * 12.0 * 14.0 / ts_sec) * (1.0 - oh),
             2
         )
 

@@ -2511,6 +2511,88 @@ Status: Granted
         self.assertFalse(res_low["is_funded"])
         self.assertEqual(res_low["converted_sks"], 2)
 
+    def test_calculate_optical_dwdm_osnr_ber_margin(self):
+        from parser import calculate_optical_dwdm_osnr_ber_margin
+        res = calculate_optical_dwdm_osnr_ber_margin(
+            signal_power_dbm=2.0,
+            ase_noise_power_dbm=-25.0,
+            fec_threshold_osnr_db=15.0,
+            channel_wavelength_nm=1550.12,
+            baud_rate_gbaud=32.0
+        )
+        self.assertEqual(res["osnr_db"], 27.0)
+        self.assertEqual(res["osnr_margin_db"], 12.0)
+        self.assertTrue(res["fec_compliant"])
+        self.assertIn("Optimal", res["health_status"])
+        self.assertGreater(res["q_factor_linear"], 0.0)
+        self.assertLess(res["pre_fec_ber"], 1e-3)
+
+        # Degradation test below threshold
+        deg = calculate_optical_dwdm_osnr_ber_margin(
+            signal_power_dbm=-15.0,
+            ase_noise_power_dbm=-25.0,
+            fec_threshold_osnr_db=15.0
+        )
+        self.assertFalse(deg["fec_compliant"])
+        self.assertIn("Degradasi", deg["health_status"])
+
+    def test_calculate_5g_nr_carrier_aggregation_throughput(self):
+        from parser import calculate_5g_nr_carrier_aggregation_throughput
+        res = calculate_5g_nr_carrier_aggregation_throughput(
+            component_carriers=[
+                {"name": "CC1 (PCell)", "bandwidth_mhz": 100.0, "scs_khz": 30, "mimo_layers": 4, "modulation": "256QAM"},
+                {"name": "CC2 (SCell)", "bandwidth_mhz": 100.0, "scs_khz": 30, "mimo_layers": 4, "modulation": "256QAM"}
+            ]
+        )
+        self.assertEqual(res["carrier_count"], 2)
+        self.assertEqual(res["total_bandwidth_mhz"], 200.0)
+        self.assertGreater(res["aggregated_throughput_mbps"], 1000.0)
+        self.assertGreater(res["aggregated_throughput_gbps"], 1.0)
+        self.assertIn("Gigabit", res["performance_tier"])
+
+    def test_calculate_satellite_g_over_t_system_noise(self):
+        from parser import calculate_satellite_g_over_t_system_noise
+        res = calculate_satellite_g_over_t_system_noise(
+            antenna_diameter_m=3.8,
+            frequency_ghz=12.5,
+            aperture_efficiency=0.65,
+            elevation_angle_deg=45.0,
+            lna_noise_temp_k=50.0,
+            feed_loss_db=0.5
+        )
+        self.assertGreater(res["antenna_gain_dbi"], 40.0)
+        self.assertGreater(res["system_noise_temp_k"], 50.0)
+        self.assertGreater(res["g_over_t_db_k"], 20.0)
+        self.assertIn(res["station_tier"], ["Stasiun Bumi Hub Utama (Gateway Grade)", "Terminal Komersial VSAT Standar"])
+
+    def test_parse_pkm_pi_proposal_evaluation(self):
+        from parser import parse_pkm_pi_proposal_evaluation
+        res_top = parse_pkm_pi_proposal_evaluation({
+            "student_leader": "Ahmad Dani",
+            "nim": "1101210088",
+            "proposal_title": "Otomasi Suhu & Kelembaban Kumbung Jamur IoT",
+            "partner_enterprise": "KWT Jamur Sejahtera",
+            "technology_type": "IoT & Smart Climate Control",
+            "diagnosis_score": 90.0,
+            "solution_score": 90.0,
+            "productivity_score": 88.0,
+            "budget_score": 85.0
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 9500000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_funded"])
+
+        res_low = parse_pkm_pi_proposal_evaluation({
+            "diagnosis_score": 45.0,
+            "solution_score": 50.0,
+            "productivity_score": 50.0,
+            "budget_score": 50.0
+        })
+        self.assertEqual(res_low["letter_grade"], "C")
+        self.assertFalse(res_low["is_funded"])
+        self.assertEqual(res_low["converted_sks"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
