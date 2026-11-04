@@ -2452,6 +2452,40 @@ navigation: true
             }
         return data
 
+    @staticmethod
+    def to_remix_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports content as a Remix Run / React Router 7 MDX route document with meta descriptor function.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        pub_date = metadata.get("publish_date", "2026-11-04")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'slug: "{slug}"',
+            f'published: "{pub_date}"',
+            f'tags: {json.dumps(tags)}',
+            'framework: "remix"',
+            "remix: true",
+            "---",
+            "",
+            "export const meta = () => [",
+            f'  {{ title: "{title}" }},',
+            f'  {{ name: "description", content: "{desc}" }},',
+            f'  {{ name: "keywords", content: "{", ".join(tags)}" }}',
+            "];",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
