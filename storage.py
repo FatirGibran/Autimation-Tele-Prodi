@@ -1424,6 +1424,19 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_dwdm_wavelength ON optical_dwdm_records(channel_wavelength_nm);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_ca_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    config_name TEXT NOT NULL,
+                    carrier_count INTEGER NOT NULL,
+                    total_bandwidth_mhz REAL NOT NULL,
+                    aggregated_throughput_mbps REAL NOT NULL,
+                    aggregated_throughput_gbps REAL NOT NULL,
+                    performance_tier TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ca_name ON nr_ca_records(config_name);")
 
 
 
@@ -6544,6 +6557,56 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def record_nr_carrier_aggregation(
+        self,
+        config_name: str,
+        carrier_count: int,
+        total_bandwidth_mhz: float,
+        aggregated_throughput_mbps: float,
+        aggregated_throughput_gbps: float,
+        performance_tier: str
+    ) -> int:
+        """
+        Records a 5G NR Carrier Aggregation (CA) aggregated peak throughput record.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_ca_records (
+                    config_name, carrier_count, total_bandwidth_mhz,
+                    aggregated_throughput_mbps, aggregated_throughput_gbps,
+                    performance_tier
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                str(config_name), int(carrier_count), float(total_bandwidth_mhz),
+                float(aggregated_throughput_mbps), float(aggregated_throughput_gbps),
+                str(performance_tier)
+            ))
+            return cursor.lastrowid
+
+    def list_nr_carrier_aggregation(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR Carrier Aggregation records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_ca_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_carrier_aggregation_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a 5G NR Carrier Aggregation record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_ca_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
