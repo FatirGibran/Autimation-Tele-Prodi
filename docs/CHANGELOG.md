@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 983+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 1094+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 925 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 1.005 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -1256,6 +1256,47 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 1056. **Subcommand CLI `wss`, `ta`, dan `pkmre` (`cli.py`)**: Perintah konsol CLI baru untuk operasionalisasi evaluasi rugi-rugi optical WSS OXC, kalkulasi 5G NR Timing Advance & jarak propagasi UE, dan evaluasi proposal riset PKM-RE mahasiswa.
 1057. **Unit Test CLI Subcommand `wss`, `ta`, dan `pkmre` (`tests/test_cli.py`)**: Penambahan unit test penanganan argumen baris perintah terminal (105 unit tests passing).
 1058. **Dokumentasi Perubahan Arsitektur v5.2.0 (`docs/changes/89_v5_2_feature_expansions.md`) & Pembaruan Log CHANGELOG.md**: Dokumentasi komprehensif seluruh fitur, sinkronisasi catatan rilis, penambahan seksi 40, dan pembaharuan metrik proyek dengan 979 unit test passing (100% pass rate).
+
+---
+
+## 41. Ekspansi Arsitektur v5.3.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+1059. **Sanitasi Atribut Elemen Dialog Modal HTML5 `<dialog>` (`sanitizer.py`)**: Sanitasi elemen modal `<dialog>` beserta backdrop dan atribut fokus, validasi atribut `open`, `aria-modal`, `aria-labelledby`, `aria-describedby`, dan sterilisasi atribut autofocus.
+1060. **Sanitasi Elemen Kanvas Grafis HTML5 `<canvas>` (`sanitizer.py`)**: Sanitasi elemen grafis `<canvas>`, validasi atribut dimensi numerik `width` dan `height`, penjaminan fallback accessibility, dan sterilisasi skrip manipulasi konteks langsung.
+1061. **Sanitasi Elemen Landmark Pencarian Semantik HTML5 `<search>` (`sanitizer.py`)**: Sanitasi elemen penanda landmark semantik modern `<search>`, penegakan atribut aksesibilitas `role="search"`, dan pembersihan payload jahat.
+1062. **Unit Test Sanitasi Dialog, Canvas, dan Landmark Search HTML5 (`tests/test_sanitizer.py`)**: Penambahan unit test verifikasi sterilisasi dialog modal, grafis kanvas, dan landmark search semantik (104 unit tests passing).
+1063. **Kalkulator Penguatan Optical Raman Terdistribusi DWDM (`parser.py`)**: Perhitungan penguatan on-off Raman, redaman fiber, panjang bentang efektif $L_{\text{eff}}$, penguatan bersih (net gain), dan equivalent noise figure ($NF_{\text{eq}}$) menurut teori transmisi serat optik non-linear.
+1064. **Kalkulator Latensi 5G NR BWP Switching & Adaptasi Numerologi (`parser.py`)**: Evaluasi penundaan switching bandwidth part (BWP) menurut 3GPP Rel-15/16 TS 38.133, slot interupsi UE target, delay retuning RF Type 1 dan Type 2, serta klasifikasi performa latensi.
+1065. **Kalkulator Sintilasi Troposferik Satelit ITU-R P.618 (`parser.py`)**: Perhitungan redaman fluktuasi sintilasi troposferik stasiun bumi satelit berdasarkan rekomendasi ITU-R P.618, varians indeks refraksi atmosfer, deviasi standar $\sigma$, dan fade margin persentil waktu.
+1066. **Evaluator Proposal Mahasiswa Belmawa PKM Pengabdian Masyarakat (PKM-PM) (`parser.py`)**: Kuantifikasi penilaian proposal pengabdian masyarakat mahasiswa (ketepatan diagnosis 25%, solusi permasalahan 35%, keberlanjutan 25%, efisiensi RAB & jadwal 15%), penentuan pendanaan, dan rekomendasi konversi MBKM.
+1067. **Unit Test Raman Gain, BWP Switching, Tropospheric Scintillation, dan PKM-PM (`tests/test_parser.py`)**: Penambahan unit test komprehensif untuk pengujian akurasi numerik komponen amplifier Raman, BWP switching 5G NR, sintilasi troposferik satelit, dan evaluasi proposal PKM-PM (142 unit tests passing).
+1068. **Auditor Ruang Lingkup Header Tabel `scope` & Keterangan `<caption>` WCAG 2.1 (`seo_validator.py`)**: Audit semantik tabel data menurut WCAG 2.1 SC 1.3.1 (Info and Relationships), verifikasi atribut `scope="col"` atau `scope="row"` pada setiap header `<th>`, serta ketersediaan elemen `<caption>`.
+1069. **Auditor Atribut Autocomplete Formulir WCAG 2.1 (`seo_validator.py`)**: Audit formulir pengguna menurut WCAG 2.1 SC 1.3.5 (Identify Input Purpose), verifikasi nilai token atribut `autocomplete` yang sesuai standar HTML5 untuk input data diri.
+1070. **Auditor Ukuran Target Sentuh Interaktif (Target Size) WCAG 2.1 (`seo_validator.py`)**: Audit ukuran area sentuh menurut WCAG 2.1 SC 2.5.5 (Target Size), verifikasi dimensi minimum target sentuh interaktif (24x24 px untuk AA dan 44x44 px untuk AAA) pada tombol dan tautan.
+1071. **Auditor Petunjuk Sumber Daya DNS-Prefetch & Preconnect Core Web Vitals (`seo_validator.py`)**: Audit optimasi latensi koneksi pihak ketiga, verifikasi tautan `<link rel="dns-prefetch">` dan `<link rel="preconnect">` untuk pemuatan aset font, analitik, dan CDN eksternal.
+1072. **Unit Test Table Scope, Autocomplete, Target Size, dan Resource Hints Auditors (`tests/test_seo_validator.py`)**: Pengujian unit terpadu audit header tabel, input autocomplete, target sentuh interaktif, dan petunjuk koneksi Core Web Vitals (142 unit tests passing).
+1073. **Komponen Kartu Penguatan Optical Raman Amplifier (`components.py`)**: Kartu visual Elementor untuk telemetri penguatan on-off Raman, daya pompa laser, panjang bentang serat efektif, equivalent noise figure, dan status kesehatan span optik.
+1074. **Komponen Kartu Latensi 5G NR BWP Switching (`components.py`)**: Kartu visual Elementor untuk telemetri latensi adaptasi BWP, konfigurasi SCS awal dan target, pemicu DCI/timer, slot interupsi UE, dan klasifikasi tingkatan latensi.
+1075. **Komponen Kartu Sintilasi Troposferik Satelit ITU-R P.618 (`components.py`)**: Kartu visual Elementor untuk telemetri redaman sintilasi dB, frekuensi satelit, sudut elevasi stasiun bumi, kelembapan relatif, dan rekomendasi margin fading.
+1076. **Komponen Kartu Evaluasi Proposal Mahasiswa PKM Pengabdian Masyarakat (`components.py`)**: Kartu visual Elementor profil ketua pengusul, mitra masyarakat sasaran, fokus program pengabdian, skor komposit, status pendanaan Belmawa Dikti, dan konversi SKS MBKM.
+1077. **Komponen Diagram Garis Waktu 5G NR BWP Switching Responsif Inline SVG (`components.py`)**: Kartu diagram vektor interaktif visualisasi transisi BWP aktif ke BWP target, jeda retuning RF, dan slot interupsi transmisi berbasis inline SVG.
+1078. **Unit Test Komponen Visual Raman, BWP, Scintillation, PKM-PM, dan BWP SVG (`tests/test_components.py`)**: Penambahan unit test untuk memastikan seluruh komponen semantik Elementor dan visualisasi grafis SVG ter-render secara utuh dan valid (176 unit tests passing).
+1079. **Formatter Telegram Penguatan Optical Raman Amplifier (`formatters.py`)**: Format buletin resmi Telegram untuk notifikasi telemetri penguatan on-off Raman dan noise figure link serat optik DWDM.
+1080. **Formatter Telegram Pendanaan Pengabdian Mahasiswa PKM-PM (`formatters.py`)**: Format buletin resmi Telegram untuk pengumuman capaian kelulusan pendanaan pengabdian masyarakat mahasiswa Belmawa Dikti.
+1081. **Unit Test Formatter Telegram Optical Raman dan PKM-PM (`tests/test_formatters.py`)**: Penambahan unit test integritas template dan sanitasi markup Telegram bot (69 unit tests passing).
+1082. **Manajer Rekam Penguatan Optical Raman Amplifier (`storage.py`)**: Skema tabel SQLite `optical_raman_records` dan fungsi `record_optical_raman`, `list_optical_raman`, `get_optical_raman_by_id`.
+1083. **Manajer Rekam 5G NR BWP Switching Latency (`storage.py`)**: Skema tabel SQLite `nr_bwp_switching_records` dan fungsi `record_nr_bwp_switching`, `list_nr_bwp_switching`, `get_nr_bwp_switching_by_id`.
+1084. **Manajer Rekam Evaluasi Proposal Mahasiswa PKM-PM (`storage.py`)**: Skema tabel SQLite `pkm_pm_proposal_records` dan fungsi `record_pkm_pm_proposal`, `list_pkm_pm_proposals`, `get_pkm_pm_proposal_by_id`.
+1085. **Unit Test Storage Optical Raman, BWP Switching, dan Proposal PKM-PM (`tests/test_storage.py`)**: Penambahan unit test transaksi CRUD terisolasi dan integritas skema database (110 unit tests passing).
+1086. **Helper WordPress Get Users by IDs (`wordpress_client.py`)**: Metode `get_users_by_ids` untuk membaca sekumpulan data penulis/pengguna berdasarkan daftar ID numerik via REST API (`/wp/v2/users?include=...`).
+1087. **Helper WordPress Batch Update Post Categories (`wordpress_client.py`)**: Metode `batch_update_post_categories` untuk memperbarui taksonomi kategori sekumpulan pos secara massal via REST API (`POST /wp/v2/posts/{id}`).
+1088. **Unit Test WordPress Client Get Users by IDs & Batch Update Post Categories (`tests/test_wordpress_client.py`)**: Penambahan unit test mocked HTTP requests untuk pengambilan user batch dan pembaruan kategori pos (72 unit tests passing).
+1089. **Generator Schema.org SocialMediaPosting JSON-LD Sosialisasi Mahasiswa (`exporter.py`)**: Metode `generate_social_media_posting_json_ld` menghasilkan struktur metadata Google SocialMediaPosting untuk rilis sosialisasi pengabdian masyarakat mahasiswa di kanal publik.
+1090. **Eksportir Dokumentasi MDX Remix Run React Framework (`exporter.py`)**: Metode `to_remix_run_mdx` mengonversi artikel editorial ke format dokumentasi fullstack Remix Run React framework dengan frontmatter YAML terintegrasi.
+1091. **Unit Test Exporter SocialMediaPosting JSON-LD & Remix Run MDX (`tests/test_exporter.py`)**: Penambahan unit test integritas penanda Schema.org SocialMediaPosting dan frontmatter rute Remix Run MDX (71 unit tests passing).
+1092. **Subcommand CLI `raman`, `bwp`, dan `pkmpm` (`cli.py`)**: Perintah konsol CLI baru untuk operasionalisasi evaluasi amplifier Raman terdistribusi, kalkulasi latensi 5G NR BWP switching, dan evaluasi proposal pengabdian PKM-PM mahasiswa.
+1093. **Unit Test CLI Subcommand `raman`, `bwp`, dan `pkmpm` (`tests/test_cli.py`)**: Penambahan unit test penanganan argumen baris perintah terminal (108 unit tests passing).
+1094. **Dokumentasi Perubahan Arsitektur v5.3.0 (`docs/changes/90_v5_3_feature_expansions.md`) & Pembaruan Log CHANGELOG.md**: Dokumentasi komprehensif seluruh fitur, sinkronisasi catatan rilis, penambahan seksi 41, dan pembaharuan metrik proyek dengan 1.005 unit test passing (100% pass rate).
 
 
 
