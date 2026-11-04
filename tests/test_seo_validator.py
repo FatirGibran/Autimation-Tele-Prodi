@@ -2204,6 +2204,57 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(res_bad["missing_crossorigin_count"], 1)
         self.assertEqual(res_bad["missing_swap_count"], 1)
 
+    def test_audit_table_header_scope_and_caption(self):
+        html_ok = '<table><caption>Daftar Nilai</caption><tr><th scope="col">Nama</th><th scope="col">Nilai</th></tr><tr><td>Budi</td><td>90</td></tr></table>'
+        res_ok = YoastSEOValidator.audit_table_header_scope_and_caption(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["tables_count"], 1)
+        self.assertEqual(res_ok["tables_with_caption"], 1)
+        self.assertEqual(res_ok["th_with_valid_scope"], 2)
+        self.assertEqual(res_ok["missing_scope_count"], 0)
+
+        html_bad = '<table><tr><th>Nama</th><th>Nilai</th></tr></table>'
+        res_bad = YoastSEOValidator.audit_table_header_scope_and_caption(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["tables_with_caption"], 0)
+        self.assertEqual(res_bad["missing_scope_count"], 2)
+
+    def test_audit_form_input_autocomplete_attributes(self):
+        html_ok = '<form><input type="email" name="user_email" autocomplete="email"><input type="password" name="password" autocomplete="current-password"></form>'
+        res_ok = YoastSEOValidator.audit_form_input_autocomplete_attributes(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["personal_inputs_count"], 2)
+        self.assertEqual(res_ok["valid_autocomplete_count"], 2)
+
+        html_bad = '<form><input type="email" name="user_email"><input type="password" name="pwd"></form>'
+        res_bad = YoastSEOValidator.audit_form_input_autocomplete_attributes(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["missing_autocomplete_count"], 2)
+
+    def test_audit_touch_target_minimum_size(self):
+        html_ok = '<button style="min-width: 48px; min-height: 48px; width: 48px; height: 48px;">Klik</button><a href="#" style="padding: 12px; width: 32px; height: 32px;">Link</a>'
+        res_ok = YoastSEOValidator.audit_touch_target_minimum_size(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["undersized_targets_count"], 0)
+
+        html_bad = '<button style="width: 16px; height: 16px;">X</button>'
+        res_bad = YoastSEOValidator.audit_touch_target_minimum_size(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["undersized_targets_count"], 1)
+
+    def test_audit_resource_hints_dns_prefetch_preconnect(self):
+        html_ok = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="dns-prefetch" href="https://api.example.com">'
+        res_ok = YoastSEOValidator.audit_resource_hints_dns_prefetch_preconnect(html_ok)
+        self.assertTrue(res_ok["is_optimized"])
+        self.assertEqual(res_ok["preconnect_count"], 1)
+        self.assertEqual(res_ok["dns_prefetch_count"], 1)
+        self.assertEqual(res_ok["missing_crossorigin_count"], 0)
+
+        html_bad = '<link rel="preconnect" href="https://fonts.gstatic.com"><link rel="preconnect" href="invalid-origin">'
+        res_bad = YoastSEOValidator.audit_resource_hints_dns_prefetch_preconnect(html_bad)
+        self.assertFalse(res_bad["is_optimized"])
+        self.assertEqual(res_bad["missing_crossorigin_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
