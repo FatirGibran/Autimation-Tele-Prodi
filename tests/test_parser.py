@@ -2593,6 +2593,94 @@ Status: Granted
         self.assertFalse(res_low["is_funded"])
         self.assertEqual(res_low["converted_sks"], 2)
 
+    def test_calculate_optical_edfa_saturation_noise_figure(self):
+        from parser import calculate_optical_edfa_saturation_noise_figure
+        res_linear = calculate_optical_edfa_saturation_noise_figure({
+            "pin_dbm": -25.0,
+            "small_signal_gain_db": 30.0,
+            "saturation_output_power_dbm": 15.0,
+            "spontaneous_emission_factor": 1.4,
+            "wavelength_nm": 1550.0
+        })
+        self.assertGreater(res_linear["saturated_gain_db"], 25.0)
+        self.assertLess(res_linear["gain_compression_db"], 5.0)
+        self.assertGreater(res_linear["noise_figure_db"], 3.0)
+        self.assertIn("Regime", res_linear["operational_regime"])
+
+        # Deep saturation test
+        res_sat = calculate_optical_edfa_saturation_noise_figure({
+            "pin_dbm": 10.0,
+            "small_signal_gain_db": 30.0,
+            "saturation_output_power_dbm": 15.0
+        })
+        self.assertTrue(res_sat["is_saturated"])
+        self.assertGreater(res_sat["gain_compression_db"], 10.0)
+
+    def test_calculate_5g_nr_cross_carrier_scheduling_latency(self):
+        from parser import calculate_5g_nr_cross_carrier_scheduling_latency
+        res = calculate_5g_nr_cross_carrier_scheduling_latency({
+            "scheduling_cell": "PCell (n78 3.5GHz)",
+            "scheduled_cell": "SCell (n258 28GHz)",
+            "scheduling_numerology_mu": 1,
+            "scheduled_numerology_mu": 3,
+            "cif_present": True,
+            "cfi_pdcch_symbols": 2,
+            "k0_pdsch_delay_slots": 0,
+            "k2_pusch_delay_slots": 2
+        })
+        self.assertEqual(res["scheduling_scs_khz"], 30)
+        self.assertEqual(res["scheduled_scs_khz"], 120)
+        self.assertTrue(res["cif_present"])
+        self.assertGreater(res["downlink_scheduling_latency_ms"], 0.0)
+        self.assertGreater(res["uplink_scheduling_latency_ms"], res["downlink_scheduling_latency_ms"])
+        self.assertIn("latency_profile", res)
+
+    def test_calculate_satellite_cloud_attenuation_itu_r_p840(self):
+        from parser import calculate_satellite_cloud_attenuation_itu_r_p840
+        res = calculate_satellite_cloud_attenuation_itu_r_p840({
+            "satellite_name": "Telkom-4 / Merah Putih",
+            "frequency_ghz": 28.0,
+            "elevation_angle_deg": 45.0,
+            "liquid_water_density_gm3": 0.5,
+            "cloud_thickness_km": 1.5,
+            "temperature_celsius": 5.0
+        })
+        self.assertGreater(res["specific_attenuation_coeff_kl"], 0.0)
+        self.assertGreater(res["total_cloud_attenuation_db"], 0.0)
+        self.assertIn(res["attenuation_severity"], [
+            "Negligible Attenuation",
+            "Moderate Attenuation (Link Margin Required)",
+            "Severe Attenuation (Uplink Power Control Recommended)"
+        ])
+
+    def test_parse_pkm_ki_proposal_evaluation(self):
+        from parser import parse_pkm_ki_proposal_evaluation
+        res_top = parse_pkm_ki_proposal_evaluation({
+            "student_leader": "Rizky Ramadhan",
+            "nim": "1101210055",
+            "proposal_title": "Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan",
+            "prototype_type": "Prototipe Teruji Lapangan",
+            "target_user": "Dinas Bina Marga & Pekerjaan Umum",
+            "novelty_score": 90.0,
+            "functionality_score": 92.0,
+            "design_score": 88.0,
+            "budget_score": 85.0
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 10000000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_funded"])
+
+        res_low = parse_pkm_ki_proposal_evaluation({
+            "novelty_score": 50.0,
+            "functionality_score": 50.0,
+            "design_score": 50.0,
+            "budget_score": 50.0
+        })
+        self.assertEqual(res_low["letter_grade"], "C")
+        self.assertFalse(res_low["is_funded"])
+        self.assertEqual(res_low["converted_sks"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
