@@ -7062,6 +7062,57 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_form_error_identification_aria(html_content: str) -> Dict[str, Any]:
+        """
+        Audits form error identification and messaging according to WCAG 2.1 SC 3.3.1 (Error Identification).
+        Ensures that inputs marked with aria-invalid='true' have programmatic links to error descriptions
+        via aria-errormessage or aria-describedby pointing to valid notification nodes.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_invalid_fields": 0,
+                "linked_error_fields": 0,
+                "missing_error_links": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        controls = soup.find_all(["input", "select", "textarea"])
+        invalid_controls = [c for c in controls if (c.get("aria-invalid") or "").strip().lower() == "true"]
+
+        issues = []
+        linked_count = 0
+
+        for idx, ctrl in enumerate(invalid_controls, start=1):
+            name_or_id = ctrl.get("name") or ctrl.get("id") or f"Field #{idx}"
+            err_msg_id = (ctrl.get("aria-errormessage") or "").strip()
+            desc_by_id = (ctrl.get("aria-describedby") or "").strip()
+
+            target_id = err_msg_id or desc_by_id
+            if not target_id:
+                issues.append(f"Elemen input '{name_or_id}' ditandai aria-invalid='true' namun tidak memiliki atribut aria-errormessage atau aria-describedby.")
+                continue
+
+            # Verify target element exists in DOM
+            target_el = soup.find(id=target_id)
+            if not target_el:
+                issues.append(f"Elemen input '{name_or_id}' merujuk pesan kesalahan ID '{target_id}' yang tidak ditemukan dalam DOM.")
+                continue
+
+            linked_count += 1
+
+        missing_links = len(invalid_controls) - linked_count
+        return {
+            "total_invalid_fields": len(invalid_controls),
+            "linked_error_fields": linked_count,
+            "missing_error_links": missing_links,
+            "is_accessible": len(issues) == 0,
+            "issues": issues
+        }
+
+
 
 
 
