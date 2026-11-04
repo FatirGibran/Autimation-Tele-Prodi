@@ -2950,6 +2950,77 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Ketua PM Test", out)
 
+    def test_cmd_dwdm(self):
+        class ArgsAdd:
+            action = "add"
+            wavelength = 1550.12
+            signal = 2.0
+            ase = -26.0
+            fec = 14.5
+            baud = 32.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_dwdm(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Optical DWDM berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_dwdm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("1550.12", out)
+
+    def test_cmd_ca(self):
+        class ArgsAdd:
+            action = "add"
+            name = "CA_CLI_TEST_200M"
+            cc = 2
+            bw = 200.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ca(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR Carrier Aggregation berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ca(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("CA_CLI_TEST_200M", out)
+
+    def test_cmd_pkmpi(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Ketua PI Test"
+            nim = "1101219999"
+            title = "Otomasi Suhu Kumbung Jamur"
+            partner = "KWT Jamur Sejahtera"
+            tech = "Sistem IoT & Smart Climate Control"
+            diag = 88.0
+            sol = 86.0
+            prod = 87.0
+            budget = 85.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmpi(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-PI berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmpi(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Ketua PI Test", out)
+
 
 if __name__ == "__main__":
     unittest.main()
