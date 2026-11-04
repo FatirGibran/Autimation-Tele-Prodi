@@ -51,7 +51,10 @@ from sanitizer import (
     sanitize_html5_fieldset_legend_grouping,
     sanitize_html5_video_track_attributes,
     sanitize_html5_details_summary_attributes,
-    sanitize_html5_template_slot_elements
+    sanitize_html5_template_slot_elements,
+    sanitize_html5_dialog_backdrop_controls,
+    sanitize_html5_canvas_scriptable_attributes,
+    sanitize_html5_search_element_attributes
 )
 
 
@@ -1258,6 +1261,35 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("onload=", cleaned)
         self.assertNotIn("onclick=", cleaned)
         self.assertNotIn('name="valueOf"', cleaned)
+
+    def test_sanitize_html5_dialog_backdrop_controls(self):
+        raw = '<dialog open autofocus onclose="bad()" aria-modal="invalid" style="color:red"><p>Modal Content</p></dialog>'
+        cleaned = sanitize_html5_dialog_backdrop_controls(raw)
+        self.assertIn("open", cleaned)
+        self.assertNotIn("autofocus", cleaned)
+        self.assertNotIn("onclose=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn('aria-modal="true"', cleaned)
+
+    def test_sanitize_html5_canvas_scriptable_attributes(self):
+        raw = '<canvas width="99999" height="invalid" context="2d" onclick="bad()" willreadfrequently="true"><p>Fallback Text</p></canvas>'
+        cleaned = sanitize_html5_canvas_scriptable_attributes(raw)
+        self.assertIn('width="300"', cleaned)
+        self.assertIn('height="150"', cleaned)
+        self.assertNotIn("context=", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("willreadfrequently=", cleaned)
+        self.assertIn("<p>Fallback Text</p>", cleaned)
+
+    def test_sanitize_html5_search_element_attributes(self):
+        raw = '<search role="navigation" id="submit" name="query" onsubmit="bad()" style="color:blue"><input type="search"></search>'
+        cleaned = sanitize_html5_search_element_attributes(raw)
+        self.assertIn('role="search"', cleaned)
+        self.assertNotIn('id="submit"', cleaned)
+        self.assertNotIn('name="query"', cleaned)
+        self.assertNotIn("onsubmit=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn('<input type="search">', cleaned)
 
 
 if __name__ == "__main__":
