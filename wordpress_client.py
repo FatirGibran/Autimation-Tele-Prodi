@@ -1262,11 +1262,12 @@ class WordPressClient:
         valid_ids = [str(int(cid)) for cid in category_ids if cid]
         if not valid_ids:
             return []
-        query = urllib.parse.urlencode({"include": ",".join(valid_ids), "per_page": len(valid_ids)})
-        endpoint = f"{self.api_url}/categories?{query}"
+        include_param = ",".join(valid_ids)
+        endpoint = f"{self.api_url}/categories?include={include_param}&per_page={len(valid_ids)}"
         req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
         res = self._send_request(req)
         return res if isinstance(res, list) else []
+
 
     def batch_update_tag_descriptions(
         self,
