@@ -1252,6 +1252,23 @@ class WordPressClient:
             "total": len(comment_status_map)
         }
 
+    def get_categories_by_ids(self, category_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        Fetches category details for a list of category IDs via GET /wp/v2/categories?include=id1,id2,...
+        Returns an empty list if category_ids is empty.
+        """
+        if not category_ids:
+            return []
+        valid_ids = [str(int(cid)) for cid in category_ids if cid]
+        if not valid_ids:
+            return []
+        query = urllib.parse.urlencode({"include": ",".join(valid_ids), "per_page": len(valid_ids)})
+        endpoint = f"{self.api_url}/categories?{query}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        res = self._send_request(req)
+        return res if isinstance(res, list) else []
+
+
 
 
 
