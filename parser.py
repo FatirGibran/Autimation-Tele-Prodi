@@ -8184,6 +8184,79 @@ def calculate_optical_edfa_saturation_noise_figure(data: Dict[str, Any]) -> Dict
     }
 
 
+def calculate_5g_nr_cross_carrier_scheduling_latency(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Calculates 3GPP 5G NR Carrier Aggregation Cross-Carrier Scheduling (CCS)
+    downlink and uplink control latency, numerology slot alignment jitter,
+    and Carrier Indicator Field (CIF) decoding delay.
+    """
+    scheduling_cell = str(data.get("scheduling_cell", "PCell (n78 3.5GHz)")).strip()
+    scheduled_cell = str(data.get("scheduled_cell", "SCell (n258 28GHz)")).strip()
+    mu_sched = max(0, min(4, int(data.get("scheduling_numerology_mu", 1))))
+    mu_target = max(0, min(4, int(data.get("scheduled_numerology_mu", 3))))
+    cif_present = bool(data.get("cif_present", True))
+    cfi_symbols = max(1, min(3, int(data.get("cfi_pdcch_symbols", 2))))
+    k0_slots = max(0, int(data.get("k0_pdsch_delay_slots", 0)))
+    k2_slots = max(1, int(data.get("k2_pusch_delay_slots", 2)))
+
+    # Slot duration: 1.0 / (2^mu) ms
+    t_slot_sched_ms = 1.0 / (2 ** mu_sched)
+    t_slot_target_ms = 1.0 / (2 ** mu_target)
+    scs_sched_khz = 15 * (2 ** mu_sched)
+    scs_target_khz = 15 * (2 ** mu_target)
+
+    # PDCCH decoding duration: cfi / 14 * t_slot_sched
+    t_pdcch_ms = (cfi_symbols / 14.0) * t_slot_sched_ms
+
+    # Numerology cross-carrier boundary alignment overhead
+    if mu_sched != mu_target:
+        alignment_overhead_ms = abs(t_slot_sched_ms - t_slot_target_ms) / 2.0
+    else:
+        alignment_overhead_ms = 0.0
+
+    # CIF 3-bit DCI parsing overhead
+    cif_overhead_ms = 0.02 if cif_present else 0.0
+
+    # Downlink latency: PDCCH decode + alignment + CIF + k0 * T_target
+    dl_latency_ms = round(t_pdcch_ms + alignment_overhead_ms + cif_overhead_ms + (k0_slots * t_slot_target_ms), 4)
+
+    # Uplink latency: PDCCH decode + alignment + CIF + k2 * T_target
+    ul_latency_ms = round(t_pdcch_ms + alignment_overhead_ms + cif_overhead_ms + (k2_slots * t_slot_target_ms), 4)
+
+    # URLLC / eMBB compatibility rating
+    if dl_latency_ms <= 1.0 and ul_latency_ms <= 1.5:
+        latency_profile = "Ultra-Reliable Low-Latency Communication (URLLC) Compliant"
+        is_urllc_capable = True
+    elif dl_latency_ms <= 4.0:
+        latency_profile = "Enhanced Mobile Broadband (eMBB) Standard Compliant"
+        is_urllc_capable = False
+    else:
+        latency_profile = "High Latency Cross-Carrier Operation"
+        is_urllc_capable = False
+
+    return {
+        "scheduling_cell": scheduling_cell,
+        "scheduled_cell": scheduled_cell,
+        "scheduling_numerology_mu": mu_sched,
+        "scheduled_numerology_mu": mu_target,
+        "scheduling_scs_khz": scs_sched_khz,
+        "scheduled_scs_khz": scs_target_khz,
+        "cif_present": cif_present,
+        "cfi_pdcch_symbols": cfi_symbols,
+        "k0_pdsch_delay_slots": k0_slots,
+        "k2_pusch_delay_slots": k2_slots,
+        "sched_slot_duration_ms": round(t_slot_sched_ms, 4),
+        "target_slot_duration_ms": round(t_slot_target_ms, 4),
+        "pdcch_decode_latency_ms": round(t_pdcch_ms, 4),
+        "alignment_overhead_ms": round(alignment_overhead_ms, 4),
+        "downlink_scheduling_latency_ms": dl_latency_ms,
+        "uplink_scheduling_latency_ms": ul_latency_ms,
+        "latency_profile": latency_profile,
+        "is_urllc_capable": is_urllc_capable
+    }
+
+
+
 
 
 
