@@ -2521,6 +2521,74 @@ def sanitize_html5_search_element_attributes(html: str) -> str:
     return re.sub(r'<search\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_search, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_picture_source_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <picture> and child <source> elements by stripping inline event handlers,
+    neutralizing javascript/data-html schemes in srcset, validating media queries against dangerous CSS expressions,
+    and enforcing safe image MIME types in the type attribute.
+    """
+    if not html or ("<picture" not in html.lower() and "<source" not in html.lower()):
+        return html
+
+    safe_mimes = {
+        "image/webp", "image/avif", "image/jpeg", "image/png", "image/svg+xml",
+        "image/gif", "image/apng", "image/heic", "image/heif"
+    }
+
+    # Clean <picture> container tags
+    def fix_picture(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<picture\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_picture, html, flags=re.IGNORECASE)
+
+    # Clean <source> elements
+    def fix_source(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize srcset
+        srcset_m = re.search(r'\bsrcset=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if srcset_m:
+            val = srcset_m.group(1).strip()
+            if re.search(r'(?:javascript:|data:text/html|vbscript:|<script|eval\()', val, re.IGNORECASE):
+                tag = re.sub(r'\s+srcset=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize media attribute
+        media_m = re.search(r'\bmedia=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if media_m:
+            val = media_m.group(1).strip()
+            if re.search(r'(?:expression|javascript:|@import|-moz-binding)', val, re.IGNORECASE):
+                tag = re.sub(r'\s+media=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize type MIME
+        type_m = re.search(r'\btype=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if type_m:
+            val = type_m.group(1).strip().lower()
+            if val not in safe_mimes:
+                tag = re.sub(r'\s+type=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize width/height if present
+        for dim in ("width", "height"):
+            dim_m = re.search(rf'\b{dim}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if dim_m:
+                val = dim_m.group(1).strip()
+                try:
+                    num = int(val)
+                    if num <= 0 or num > 16384:
+                        tag = re.sub(rf'\s+{dim}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+                except ValueError:
+                    tag = re.sub(rf'\s+{dim}=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<source\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_source, cleaned, flags=re.IGNORECASE)
+
+
+
 
 
 
