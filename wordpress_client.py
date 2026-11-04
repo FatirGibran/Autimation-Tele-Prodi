@@ -1218,6 +1218,41 @@ class WordPressClient:
 
         return all_comments
 
+    def batch_update_comment_status(
+        self,
+        comment_status_map: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Batch updates moderation statuses for multiple comments via POST /wp/v2/comments/{id}.
+        Each item in comment_status_map should be a dict with 'id' (or 'comment_id') and 'status' ('approved', 'hold', 'spam', 'trash').
+        """
+        valid_statuses = {"approved", "hold", "spam", "trash"}
+        updated = []
+        failed = []
+
+        for item in comment_status_map:
+            cid = item.get("id") or item.get("comment_id")
+            st = str(item.get("status", "")).strip().lower()
+            if not cid or st not in valid_statuses:
+                continue
+
+            try:
+                endpoint = f"{self.api_url}/comments/{int(cid)}"
+                payload = {"status": st}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(cid))
+            except Exception as e:
+                failed.append({"comment_id": int(cid), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(comment_status_map)
+        }
+
+
 
 
 
