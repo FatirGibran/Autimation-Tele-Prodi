@@ -2322,6 +2322,72 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertEqual(res_bad["blocking_scripts_count"], 1)
         self.assertEqual(res_bad["third_party_scripts_count"], 1)
 
+    def test_audit_table_row_and_column_headers(self):
+        html_ok = (
+            '<table id="rf-tbl" aria-label="Tabel Frekuensi RF">'
+            '<caption>Alokasi Frekuensi Telekomunikasi</caption>'
+            '<tr><th scope="col">Band</th><th scope="col">Frekuensi</th></tr>'
+            '<tr><td>C-Band</td><td>4 GHz</td></tr>'
+            '</table>'
+        )
+        res_ok = YoastSEOValidator.audit_table_row_and_column_headers(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_tables"], 1)
+        self.assertEqual(res_ok["has_caption_count"], 1)
+
+        html_bad = '<table><tr><td>Data 1</td><td>Data 2</td></tr></table>'
+        res_bad = YoastSEOValidator.audit_table_row_and_column_headers(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["missing_headers_count"], 1)
+
+    def test_audit_aria_live_status_regions(self):
+        html_ok = (
+            '<div>'
+            '<div role="status" aria-live="polite">Sinkronisasi data selesai.</div>'
+            '<div role="alert" aria-live="assertive">Koneksi terputus!</div>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_aria_live_status_regions(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["valid_live_regions"], 2)
+        self.assertEqual(res_ok["status_roles_count"], 1)
+        self.assertEqual(res_ok["alert_roles_count"], 1)
+
+        html_bad = '<div class="alert-feedback">Terjadi kesalahan!</div>'
+        res_bad = YoastSEOValidator.audit_aria_live_status_regions(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertGreater(len(res_bad["issues"]), 0)
+
+    def test_audit_label_in_name_consistency(self):
+        html_ok = '<button aria-label="Kirim formulir pendaftaran mahasiswa">Kirim</button>'
+        res_ok = YoastSEOValidator.audit_label_in_name_consistency(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["consistent_elements_count"], 1)
+
+        html_bad = '<button aria-label="Lanjutkan ke tahap verifikasi">Simpan</button>'
+        res_bad = YoastSEOValidator.audit_label_in_name_consistency(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["inconsistent_elements_count"], 1)
+
+    def test_audit_image_srcset_density_descriptors(self):
+        html_ok = (
+            '<div>'
+            '<img src="photo.jpg" srcset="photo.jpg 1x, photo-2x.jpg 2x" alt="Foto">'
+            '<img src="hero.jpg" srcset="hero-400.jpg 400w, hero-800.jpg 800w" sizes="(max-width: 600px) 400px, 800px" alt="Hero">'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_image_srcset_density_descriptors(html_ok)
+        self.assertTrue(res_ok["is_optimized"])
+        self.assertEqual(res_ok["valid_srcset_images"], 2)
+        self.assertEqual(res_ok["density_descriptor_count"], 1)
+        self.assertEqual(res_ok["width_descriptor_count"], 1)
+
+        # Missing sizes for width descriptors
+        html_bad = '<img src="hero.jpg" srcset="hero-400.jpg 400w, hero-800.jpg 800w" alt="Hero">'
+        res_bad = YoastSEOValidator.audit_image_srcset_density_descriptors(html_bad)
+        self.assertFalse(res_bad["is_optimized"])
+        self.assertGreater(len(res_bad["issues"]), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
