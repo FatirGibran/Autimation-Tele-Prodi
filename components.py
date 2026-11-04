@@ -7400,7 +7400,46 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_dwdm_osnr_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Metrik Kualitas Optik DWDM OSNR & Q-Factor", **kwargs) -> str:
+        """
+        Renders an Elementor card showing DWDM channel OSNR, FEC margin, equivalent Q-factor, and pre-FEC BER.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        w_len = float(d.get("channel_wavelength_nm", 1550.12))
+        sig_p = float(d.get("signal_power_dbm", 0.0))
+        ase_p = float(d.get("ase_noise_power_dbm", -28.0))
+        osnr_db = float(d.get("osnr_db", 28.0))
+        margin_db = float(d.get("osnr_margin_db", 13.5))
+        q_db = float(d.get("q_factor_db", 14.2))
+        ber = float(d.get("pre_fec_ber", 1e-9))
+        status = str(d.get("health_status", "Optimal (Headroom Tinggi)"))
+
+        badge_color = "#22c55e" if margin_db >= 5.0 else ("#facc15" if margin_db >= 0.0 else "#ef4444")
+
+        return f"""    <div class="tu-dwdm-osnr-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">DWDM Transmission Telemetry</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #f1f5f9; font-size: 15px;">{title} (λ = {w_len:.2f} nm)</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Daya Sinyal Optik: <strong>{sig_p:+.1f} dBm</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Derau ASE (0.1 nm): <strong>{ase_p:+.1f} dBm</strong></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>OSNR: <strong style="color: #38bdf8;">{osnr_db:.2f} dB</strong></div>
+        <div>Margin FEC: <strong style="color: {badge_color};">{margin_db:+.2f} dB</strong></div>
+        <div>Q-Factor: <strong style="color: #facc15;">{q_db:.2f} dB</strong> (BER: {ber:.2e})</div>
+      </div>
+    </div>"""
+
+    @classmethod
+
+
 render_5g_bwp_switching_svg = EditorialComponents.render_5g_bwp_switching_svg
+render_optical_dwdm_osnr_card = EditorialComponents.render_optical_dwdm_osnr_card
 render_pkm_pm_proposal_card = EditorialComponents.render_pkm_pm_proposal_card
 render_satellite_tropospheric_scintillation_card = EditorialComponents.render_satellite_tropospheric_scintillation_card
 render_5g_bwp_switching_card = EditorialComponents.render_5g_bwp_switching_card
