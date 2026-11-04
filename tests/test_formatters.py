@@ -1187,6 +1187,46 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Lolos Pendanaan Belmawa PKM-PM Unggulan", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/pm/99", msg)
 
+    def test_format_optical_dwdm_telegram(self):
+        msg = TelegramFormatter.format_optical_dwdm_telegram(
+            channel_wavelength_nm=1550.12,
+            signal_power_dbm=2.0,
+            ase_noise_power_dbm=-26.0,
+            osnr_db=28.0,
+            osnr_margin_db=13.5,
+            q_factor_db=14.2,
+            pre_fec_ber=1e-9,
+            health_status="Optimal (Headroom Tinggi)"
+        )
+        self.assertIn("Telemetri Kualitas Transmisi Serat Optik DWDM", msg)
+        self.assertIn("1550.12 nm", msg)
+        self.assertIn("+2.00 dBm", msg)
+        self.assertIn("28.00 dB", msg)
+        self.assertIn("+13.50 dB", msg)
+        self.assertIn("14.20 dB", msg)
+        self.assertIn("Optimal (Headroom Tinggi)", msg)
+
+    def test_format_pkm_pi_telegram(self):
+        msg = TelegramFormatter.format_pkm_pi_telegram(
+            student_leader="Ahmad Dani",
+            nim="1101210088",
+            proposal_title="Otomasi Suhu Kumbung Jamur IoT",
+            partner_enterprise="KWT Jamur Sejahtera",
+            technology_type="IoT & Smart Climate Control",
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=9500000,
+            funding_status="Lolos Pendanaan Belmawa PKM-PI Unggulan",
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/pi/88"
+        )
+        self.assertIn("Pengumuman Kelulusan Pendanaan Belmawa PKM-PI", msg)
+        self.assertIn("Ahmad Dani", msg)
+        self.assertIn("1101210088", msg)
+        self.assertIn("Otomasi Suhu Kumbung Jamur IoT", msg)
+        self.assertIn("KWT Jamur Sejahtera", msg)
+        self.assertIn("Rp 9,500,000", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/pi/88", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
