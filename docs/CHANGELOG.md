@@ -5,9 +5,9 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 ---
 
 ## Ringkasan Metrik Pembaruan
-- **Total Item Perubahan**: 1094+ item pembaruan arsitektural terverifikasi
+- **Total Item Perubahan**: 1130+ item pembaruan arsitektural terverifikasi
 - **Cakupan Modul**: Sanitasi Keamanan, Parser Konten, Yoast SEO Evaluator, Komponen Semantik Elementor, Storage & SQLite, Exporter & Schema, CLI Tools, Webhook Server, Klien WordPress, serta Skrip Operasional
-- **Status Pengujian**: 1.005 unit tests terverifikasi (100% pass rate)
+- **Status Pengujian**: 1.030 unit tests terverifikasi (100% pass rate)
 
 
 ---
@@ -1297,6 +1297,47 @@ Dokumen ini mencatat seluruh perkembangan dan pembaruan arsitektural yang telah 
 1092. **Subcommand CLI `raman`, `bwp`, dan `pkmpm` (`cli.py`)**: Perintah konsol CLI baru untuk operasionalisasi evaluasi amplifier Raman terdistribusi, kalkulasi latensi 5G NR BWP switching, dan evaluasi proposal pengabdian PKM-PM mahasiswa.
 1093. **Unit Test CLI Subcommand `raman`, `bwp`, dan `pkmpm` (`tests/test_cli.py`)**: Penambahan unit test penanganan argumen baris perintah terminal (108 unit tests passing).
 1094. **Dokumentasi Perubahan Arsitektur v5.3.0 (`docs/changes/90_v5_3_feature_expansions.md`) & Pembaruan Log CHANGELOG.md**: Dokumentasi komprehensif seluruh fitur, sinkronisasi catatan rilis, penambahan seksi 41, dan pembaharuan metrik proyek dengan 1.005 unit test passing (100% pass rate).
+
+---
+
+## 42. Ekspansi Arsitektur v5.4.0 (`sanitizer.py`, `parser.py`, `seo_validator.py`, `components.py`, `formatters.py`, `storage.py`, `wordpress_client.py`, `exporter.py`, `cli.py`)
+
+1095. **Sanitasi Elemen Gambar Responsif HTML5 `<picture>` & `<source>` (`sanitizer.py`)**: Sanitasi elemen gambar responsif `<picture>` dan elemen sumber `<source>`, validasi atribut `srcset`, `media`, dan restriksi tipe MIME gambar aman (`image/webp`, `image/avif`, `image/jpeg`, dll.).
+1096. **Sanitasi Elemen Autocomplete HTML5 `<datalist>` & `<option>` (`sanitizer.py`)**: Sanitasi elemen kontainer autocomplete `<datalist>` beserta opsi `<option>`, mitigasi DOM clobbering pada atribut identifier `id`, dan pembersihan skrip jahat pada nilai dan takarir opsi.
+1097. **Sanitasi Formula Matematika MathML `<math>` & Elemen Presentasi (`sanitizer.py`)**: Sanitasi elemen formula matematika MathML `<math>` beserta elemen anak presentasi, pemblokiran skrip tersembunyi pada blok `<annotation-xml>`, penyingkiran atribut tautan `href` / `xlink:href`, dan validasi atribut `display`.
+1098. **Unit Test Sanitasi Picture Source, Datalist, dan MathML HTML5 (`tests/test_sanitizer.py`)**: Penambahan unit test verifikasi sterilisasi kontainer gambar responsif, autocomplete datalist, dan formula matematika MathML (107 unit tests passing).
+1099. **Kalkulator OSNR & Margin FEC Kanal Transmisi DWDM ITU-T G.692/G.977 (`parser.py`)**: Perhitungan Optical Signal-to-Noise Ratio (OSNR) dalam lebar pita referensi 0.1 nm, evaluasi margin batas koreksi kesalahan Forward Error Correction (FEC), estimasi faktor kualitas $Q$, dan estimasi Bit Error Rate (BER) sebelum FEC.
+1100. **Kalkulator Throughput 5G NR Carrier Aggregation (CA) 3GPP TS 38.306 (`parser.py`)**: Evaluasi throughput agregasi laju data puncak teoritis gabungan Primary Cell (PCell) dan Secondary Cells (SCells) berdasarkan alokasi PRB, tingkat modulasi hingga 256/1024-QAM, konfigurasi MIMO 4x4, durasi slot OFDM 14 simbol, dan rasio overhead kontrol.
+1101. **Kalkulator Figure of Merit $G/T$ Stasiun Bumi Satelit ITU-R S.733 (`parser.py`)**: Perhitungan penguatan antena parabola ($G$), temperatur derau antena terhadap sudut elevasi ($T_a$), redaman transmisi feed, temperatur derau LNA, total temperatur derau sistem ($T_{\text{sys}}$), dan rasio kelayakan $G/T$ dB/K.
+1102. **Evaluator Proposal Mahasiswa Belmawa PKM Penerapan Iptek (PKM-PI) (`parser.py`)**: Kuantifikasi penilaian proposal alih teknologi mahasiswa ke mitra produktif UMKM/industri (diagnosis permasalahan 25%, ketepatan solusi 35%, peningkatan produktivitas 25%, efisiensi anggaran 15%), penentuan kelulusan pendanaan, dan rekomendasi konversi SKS MBKM.
+1103. **Unit Test DWDM OSNR, 5G NR CA, Satellite G/T, dan PKM-PI Evaluator (`tests/test_parser.py`)**: Penambahan unit test komprehensif untuk pengujian akurasi numerik kualitas sinyal DWDM, kapasitas agregasi kanal 5G, stasiun bumi satelit, dan evaluasi proposal penerapan iptek mahasiswa (145 unit tests passing).
+1104. **Auditor Audio Deskripsi & Subtitle Video WCAG 2.1 SC 1.2.3/1.2.5 (`seo_validator.py`)**: Audit aksesibilitas elemen video menurut WCAG 2.1 SC 1.2.3 dan SC 1.2.5, verifikasi ketersediaan trek audio deskripsi (`<track kind="descriptions">`) atau atribut `aria-describedby` serta ketersediaan trek takarir sinkron.
+1105. **Auditor Pesan Kesalahan Formulir ARIA WCAG 2.1 SC 3.3.1 (`seo_validator.py`)**: Audit formulir menurut WCAG 2.1 SC 3.3.1 (Error Identification), verifikasi bahwa input bertanda `aria-invalid="true"` memiliki tautan referensi aktif via `aria-errormessage` atau `aria-describedby` ke elemen deskripsi kesalahan dalam DOM.
+1106. **Auditor Rasio Kontras Komponen Non-Teks & Grafis UI WCAG 2.1 SC 1.4.11 (`seo_validator.py`)**: Audit rasio kontras elemen antarmuka non-teks menurut WCAG 2.1 SC 1.4.11, memastikan batas visual tombol dan ikon interaktif memiliki rasio kontras sekurang-kurangnya 3.0:1 terhadap latar belakang.
+1107. **Auditor Pemuatan Skrip Pihak Ketiga Async/Defer Core Web Vitals (`seo_validator.py`)**: Audit strategi pemuatan dependensi skrip eksternal pihak ketiga Core Web Vitals, memastikan penegakan atribut non-blocking `async` atau `defer` guna memitigasi isu parser-blocking pada INP dan TBT.
+1108. **Unit Test Video Audio Description, Form Error ARIA, Non-Text Contrast, dan Script Strategy Auditors (`tests/test_seo_validator.py`)**: Pengujian unit terpadu audit audio deskripsi video, pesan kesalahan formulir ARIA, rasio kontras non-teks, dan strategi pemuatan skrip eksternal (146 unit tests passing).
+1109. **Komponen Kartu Telemetri DWDM OSNR & Q-Factor (`components.py`)**: Kartu visual Elementor untuk telemetri panjang gelombang kanal, daya sinyal optik, akumulasi derau ASE, OSNR dB, margin di atas batas FEC, faktor kualitas $Q$, dan estimasi BER.
+1110. **Komponen Kartu Kapasitas 5G NR Carrier Aggregation (`components.py`)**: Kartu visual Elementor untuk telemetri jumlah komponen carrier (PCell + SCells), total bandwidth gabungan, throughput puncak dalam Mbps dan Gbps, serta tingkatan performa multi-gigabit.
+1111. **Komponen Kartu Figure of Merit $G/T$ Stasiun Bumi Satelit (`components.py`)**: Kartu visual Elementor untuk telemetri diameter antena, frekuensi Ku/Ka band, penguatan antena dBi, temperatur derau sistem Tsys, sudut elevasi, dan kelas stasiun bumi (Gateway Grade / VSAT).
+1112. **Komponen Kartu Evaluasi Proposal Mahasiswa PKM Penerapan Iptek (`components.py`)**: Kartu visual Elementor profil ketua pengusul, mitra usaha produktif, jenis teknologi terapan, skor komposit, status pendanaan Belmawa Dikti, dan rekognisi SKS MBKM.
+1113. **Komponen Diagram Alokasi Spektrum 5G NR Carrier Aggregation Responsif Inline SVG (`components.py`)**: Kartu diagram vektor interaktif visualisasi alokasi spektrum frekuensi radio CC1 Primary Cell dan CC2 Secondary Cell, guard band, bandwidth gabungan, dan throughput puncak Gbps berbasis inline SVG.
+1114. **Unit Test Komponen Visual DWDM OSNR, 5G CA, Satellite G/T, PKM-PI, dan CA SVG (`tests/test_components.py`)**: Penambahan unit test untuk memastikan seluruh komponen semantik Elementor dan visualisasi grafis SVG ter-render secara utuh dan valid (181 unit tests passing).
+1115. **Formatter Telegram Kualitas Transmisi Kanal Serat Optik DWDM (`formatters.py`)**: Format buletin resmi Telegram untuk notifikasi peringatan telemetri kualitas lapisan fisik transmisi serat optik DWDM, OSNR, dan margin FEC.
+1116. **Formatter Telegram Pendanaan Penerapan Iptek Mahasiswa PKM-PI (`formatters.py`)**: Format buletin resmi Telegram untuk pengumuman capaian kelulusan pendanaan alih teknologi mahasiswa Belmawa Dikti.
+1117. **Unit Test Formatter Telegram DWDM OSNR dan PKM-PI (`tests/test_formatters.py`)**: Penambahan unit test integritas template dan sanitasi markup Telegram bot (71 unit tests passing).
+1118. **Manajer Rekam Kualitas Kanal Optik DWDM (`storage.py`)**: Skema tabel SQLite `optical_dwdm_records` dan fungsi `record_optical_dwdm`, `list_optical_dwdm`, `get_optical_dwdm_by_id`.
+1119. **Manajer Rekam 5G NR Carrier Aggregation (`storage.py`)**: Skema tabel SQLite `nr_ca_records` dan fungsi `record_nr_carrier_aggregation`, `list_nr_carrier_aggregation`, `get_nr_carrier_aggregation_by_id`.
+1120. **Manajer Rekam Evaluasi Proposal Mahasiswa PKM-PI (`storage.py`)**: Skema tabel SQLite `pkm_pi_proposal_records` dan fungsi `record_pkm_pi_proposal`, `list_pkm_pi_proposals`, `get_pkm_pi_proposal_by_id`.
+1121. **Unit Test Storage DWDM OSNR, NR Carrier Aggregation, dan Proposal PKM-PI (`tests/test_storage.py`)**: Penambahan unit test transaksi CRUD terisolasi dan integritas skema database (113 unit tests passing).
+1122. **Helper WordPress Get Comments by IDs (`wordpress_client.py`)**: Metode `get_comments_by_ids` untuk membaca sekumpulan data komentar berdasarkan daftar ID numerik via REST API (`/wp/v2/comments?include=...`).
+1123. **Helper WordPress Batch Update Comment Status (`wordpress_client.py`)**: Metode `batch_update_comment_status` untuk memperbarui status moderasi sekumpulan komentar secara massal via REST API (`POST /wp/v2/comments/{id}`).
+1124. **Unit Test WordPress Client Get Comments by IDs & Batch Update Comment Status (`tests/test_wordpress_client.py`)**: Penambahan unit test mocked HTTP requests untuk pengambilan komentar batch dan pembaruan status moderasi (74 unit tests passing).
+1125. **Generator Schema.org TechArticle & HowTo JSON-LD Alih Teknologi Mahasiswa (`exporter.py`)**: Metode `generate_tech_transfer_how_to_json_ld` menghasilkan struktur metadata Google TechArticle dan HowTo untuk dokumentasi panduan penerapan iptek mahasiswa di mitra industri.
+1126. **Eksportir Dokumentasi MDX SolidStart Reactive Framework (`exporter.py`)**: Metode `to_solidstart_mdx` mengonversi artikel editorial ke format dokumentasi reaktif SolidStart dengan integrasi `@solidjs/meta` components dan frontmatter YAML.
+1127. **Unit Test Exporter Tech Transfer HowTo JSON-LD & SolidStart MDX (`tests/test_exporter.py`)**: Penambahan unit test integritas penanda Schema.org HowTo TechArticle dan rute SolidStart MDX (72 unit tests passing).
+1128. **Subcommand CLI `dwdm`, `ca`, dan `pkmpi` (`cli.py`)**: Perintah konsol CLI baru untuk operasionalisasi evaluasi kanal transmisi DWDM OSNR, kalkulasi throughput 5G NR Carrier Aggregation, dan evaluasi proposal alih teknologi PKM-PI mahasiswa.
+1129. **Unit Test CLI Subcommand `dwdm`, `ca`, dan `pkmpi` (`tests/test_cli.py`)**: Penambahan unit test penanganan argumen baris perintah terminal (110 unit tests passing).
+1130. **Dokumentasi Perubahan Arsitektur v5.4.0 (`docs/changes/91_v5_4_feature_expansions.md`) & Pembaruan Log CHANGELOG.md**: Dokumentasi komprehensif seluruh fitur, sinkronisasi catatan rilis, penambahan seksi 42, dan pembaharuan metrik proyek dengan 1.030 unit test passing (100% pass rate).
 
 
 
