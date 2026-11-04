@@ -7428,6 +7428,99 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_image_srcset_density_descriptors(html_content: str) -> Dict[str, Any]:
+        """
+        Audits responsive image srcset definitions for mobile viewport optimization and display density descriptors.
+        Validates pixel density (1x, 2x, 3x) and width (e.g. 600w, 1200w) descriptors,
+        enforces descriptor consistency (no mixing of x and w in the same srcset),
+        and verifies the presence of the 'sizes' attribute when width descriptors are used.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_srcset_images": 0,
+                "valid_srcset_images": 0,
+                "density_descriptor_count": 0,
+                "width_descriptor_count": 0,
+                "is_optimized": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        images = soup.find_all("img", srcset=True)
+
+        if not images:
+            return {
+                "total_srcset_images": 0,
+                "valid_srcset_images": 0,
+                "density_descriptor_count": 0,
+                "width_descriptor_count": 0,
+                "is_optimized": True,
+                "issues": []
+            }
+
+        valid_count = 0
+        density_count = 0
+        width_count = 0
+        issues = []
+
+        for idx, img in enumerate(images, 1):
+            src = img.get("src") or f"Gambar #{idx}"
+            raw_srcset = img.get("srcset", "").strip()
+            has_sizes = img.has_attr("sizes") and bool(img.get("sizes", "").strip())
+
+            candidates = [c.strip() for c in raw_srcset.split(",") if c.strip()]
+            has_x = False
+            has_w = False
+            malformed = False
+
+            for c in candidates:
+                parts = c.split()
+                if len(parts) == 1:
+                    has_x = True
+                elif len(parts) == 2:
+                    descriptor = parts[1].lower()
+                    if re.match(r'^\d+(?:\.\d+)?x$', descriptor):
+                        has_x = True
+                    elif re.match(r'^\d+w$', descriptor):
+                        has_w = True
+                    else:
+                        malformed = True
+                else:
+                    malformed = True
+
+            img_valid = True
+            if malformed:
+                issues.append(f"{src}: Kandidat srcset tidak memiliki format deskriptor yang valid.")
+                img_valid = False
+
+            if has_x and has_w:
+                issues.append(f"{src}: Atribut srcset menggabungkan deskriptor densitas ('x') dan lebar ('w') sekaligus.")
+                img_valid = False
+
+            if has_w:
+                width_count += 1
+                if not has_sizes:
+                    issues.append(f"{src}: Penggunaan deskriptor lebar ('w') memerlukan atribut 'sizes' untuk kalkulasi viewport.")
+                    img_valid = False
+            elif has_x:
+                density_count += 1
+
+            if img_valid:
+                valid_count += 1
+
+        is_optimized = (valid_count == len(images)) and (len(issues) == 0)
+
+        return {
+            "total_srcset_images": len(images),
+            "valid_srcset_images": valid_count,
+            "density_descriptor_count": density_count,
+            "width_descriptor_count": width_count,
+            "is_optimized": is_optimized,
+            "issues": issues
+        }
+
+
 
 
 
