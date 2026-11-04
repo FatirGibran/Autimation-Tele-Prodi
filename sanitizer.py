@@ -729,6 +729,11 @@ class HTMLSanitizer:
             cleaned = sanitize_html5_audio_source_track_attributes(cleaned)
             warnings.append("Sanitized HTML5 audio media and nested source track attributes.")
 
+        # 8ac. Sanitize HTML5 table colgroup and col layout elements
+        if "<col" in cleaned.lower() or "<colgroup" in cleaned.lower():
+            cleaned = sanitize_html5_table_colgroup_attributes(cleaned)
+            warnings.append("Sanitized HTML5 table colgroup and col styling attributes.")
+
         return cleaned, warnings
 
 
@@ -2730,6 +2735,43 @@ def sanitize_html5_audio_source_track_attributes(html: str) -> str:
     cleaned = re.sub(r'<audio\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_audio_tag, cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r'<(?:source|track)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_audio_source_track, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_table_colgroup_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <colgroup> and <col> tabular column layout elements by stripping
+    executable JavaScript event handlers, invalid inline styles, validating span
+    attributes as positive integers, and neutralizing deprecated or unsafe attributes.
+    """
+    if not html or ("<col" not in html.lower() and "<colgroup" not in html.lower()):
+        return html
+
+    cleaned = html
+
+    def fix_col_or_group(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize span attribute: must be a positive integer >= 1
+        span_m = re.search(r'\bspan=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if span_m:
+            val = span_m.group(1).strip()
+            if not re.match(r'^[1-9]\d*$', val):
+                tag = re.sub(r'\s+span=["\'][^"\']*["\']', ' span="1"', tag, flags=re.IGNORECASE)
+
+        # Sanitize width attribute if present: must be numeric or percentage
+        width_m = re.search(r'\bwidth=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if width_m:
+            wval = width_m.group(1).strip()
+            if not re.match(r'^\d+(?:px|%)?$', wval):
+                tag = re.sub(r'\s+width=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    cleaned = re.sub(r'<(?:colgroup|col)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_col_or_group, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
