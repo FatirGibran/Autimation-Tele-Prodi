@@ -6961,6 +6961,59 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_resource_hints_dns_prefetch_preconnect(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits network resource hints (<link rel="preconnect"> and <link rel="dns-prefetch">)
+        for connection optimization, ensuring valid origin schemes, verifying 'crossorigin'
+        for cross-origin font/CDN domains, and warning against socket contention (> 4 preconnect links).
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "preconnect_count": 0,
+                "dns_prefetch_count": 0,
+                "missing_crossorigin_count": 0,
+                "excessive_preconnect": False,
+                "is_optimized": True,
+                "issues": [],
+                "warnings": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        warnings = []
+
+        preconnect_links = soup.find_all("link", rel=lambda r: r and "preconnect" in r)
+        dns_prefetch_links = soup.find_all("link", rel=lambda r: r and "dns-prefetch" in r)
+
+        missing_crossorigin = 0
+
+        for link in preconnect_links:
+            href = (link.get("href") or "").strip()
+            if not href.startswith(("http://", "https://", "//")):
+                issues.append(f"Elemen <link rel='preconnect' href='{href}'> tidak memiliki skema URL origin yang valid.")
+
+            # Cross-origin CDNs (e.g. fonts.gstatic.com) require crossorigin attribute
+            if "gstatic.com" in href.lower() and not link.has_attr("crossorigin"):
+                missing_crossorigin += 1
+                issues.append(f"Elemen <link rel='preconnect' href='{href}'> wajib menyertakan atribut 'crossorigin'.")
+
+        excessive_preconnect = len(preconnect_links) > 4
+        if excessive_preconnect:
+            warnings.append(f"Terlalu banyak preconnect ({len(preconnect_links)} tautan); lebih dari 4 preconnect dapat menyebabkan socket contention.")
+
+        is_optimized = (len(issues) == 0)
+
+        return {
+            "preconnect_count": len(preconnect_links),
+            "dns_prefetch_count": len(dns_prefetch_links),
+            "missing_crossorigin_count": missing_crossorigin,
+            "excessive_preconnect": excessive_preconnect,
+            "is_optimized": is_optimized,
+            "issues": issues,
+            "warnings": warnings
+        }
+
 
 
 
