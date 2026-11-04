@@ -1486,6 +1486,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_ccs_name ON nr_cross_carrier_records(config_name);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_ki_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    prototype_type TEXT NOT NULL,
+                    target_user TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    allocated_budget_idr REAL NOT NULL,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_ki_nim ON pkm_ki_proposal_records(nim);")
+
 
 
 
@@ -6815,6 +6832,59 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def save_pkm_ki_proposal(
+        self,
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        prototype_type: str,
+        target_user: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: float,
+        is_funded: bool = False
+    ) -> int:
+        """
+        Stores a Belmawa PKM-KI student proposal evaluation record in SQLite storage.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_ki_proposal_records (
+                    student_leader, nim, proposal_title, prototype_type,
+                    target_user, composite_score, letter_grade,
+                    allocated_budget_idr, is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(student_leader), str(nim), str(proposal_title), str(prototype_type),
+                str(target_user), float(composite_score), str(letter_grade),
+                float(allocated_budget_idr), 1 if is_funded else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_ki_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent PKM-KI proposal evaluation records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_ki_proposal_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_ki_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a PKM-KI proposal evaluation record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_ki_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
