@@ -51,7 +51,10 @@ from parser import (
     parse_pkm_pm_proposal_evaluation,
     calculate_optical_dwdm_osnr_ber_margin,
     calculate_5g_nr_carrier_aggregation_throughput,
-    parse_pkm_pi_proposal_evaluation
+    parse_pkm_pi_proposal_evaluation,
+    calculate_optical_edfa_saturation_noise_figure,
+    calculate_5g_nr_cross_carrier_scheduling_latency,
+    parse_pkm_ki_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -3232,7 +3235,137 @@ def cmd_pkmpi(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['partner_enterprise'][:20]:<22} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
 
 
+def cmd_edfa(args):
+    if args.action == "add":
+        amp_id = args.amp or "EDFA-C-BAND-01"
+        pump = args.pump or "980nm Co-directional"
+        pin = float(args.pin) if args.pin is not None else -20.0
+        g0 = float(args.gain) if args.gain is not None else 30.0
+        psat = float(args.psat) if args.psat is not None else 15.0
+
+        res = calculate_optical_edfa_saturation_noise_figure({
+            "amplifier_id": amp_id,
+            "pump_type": pump,
+            "pin_dbm": pin,
+            "small_signal_gain_db": g0,
+            "saturation_output_power_dbm": psat
+        })
+        rec_id = storage.record_optical_edfa(
+            amplifier_id=amp_id,
+            pump_type=pump,
+            pin_dbm=pin,
+            saturated_gain_db=res["saturated_gain_db"],
+            output_power_dbm=res["output_power_dbm"],
+            gain_compression_db=res["gain_compression_db"],
+            noise_figure_db=res["noise_figure_db"],
+            operational_regime=res["operational_regime"],
+            is_saturated=res["is_saturated"]
+        )
+        print(f"Catatan Optical EDFA berhasil disimpan dengan ID: {rec_id} (Unit: {amp_id}, Gain: {res['saturated_gain_db']} dB, NF: {res['noise_figure_db']} dB, Status: {res['operational_regime']})")
+    else:
+        records = storage.list_optical_edfa(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan Optical EDFA yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'AMPLIFIER ID':<18} | {'PIN (dBm)':<10} | {'GAIN (dB)':<10} | {'POUT (dBm)':<12} | {'REZIM'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['amplifier_id']:<18} | {r['pin_dbm']:<10.1f} | {r['saturated_gain_db']:<10.2f} | {r['output_power_dbm']:<12.2f} | {r['operational_regime']}")
+
+
+def cmd_ccs(args):
+    if args.action == "add":
+        cfg = args.name or "CCS_n78_scheduling_n258"
+        pcell = args.pcell or "PCell (n78 3.5GHz)"
+        scell = args.scell or "SCell (n258 28GHz)"
+        scs_sched = int(args.scs_pcell) if args.scs_pcell is not None else 30
+        scs_target = int(args.scs_scell) if args.scs_scell is not None else 120
+        cif = not args.no_cif
+
+        mu_sched = 1 if scs_sched == 30 else (0 if scs_sched == 15 else 2)
+        mu_target = 3 if scs_target == 120 else (2 if scs_target == 60 else 1)
+
+        res = calculate_5g_nr_cross_carrier_scheduling_latency({
+            "scheduling_cell": pcell,
+            "scheduled_cell": scell,
+            "scheduling_numerology_mu": mu_sched,
+            "scheduled_numerology_mu": mu_target,
+            "cif_present": cif
+        })
+        rec_id = storage.record_nr_cross_carrier(
+            config_name=cfg,
+            scheduling_cell=pcell,
+            scheduled_cell=scell,
+            scheduling_scs_khz=scs_sched,
+            scheduled_scs_khz=scs_target,
+            cif_present=cif,
+            downlink_scheduling_latency_ms=res["downlink_scheduling_latency_ms"],
+            uplink_scheduling_latency_ms=res["uplink_scheduling_latency_ms"],
+            latency_profile=res["latency_profile"],
+            is_urllc_capable=res["is_urllc_capable"]
+        )
+        print(f"Catatan 5G NR CCS berhasil disimpan dengan ID: {rec_id} (Config: {cfg}, DL Latensi: {res['downlink_scheduling_latency_ms']} ms, Status: {res['latency_profile']})")
+    else:
+        records = storage.list_nr_cross_carrier(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR Cross-Carrier Scheduling yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KONFIGURASI':<24} | {'PCELL':<16} | {'SCELL':<16} | {'DL (ms)':<10} | {'STATUS'}")
+        print("-" * 85)
+        for r in records:
+            print(f"{r['id']:<4} | {r['config_name'][:22]:<24} | {r['scheduling_cell'][:14]:<16} | {r['scheduled_cell'][:14]:<16} | {r['downlink_scheduling_latency_ms']:<10.3f} | {r['latency_profile']}")
+
+
+def cmd_pkmki(args):
+    if args.action == "add":
+        leader = args.leader or "Ketua Tim PKM-KI"
+        nim = args.nim or "1101210055"
+        title = args.title or "Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan"
+        proto = args.proto or "Prototipe Teruji Lapangan (TRL 5)"
+        target = args.target or "Dinas Bina Marga & PU"
+        nov = float(args.nov) if args.nov is not None else 85.0
+        func = float(args.func) if args.func is not None else 85.0
+        des = float(args.des) if args.des is not None else 85.0
+        budget = float(args.budget) if args.budget is not None else 85.0
+
+        res = parse_pkm_ki_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "prototype_type": proto,
+            "target_user": target,
+            "novelty_score": nov,
+            "functionality_score": func,
+            "design_score": des,
+            "budget_score": budget
+        })
+        rec_id = storage.record_pkm_ki_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            prototype_type=proto,
+            target_user=target,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-KI berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_pkm_ki_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-KI yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'PROTOTIPE':<22} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            funded_str = "Lolos" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['prototype_type'][:20]:<22} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
+
+
 def main():
+
 
 
 
@@ -4357,6 +4490,45 @@ def main():
     pkmpi_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
     pkmpi_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmpi_parser.set_defaults(func=cmd_pkmpi)
+
+    # Optical EDFA Amplifier command
+    edfa_parser = subparsers.add_parser("edfa", help="Kelola telemetri penguatan dan noise figure optical EDFA (list, add)")
+    edfa_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi EDFA")
+    edfa_parser.add_argument("--amp", default="EDFA-C-BAND-01", help="Identifier penguat EDFA")
+    edfa_parser.add_argument("--pump", default="980nm Co-directional", help="Konfigurasi laser pompa optik")
+    edfa_parser.add_argument("--pin", type=float, default=-20.0, help="Daya masukan sinyal optik (dBm)")
+    edfa_parser.add_argument("--gain", type=float, default=30.0, help="Small signal gain G0 (dB)")
+    edfa_parser.add_argument("--psat", type=float, default=15.0, help="Daya saturasi keluaran Psat (dBm)")
+    edfa_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    edfa_parser.set_defaults(func=cmd_edfa)
+
+    # 5G NR Cross-Carrier Scheduling command
+    ccs_parser = subparsers.add_parser("ccs", help="Kelola kalkulasi latensi 5G NR Cross-Carrier Scheduling (list, add)")
+    ccs_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi Cross-Carrier Scheduling")
+    ccs_parser.add_argument("--name", default="CCS_n78_scheduling_n258", help="Nama konfigurasi penjadwalan")
+    ccs_parser.add_argument("--pcell", default="PCell (n78 3.5GHz)", help="Cell penjadwal (scheduling cell)")
+    ccs_parser.add_argument("--scell", default="SCell (n258 28GHz)", help="Cell terjadwal (scheduled target cell)")
+    ccs_parser.add_argument("--scs-pcell", type=int, default=30, help="SCS cell penjadwal (15, 30, 60 kHz)")
+    ccs_parser.add_argument("--scs-scell", type=int, default=120, help="SCS cell terjadwal (60, 120 kHz)")
+    ccs_parser.add_argument("--no-cif", action="store_true", help="Nonaktifkan field CIF 3-bit pada PDCCH")
+    ccs_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    ccs_parser.set_defaults(func=cmd_ccs)
+
+    # PKM-KI Proposal command
+    pkmki_parser = subparsers.add_parser("pkmki", help="Kelola evaluasi proposal Belmawa PKM Karya Inovatif (list, add)")
+    pkmki_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-KI")
+    pkmki_parser.add_argument("--leader", default="Ketua Tim PKM-KI", help="Nama ketua mahasiswa pengusul")
+    pkmki_parser.add_argument("--nim", default="1101210055", help="NIM ketua mahasiswa")
+    pkmki_parser.add_argument("--title", default="Sistem Radar Doppler Portabel Pemantau Keretakan Jembatan", help="Judul proposal karya inovatif")
+    pkmki_parser.add_argument("--proto", default="Prototipe Teruji Lapangan (TRL 5)", help="Bentuk luaran prototipe inovatif")
+    pkmki_parser.add_argument("--target", default="Dinas Bina Marga & PU", help="Sasaran pengguna inovasi")
+    pkmki_parser.add_argument("--nov", type=float, default=85.0, help="Skor kebaruan & potensi paten (0-100)")
+    pkmki_parser.add_argument("--func", type=float, default=85.0, help="Skor fungsi prototipe & validasi (0-100)")
+    pkmki_parser.add_argument("--des", type=float, default=85.0, help="Skor desain sistem & utilitas (0-100)")
+    pkmki_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
+    pkmki_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmki_parser.set_defaults(func=cmd_pkmki)
+
 
     args = parser.parse_args()
 
