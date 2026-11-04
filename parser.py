@@ -7559,6 +7559,86 @@ def calculate_optical_raman_amplifier_gain(
     }
 
 
+def calculate_5g_nr_bwp_switching_latency(
+    active_bwp_mhz: float = 20.0,
+    target_bwp_mhz: float = 100.0,
+    scs_source_khz: int = 15,
+    scs_target_khz: int = 30,
+    switch_trigger: str = "DCI",
+    delay_type: str = "TYPE1"
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP Rel-15/16 Bandwidth Part (BWP) switching latency and slot interruption duration,
+    accounting for numerology adaptation (mu1 to mu2), RF retuning delay (Type 1 vs Type 2),
+    trigger mechanism (DCI, Timer, RRC), lost slot transmission budget, and efficiency.
+    """
+    act_mhz = max(5.0, min(400.0, float(active_bwp_mhz)))
+    tgt_mhz = max(5.0, min(400.0, float(target_bwp_mhz)))
+    scs_src = max(15, min(120, int(scs_source_khz)))
+    scs_tgt = max(15, min(120, int(scs_target_khz)))
+    trigger = switch_trigger.strip().upper() if switch_trigger else "DCI"
+    dtype = delay_type.strip().upper() if delay_type else "TYPE1"
+
+    scs_to_mu = {15: 0, 30: 1, 60: 2, 120: 3}
+    mu_src = scs_to_mu.get(scs_src, 0)
+    mu_tgt = scs_to_mu.get(scs_tgt, 1)
+    min_mu = min(mu_src, mu_tgt)
+
+    # Base slot duration in microseconds: 1000 us / 2^mu
+    slot_src_us = 1000.0 / (2 ** mu_src)
+    slot_tgt_us = 1000.0 / (2 ** mu_tgt)
+    ref_slot_us = 1000.0 / (2 ** min_mu)
+
+    # 3GPP TS 38.133 Table 8.6.2-1 BWP switching delay definition
+    if dtype == "TYPE1":
+        # Type 1: subband switch within same RF channel bandwidth
+        base_delay_us = 200.0 if min_mu <= 1 else 150.0
+    else:
+        # Type 2: wider retuning requiring RF synthesizer relock
+        base_delay_us = 600.0 if min_mu <= 1 else 400.0
+
+    if trigger == "RRC":
+        # RRC reconfiguration signaling adds protocol processing delay
+        switch_delay_us = base_delay_us + 10000.0
+    elif trigger == "TIMER":
+        # Timer expiration adds scheduled slot boundary alignment
+        switch_delay_us = base_delay_us + ref_slot_us
+    else:
+        # DCI-triggered dynamic BWP switch
+        switch_delay_us = base_delay_us
+
+    # Lost slots during switching interruption
+    interrupted_slots_source = int(math.ceil(switch_delay_us / slot_src_us))
+    interrupted_slots_target = int(math.ceil(switch_delay_us / slot_tgt_us))
+
+    bandwidth_expansion_ratio = round(tgt_mhz / act_mhz, 2)
+
+    if switch_delay_us <= 300.0:
+        performance_tier = "OPTIMAL_LOW_LATENCY_SWITCH"
+        is_acceptable = True
+    elif switch_delay_us <= 1000.0:
+        performance_tier = "STANDARD_DCI_SWITCH"
+        is_acceptable = True
+    else:
+        performance_tier = "HIGH_LATENCY_RRC_SWITCH"
+        is_acceptable = False
+
+    return {
+        "active_bwp_mhz": act_mhz,
+        "target_bwp_mhz": tgt_mhz,
+        "scs_source_khz": scs_src,
+        "scs_target_khz": scs_tgt,
+        "switch_trigger": trigger,
+        "delay_type": dtype,
+        "switch_delay_us": round(switch_delay_us, 1),
+        "interrupted_slots_source": interrupted_slots_source,
+        "interrupted_slots_target": interrupted_slots_target,
+        "bandwidth_expansion_ratio": bandwidth_expansion_ratio,
+        "performance_tier": performance_tier,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
