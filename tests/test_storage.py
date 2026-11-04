@@ -2767,6 +2767,75 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["research_topic"], "Gelombang Mikro")
         self.assertIsNone(self.storage.get_pkm_re_proposal_by_id(99999))
 
+    def test_optical_raman_storage(self):
+        rec_id = self.storage.record_optical_raman(
+            link_identifier="SPAN-PWT-BDG-01",
+            pump_power_mw=500.0,
+            fiber_length_km=50.0,
+            effective_length_km=20.0,
+            on_off_gain_db=11.2,
+            net_gain_db=1.2,
+            eq_noise_figure_db=-6.7,
+            health_status="HIGH_GAIN_DISTRIBUTED_TRANSPARENT"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_raman()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["link_identifier"], "SPAN-PWT-BDG-01")
+        self.assertEqual(items[0]["on_off_gain_db"], 11.2)
+
+        single = self.storage.get_optical_raman_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["health_status"], "HIGH_GAIN_DISTRIBUTED_TRANSPARENT")
+        self.assertIsNone(self.storage.get_optical_raman_by_id(99999))
+
+    def test_nr_bwp_switching_storage(self):
+        rec_id = self.storage.record_nr_bwp_switching(
+            ue_identifier="UE-5G-BWP-01",
+            active_bwp_mhz=20.0,
+            target_bwp_mhz=100.0,
+            scs_source_khz=15,
+            scs_target_khz=30,
+            switch_trigger="DCI",
+            delay_type="TYPE1",
+            switch_delay_us=200.0,
+            interrupted_slots_target=4,
+            performance_tier="OPTIMAL_LOW_LATENCY_SWITCH"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_bwp_switching()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["ue_identifier"], "UE-5G-BWP-01")
+        self.assertEqual(items[0]["switch_delay_us"], 200.0)
+
+        single = self.storage.get_nr_bwp_switching_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["performance_tier"], "OPTIMAL_LOW_LATENCY_SWITCH")
+        self.assertIsNone(self.storage.get_nr_bwp_switching_by_id(99999))
+
+    def test_pkm_pm_proposal_storage(self):
+        rec_id = self.storage.record_pkm_pm_proposal(
+            student_leader="Siti Nurhaliza",
+            nim="1101210099",
+            proposal_title="Pemberdayaan UMKM Pengrajin Bambu",
+            partner_community="Komunitas Pengrajin Bambu",
+            empowerment_program="Pelatihan Digital & IoT",
+            composite_score=89.0,
+            letter_grade="A",
+            allocated_budget_idr=9500000.0,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_pm_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Siti Nurhaliza")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_pkm_pm_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["partner_community"], "Komunitas Pengrajin Bambu")
+        self.assertIsNone(self.storage.get_pkm_pm_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
