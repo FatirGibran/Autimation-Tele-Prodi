@@ -8328,6 +8328,80 @@ def calculate_satellite_cloud_attenuation_itu_r_p840(data: Dict[str, Any]) -> Di
     }
 
 
+def parse_pkm_ki_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates Belmawa Kemendikbudristek PKM-KI (Program Kreativitas Mahasiswa -
+    Karya Inovatif) proposals for S1 Teknik Telekomunikasi Telkom University Purwokerto.
+    Weights:
+      - Novelty & Intellectual Property Potential: 30%
+      - Working Prototype Functionality & Technical Validation: 35%
+      - Engineering System Design & User/Market Fit: 20%
+      - Budget Realism & Guideline Compliance: 15%
+    """
+    student_leader = str(data.get("student_leader", "Mahasiswa TT")).strip()
+    nim = str(data.get("nim", "1201200001")).strip()
+    proposal_title = str(data.get("proposal_title", "Prototipe IoT Pemantau Saluran")).strip()
+    prototype_type = str(data.get("prototype_type", "Fungsional Skala Lab (TRL 4-5)")).strip()
+    target_user = str(data.get("target_user", "Industri Manufaktur / UMKM")).strip()
+
+    s_nov = max(0.0, min(100.0, float(data.get("novelty_score", 0.0))))
+    s_func = max(0.0, min(100.0, float(data.get("functionality_score", 0.0))))
+    s_des = max(0.0, min(100.0, float(data.get("design_score", 0.0))))
+    s_bud = max(0.0, min(100.0, float(data.get("budget_score", 0.0))))
+
+    composite = round((0.30 * s_nov) + (0.35 * s_func) + (0.20 * s_des) + (0.15 * s_bud), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        allocated_budget_idr = 10000000
+        funding_status = "Lolos Pendanaan Belmawa PKM-KI Unggulan"
+        converted_sks = 4
+    elif is_funded:
+        allocated_budget_idr = 8500000
+        funding_status = "Lolos Pendanaan Belmawa PKM-KI Reguler"
+        converted_sks = 3
+    else:
+        allocated_budget_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "prototype_type": prototype_type,
+        "target_user": target_user,
+        "novelty_score": s_nov,
+        "functionality_score": s_func,
+        "design_score": s_des,
+        "budget_score": s_bud,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "allocated_budget_idr": allocated_budget_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
+
 
 
 
