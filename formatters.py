@@ -1791,6 +1791,36 @@ class TelegramFormatter:
             f"ℹ️ *Monitoring penguatan sinyal optik C-Band/L-Band pada jaringan DWDM metro/long-haul.*"
         )
 
+    @staticmethod
+    def format_pkm_ki_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        prototype_type: str,
+        target_user: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Karya Inovatif (PKM-KI) innovative prototype funding announcement for Telegram broadcast.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"💡 **Pengumuman Kelulusan Pendanaan Belmawa PKM-KI (Karya Inovatif)**\n\n"
+            f"🛠️ **Judul Karya Inovatif:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"📐 **Kategori Prototipe:** `{prototype_type.strip()}`\n"
+            f"🎯 **Sasaran Pengguna:** `{target_user.strip()}`\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Hibah:** `Rp {allocated_budget_idr:,}`\n"
+            f"🌟 **Status:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"🚀 *Selamat merealisasikan prototipe karya inovatif siap guna menuju perlindungan kekayaan intelektual (Paten)!*"
+        )
+
+
 
 
 
