@@ -1762,6 +1762,36 @@ class TelegramFormatter:
             f"🚀 *Selamat mengimplementasikan teknologi tepat guna untuk mendongkrak produktivitas mitra!*"
         )
 
+    @staticmethod
+    def format_optical_edfa_telegram(
+        amplifier_id: str,
+        pump_type: str,
+        pin_dbm: float,
+        saturated_gain_db: float,
+        output_power_dbm: float,
+        gain_compression_db: float,
+        noise_figure_db: float,
+        operational_regime: str,
+        is_saturated: bool
+    ) -> str:
+        """
+        Renders an optical EDFA amplifier gain saturation and noise figure telemetry alert for Telegram broadcast.
+        """
+        status_icon = "🔴" if gain_compression_db > 10.0 else ("🟡" if is_saturated else "🟢")
+        return (
+            f"🔦 **Telemetri Penguat Optik EDFA (Erbium-Doped Fiber Amplifier)**\n\n"
+            f"📡 **Unit ID Amplifier:** `{amplifier_id.strip()}`\n"
+            f"⚡ **Konfigurasi Pompa Optik:** `{pump_type.strip()}`\n"
+            f"📥 **Daya Masuk Sinyal (Pin):** `{pin_dbm:+.2f} dBm`\n"
+            f"📤 **Daya Keluar Sinyal (Pout):** `{output_power_dbm:+.2f} dBm`\n"
+            f"📈 **Gain Terukur (Saturated):** `{saturated_gain_db:.2f} dB`\n"
+            f"📉 **Kompresi Gain:** `-{gain_compression_db:.2f} dB`\n"
+            f"🛡️ **Noise Figure (NF):** `{noise_figure_db:.2f} dB`\n"
+            f"{status_icon} **Rezim Operasi:** `{operational_regime.strip()}`\n\n"
+            f"ℹ️ *Monitoring penguatan sinyal optik C-Band/L-Band pada jaringan DWDM metro/long-haul.*"
+        )
+
+
 
 
 
