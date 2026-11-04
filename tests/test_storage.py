@@ -2836,6 +2836,72 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["partner_community"], "Komunitas Pengrajin Bambu")
         self.assertIsNone(self.storage.get_pkm_pm_proposal_by_id(99999))
 
+    def test_optical_dwdm_storage(self):
+        rec_id = self.storage.record_optical_dwdm(
+            channel_wavelength_nm=1550.12,
+            signal_power_dbm=2.0,
+            ase_noise_power_dbm=-26.0,
+            osnr_db=28.0,
+            osnr_margin_db=13.5,
+            q_factor_db=14.2,
+            pre_fec_ber=1e-9,
+            health_status="Optimal (Headroom Tinggi)",
+            fec_compliant=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_dwdm()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["channel_wavelength_nm"], 1550.12)
+        self.assertEqual(items[0]["osnr_db"], 28.0)
+
+        single = self.storage.get_optical_dwdm_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["health_status"], "Optimal (Headroom Tinggi)")
+        self.assertIsNone(self.storage.get_optical_dwdm_by_id(99999))
+
+    def test_nr_carrier_aggregation_storage(self):
+        rec_id = self.storage.record_nr_carrier_aggregation(
+            config_name="CA_n78_2CC_200MHz",
+            carrier_count=2,
+            total_bandwidth_mhz=200.0,
+            aggregated_throughput_mbps=4674.0,
+            aggregated_throughput_gbps=4.674,
+            performance_tier="Ultra-High Multi-Gigabit (FR1 4x4 CA)"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_carrier_aggregation()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["config_name"], "CA_n78_2CC_200MHz")
+        self.assertEqual(items[0]["total_bandwidth_mhz"], 200.0)
+
+        single = self.storage.get_nr_carrier_aggregation_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["performance_tier"], "Ultra-High Multi-Gigabit (FR1 4x4 CA)")
+        self.assertIsNone(self.storage.get_nr_carrier_aggregation_by_id(99999))
+
+    def test_pkm_pi_proposal_storage(self):
+        rec_id = self.storage.record_pkm_pi_proposal(
+            student_leader="Ahmad Dani",
+            nim="1101210088",
+            proposal_title="Otomasi Suhu Kumbung Jamur IoT",
+            partner_enterprise="KWT Jamur Sejahtera",
+            technology_type="IoT & Smart Climate Control",
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=9500000.0,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_pi_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Ahmad Dani")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_pkm_pi_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["partner_enterprise"], "KWT Jamur Sejahtera")
+        self.assertIsNone(self.storage.get_pkm_pi_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
