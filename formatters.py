@@ -1706,6 +1706,34 @@ class TelegramFormatter:
             f"👏 *Selamat mengabdi dan memberdayakan masyarakat demi dampak sosial berkelanjutan!*"
         )
 
+    @staticmethod
+    def format_optical_dwdm_telegram(
+        channel_wavelength_nm: float,
+        signal_power_dbm: float,
+        ase_noise_power_dbm: float,
+        osnr_db: float,
+        osnr_margin_db: float,
+        q_factor_db: float,
+        pre_fec_ber: float,
+        health_status: str
+    ) -> str:
+        """
+        Renders an optical DWDM channel transmission OSNR & Q-Factor telemetry alert for Telegram broadcast.
+        """
+        status_icon = "🟢" if osnr_margin_db >= 5.0 else ("🟡" if osnr_margin_db >= 0.0 else "🔴")
+        return (
+            f"🌐 **Telemetri Kualitas Transmisi Serat Optik DWDM**\n\n"
+            f"📡 **Panjang Gelombang (λ):** `{channel_wavelength_nm:.2f} nm` (C-Band DWDM)\n"
+            f"⚡ **Daya Sinyal Optik:** `{signal_power_dbm:+.2f} dBm`\n"
+            f"📉 **Derau Akumulasi ASE (0.1 nm):** `{ase_noise_power_dbm:+.2f} dBm`\n"
+            f"📊 **Nilai OSNR Terukur:** `{osnr_db:.2f} dB`\n"
+            f"🛡️ **Margin di Atas FEC Limit:** `{osnr_margin_db:+.2f} dB`\n"
+            f"📐 **Kualitas Sinyal (Q-Factor):** `{q_factor_db:.2f} dB` (Est. BER: `{pre_fec_ber:.2e}`)\n"
+            f"{status_icon} **Status Kelayakan:** `{health_status.strip()}`\n\n"
+            f"ℹ️ *Monitoring performa lapisan fisik transmisi DWDM backbone telekomunikasi.*"
+        )
+
+
 
 
 
