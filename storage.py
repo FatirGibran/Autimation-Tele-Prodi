@@ -1453,6 +1453,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_pi_nim ON pkm_pi_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_edfa_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    amplifier_id TEXT NOT NULL,
+                    pump_type TEXT NOT NULL,
+                    pin_dbm REAL NOT NULL,
+                    saturated_gain_db REAL NOT NULL,
+                    output_power_dbm REAL NOT NULL,
+                    gain_compression_db REAL NOT NULL,
+                    noise_figure_db REAL NOT NULL,
+                    operational_regime TEXT NOT NULL,
+                    is_saturated INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_optical_edfa_amp_id ON optical_edfa_records(amplifier_id);")
+
 
 
 
@@ -6674,6 +6691,59 @@ class StorageManager:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def save_optical_edfa_record(
+        self,
+        amplifier_id: str,
+        pump_type: str,
+        pin_dbm: float,
+        saturated_gain_db: float,
+        output_power_dbm: float,
+        gain_compression_db: float,
+        noise_figure_db: float,
+        operational_regime: str,
+        is_saturated: bool = False
+    ) -> int:
+        """
+        Stores an optical EDFA amplifier telemetry record in SQLite storage.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_edfa_records (
+                    amplifier_id, pump_type, pin_dbm, saturated_gain_db,
+                    output_power_dbm, gain_compression_db, noise_figure_db,
+                    operational_regime, is_saturated
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(amplifier_id), str(pump_type), float(pin_dbm), float(saturated_gain_db),
+                float(output_power_dbm), float(gain_compression_db), float(noise_figure_db),
+                str(operational_regime), 1 if is_saturated else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_edfa_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent optical EDFA telemetry records.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_edfa_records ORDER BY id DESC LIMIT ?",
+                (max(1, int(limit)),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_edfa_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves an optical EDFA telemetry record by ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_edfa_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
 
 
 
