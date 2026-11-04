@@ -2633,6 +2633,46 @@ navigation: true
 
         return data
 
+    @staticmethod
+    def to_gatsby_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial content to Gatsby React MDX document format
+        with Gatsby Head API export and GraphQL frontmatter fields.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        pub_date = metadata.get("publish_date", "2026-11-04")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'slug: "{slug}"',
+            f'date: "{pub_date}"',
+            f'tags: {json.dumps(tags)}',
+            'framework: "gatsby"',
+            "gatsby: true",
+            "---",
+            "",
+            "import * as React from 'react';",
+            "",
+            "export const Head = () => (",
+            "  <>",
+            f"    <title>{title}</title>",
+            f'    <meta name="description" content="{desc}" />',
+            "  </>",
+            ");",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
+
 
 
 
