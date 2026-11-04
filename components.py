@@ -7584,11 +7584,6 @@ class EditorialComponents:
       </div>
     </div>"""
 
-    @classmethod
-
-
-
-
 
 render_5g_bwp_switching_svg = EditorialComponents.render_5g_bwp_switching_svg
 render_5g_carrier_aggregation_spectrum_svg = EditorialComponents.render_5g_carrier_aggregation_spectrum_svg

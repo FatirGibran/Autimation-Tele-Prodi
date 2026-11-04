@@ -2759,6 +2759,84 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Target BWP #2", html)
         self.assertIn("T_bwp = 200 μs", html)
 
+    def test_render_optical_dwdm_osnr_card(self):
+        html = EditorialComponents.render_optical_dwdm_osnr_card({
+            "channel_wavelength_nm": 1550.12,
+            "signal_power_dbm": 2.0,
+            "ase_noise_power_dbm": -26.0,
+            "osnr_db": 28.0,
+            "osnr_margin_db": 13.5,
+            "q_factor_db": 14.2,
+            "pre_fec_ber": 1e-9,
+            "health_status": "Optimal (Headroom Tinggi)"
+        })
+        self.assertIn("tu-dwdm-osnr-card", html)
+        self.assertIn("1550.12 nm", html)
+        self.assertIn("+2.0 dBm", html)
+        self.assertIn("28.00 dB", html)
+        self.assertIn("+13.50 dB", html)
+
+    def test_render_5g_carrier_aggregation_card(self):
+        html = EditorialComponents.render_5g_carrier_aggregation_card({
+            "carrier_count": 2,
+            "total_bandwidth_mhz": 200.0,
+            "aggregated_throughput_mbps": 4674.0,
+            "aggregated_throughput_gbps": 4.674,
+            "performance_tier": "Ultra-High Multi-Gigabit (FR1 4x4 CA)"
+        })
+        self.assertIn("tu-nr-ca-card", html)
+        self.assertIn("2 CCs", html)
+        self.assertIn("200.0 MHz", html)
+        self.assertIn("4,674.0 Mbps", html)
+        self.assertIn("4.674 Gbps", html)
+
+    def test_render_satellite_g_over_t_card(self):
+        html = EditorialComponents.render_satellite_g_over_t_card({
+            "antenna_diameter_m": 3.8,
+            "frequency_ghz": 12.5,
+            "elevation_angle_deg": 45.0,
+            "antenna_gain_dbi": 51.65,
+            "system_noise_temp_k": 98.4,
+            "g_over_t_db_k": 31.72,
+            "station_tier": "Stasiun Bumi Hub Utama (Gateway Grade)"
+        })
+        self.assertIn("tu-sat-gt-card", html)
+        self.assertIn("3.8 m", html)
+        self.assertIn("12.5 GHz", html)
+        self.assertIn("51.65 dBi", html)
+        self.assertIn("31.72 dB/K", html)
+
+    def test_render_pkm_pi_proposal_card(self):
+        html = EditorialComponents.render_pkm_pi_proposal_card({
+            "student_leader": "Ahmad Dani",
+            "nim": "1101210088",
+            "proposal_title": "Otomasi Suhu Kumbung Jamur IoT",
+            "partner_enterprise": "KWT Jamur Sejahtera",
+            "technology_type": "IoT & Smart Climate Control",
+            "composite_score": 88.5,
+            "letter_grade": "A",
+            "allocated_budget_idr": 9500000,
+            "converted_sks": 4,
+            "funding_status": "Lolos Pendanaan Belmawa PKM-PI Unggulan"
+        })
+        self.assertIn("tu-pkm-pi-card", html)
+        self.assertIn("Ahmad Dani", html)
+        self.assertIn("KWT Jamur Sejahtera", html)
+        self.assertIn("9,500,000", html)
+        self.assertIn("4 SKS MBKM", html)
+
+    def test_render_5g_carrier_aggregation_spectrum_svg(self):
+        html = EditorialComponents.render_5g_carrier_aggregation_spectrum_svg({
+            "total_bandwidth_mhz": 200.0,
+            "aggregated_throughput_gbps": 4.674,
+            "carrier_count": 2
+        })
+        self.assertIn("tu-nr-ca-svg-card", html)
+        self.assertIn("<svg", html)
+        self.assertIn("CC1 (Primary Cell - PCell)", html)
+        self.assertIn("CC2 (Secondary Cell - SCell)", html)
+        self.assertIn("4.674 Gbps", html)
+
 
 if __name__ == "__main__":
     unittest.main()
