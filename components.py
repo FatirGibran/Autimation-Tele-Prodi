@@ -7310,6 +7310,47 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_pm_proposal_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Evaluasi Proposal Belmawa PKM Pengabdian Masyarakat", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying Belmawa PKM-PM student community service proposal evaluation and funding status.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        leader = str(d.get("student_leader", "Siti Nurhaliza"))
+        nim = str(d.get("nim", "1101210099"))
+        prop_title = str(d.get("proposal_title", "Pemberdayaan UMKM Pengrajin Bambu Berbasis E-Commerce & IoT"))
+        partner = str(d.get("partner_community", "Komunitas Pengrajin Bambu Desa Sukaraja"))
+        prog = str(d.get("empowerment_program", "Pelatihan Pemasaran Digital & Kontrol Mutu IoT"))
+        score = float(d.get("composite_score", 89.0))
+        grade = str(d.get("letter_grade", "A"))
+        budget = float(d.get("allocated_budget_idr", 9500000))
+        status = str(d.get("funding_status", "Lolos Pendanaan Belmawa PKM-PM Unggulan"))
+        sks = int(d.get("converted_sks", 4))
+
+        badge_color = "#10b981" if "Lolos" in status else "#ef4444"
+
+        return f"""    <div class="tu-pkm-pm-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Belmawa PKM-PM Pengabdian Masyarakat</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{grade} ({score:.1f})</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Ketua Pengusul: <strong>{leader} ({nim})</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Mitra Komunitas: <strong>{partner}</strong></div>
+      </div>
+      <div style="background: #1e293b; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 12px;">
+        Judul Program: <strong>{prop_title}</strong> (Fokus: {prog})
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Status: <strong style="color: {badge_color};">{status}</strong></div>
+        <div>Alokasi Dana: <strong style="color: #facc15;">Rp {budget:,.0f}</strong></div>
+        <div>Rekognisi: <strong style="color: #38bdf8;">{sks} SKS MBKM</strong></div>
+      </div>
+    </div>"""
+
+render_pkm_pm_proposal_card = EditorialComponents.render_pkm_pm_proposal_card
 render_satellite_tropospheric_scintillation_card = EditorialComponents.render_satellite_tropospheric_scintillation_card
 render_5g_bwp_switching_card = EditorialComponents.render_5g_bwp_switching_card
 render_optical_raman_gain_card = EditorialComponents.render_optical_raman_gain_card
