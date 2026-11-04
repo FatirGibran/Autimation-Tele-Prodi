@@ -2673,6 +2673,92 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Downlink Frame (DL)", html)
         self.assertIn("Uplink Advance", html)
 
+    def test_render_optical_raman_gain_card(self):
+        html = EditorialComponents.render_optical_raman_gain_card({
+            "pump_power_mw": 500.0,
+            "fiber_length_km": 50.0,
+            "effective_length_km": 20.0,
+            "on_off_gain_db": 11.2,
+            "net_gain_db": 1.2,
+            "eq_noise_figure_db": -6.7,
+            "health_status": "HIGH_GAIN_DISTRIBUTED_TRANSPARENT"
+        })
+        self.assertIn("tu-optical-raman-card", html)
+        self.assertIn("500.0 mW", html)
+        self.assertIn("50.0 km", html)
+        self.assertIn("+11.20 dB", html)
+        self.assertIn("+1.20 dB", html)
+        self.assertIn("-6.70 dB", html)
+
+    def test_render_5g_bwp_switching_card(self):
+        html = EditorialComponents.render_5g_bwp_switching_card({
+            "active_bwp_mhz": 20.0,
+            "target_bwp_mhz": 100.0,
+            "scs_source_khz": 15,
+            "scs_target_khz": 30,
+            "switch_trigger": "DCI",
+            "delay_type": "TYPE1",
+            "switch_delay_us": 200.0,
+            "interrupted_slots_target": 4,
+            "bandwidth_expansion_ratio": 5.0,
+            "performance_tier": "OPTIMAL_LOW_LATENCY_SWITCH"
+        })
+        self.assertIn("tu-nr-bwp-switching-card", html)
+        self.assertIn("20 MHz", html)
+        self.assertIn("100 MHz", html)
+        self.assertIn("200.0 μs", html)
+        self.assertIn("4 slots", html)
+
+    def test_render_satellite_tropospheric_scintillation_card(self):
+        html = EditorialComponents.render_satellite_tropospheric_scintillation_card({
+            "surface_temperature_c": 25.0,
+            "surface_humidity_percent": 75.0,
+            "carrier_frequency_ghz": 12.0,
+            "elevation_angle_deg": 30.0,
+            "wet_refractivity_n_wet": 56.4,
+            "signal_fluctuation_sigma_db": 0.35,
+            "scintillation_fade_depth_db": 1.25,
+            "fading_severity": "LOW_SCINTILLATION_ACCEPTABLE"
+        })
+        self.assertIn("tu-satellite-scintillation-card", html)
+        self.assertIn("25.0°C", html)
+        self.assertIn("12.0 GHz", html)
+        self.assertIn("0.350 dB", html)
+        self.assertIn("1.25 dB", html)
+
+    def test_render_pkm_pm_proposal_card(self):
+        html = EditorialComponents.render_pkm_pm_proposal_card({
+            "student_leader": "Siti Nurhaliza",
+            "nim": "1101210099",
+            "proposal_title": "Pemberdayaan UMKM Pengrajin Bambu Berbasis E-Commerce & IoT",
+            "partner_community": "Komunitas Pengrajin Bambu Desa Sukaraja",
+            "empowerment_program": "Pelatihan Pemasaran Digital & Kontrol Mutu IoT",
+            "composite_score": 89.0,
+            "letter_grade": "A",
+            "allocated_budget_idr": 9500000,
+            "converted_sks": 4,
+            "funding_status": "Lolos Pendanaan Belmawa PKM-PM Unggulan"
+        })
+        self.assertIn("tu-pkm-pm-card", html)
+        self.assertIn("Siti Nurhaliza", html)
+        self.assertIn("9,500,000", html)
+        self.assertIn("4 SKS MBKM", html)
+
+    def test_render_5g_bwp_switching_svg(self):
+        html = EditorialComponents.render_5g_bwp_switching_svg({
+            "active_bwp_mhz": 20.0,
+            "target_bwp_mhz": 100.0,
+            "switch_delay_us": 200.0,
+            "scs_source_khz": 15,
+            "scs_target_khz": 30,
+            "switch_trigger": "DCI"
+        })
+        self.assertIn("tu-nr-bwp-svg-card", html)
+        self.assertIn("<svg", html)
+        self.assertIn("Active BWP #1", html)
+        self.assertIn("Target BWP #2", html)
+        self.assertIn("T_bwp = 200 μs", html)
+
 
 if __name__ == "__main__":
     unittest.main()
