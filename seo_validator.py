@@ -7179,6 +7179,57 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_third_party_script_loading_strategy(html_content: str) -> Dict[str, Any]:
+        """
+        Audits third-party script loading strategies to optimize Core Web Vitals (INP, TBT, FCP).
+        Enforces non-blocking execution attributes ('async' or 'defer') on all external script dependencies.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_scripts": 0,
+                "async_defer_scripts": 0,
+                "blocking_scripts_count": 0,
+                "third_party_scripts_count": 0,
+                "is_optimized": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        scripts = soup.find_all("script", src=True)
+
+        issues = []
+        async_defer_count = 0
+        third_party_count = 0
+        blocking_count = 0
+
+        for s in scripts:
+            src = (s.get("src") or "").strip()
+            is_async = s.has_attr("async")
+            is_defer = s.has_attr("defer")
+            is_external = src.startswith(("http://", "https://", "//"))
+            is_third_party = is_external and "telkomuniversity.ac.id" not in src.lower()
+
+            if is_third_party:
+                third_party_count += 1
+
+            if is_async or is_defer:
+                async_defer_count += 1
+            else:
+                blocking_count += 1
+                domain_label = "pihak ketiga" if is_third_party else "eksternal"
+                issues.append(f"Skrip {domain_label} '{src}' dimuat secara synchronous parser-blocking tanpa atribut 'async' atau 'defer'.")
+
+        return {
+            "total_scripts": len(scripts),
+            "async_defer_scripts": async_defer_count,
+            "blocking_scripts_count": blocking_count,
+            "third_party_scripts_count": third_party_count,
+            "is_optimized": blocking_count == 0,
+            "issues": issues
+        }
+
+
 
 
 
