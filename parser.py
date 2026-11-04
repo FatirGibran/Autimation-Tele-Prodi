@@ -7864,6 +7864,105 @@ def calculate_optical_dwdm_osnr_ber_margin(
     }
 
 
+def calculate_5g_nr_carrier_aggregation_throughput(
+    component_carriers: Optional[List[Dict[str, Any]]] = None,
+    scaling_factor: float = 1.0,
+    overhead_ratio: float = 0.14
+) -> Dict[str, Any]:
+    """
+    Calculates aggregated theoretical peak data rate for 5G NR Carrier Aggregation (CA)
+    combining Primary Cell (PCell) and Secondary Cells (SCells) according to 3GPP TS 38.306 Section 4.1.2.
+    """
+    if component_carriers is None:
+        component_carriers = [
+            {"name": "CC1 (PCell)", "bandwidth_mhz": 100.0, "scs_khz": 30, "mimo_layers": 4, "modulation": "256QAM"},
+            {"name": "CC2 (SCell)", "bandwidth_mhz": 100.0, "scs_khz": 30, "mimo_layers": 4, "modulation": "256QAM"}
+        ]
+
+    # Standard maximum transmission code rate Rmax = 948 / 1024
+    r_max = 948.0 / 1024.0
+    scale = float(scaling_factor)
+    oh = float(overhead_ratio)
+
+    # 3GPP TS 38.101-1 PRB mapping for common FR1 channel bandwidths
+    prb_table = {
+        (100.0, 30): 273, (100.0, 60): 135,
+        (80.0, 30): 217, (80.0, 60): 107,
+        (60.0, 30): 162, (60.0, 60): 79,
+        (50.0, 30): 133, (50.0, 60): 65,
+        (40.0, 30): 106, (40.0, 15): 216,
+        (20.0, 30): 51, (20.0, 15): 106,
+        (10.0, 15): 52, (15.0, 15): 79, (5.0, 15): 25
+    }
+
+    mod_orders = {
+        "QPSK": 2, "16QAM": 4, "64QAM": 6, "256QAM": 8, "1024QAM": 10
+    }
+
+    processed_ccs = []
+    total_mbps = 0.0
+    total_bw_mhz = 0.0
+
+    for idx, cc in enumerate(component_carriers):
+        name = str(cc.get("name", f"CC{idx+1}"))
+        bw = float(cc.get("bandwidth_mhz", 100.0))
+        scs = int(cc.get("scs_khz", 30))
+        layers = int(cc.get("mimo_layers", 4))
+        mod_str = str(cc.get("modulation", "256QAM")).upper()
+        qm = mod_orders.get(mod_str, 8)
+
+        # Lookup or calculate PRB
+        prb = prb_table.get((bw, scs))
+        if not prb:
+            prb = max(20, int((bw * 1000.0 - 1000.0) / (12.0 * scs)))
+
+        # Numerology mu = log2(SCS / 15)
+        mu = 0 if scs == 15 else (1 if scs == 30 else (2 if scs == 60 else 3))
+        # Slot duration Ts in seconds: 1e-3 / 2^mu
+        ts_sec = 1e-3 / (2 ** mu)
+
+        # Peak data rate formula per 3GPP TS 38.306:
+        # Rate = 1e-6 * layers * Qm * f * Rmax * (PRB * 12 / Ts) * (1 - OH)
+        cc_rate_mbps = round(
+            1e-6 * layers * qm * scale * r_max * (prb * 12.0 / ts_sec) * (1.0 - oh),
+            2
+        )
+
+        total_mbps += cc_rate_mbps
+        total_bw_mhz += bw
+        processed_ccs.append({
+            "name": name,
+            "bandwidth_mhz": bw,
+            "scs_khz": scs,
+            "mimo_layers": layers,
+            "modulation": mod_str,
+            "prb_count": prb,
+            "peak_throughput_mbps": cc_rate_mbps
+        })
+
+    agg_mbps = round(total_mbps, 2)
+    agg_gbps = round(agg_mbps / 1000.0, 3)
+
+    if agg_gbps >= 3.0:
+        perf_tier = "Ultra-High Multi-Gigabit (FR1 4x4 CA)"
+    elif agg_gbps >= 1.5:
+        perf_tier = "High Gigabit (FR1 CA)"
+    elif agg_gbps >= 0.5:
+        perf_tier = "Standard 5G Broadband"
+    else:
+        perf_tier = "Basic Sub-6GHz"
+
+    return {
+        "carrier_count": len(processed_ccs),
+        "total_bandwidth_mhz": total_bw_mhz,
+        "aggregated_throughput_mbps": agg_mbps,
+        "aggregated_throughput_gbps": agg_gbps,
+        "performance_tier": perf_tier,
+        "carriers": processed_ccs
+    }
+
+
+
 
 
 
