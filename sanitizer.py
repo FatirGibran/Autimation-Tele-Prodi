@@ -2453,6 +2453,38 @@ def sanitize_html5_dialog_backdrop_controls(html: str) -> str:
     return re.sub(r'<dialog\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_dialog, html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_canvas_scriptable_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <canvas> elements by enforcing positive numeric width and height bounds (1 to 8192 px),
+    stripping scriptable context or event attributes (oncontextlost, oncontextrestored, onclick),
+    and preserving semantic fallback markup within the canvas container.
+    """
+    if not html or "<canvas" not in html.lower():
+        return html
+
+    def fix_canvas(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:context|willreadfrequently)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate width and height attributes
+        for dim in ("width", "height"):
+            dim_m = re.search(rf'\b{dim}=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+            if dim_m:
+                val = dim_m.group(1).strip()
+                try:
+                    num = int(val)
+                    if num <= 0 or num > 8192:
+                        tag = re.sub(rf'\s+{dim}=["\'][^"\']*["\']', f' {dim}="300"' if dim == 'width' else f' {dim}="150"', tag, flags=re.IGNORECASE)
+                except ValueError:
+                    tag = re.sub(rf'\s+{dim}=["\'][^"\']*["\']', f' {dim}="300"' if dim == 'width' else f' {dim}="150"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    return re.sub(r'<canvas\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_canvas, html, flags=re.IGNORECASE)
+
+
 
 
 
