@@ -8104,6 +8104,87 @@ def parse_pkm_pi_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_edfa_saturation_noise_figure(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Calculates optical Erbium-Doped Fiber Amplifier (EDFA) saturated gain, output power,
+    gain compression, noise figure (NF), and amplified spontaneous emission (ASE) power
+    under steady-state signal input power conditions.
+    """
+    amplifier_id = str(data.get("amplifier_id", "EDFA-C-BAND-01")).strip()
+    pump_type = str(data.get("pump_type", "980nm Co-directional")).strip()
+    pin_dbm = float(data.get("pin_dbm", -20.0))
+    g0_db = float(data.get("small_signal_gain_db", 30.0))
+    psat_out_dbm = float(data.get("saturation_output_power_dbm", 15.0))
+    nsp = float(data.get("spontaneous_emission_factor", 1.4))
+    wavelength_nm = float(data.get("wavelength_nm", 1550.0))
+    optical_bandwidth_nm = float(data.get("optical_bandwidth_nm", 0.1))
+
+    # Convert dBm to mW and linear gain
+    pin_mw = 10.0 ** (pin_dbm / 10.0)
+    psat_mw = 10.0 ** (psat_out_dbm / 10.0)
+    g0_lin = 10.0 ** (g0_db / 10.0)
+
+    # Solve saturated gain G: (Pin / Psat) * G^2 + G - G0 = 0
+    # Standard quadratic solution for positive real root
+    if pin_mw > 0 and psat_mw > 0:
+        a = pin_mw / psat_mw
+        b = 1.0
+        c = -g0_lin
+        discriminant = (b * b) - (4.0 * a * c)
+        g_lin = (-b + math.sqrt(max(0.0, discriminant))) / (2.0 * a)
+    else:
+        g_lin = g0_lin
+
+    g_lin = max(1.0, g_lin)
+    gain_db = round(10.0 * math.log10(g_lin), 2)
+    pout_mw = pin_mw * g_lin
+    pout_dbm = round(10.0 * math.log10(pout_mw), 2)
+    gain_compression_db = round(max(0.0, g0_db - gain_db), 2)
+
+    # Noise figure calculation
+    nf_lin = (2.0 * nsp * (g_lin - 1.0) / g_lin) + (1.0 / g_lin)
+    nf_db = round(10.0 * math.log10(max(1.0, nf_lin)), 2)
+
+    # ASE noise power in optical bandwidth: P_ase = 2 * nsp * (G - 1) * h * nu * delta_nu
+    # delta_nu (Hz) = (c / lambda^2) * delta_lambda
+    h = 6.62607015e-34
+    c = 2.99792458e8
+    lam_m = wavelength_nm * 1e-9
+    nu = c / lam_m
+    delta_lam_m = optical_bandwidth_nm * 1e-9
+    delta_nu = (c / (lam_m * lam_m)) * delta_lam_m
+
+    p_ase_w = 2.0 * nsp * (g_lin - 1.0) * h * nu * delta_nu
+    p_ase_mw = p_ase_w * 1000.0
+    p_ase_dbm = round(10.0 * math.log10(max(1e-18, p_ase_mw)), 2)
+
+    # Regime categorization
+    if gain_compression_db < 3.0:
+        operational_regime = "Small-Signal Linear Regime"
+    elif gain_compression_db <= 10.0:
+        operational_regime = "Moderate Gain Saturation"
+    else:
+        operational_regime = "Deep Saturation Regime"
+
+    return {
+        "amplifier_id": amplifier_id,
+        "pump_type": pump_type,
+        "pin_dbm": pin_dbm,
+        "small_signal_gain_db": g0_db,
+        "saturation_output_power_dbm": psat_out_dbm,
+        "wavelength_nm": wavelength_nm,
+        "optical_bandwidth_nm": optical_bandwidth_nm,
+        "saturated_gain_db": gain_db,
+        "output_power_dbm": pout_dbm,
+        "gain_compression_db": gain_compression_db,
+        "noise_figure_db": nf_db,
+        "ase_noise_power_dbm": p_ase_dbm,
+        "operational_regime": operational_regime,
+        "is_saturated": gain_compression_db >= 3.0
+    }
+
+
+
 
 
 
