@@ -734,6 +734,11 @@ class HTMLSanitizer:
             cleaned = sanitize_html5_table_colgroup_attributes(cleaned)
             warnings.append("Sanitized HTML5 table colgroup and col styling attributes.")
 
+        # 8ad. Sanitize HTML5 del and ins editorial revision elements
+        if "<del" in cleaned.lower() or "<ins" in cleaned.lower():
+            cleaned = sanitize_html5_del_ins_datetime_attributes(cleaned)
+            warnings.append("Sanitized HTML5 del and ins citation and datetime attributes.")
+
         return cleaned, warnings
 
 
@@ -2771,6 +2776,44 @@ def sanitize_html5_table_colgroup_attributes(html: str) -> str:
 
     cleaned = re.sub(r'<(?:colgroup|col)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_col_or_group, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_del_ins_datetime_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <del> and <ins> editorial revision elements by stripping
+    executable JavaScript event handlers, invalid inline styles, validating
+    cite attribute URLs against malicious schemes (javascript:, vbscript:, data:),
+    and validating datetime attributes against script injections.
+    """
+    if not html or ("<del" not in html.lower() and "<ins" not in html.lower()):
+        return html
+
+    cleaned = html
+
+    def fix_del_ins(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize cite attribute: URL
+        cite_m = re.search(r'\bcite=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if cite_m:
+            cval = cite_m.group(1).strip()
+            if cval.lower().startswith(("javascript:", "vbscript:", "data:")) or re.search(r'[<>"\'`]', cval):
+                tag = re.sub(r'\s+cite=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize datetime attribute: valid timestamp / date string without dangerous payloads
+        dt_m = re.search(r'\bdatetime=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if dt_m:
+            dtval = dt_m.group(1).strip()
+            if dtval.lower().startswith(("javascript:", "data:")) or re.search(r'[<>"\'`]', dtval):
+                tag = re.sub(r'\s+datetime=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    cleaned = re.sub(r'<(?:del|ins)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_del_ins, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
