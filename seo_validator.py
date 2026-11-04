@@ -7367,6 +7367,68 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_label_in_name_consistency(html_content: str) -> Dict[str, Any]:
+        """
+        Audits visual label and programmatic accessible name consistency under WCAG 2.1
+        Success Criterion 2.5.3 (Label in Name).
+        Ensures that interactive elements (buttons, links, form inputs) with visible text labels
+        contain the visible text verbatim within their programmatic accessible name (aria-label).
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_labeled_elements": 0,
+                "consistent_elements_count": 0,
+                "inconsistent_elements_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        interactive_tags = soup.find_all(lambda tag: tag.name in {"button", "a", "summary"} and tag.has_attr("aria-label"))
+
+        if not interactive_tags:
+            return {
+                "total_labeled_elements": 0,
+                "consistent_elements_count": 0,
+                "inconsistent_elements_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        total_labeled = 0
+        consistent_count = 0
+        inconsistent_count = 0
+        issues = []
+
+        for el in interactive_tags:
+            visible_text = el.get_text().strip()
+            aria_label = (el.get("aria-label") or "").strip()
+
+            if not visible_text:
+                continue
+
+            total_labeled += 1
+            norm_visible = re.sub(r'\s+', ' ', visible_text).lower()
+            norm_aria = re.sub(r'\s+', ' ', aria_label).lower()
+
+            if norm_visible in norm_aria:
+                consistent_count += 1
+            else:
+                inconsistent_count += 1
+                issues.append(f"<{el.name}>: Teks visual '{visible_text}' tidak ditemukan dalam accessible name aria-label='{aria_label}' (WCAG 2.5.3).")
+
+        is_compliant = (inconsistent_count == 0)
+
+        return {
+            "total_labeled_elements": total_labeled,
+            "consistent_elements_count": consistent_count,
+            "inconsistent_elements_count": inconsistent_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
+
 
 
 
