@@ -8256,6 +8256,79 @@ def calculate_5g_nr_cross_carrier_scheduling_latency(data: Dict[str, Any]) -> Di
     }
 
 
+def calculate_satellite_cloud_attenuation_itu_r_p840(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Calculates Earth-space satellite link cloud and fog attenuation based on
+    ITU-R P.840 recommendation using Rayleigh approximation for liquid water
+    dielectric permittivity across microwave and millimeter bands.
+    """
+    satellite_name = str(data.get("satellite_name", "Telkom-4 / Merah Putih")).strip()
+    frequency_ghz = max(1.0, min(100.0, float(data.get("frequency_ghz", 28.0))))
+    elevation_deg = max(5.0, min(90.0, float(data.get("elevation_angle_deg", 45.0))))
+    liquid_water_density = max(0.01, min(5.0, float(data.get("liquid_water_density_gm3", 0.5))))
+    cloud_thickness_km = max(0.1, min(10.0, float(data.get("cloud_thickness_km", 1.5))))
+    temp_c = max(-40.0, min(40.0, float(data.get("temperature_celsius", 5.0))))
+
+    # Temperature in Kelvin and theta parameter
+    t_k = temp_c + 273.15
+    theta = 300.0 / t_k
+
+    # ITU-R P.840 dielectric model parameters
+    eps0 = 77.66 + (103.3 * (theta - 1.0))
+    eps1 = 0.0671 * eps0
+    eps2 = 3.52
+
+    # Relaxation frequencies in GHz
+    fp = 20.20 - (146.0 * (theta - 1.0)) + (316.0 * ((theta - 1.0) ** 2))
+    fs = 39.8 * fp
+
+    # Complex permittivity calculation
+    f = frequency_ghz
+    eps_prime = ((eps0 - eps1) / (1.0 + ((f / fp) ** 2))) + ((eps1 - eps2) / (1.0 + ((f / fs) ** 2))) + eps2
+    eps_double_prime = ((f * (eps0 - eps1)) / (fp * (1.0 + ((f / fp) ** 2)))) + ((f * (eps1 - eps2)) / (fs * (1.0 + ((f / fs) ** 2))))
+
+    eta = (2.0 + eps_prime) / eps_double_prime
+
+    # Specific attenuation coefficient Kl in (dB/km) / (g/m^3)
+    kl = (0.819 * f) / (eps_double_prime * (1.0 + (eta ** 2)))
+
+    # Cloud liquid water specific attenuation gamma_c (dB/km)
+    gamma_c = kl * liquid_water_density
+
+    # Slant path through cloud layer
+    elev_rad = math.radians(elevation_deg)
+    slant_path_km = cloud_thickness_km / math.sin(elev_rad)
+
+    # Total cloud attenuation A_c in dB
+    total_attenuation_db = round(gamma_c * slant_path_km, 3)
+
+    if total_attenuation_db < 0.5:
+        severity = "Negligible Attenuation"
+        upc_recommended = False
+    elif total_attenuation_db <= 2.5:
+        severity = "Moderate Attenuation (Link Margin Required)"
+        upc_recommended = False
+    else:
+        severity = "Severe Attenuation (Uplink Power Control Recommended)"
+        upc_recommended = True
+
+    return {
+        "satellite_name": satellite_name,
+        "frequency_ghz": frequency_ghz,
+        "elevation_angle_deg": elevation_deg,
+        "liquid_water_density_gm3": liquid_water_density,
+        "cloud_thickness_km": cloud_thickness_km,
+        "temperature_celsius": temp_c,
+        "specific_attenuation_coeff_kl": round(kl, 5),
+        "specific_attenuation_gamma_db_per_km": round(gamma_c, 4),
+        "slant_path_km": round(slant_path_km, 3),
+        "total_cloud_attenuation_db": total_attenuation_db,
+        "attenuation_severity": severity,
+        "uplink_power_control_recommended": upc_recommended
+    }
+
+
+
 
 
 
