@@ -7724,6 +7724,81 @@ def calculate_satellite_tropospheric_scintillation_itu_r_p618(
     }
 
 
+def parse_pkm_pm_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates Belmawa PKM Pengabdian Kepada Masyarakat (PKM-PM) proposals,
+    quantifying community partner problem diagnosis (30%), empowerment solution appropriateness (35%),
+    social sustainability & behavioral change (20%), and budget & schedule efficiency (15%).
+    """
+    student_leader = str(data.get("student_leader", "Ketua Tim PKM-PM")).strip()
+    nim = str(data.get("nim", "")).strip()
+    proposal_title = str(data.get("proposal_title", "Pemberdayaan Masyarakat Cerdas")).strip()
+    partner_community = str(data.get("partner_community", "Komunitas Masyarakat Mitra")).strip()
+    empowerment_program = str(data.get("empowerment_program", "Pelatihan Literasi Digital & IoT")).strip()
+
+    s_diag = max(0.0, min(100.0, float(data.get("diagnosis_score", 85.0))))
+    s_sol = max(0.0, min(100.0, float(data.get("solution_score", 85.0))))
+    s_sust = max(0.0, min(100.0, float(data.get("sustainability_score", 85.0))))
+    s_bud = max(0.0, min(100.0, float(data.get("budget_score", 85.0))))
+
+    composite = round(
+        (0.30 * s_diag) +
+        (0.35 * s_sol) +
+        (0.20 * s_sust) +
+        (0.15 * s_bud),
+        2
+    )
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        allocated_budget_idr = 9500000
+        funding_status = "Lolos Pendanaan Belmawa PKM-PM Unggulan"
+        converted_sks = 4
+    elif is_funded:
+        allocated_budget_idr = 8000000
+        funding_status = "Lolos Pendanaan Belmawa PKM-PM Reguler"
+        converted_sks = 3
+    else:
+        allocated_budget_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "partner_community": partner_community,
+        "empowerment_program": empowerment_program,
+        "diagnosis_score": s_diag,
+        "solution_score": s_sol,
+        "sustainability_score": s_sust,
+        "budget_score": s_bud,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "allocated_budget_idr": allocated_budget_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
 
 
 
