@@ -6837,6 +6837,74 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_form_input_autocomplete_attributes(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits form input fields according to WCAG 2.1 SC 1.3.5 (Identify Input Purpose),
+        verifying that inputs collecting common user information (name, email, tel, address, password)
+        include appropriate 'autocomplete' attributes to facilitate automated assistive input.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "inputs_count": 0,
+                "personal_inputs_count": 0,
+                "valid_autocomplete_count": 0,
+                "missing_autocomplete_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        inputs = soup.find_all("input")
+        issues = []
+
+        personal_patterns = {
+            "name": re.compile(r'\b(?:name|nama|fullname|first_?name|last_?name)\b', re.IGNORECASE),
+            "email": re.compile(r'\b(?:email|e-mail|surel)\b', re.IGNORECASE),
+            "tel": re.compile(r'\b(?:tel|phone|telepon|hp|handphone|mobile)\b', re.IGNORECASE),
+            "password": re.compile(r'\b(?:pass|password|sandi)\b', re.IGNORECASE),
+            "address": re.compile(r'\b(?:address|alamat|street|city|postal|zip)\b', re.IGNORECASE)
+        }
+
+        personal_inputs = 0
+        valid_autocomplete = 0
+        missing_autocomplete = 0
+
+        for inp in inputs:
+            itype = (inp.get("type") or "text").strip().lower()
+            if itype in {"hidden", "submit", "reset", "button", "checkbox", "radio"}:
+                continue
+
+            name_attr = (inp.get("name") or "").strip()
+            id_attr = (inp.get("id") or "").strip()
+            identifier = f"{name_attr} {id_attr} {itype}"
+
+            is_personal = False
+            for kind, pat in personal_patterns.items():
+                if pat.search(identifier) or itype == kind:
+                    is_personal = True
+                    break
+
+            if is_personal:
+                personal_inputs += 1
+                autoc = (inp.get("autocomplete") or "").strip().lower()
+                if autoc and autoc != "invalid":
+                    valid_autocomplete += 1
+                else:
+                    missing_autocomplete += 1
+                    issues.append(f"Elemen input <input name='{name_attr or id_attr}' type='{itype}'> tidak memiliki atribut autocomplete yang sesuai.")
+
+        is_compliant = (missing_autocomplete == 0)
+
+        return {
+            "inputs_count": len(inputs),
+            "personal_inputs_count": personal_inputs,
+            "valid_autocomplete_count": valid_autocomplete,
+            "missing_autocomplete_count": missing_autocomplete,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
