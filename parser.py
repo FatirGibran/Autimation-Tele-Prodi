@@ -7491,6 +7491,74 @@ def parse_pkm_re_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_raman_amplifier_gain(
+    pump_power_mw: float = 500.0,
+    fiber_length_km: float = 50.0,
+    raman_gain_coeff_m_w: float = 0.8e-13,
+    effective_area_um2: float = 80.0,
+    fiber_loss_db_km: float = 0.2,
+    noise_figure_excess_db: float = 1.5
+) -> Dict[str, Any]:
+    """
+    Calculates distributed Optical Raman Amplifier (DRA) performance in DWDM fiber links,
+    including effective fiber interaction length, linear and logarithmic ON-OFF Raman gain,
+    net gain after span fiber attenuation, equivalent ASE noise figure (NF), and transparency state.
+    """
+    p_mw = max(10.0, float(pump_power_mw))
+    p_w = p_mw * 1e-3
+    length_km = max(1.0, float(fiber_length_km))
+    g_r = max(1e-15, float(raman_gain_coeff_m_w))
+    a_eff_um2 = max(20.0, float(effective_area_um2))
+    a_eff_m2 = a_eff_um2 * 1e-12
+    loss_db = max(0.05, float(fiber_loss_db_km))
+    nf_excess = max(0.0, float(noise_figure_excess_db))
+
+    # Convert fiber attenuation to 1/km natural nepers
+    alpha_p = loss_db * (math.log(10.0) / 10.0)
+
+    # Effective interaction length: Leff = (1 - exp(-alpha * L)) / alpha
+    exp_factor = math.exp(-alpha_p * length_km)
+    l_eff_km = (1.0 - exp_factor) / alpha_p
+    l_eff_m = l_eff_km * 1000.0
+
+    # On-off gain linear: exp(gR * Pp * Leff / Aeff)
+    exponent = (g_r * p_w * l_eff_m) / a_eff_m2
+    exponent = min(25.0, exponent)
+    g_on_off_linear = math.exp(exponent)
+    g_on_off_db = round(10.0 * math.log10(g_on_off_linear), 2)
+
+    total_passive_loss_db = round(loss_db * length_km, 2)
+    net_gain_db = round(g_on_off_db - total_passive_loss_db, 2)
+
+    # Distributed Raman amplifier equivalent noise figure relative to span input
+    eq_noise_figure_db = round(-g_on_off_db + nf_excess + 3.0, 2)
+
+    if g_on_off_db >= 10.0 and net_gain_db >= 0.0:
+        health_status = "HIGH_GAIN_DISTRIBUTED_TRANSPARENT"
+        is_acceptable = True
+    elif g_on_off_db >= 5.0:
+        health_status = "MODERATE_GAIN_ASSISTED"
+        is_acceptable = True
+    else:
+        health_status = "LOW_GAIN_MARGINAL"
+        is_acceptable = False
+
+    return {
+        "pump_power_mw": round(p_mw, 1),
+        "fiber_length_km": round(length_km, 2),
+        "effective_length_km": round(l_eff_km, 2),
+        "effective_area_um2": round(a_eff_um2, 1),
+        "raman_gain_coeff_m_w": g_r,
+        "fiber_loss_db_km": round(loss_db, 3),
+        "total_passive_loss_db": total_passive_loss_db,
+        "on_off_gain_db": g_on_off_db,
+        "net_gain_db": net_gain_db,
+        "eq_noise_figure_db": eq_noise_figure_db,
+        "health_status": health_status,
+        "is_acceptable": is_acceptable
+    }
+
+
 
 
 
