@@ -2875,6 +2875,81 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Ketua Riset Test", out)
 
+    def test_cmd_raman(self):
+        class ArgsAdd:
+            action = "add"
+            link = "SPAN-RAMAN-CLI-01"
+            pump = 600.0
+            length = 60.0
+            loss = 0.2
+            area = 80.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_raman(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Optical Raman Amplifier berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_raman(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("SPAN-RAMAN-CLI-01", out)
+
+    def test_cmd_bwp(self):
+        class ArgsAdd:
+            action = "add"
+            ue = "UE-BWP-CLI-01"
+            active = 20.0
+            target = 100.0
+            scs_src = 15
+            scs_tgt = 30
+            trigger = "DCI"
+            type = "TYPE1"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bwp(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR BWP Switching berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_bwp(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("UE-BWP-CLI-01", out)
+
+    def test_cmd_pkmpm(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Ketua PM Test"
+            nim = "1101218888"
+            title = "Pemberdayaan Masyarakat Desa Wisata"
+            partner = "Kelompok Sadar Wisata Desa"
+            program = "Digital Marketing Wisata"
+            diag = 88.0
+            sol = 86.0
+            sust = 87.0
+            budget = 85.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmpm(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-PM berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmpm(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Ketua PM Test", out)
+
 
 if __name__ == "__main__":
     unittest.main()
