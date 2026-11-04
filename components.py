@@ -7207,6 +7207,40 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_raman_gain_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Penguatan Raman Terdistribusi (DRA) DWDM", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying distributed optical Raman amplification telemetry.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        pump = float(d.get("pump_power_mw", 500.0))
+        length = float(d.get("fiber_length_km", 50.0))
+        leff = float(d.get("effective_length_km", 20.0))
+        on_off = float(d.get("on_off_gain_db", 11.2))
+        net = float(d.get("net_gain_db", 1.2))
+        nf = float(d.get("eq_noise_figure_db", -6.7))
+        status = str(d.get("health_status", "HIGH_GAIN_DISTRIBUTED_TRANSPARENT"))
+
+        badge_color = "#10b981" if "HIGH" in status else ("#0284c7" if "MODERATE" in status else "#f59e0b")
+
+        return f"""    <div class="tu-optical-raman-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Distributed Raman Amplifier (DRA)</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 13px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Daya Pompa (Pp): <strong>{pump:.1f} mW</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Panjang Fiber (L): <strong>{length:.1f} km</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Panjang Efektif Leff: <strong>{leff:.1f} km</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Gain On-Off: <strong style="color: #38bdf8;">+{on_off:.2f} dB</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Net Span Gain: <strong style="color: #34d399;">{net:+.2f} dB</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Eq. Noise Figure: <strong style="color: #facc15;">{nf:.2f} dB</strong></div>
+      </div>
+    </div>"""
+
+render_optical_raman_gain_card = EditorialComponents.render_optical_raman_gain_card
 render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
 render_nr_timing_advance_card = EditorialComponents.render_5g_nr_timing_advance_card
 render_satellite_rain_attenuation_card = EditorialComponents.render_satellite_rain_attenuation_card
