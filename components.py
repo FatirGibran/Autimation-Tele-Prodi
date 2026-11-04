@@ -7436,10 +7436,41 @@ class EditorialComponents:
     </div>"""
 
     @classmethod
+    def render_5g_carrier_aggregation_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Kapasitas Agregasi Kanal 5G NR Carrier Aggregation (CA)", **kwargs) -> str:
+        """
+        Renders an Elementor card showing 5G NR Carrier Aggregation peak throughput, total bandwidth, and CC specs.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        n_cc = int(d.get("carrier_count", 2))
+        total_bw = float(d.get("total_bandwidth_mhz", 200.0))
+        tput_mbps = float(d.get("aggregated_throughput_mbps", 4674.0))
+        tput_gbps = float(d.get("aggregated_throughput_gbps", 4.67))
+        tier = str(d.get("performance_tier", "Ultra-High Multi-Gigabit (FR1 4x4 CA)"))
+
+        return f"""    <div class="tu-nr-ca-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR Carrier Aggregation</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{tier}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px; margin-bottom: 12px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Jumlah Komponen Carrier: <strong>{n_cc} CCs (PCell + SCells)</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Total Bandwidth Agregasi: <strong>{total_bw:.1f} MHz</strong></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Throughput Puncak (Mbps): <strong style="color: #38bdf8;">{tput_mbps:,.1f} Mbps</strong></div>
+        <div>Throughput Puncak (Gbps): <strong style="color: #22c55e;">{tput_gbps:.3f} Gbps</strong></div>
+      </div>
+    </div>"""
+
+    @classmethod
+
 
 
 render_5g_bwp_switching_svg = EditorialComponents.render_5g_bwp_switching_svg
 render_optical_dwdm_osnr_card = EditorialComponents.render_optical_dwdm_osnr_card
+render_5g_carrier_aggregation_card = EditorialComponents.render_5g_carrier_aggregation_card
 render_pkm_pm_proposal_card = EditorialComponents.render_pkm_pm_proposal_card
 render_satellite_tropospheric_scintillation_card = EditorialComponents.render_satellite_tropospheric_scintillation_card
 render_5g_bwp_switching_card = EditorialComponents.render_5g_bwp_switching_card
