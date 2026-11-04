@@ -7240,6 +7240,43 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_bwp_switching_card(cls, data: Optional[Dict[str, Any]] = None, title: str = "Performa 5G NR Bandwidth Part (BWP) Switching", **kwargs) -> str:
+        """
+        Renders an Elementor card displaying 3GPP 5G NR BWP switching latency, numerology adaptation, and slot overhead.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        act_mhz = float(d.get("active_bwp_mhz", 20.0))
+        tgt_mhz = float(d.get("target_bwp_mhz", 100.0))
+        scs_src = int(d.get("scs_source_khz", 15))
+        scs_tgt = int(d.get("scs_target_khz", 30))
+        trigger = str(d.get("switch_trigger", "DCI"))
+        dtype = str(d.get("delay_type", "TYPE1"))
+        delay_us = float(d.get("switch_delay_us", 200.0))
+        slots_tgt = int(d.get("interrupted_slots_target", 4))
+        ratio = float(d.get("bandwidth_expansion_ratio", 5.0))
+        tier = str(d.get("performance_tier", "OPTIMAL_LOW_LATENCY_SWITCH"))
+
+        badge_color = "#10b981" if "OPTIMAL" in tier else ("#0284c7" if "STANDARD" in tier else "#ef4444")
+
+        return f"""    <div class="tu-nr-bwp-switching-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">3GPP Rel-15/16 BWP Switching</span>
+        <span style="font-size: 11px; background: {badge_color}; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{tier}</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 13px;">
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">BWP Aktif: <strong>{act_mhz:.0f} MHz (SCS {scs_src}k)</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">BWP Target: <strong>{tgt_mhz:.0f} MHz (SCS {scs_tgt}k)</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Trigger &amp; Tipe: <strong>{trigger} ({dtype})</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Switching Delay: <strong style="color: #38bdf8;">{delay_us:.1f} μs</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Slot Terinterupsi: <strong style="color: #facc15;">{slots_tgt} slots</strong></div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px;">Ekspansi Bandwidth: <strong style="color: #34d399;">{ratio:.1f}x</strong></div>
+      </div>
+    </div>"""
+
+render_5g_bwp_switching_card = EditorialComponents.render_5g_bwp_switching_card
 render_optical_raman_gain_card = EditorialComponents.render_optical_raman_gain_card
 render_optical_wss_oxc_card = EditorialComponents.render_optical_wss_oxc_card
 render_nr_timing_advance_card = EditorialComponents.render_5g_nr_timing_advance_card
