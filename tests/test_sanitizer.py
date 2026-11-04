@@ -57,7 +57,10 @@ from sanitizer import (
     sanitize_html5_search_element_attributes,
     sanitize_html5_picture_source_attributes,
     sanitize_html5_datalist_elements,
-    sanitize_html5_mathml_math_elements
+    sanitize_html5_mathml_math_elements,
+    sanitize_html5_audio_source_track_attributes,
+    sanitize_html5_table_colgroup_attributes,
+    sanitize_html5_del_ins_datetime_attributes
 )
 
 
@@ -1327,6 +1330,47 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("<mi>x</mi>", cleaned)
         self.assertIn("<mo>+</mo>", cleaned)
         self.assertIn("<mn>1</mn>", cleaned)
+
+    def test_sanitize_html5_audio_source_track_attributes(self):
+        raw = '<audio controls preload="invalid" onerror="alert(1)" src="javascript:evil()"><source src="https://example.com/audio.mp3" onplay="bad()"><track kind="invalid" src="data:text/html,<script>alert(1)</script>"></audio>'
+        cleaned = sanitize_html5_audio_source_track_attributes(raw)
+        self.assertNotIn("onerror=", cleaned)
+        self.assertNotIn("onplay=", cleaned)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertNotIn("data:text/html", cleaned)
+        self.assertIn('preload="metadata"', cleaned)
+        self.assertIn('src="https://example.com/audio.mp3"', cleaned)
+        self.assertIn("<audio", cleaned)
+        self.assertIn("</audio>", cleaned)
+
+    def test_sanitize_html5_table_colgroup_attributes(self):
+        raw = '<colgroup span="0" onclick="bad()"><col span="3" width="120px" style="color:red"><col span="invalid" width="javascript:bad()"></colgroup>'
+        cleaned = sanitize_html5_table_colgroup_attributes(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertIn('span="1"', cleaned)
+        self.assertIn('span="3"', cleaned)
+        self.assertIn('width="120px"', cleaned)
+
+    def test_sanitize_html5_del_ins_datetime_attributes(self):
+        raw = '<del cite="javascript:alert(1)" datetime="2026-11-05T03:00:00Z" onclick="bad()">Old text</del><ins cite="https://example.com/ref" datetime="data:text/html;base64,bad">New text</ins>'
+        cleaned = sanitize_html5_del_ins_datetime_attributes(raw)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertNotIn("data:text/html", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertIn('datetime="2026-11-05T03:00:00Z"', cleaned)
+        self.assertIn('cite="https://example.com/ref"', cleaned)
+        self.assertIn("Old text", cleaned)
+        self.assertIn("New text", cleaned)
+
+    def test_sanitize_html_with_new_audio_col_del_elements(self):
+        html = '<div class="tu-editorial-container"><audio controls onerror="alert(1)"><source src="test.mp3"></audio><table class="tu-table"><colgroup span="-1"><col width="50%"></colgroup></table><del cite="javascript:x">stale</del></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("onerror", clean)
+        self.assertNotIn("javascript:x", clean)
+        self.assertIn('span="1"', clean)
+        self.assertIn('width="50%"', clean)
 
 
 if __name__ == "__main__":
