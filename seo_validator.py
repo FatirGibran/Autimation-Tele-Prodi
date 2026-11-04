@@ -6772,6 +6772,71 @@ class YoastSEOValidator:
             "warnings": warnings
         }
 
+    @classmethod
+    def audit_table_header_scope_and_caption(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML <table> accessibility according to WCAG 2.1 SC 1.3.1 (Info and Relationships),
+        verifying the presence of table captions or accessible labels, checking <th> elements
+        for valid 'scope' attributes ('col', 'row', 'colgroup', 'rowgroup'), and detecting
+        tabular data without header cells.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "tables_count": 0,
+                "tables_with_caption": 0,
+                "total_th_count": 0,
+                "th_with_valid_scope": 0,
+                "missing_scope_count": 0,
+                "tables_missing_headers": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+        issues = []
+
+        valid_scopes = {"col", "row", "colgroup", "rowgroup"}
+        tables_with_caption = 0
+        total_th = 0
+        th_with_valid_scope = 0
+        missing_scope = 0
+        tables_missing_headers = 0
+
+        for idx, table in enumerate(tables, start=1):
+            has_caption = table.find("caption") is not None or table.has_attr("aria-label") or table.has_attr("aria-labelledby")
+            if has_caption:
+                tables_with_caption += 1
+            else:
+                issues.append(f"Tabel #{idx} tidak memiliki elemen <caption> atau atribut aria-label.")
+
+            ths = table.find_all("th")
+            total_th += len(ths)
+            if not ths:
+                tables_missing_headers += 1
+                issues.append(f"Tabel #{idx} tidak memiliki sel header <th>.")
+            else:
+                for th in ths:
+                    scope = (th.get("scope") or "").strip().lower()
+                    if scope in valid_scopes:
+                        th_with_valid_scope += 1
+                    else:
+                        missing_scope += 1
+                        issues.append(f"Sel header <th> ('{th.get_text(strip=True)[:20]}') pada Tabel #{idx} tidak memiliki atribut scope yang valid.")
+
+        is_accessible = (len(issues) == 0)
+
+        return {
+            "tables_count": len(tables),
+            "tables_with_caption": tables_with_caption,
+            "total_th_count": total_th,
+            "th_with_valid_scope": th_with_valid_scope,
+            "missing_scope_count": missing_scope,
+            "tables_missing_headers": tables_missing_headers,
+            "is_accessible": is_accessible,
+            "issues": issues
+        }
+
 
 
 
