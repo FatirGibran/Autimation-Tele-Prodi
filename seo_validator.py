@@ -6905,6 +6905,62 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_touch_target_minimum_size(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits interactive elements (buttons, links, submit inputs) for minimum touch target size
+        compliance per WCAG 2.1/2.2 SC 2.5.5 / 2.5.8 (Target Size), ensuring interactive controls
+        do not define explicit inline dimensions below 24x24 px without compensating spacing.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "interactive_elements_count": 0,
+                "undersized_targets_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        interactives = soup.find_all(["button", "a", "input"])
+        issues = []
+        undersized_count = 0
+        total_interactive = 0
+
+        dim_pattern = re.compile(r'(?:width|height)\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*px', re.IGNORECASE)
+
+        for el in interactives:
+            if el.name == "input" and (el.get("type") or "text").lower() not in {"button", "submit", "reset"}:
+                continue
+
+            total_interactive += 1
+            style = el.get("style") or ""
+            dims = [float(v) for v in dim_pattern.findall(style)]
+
+            # Check if explicit width or height is strictly below 24px
+            is_undersized = any(d < 24.0 for d in dims)
+
+            # Check width/height HTML attributes on svg buttons/icons
+            attr_w = el.get("width")
+            attr_h = el.get("height")
+            if attr_w and attr_w.isdigit() and int(attr_w) < 24:
+                is_undersized = True
+            if attr_h and attr_h.isdigit() and int(attr_h) < 24:
+                is_undersized = True
+
+            if is_undersized:
+                undersized_count += 1
+                text_snippet = el.get_text(strip=True)[:20] or el.name
+                issues.append(f"Elemen interaktif <{el.name}> ('{text_snippet}') memiliki ukuran target sentuh di bawah 24px (WCAG 2.1 SC 2.5.8).")
+
+        is_compliant = (undersized_count == 0)
+
+        return {
+            "interactive_elements_count": total_interactive,
+            "undersized_targets_count": undersized_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
