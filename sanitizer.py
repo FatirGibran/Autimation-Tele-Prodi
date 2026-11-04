@@ -724,6 +724,11 @@ class HTMLSanitizer:
             cleaned = re.sub(r'<progress\b[^>]*>', sanitize_progress, cleaned, flags=re.IGNORECASE)
             warnings.append("Sanitized HTML5 progress gauge elements.")
 
+        # 8ab. Sanitize HTML5 audio media elements
+        if "<audio" in cleaned.lower():
+            cleaned = sanitize_html5_audio_source_track_attributes(cleaned)
+            warnings.append("Sanitized HTML5 audio media and nested source track attributes.")
+
         return cleaned, warnings
 
 
@@ -2676,6 +2681,56 @@ def sanitize_html5_mathml_math_elements(html: str) -> str:
 
     cleaned = re.sub(rf'<({mathml_tags})\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_child, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_audio_source_track_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <audio> media elements, along with nested <source> and <track> children,
+    by stripping dangerous executable event handlers (e.g. onerror, onplay), neutralizing
+    malicious URI schemes (javascript:, data:text/html, vbscript:), validating preload attributes,
+    and enforcing safe media formatting.
+    """
+    if not html or "<audio" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_audio_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Check src attribute on audio
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src_val = src_m.group(1).strip()
+            if src_val.lower().startswith(("javascript:", "data:text/html", "vbscript:")) or re.search(r'[<>"\'`]', src_val):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate preload attribute
+        preload_m = re.search(r'\bpreload=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if preload_m:
+            pval = preload_m.group(1).strip().lower()
+            if pval not in {"auto", "metadata", "none"}:
+                tag = re.sub(r'\s+preload=["\'][^"\']*["\']', ' preload="metadata"', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_audio_source_track(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src_val = src_m.group(1).strip()
+            if src_val.lower().startswith(("javascript:", "data:text/html", "vbscript:")) or re.search(r'[<>"\'`]', src_val):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<audio\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_audio_tag, cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'<(?:source|track)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_audio_source_track, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
