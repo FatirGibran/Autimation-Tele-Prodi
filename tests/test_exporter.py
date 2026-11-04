@@ -1277,6 +1277,41 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("export const meta = () => [", res)
         self.assertIn("<p>Prerendered Remix content.</p>", res)
 
+    def test_generate_tech_transfer_how_to_json_ld(self):
+        res = ArticleExporter.generate_tech_transfer_how_to_json_ld(
+            title="Implementasi Sistem Kontrol Suhu IoT pada Kumbung Jamur",
+            description="Panduan teknis alih teknologi sistem pemantauan dan otomasi lingkungan jamur tiram.",
+            student_leader="Ahmad Dani",
+            partner_enterprise="KWT Jamur Sejahtera",
+            technology_type="Sistem Otomasi IoT Esp32",
+            article_url="https://telecom.telkomuniversity.ac.id/pkm-pi/jamur"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertIn("TechArticle", res["@type"])
+        self.assertIn("HowTo", res["@type"])
+        self.assertEqual(res["name"], "Implementasi Sistem Kontrol Suhu IoT pada Kumbung Jamur")
+        self.assertEqual(res["author"]["name"], "Ahmad Dani")
+        self.assertEqual(res["about"]["name"], "Sistem Otomasi IoT Esp32")
+        self.assertEqual(res["sponsor"]["name"], "KWT Jamur Sejahtera")
+        self.assertEqual(len(res["step"]), 4)
+
+    def test_to_solidstart_mdx(self):
+        meta = {
+            "seo_title": "Panduan Integrasi SolidStart MDX",
+            "meta_description": "Dokumentasi rute SolidStart reaktif dengan MDX.",
+            "slug": "panduan-solidstart-mdx",
+            "publish_date": "2026-11-04",
+            "tags": ["solidjs", "solidstart", "reactive"]
+        }
+        res = ArticleExporter.to_solidstart_mdx(meta, "<p>SolidStart reactive content.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Integrasi SolidStart MDX"', res)
+        self.assertIn('framework: "solidstart"', res)
+        self.assertIn("solidstart: true", res)
+        self.assertIn('import { Title, Meta } from "@solidjs/meta";', res)
+        self.assertIn('<Title>Panduan Integrasi SolidStart MDX</Title>', res)
+        self.assertIn("<p>SolidStart reactive content.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
