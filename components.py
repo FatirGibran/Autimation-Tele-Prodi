@@ -7538,12 +7538,60 @@ class EditorialComponents:
     </div>"""
 
     @classmethod
+    def render_5g_carrier_aggregation_spectrum_svg(cls, data: Optional[Dict[str, Any]] = None, title: str = "Diagram Alokasi Spektrum 5G NR Carrier Aggregation", **kwargs) -> str:
+        """
+        Renders an Elementor card with an inline SVG diagram visualizing 5G NR Carrier Aggregation (CA)
+        component carrier frequency allocation (PCell + SCell) and aggregated channel capacity.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        total_bw = float(d.get("total_bandwidth_mhz", 200.0))
+        tput_gbps = float(d.get("aggregated_throughput_gbps", 4.67))
+        n_cc = int(d.get("carrier_count", 2))
+
+        return f"""    <div class="tu-nr-ca-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR CA Spectrum Allocation</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{n_cc} CCs Aggregated</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 540 200" width="100%" height="200" style="max-width: 580px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Frequency Axis -->
+          <line x1="30" y1="160" x2="510" y2="160" stroke="#64748b" stroke-width="1.5" />
+          <text x="270" y="185" fill="#94a3b8" font-size="10" text-anchor="middle">Sumbu Frekuensi Radio (f / MHz)</text>
+
+          <!-- CC1 Primary Cell (PCell - Cyan) -->
+          <rect x="50" y="50" width="200" height="90" rx="4" fill="#0369a1" stroke="#38bdf8" stroke-width="2" />
+          <text x="150" y="85" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">CC1 (Primary Cell - PCell)</text>
+          <text x="150" y="105" fill="#93c5fd" font-size="10" text-anchor="middle">100 MHz (4x4 MIMO, 256-QAM)</text>
+          <text x="150" y="125" fill="#e0f2fe" font-size="9" text-anchor="middle">273 PRBs (SCS 30 kHz)</text>
+
+          <!-- Guard Band Separator -->
+          <rect x="252" y="60" width="16" height="80" rx="2" fill="#334155" opacity="0.6" stroke-dasharray="2,2" stroke="#64748b" />
+
+          <!-- CC2 Secondary Cell (SCell - Emerald) -->
+          <rect x="270" y="50" width="220" height="90" rx="4" fill="#065f46" stroke="#34d399" stroke-width="2" />
+          <text x="380" y="85" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">CC2 (Secondary Cell - SCell)</text>
+          <text x="380" y="105" fill="#a7f3d0" font-size="10" text-anchor="middle">100 MHz (4x4 MIMO, 256-QAM)</text>
+          <text x="380" y="125" fill="#ecfdf5" font-size="9" text-anchor="middle">273 PRBs (SCS 30 kHz)</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Bandwidth Gabungan: <strong style="color: #38bdf8;">{total_bw:.1f} MHz</strong></div>
+        <div>Throughput Puncak: <strong style="color: #22c55e;">{tput_gbps:.3f} Gbps</strong></div>
+        <div>Modulasi / MIMO: <strong style="color: #facc15;">256-QAM / 4x4</strong></div>
+      </div>
+    </div>"""
+
+    @classmethod
 
 
 
 
 
 render_5g_bwp_switching_svg = EditorialComponents.render_5g_bwp_switching_svg
+render_5g_carrier_aggregation_spectrum_svg = EditorialComponents.render_5g_carrier_aggregation_spectrum_svg
 render_optical_dwdm_osnr_card = EditorialComponents.render_optical_dwdm_osnr_card
 render_5g_carrier_aggregation_card = EditorialComponents.render_5g_carrier_aggregation_card
 render_satellite_g_over_t_card = EditorialComponents.render_satellite_g_over_t_card
