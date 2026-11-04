@@ -54,7 +54,10 @@ from sanitizer import (
     sanitize_html5_template_slot_elements,
     sanitize_html5_dialog_backdrop_controls,
     sanitize_html5_canvas_scriptable_attributes,
-    sanitize_html5_search_element_attributes
+    sanitize_html5_search_element_attributes,
+    sanitize_html5_picture_source_attributes,
+    sanitize_html5_datalist_elements,
+    sanitize_html5_mathml_math_elements
 )
 
 
@@ -1290,6 +1293,40 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("onsubmit=", cleaned)
         self.assertNotIn("style=", cleaned)
         self.assertIn('<input type="search">', cleaned)
+
+    def test_sanitize_html5_picture_source_attributes(self):
+        raw = '<picture onclick="bad()"><source srcset="javascript:alert(1)" media="screen and (expression(alert(1)))" type="application/x-executable" width="99999" height="invalid"><img src="pic.webp"></picture>'
+        cleaned = sanitize_html5_picture_source_attributes(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertNotIn("expression", cleaned)
+        self.assertNotIn('type="application/x-executable"', cleaned)
+        self.assertNotIn('width="99999"', cleaned)
+        self.assertIn('<img src="pic.webp">', cleaned)
+
+    def test_sanitize_html5_datalist_elements(self):
+        raw = '<datalist id="submit" onchange="bad()"><option value="javascript:alert(1)" label="Safe Label"><option value="Safe Value" onclick="bad()"></datalist>'
+        cleaned = sanitize_html5_datalist_elements(raw)
+        self.assertNotIn('id="submit"', cleaned)
+        self.assertNotIn("onchange=", cleaned)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertIn('label="Safe Label"', cleaned)
+        self.assertIn('value="Safe Value"', cleaned)
+
+    def test_sanitize_html5_mathml_math_elements(self):
+        raw = '<math display="invalid" onclick="bad()" href="javascript:alert(1)"><annotation-xml><script>bad()</script></annotation-xml><mrow action="submit"><mi xlink:href="x">x</mi><mo>+</mo><mn>1</mn></mrow></math>'
+        cleaned = sanitize_html5_mathml_math_elements(raw)
+        self.assertIn('display="block"', cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("href=", cleaned)
+        self.assertNotIn("<annotation-xml>", cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertNotIn("action=", cleaned)
+        self.assertNotIn("xlink:href=", cleaned)
+        self.assertIn("<mi>x</mi>", cleaned)
+        self.assertIn("<mo>+</mo>", cleaned)
+        self.assertIn("<mn>1</mn>", cleaned)
 
 
 if __name__ == "__main__":
