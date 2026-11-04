@@ -3021,6 +3021,80 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Ketua PI Test", out)
 
+    def test_cmd_edfa(self):
+        class ArgsAdd:
+            action = "add"
+            amp = "EDFA-TEST-01"
+            pump = "980nm Co-directional"
+            pin = -20.0
+            gain = 30.0
+            psat = 15.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_edfa(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Optical EDFA berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_edfa(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("EDFA-TEST-01", out)
+
+    def test_cmd_ccs(self):
+        class ArgsAdd:
+            action = "add"
+            name = "CCS_CLI_TEST"
+            pcell = "PCell (n78 3.5GHz)"
+            scell = "SCell (n258 28GHz)"
+            scs_pcell = 30
+            scs_scell = 120
+            no_cif = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ccs(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR CCS berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ccs(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("CCS_CLI_TEST", out)
+
+    def test_cmd_pkmki(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Ketua KI Test"
+            nim = "1101210055"
+            title = "Sistem Radar Doppler Portabel"
+            proto = "Prototipe Fungsional Skala Lab"
+            target = "Dinas Bina Marga & PU"
+            nov = 90.0
+            func = 92.0
+            des = 88.0
+            budget = 85.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmki(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-KI berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmki(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Ketua KI Test", out)
+
 
 if __name__ == "__main__":
     unittest.main()
