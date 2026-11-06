@@ -765,6 +765,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 hgroup heading grouping elements.")
 
+        # 8ai. Sanitize HTML5 menu list and toolbar elements
+        if "<menu" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_menu_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 menu list and toolbar elements.")
+
         return cleaned, warnings
 
 
@@ -2943,6 +2950,26 @@ def sanitize_html5_hgroup_elements(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<hgroup\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_hgroup, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_menu_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <menu> toolbar or list elements by stripping scriptable event handlers,
+    unsafe attributes, and normalizing interactive toolbar markup.
+    """
+    if not html or "<menu" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_menu(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<menu\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_menu, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
