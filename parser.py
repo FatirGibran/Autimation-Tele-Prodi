@@ -8663,6 +8663,78 @@ def parse_pkm_vgk_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_coherent_qam_evm_ber(
+    osnr_db: float,
+    symbol_rate_gbaud: float = 32.0,
+    modulation_format: str = "16QAM",
+    laser_linewidth_khz: float = 100.0,
+    reference_bandwidth_nm: float = 0.1
+) -> Dict[str, Any]:
+    """
+    Calculates optical SNR per symbol, EVM (Error Vector Magnitude), theoretical BER,
+    and Forward Error Correction (FEC) threshold margin for Dual-Polarization coherent optical transponders.
+    """
+    osnr_linear = 10.0 ** (osnr_db / 10.0)
+    # Reference optical bandwidth: 0.1 nm at 1550 nm is ~12.5 GHz
+    b_ref_ghz = 12.5
+    r_s_ghz = max(1.0, float(symbol_rate_gbaud))
+
+    # SNR per symbol in dual polarization
+    snr_linear = osnr_linear * (b_ref_ghz / r_s_ghz)
+    snr_db = 10.0 * math.log10(max(1e-6, snr_linear))
+
+    # EVM RMS percentage approximation: EVM_rms = 1 / sqrt(SNR)
+    evm_rms_percent = (1.0 / math.sqrt(max(1e-6, snr_linear))) * 100.0
+
+    fmt = modulation_format.strip().upper()
+    if "QPSK" in fmt:
+        bits_per_symbol = 2
+        arg = math.sqrt(max(0.0, snr_linear / 2.0))
+        ber = 0.5 * math.erfc(arg)
+    elif "64" in fmt:
+        bits_per_symbol = 6
+        arg = math.sqrt(max(0.0, snr_linear / 42.0))
+        ber = (7.0 / 24.0) * math.erfc(arg)
+    else:  # Default 16QAM
+        fmt = "16QAM"
+        bits_per_symbol = 4
+        arg = math.sqrt(max(0.0, snr_linear / 10.0))
+        ber = (3.0 / 8.0) * math.erfc(arg)
+
+    ber = max(1e-15, min(0.5, ber))
+    raw_bitrate_gbps = 2 * bits_per_symbol * symbol_rate_gbaud
+
+    hd_fec_limit = 3.8e-3
+    sd_fec_limit = 2.4e-2
+
+    if ber <= hd_fec_limit:
+        fec_status = "Lolos HD-FEC (Margin Tinggi)"
+        is_error_free_post_fec = True
+    elif ber <= sd_fec_limit:
+        fec_status = "Lolos SD-FEC (Memerlukan Soft-Decision)"
+        is_error_free_post_fec = True
+    else:
+        fec_status = "Gagal FEC (Di Atas Ambang Batas Koreksi)"
+        is_error_free_post_fec = False
+
+    q_factor_db = max(0.0, snr_db - (10.0 * math.log10(10.0 if fmt == "16QAM" else (42.0/4.0 if fmt == "64QAM" else 2.0))))
+
+    return {
+        "modulation_format": f"DP-{fmt}",
+        "symbol_rate_gbaud": symbol_rate_gbaud,
+        "raw_bitrate_gbps": raw_bitrate_gbps,
+        "osnr_db": round(osnr_db, 2),
+        "snr_db": round(snr_db, 2),
+        "evm_rms_percent": round(evm_rms_percent, 2),
+        "estimated_ber": ber,
+        "estimated_ber_str": f"{ber:.2e}",
+        "q_factor_db": round(q_factor_db, 2),
+        "laser_linewidth_khz": laser_linewidth_khz,
+        "fec_status": fec_status,
+        "is_error_free_post_fec": is_error_free_post_fec
+    }
+
+
 
 
 
