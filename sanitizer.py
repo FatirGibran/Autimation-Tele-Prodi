@@ -11,7 +11,7 @@ ALLOWED_TAGS = {
     "math", "mrow", "mi", "mo", "mn", "msup", "msub", "mfrac", "msqrt", "mroot", "mtext",
     "ruby", "rt", "rp", "rb", "rtc",
     "meter", "progress", "data", "template",
-    "bdi", "bdo", "wbr"
+    "bdi", "bdo", "wbr", "hgroup", "menu", "portal"
 }
 
 
@@ -757,6 +757,13 @@ class HTMLSanitizer:
             cleaned = sanitize_html5_fieldset_legend_attributes(cleaned)
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 legend and fieldset technical grouping elements.")
+
+        # 8ah. Sanitize HTML5 hgroup heading grouping elements
+        if "<hgroup" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_hgroup_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 hgroup heading grouping elements.")
 
         return cleaned, warnings
 
@@ -2916,6 +2923,26 @@ def sanitize_html5_fieldset_legend_attributes(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<(?:fieldset|legend)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_fieldset_legend, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_hgroup_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <hgroup> heading grouping containers by neutralizing inline scripting
+    handlers, stripping arbitrary style attributes, and enforcing editorial semantic styling.
+    """
+    if not html or "<hgroup" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_hgroup(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<hgroup\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_hgroup, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
