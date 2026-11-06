@@ -63,7 +63,10 @@ from sanitizer import (
     sanitize_html5_del_ins_datetime_attributes,
     sanitize_html5_select_optgroup_attributes,
     sanitize_html5_figure_figcaption_attributes,
-    sanitize_html5_fieldset_legend_attributes
+    sanitize_html5_fieldset_legend_attributes,
+    sanitize_html5_hgroup_elements,
+    sanitize_html5_menu_elements,
+    sanitize_html5_portal_elements
 )
 
 
@@ -1415,6 +1418,41 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("<fieldset", clean)
         self.assertIn("<select", clean)
 
+
+
+    def test_sanitize_html5_hgroup_elements(self):
+        raw = '<hgroup onclick="evil()" style="margin:0"><h1>Judul</h1><p>Subjudul</p></hgroup>'
+        cleaned = sanitize_html5_hgroup_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn("<hgroup>", cleaned)
+        self.assertIn("<h1>Judul</h1>", cleaned)
+
+    def test_sanitize_html5_menu_elements(self):
+        raw = '<menu onclick="steal()" contenteditable="true"><li>Item 1</li><li>Item 2</li></menu>'
+        cleaned = sanitize_html5_menu_elements(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("contenteditable=", cleaned)
+        self.assertIn("<menu>", cleaned)
+        self.assertIn("<li>Item 1</li>", cleaned)
+
+    def test_sanitize_html5_portal_elements(self):
+        raw = '<portal src="javascript:alert(1)" onclick="evil()" style="width:100%"></portal>'
+        cleaned = sanitize_html5_portal_elements(raw)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn("<portal", cleaned)
+
+    def test_sanitize_html_with_hgroup_menu_portal_elements(self):
+        html = '<div class="tu-editorial-container"><hgroup onclick="bad()"><h2>Header</h2></hgroup><menu onfocus="bad()"><li>1</li></menu><portal src="javascript:bad()"></portal></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("onclick=", clean)
+        self.assertNotIn("onfocus=", clean)
+        self.assertNotIn("javascript:bad()", clean)
+        self.assertIn("<hgroup", clean)
+        self.assertIn("<menu", clean)
+        self.assertIn("<portal", clean)
 
 
 if __name__ == "__main__":
