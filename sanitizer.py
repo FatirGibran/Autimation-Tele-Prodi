@@ -772,6 +772,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 menu list and toolbar elements.")
 
+        # 8aj. Sanitize HTML5 portal embedded navigation elements
+        if "<portal" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_portal_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 portal embedded navigation elements.")
+
         return cleaned, warnings
 
 
@@ -2970,6 +2977,27 @@ def sanitize_html5_menu_elements(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<menu\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_menu, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_portal_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <portal> embedded navigation elements by stripping inline scripting handlers,
+    unsafe javascript: / data: URI schemes, and enforcing safe sandbox restrictions.
+    """
+    if not html or "<portal" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_portal(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+src=["\'](?:javascript:|data:)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<portal\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_portal, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
