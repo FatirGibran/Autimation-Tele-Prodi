@@ -8875,6 +8875,79 @@ def calculate_satellite_depolarization_xpd_itu_r_p618(
     }
 
 
+def parse_pkm_rsh_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates PKM Riset Sosial Humaniora (PKM-RSH) student proposals under Belmawa Kemendikbudristek guidelines,
+    assessing social issue urgency, literature review, qualitative/quantitative methodology, ethical clearance,
+    policy brief impact, and MBKM credit equivalency.
+    """
+    student_leader = str(data.get("student_leader", "")).strip() or "Mahasiswa Telkom Purwokerto"
+    nim = str(data.get("nim", "")).strip()
+    proposal_title = str(data.get("proposal_title", "")).strip() or "Riset Sosio-Teknologi Humaniora Telekomunikasi"
+    research_topic = str(data.get("research_topic", "")).strip() or "Adopsi Sosio-Teknologi Digital & Dampak Sosial"
+
+    s_urgency = max(0.0, min(100.0, float(data.get("problem_urgency_score", 0.0))))
+    s_lit = max(0.0, min(100.0, float(data.get("literature_review_score", 0.0))))
+    s_method = max(0.0, min(100.0, float(data.get("methodology_ethics_score", 0.0))))
+    s_impact = max(0.0, min(100.0, float(data.get("social_impact_policy_score", 0.0))))
+    has_ethics = bool(data.get("has_ethical_clearance", True))
+
+    ethics_penalty = 0.0 if has_ethics else 10.0
+
+    raw_composite = (0.30 * s_urgency) + (0.15 * s_lit) + (0.30 * s_method) + (0.25 * s_impact)
+    composite = round(max(0.0, raw_composite - ethics_penalty), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        allocated_budget_idr = 10000000
+        funding_status = "Lolos Pendanaan Belmawa PKM-RSH Unggulan"
+        converted_sks = 5
+    elif is_funded:
+        allocated_budget_idr = 8000000
+        funding_status = "Lolos Pendanaan Belmawa PKM-RSH Reguler"
+        converted_sks = 4
+    else:
+        allocated_budget_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "research_topic": research_topic,
+        "problem_urgency_score": s_urgency,
+        "literature_review_score": s_lit,
+        "methodology_ethics_score": s_method,
+        "social_impact_policy_score": s_impact,
+        "has_ethical_clearance": has_ethics,
+        "ethics_penalty": ethics_penalty,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "allocated_budget_idr": allocated_budget_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
 
 
 
