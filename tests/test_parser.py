@@ -2757,6 +2757,89 @@ Status: Granted
         self.assertEqual(res_penalized["composite_score"], 80.0)
         self.assertTrue(res_penalized["is_funded"])
 
+    def test_calculate_optical_coherent_qam_evm_ber(self):
+        from parser import calculate_optical_coherent_qam_evm_ber
+        res_16qam = calculate_optical_coherent_qam_evm_ber(
+            osnr_db=22.0,
+            symbol_rate_gbaud=32.0,
+            modulation_format="16QAM"
+        )
+        self.assertEqual(res_16qam["modulation_format"], "DP-16QAM")
+        self.assertEqual(res_16qam["raw_bitrate_gbps"], 256.0)
+        self.assertGreater(res_16qam["snr_db"], 15.0)
+        self.assertLess(res_16qam["estimated_ber"], 0.01)
+        self.assertTrue(res_16qam["is_error_free_post_fec"])
+
+        res_qpsk = calculate_optical_coherent_qam_evm_ber(
+            osnr_db=15.0,
+            symbol_rate_gbaud=32.0,
+            modulation_format="QPSK"
+        )
+        self.assertEqual(res_qpsk["modulation_format"], "DP-QPSK")
+        self.assertEqual(res_qpsk["raw_bitrate_gbps"], 128.0)
+
+    def test_calculate_5g_nr_pucch_capacity_and_scheduling(self):
+        from parser import calculate_5g_nr_pucch_capacity_and_scheduling
+        res_fmt1 = calculate_5g_nr_pucch_capacity_and_scheduling(
+            pucch_format=1,
+            num_prbs=2,
+            num_symbols=14,
+            subcarrier_spacing_khz=30
+        )
+        self.assertEqual(res_fmt1["pucch_format"], 1)
+        self.assertEqual(res_fmt1["multiplexing_ue_capacity"], 12)
+        self.assertEqual(res_fmt1["total_allocated_res"], 336)
+        self.assertFalse(res_fmt1["is_short_pucch"])
+
+        res_fmt0 = calculate_5g_nr_pucch_capacity_and_scheduling(
+            pucch_format=0,
+            num_prbs=1,
+            num_symbols=2
+        )
+        self.assertEqual(res_fmt0["pucch_format"], 0)
+        self.assertTrue(res_fmt0["is_short_pucch"])
+
+    def test_calculate_satellite_depolarization_xpd_itu_r_p618(self):
+        from parser import calculate_satellite_depolarization_xpd_itu_r_p618
+        res = calculate_satellite_depolarization_xpd_itu_r_p618(
+            carrier_frequency_ghz=18.0,
+            elevation_angle_deg=35.0,
+            polarization_tilt_deg=45.0,
+            rain_attenuation_db=8.0,
+            rain_probability_percent=0.01
+        )
+        self.assertGreater(res["xpd_rain_db"], 15.0)
+        self.assertGreater(res["total_xpd_db"], 10.0)
+        self.assertIn("is_dual_pol_feasible", res)
+
+    def test_parse_pkm_rsh_proposal_evaluation(self):
+        from parser import parse_pkm_rsh_proposal_evaluation
+        res_top = parse_pkm_rsh_proposal_evaluation({
+            "student_leader": "Budi Santoso",
+            "nim": "1101210045",
+            "proposal_title": "Adopsi Sosio-Teknologi Digital Broadband di Komunitas Pedesaan Banyumas",
+            "research_topic": "Kesenjangan Digital & Sosio-Teknologi Pedesaan",
+            "problem_urgency_score": 92.0,
+            "literature_review_score": 90.0,
+            "methodology_ethics_score": 88.0,
+            "social_impact_policy_score": 86.0,
+            "has_ethical_clearance": True
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 10000000)
+        self.assertEqual(res_top["converted_sks"], 5)
+        self.assertTrue(res_top["is_funded"])
+
+        res_penalized = parse_pkm_rsh_proposal_evaluation({
+            "problem_urgency_score": 85.0,
+            "literature_review_score": 85.0,
+            "methodology_ethics_score": 85.0,
+            "social_impact_policy_score": 85.0,
+            "has_ethical_clearance": False
+        })
+        self.assertEqual(res_penalized["ethics_penalty"], 10.0)
+        self.assertEqual(res_penalized["composite_score"], 75.0)
+        self.assertFalse(res_penalized["is_funded"])
 
 
 if __name__ == "__main__":
