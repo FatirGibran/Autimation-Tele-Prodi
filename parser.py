@@ -8812,6 +8812,69 @@ def calculate_5g_nr_pucch_capacity_and_scheduling(
     }
 
 
+def calculate_satellite_depolarization_xpd_itu_r_p618(
+    carrier_frequency_ghz: float,
+    elevation_angle_deg: float,
+    polarization_tilt_deg: float = 45.0,
+    rain_attenuation_db: float = 12.0,
+    rain_probability_percent: float = 0.01
+) -> Dict[str, Any]:
+    """
+    Calculates rain-induced cross-polarization discrimination (XPD) and ice crystal depolarization
+    for earth-space satellite communication links according to ITU-R P.618-13 section 4.
+    """
+    f = max(8.0, min(35.0, float(carrier_frequency_ghz)))
+    theta = max(5.0, min(85.0, float(elevation_angle_deg)))
+    theta_rad = math.radians(theta)
+    tau = float(polarization_tilt_deg)
+    tau_rad = math.radians(tau)
+    a_rain = max(0.5, float(rain_attenuation_db))
+    p = max(0.001, min(1.0, float(rain_probability_percent)))
+
+    term_tilt = 1.0 - 0.484 * (1.0 + math.cos(4.0 * tau_rad))
+    term_tilt = max(0.01, term_tilt)
+    cos_theta = max(0.01, math.cos(theta_rad))
+
+    u = (30.0 * math.log10(f)) - (10.0 * math.log10(term_tilt)) - (40.0 * math.log10(cos_theta))
+
+    if f <= 20.0:
+        v = 12.8 * (f ** 0.19)
+    else:
+        v = 15.0
+
+    xpd_rain = u - (v * math.log10(a_rain))
+
+    c_ice = xpd_rain * (0.3 + 0.1 * math.log10(p)) / 2.0
+    c_ice = max(0.0, c_ice)
+
+    xpd_total = max(5.0, xpd_rain - c_ice)
+
+    if xpd_total >= 25.0:
+        feasibility = "Sangat Baik (Dual-Polarization Frequency Reuse Sangat Andal)"
+        is_dual_pol_feasible = True
+    elif xpd_total >= 20.0:
+        feasibility = "Cukup (Memerlukan Pemantauan Cross-Polar Margin)"
+        is_dual_pol_feasible = True
+    else:
+        feasibility = "Rentan (Crosstalk Polarisasi Tinggi, Memerlukan XPIC)"
+        is_dual_pol_feasible = False
+
+    return {
+        "carrier_frequency_ghz": f,
+        "elevation_angle_deg": theta,
+        "polarization_tilt_deg": tau,
+        "rain_attenuation_db": a_rain,
+        "rain_probability_percent": p,
+        "u_parameter": round(u, 2),
+        "v_parameter": round(v, 2),
+        "xpd_rain_db": round(xpd_rain, 2),
+        "ice_depol_c_ice_db": round(c_ice, 2),
+        "total_xpd_db": round(xpd_total, 2),
+        "feasibility": feasibility,
+        "is_dual_pol_feasible": is_dual_pol_feasible
+    }
+
+
 
 
 
