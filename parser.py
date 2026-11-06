@@ -8735,6 +8735,83 @@ def calculate_optical_coherent_qam_evm_ber(
     }
 
 
+def calculate_5g_nr_pucch_capacity_and_scheduling(
+    pucch_format: int = 1,
+    num_prbs: int = 1,
+    num_symbols: int = 14,
+    subcarrier_spacing_khz: int = 30,
+    uci_type: str = "HARQ-ACK",
+    target_bler: float = 0.01
+) -> Dict[str, Any]:
+    """
+    Calculates 5G NR PUCCH (Physical Uplink Control Channel) resource capacity, UCI payload capability,
+    multiplexing capacity, and required SNR according to 3GPP TS 38.211 and TS 38.213.
+    """
+    fmt = int(pucch_format)
+    if fmt not in (0, 1, 2, 3, 4):
+        fmt = 1
+
+    prbs = max(1, min(16, int(num_prbs)))
+    if fmt in (0, 2):
+        symbols = max(1, min(2, int(num_symbols)))
+    else:
+        symbols = max(4, min(14, int(num_symbols)))
+
+    scs = int(subcarrier_spacing_khz) if subcarrier_spacing_khz in (15, 30, 60, 120) else 30
+    total_res = prbs * 12 * symbols
+
+    if fmt == 0:
+        desc = "Short PUCCH (Sequence Selection, 1-2 symbols)"
+        max_uci_bits = 2
+        multiplexing_capacity = 6
+        req_snr_db = -2.5
+    elif fmt == 1:
+        desc = "Long PUCCH (Time OCC & Cyclic Shift, 4-14 symbols)"
+        max_uci_bits = 2
+        multiplexing_capacity = 12
+        req_snr_db = -5.0
+    elif fmt == 2:
+        desc = "Short PUCCH (CP-OFDM with DMRS, 1-2 symbols)"
+        data_res = prbs * 8 * symbols
+        max_uci_bits = int(data_res * 1.5)
+        multiplexing_capacity = 1
+        req_snr_db = 1.0
+    elif fmt == 3:
+        desc = "Long PUCCH (CP-OFDM / DFT-s-OFDM, Large UCI, 4-14 symbols)"
+        dmrs_symbols = 2 if symbols <= 7 else 4
+        data_res = prbs * 12 * (symbols - dmrs_symbols)
+        max_uci_bits = int(data_res * 1.5)
+        multiplexing_capacity = 1
+        req_snr_db = 0.5
+    else:  # Format 4
+        desc = "Long PUCCH (OCC Multiplexing, 4-14 symbols)"
+        dmrs_symbols = 2 if symbols <= 7 else 4
+        data_res = prbs * 12 * (symbols - dmrs_symbols)
+        max_uci_bits = int((data_res * 1.5) / 2)
+        multiplexing_capacity = 4
+        req_snr_db = -1.5
+
+    slot_duration_ms = 1.0 / (scs / 15.0)
+    slot_re_capacity = prbs * 12 * 14
+    slot_overhead_percent = (total_res / slot_re_capacity) * 100.0
+
+    return {
+        "pucch_format": fmt,
+        "format_description": desc,
+        "num_prbs": prbs,
+        "num_symbols": symbols,
+        "subcarrier_spacing_khz": scs,
+        "slot_duration_ms": slot_duration_ms,
+        "total_allocated_res": total_res,
+        "max_uci_payload_bits": max_uci_bits,
+        "multiplexing_ue_capacity": multiplexing_capacity,
+        "required_snr_db": req_snr_db,
+        "slot_overhead_percent": round(slot_overhead_percent, 2),
+        "target_bler": target_bler,
+        "is_short_pucch": fmt in (0, 2)
+    }
+
+
 
 
 
