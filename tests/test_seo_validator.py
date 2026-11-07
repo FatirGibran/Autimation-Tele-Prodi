@@ -2465,6 +2465,50 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_secure"])
         self.assertEqual(res_bad["insecure_links_count"], 1)
 
+    def test_audit_table_data_semantic_scope_headers(self):
+        html_ok = '<table><tr><th scope="col">Param</th><th scope="col">Value</th></tr><tr><td>SNR</td><td>20dB</td></tr></table>'
+        res_ok = YoastSEOValidator.audit_table_data_semantic_scope_headers(html_ok)
+        self.assertTrue(res_ok["is_accessible"])
+        self.assertEqual(res_ok["compliant_tables"], 1)
+
+        html_bad = '<table><tr><th>Param</th><th>Value</th></tr><tr><td>SNR</td><td>20dB</td></tr></table>'
+        res_bad = YoastSEOValidator.audit_table_data_semantic_scope_headers(html_bad)
+        self.assertFalse(res_bad["is_accessible"])
+        self.assertEqual(res_bad["non_compliant_tables"], 1)
+
+    def test_audit_color_contrast_inline_css(self):
+        html_ok = '<p style="color: #000000; background-color: #ffffff">High Contrast Text</p>'
+        res_ok = YoastSEOValidator.audit_color_contrast_inline_css(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["compliant_elements"], 1)
+
+        html_bad = '<span style="color: #cccccc; background-color: #ffffff">Low Contrast Text</span>'
+        res_bad = YoastSEOValidator.audit_color_contrast_inline_css(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["non_compliant_elements"], 1)
+
+    def test_audit_language_of_parts_subtags(self):
+        html_ok = '<p>Penelitian ini merujuk pada <span lang="en">Single Carrier Modulation</span> dan <blockquote lang="ja">日本語</blockquote></p>'
+        res_ok = YoastSEOValidator.audit_language_of_parts_subtags(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["valid_lang_attributes"], 2)
+
+        html_bad = '<p><span lang="1234_invalid">Bad Tag</span> dan <q lang="">Empty</q></p>'
+        res_bad = YoastSEOValidator.audit_language_of_parts_subtags(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["invalid_lang_attributes"], 2)
+
+    def test_audit_interactive_touch_target_sizes(self):
+        html_ok = '<button style="min-width: 48px; min-height: 48px">Kirim</button>'
+        res_ok = YoastSEOValidator.audit_interactive_touch_target_sizes(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["compliant_targets"], 1)
+
+        html_bad = '<button style="width: 16px; height: 16px">X</button>'
+        res_bad = YoastSEOValidator.audit_interactive_touch_target_sizes(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["sub_minimum_targets"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
