@@ -8092,6 +8092,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_coherent_qam_card(
+        cls,
+        title: str = "Telemetri Transponder Optik Koheren Dual-Polarization QAM",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying optical SNR, constellation EVM RMS,
+        theoretical BER, and FEC correction margins for DP-QPSK/16QAM/64QAM systems.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        fmt = str(d.get("modulation_format", "DP-16QAM"))
+        raw_bitrate = float(d.get("raw_bitrate_gbps", 256.0))
+        osnr = float(d.get("osnr_db", 22.0))
+        snr = float(d.get("snr_db", 18.0))
+        evm = float(d.get("evm_rms_percent", 12.5))
+        ber_str = str(d.get("estimated_ber_str", "1.20e-03"))
+        fec_status = str(d.get("fec_status", "Lolos HD-FEC (Margin Tinggi)"))
+        is_ok = bool(d.get("is_error_free_post_fec", True))
+        badge_bg = "#ecfdf5" if is_ok else "#fef2f2"
+        badge_color = "#059669" if is_ok else "#dc2626"
+
+        return f"""    <div class="tu-coherent-qam-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0284c7; font-size: 13px; text-transform: uppercase;">Koheren DWDM &bull; Dual-Polarization</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{fec_status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Format Modulasi: <strong>{fmt}</strong> &bull; Laju Raw: <strong>{raw_bitrate:.1f} Gbps</strong> &bull; OSNR: <strong>{osnr:.1f} dB</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">SNR per Simbol</span>
+          <strong style="color: #0284c7; font-size: 16px;">{snr:.2f} dB</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">EVM RMS Konstelasi</span>
+          <strong style="color: #0f172a; font-size: 16px;">{evm:.2f}%</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Estimasi Pre-FEC BER</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{ber_str}</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
@@ -8129,6 +8178,7 @@ render_5g_srs_sounding_card = EditorialComponents.render_5g_srs_sounding_card
 render_satellite_ionospheric_scintillation_card = EditorialComponents.render_satellite_ionospheric_scintillation_card
 render_pkm_vgk_proposal_card = EditorialComponents.render_pkm_vgk_proposal_card
 render_5g_srs_comb_pattern_svg = EditorialComponents.render_5g_srs_comb_pattern_svg
+render_optical_coherent_qam_card = EditorialComponents.render_optical_coherent_qam_card
 
 
 
