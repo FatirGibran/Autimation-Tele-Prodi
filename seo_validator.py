@@ -7898,6 +7898,83 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_color_contrast_inline_css(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits inline CSS color and background-color declarations to ensure compliance
+        with WCAG 2.1 SC 1.4.3 Contrast (Minimum) requiring a contrast ratio >= 4.5:1 for normal text.
+        """
+        if not html_content:
+            return {
+                "total_audited_elements": 0,
+                "compliant_elements": 0,
+                "non_compliant_elements": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        def hex_to_rgb(hex_str: str) -> Optional[Tuple[int, int, int]]:
+            h = hex_str.strip().lstrip("#")
+            if len(h) == 3:
+                h = "".join(c * 2 for c in h)
+            if len(h) == 6:
+                try:
+                    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+                except ValueError:
+                    return None
+            return None
+
+        def rel_luminance(rgb: Tuple[int, int, int]) -> float:
+            vals = []
+            for c in rgb:
+                s = c / 255.0
+                vals.append(s / 12.92 if s <= 0.04045 else ((s + 0.055) / 1.055) ** 2.4)
+            return 0.2126 * vals[0] + 0.7152 * vals[1] + 0.0722 * vals[2]
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        styled_elements = soup.find_all(style=True)
+
+        audited = 0
+        compliant = 0
+        non_compliant = 0
+        issues = []
+
+        for el in styled_elements:
+            style = el["style"].lower()
+            fg_m = re.search(r'(?:^|;)\s*color\s*:\s*(#[0-9a-f]{3,6})\b', style)
+            bg_m = re.search(r'(?:^|;)\s*background(?:-color)?\s*:\s*(#[0-9a-f]{3,6})\b', style)
+
+            if fg_m and bg_m:
+                fg_rgb = hex_to_rgb(fg_m.group(1))
+                bg_rgb = hex_to_rgb(bg_m.group(1))
+                if fg_rgb and bg_rgb:
+                    audited += 1
+                    l1 = rel_luminance(fg_rgb)
+                    l2 = rel_luminance(bg_rgb)
+                    hi, lo = max(l1, l2), min(l1, l2)
+                    ratio = (hi + 0.05) / (lo + 0.05)
+
+                    if ratio < 4.5:
+                        non_compliant += 1
+                        tag_name = el.name
+                        text_snip = el.get_text().strip()[:25]
+                        issues.append(
+                            f"<{tag_name}> '{text_snip}': Rasio kontras warna {ratio:.2f}:1 di bawah ambang batas WCAG 2.1 AA (4.5:1) "
+                            f"(teks: {fg_m.group(1)}, latar: {bg_m.group(1)})."
+                        )
+                    else:
+                        compliant += 1
+
+        is_compliant = non_compliant == 0
+
+        return {
+            "total_audited_elements": audited,
+            "compliant_elements": compliant,
+            "non_compliant_elements": non_compliant,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
