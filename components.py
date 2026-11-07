@@ -8194,6 +8194,55 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_depolarization_xpd_card(
+        cls,
+        title: str = "Estimasi Depolarisasi Hujan & Indeks XPD Satelit ITU-R P.618",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying ITU-R P.618 satellite cross-polarization discrimination (XPD),
+        ice crystal depolarization contribution, and dual-polarization frequency reuse feasibility.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        freq = float(d.get("carrier_frequency_ghz", 18.0))
+        elev = float(d.get("elevation_angle_deg", 35.0))
+        tilt = float(d.get("polarization_tilt_deg", 45.0))
+        xpd_rain = float(d.get("xpd_rain_db", 26.5))
+        c_ice = float(d.get("ice_depol_c_ice_db", 1.8))
+        total_xpd = float(d.get("total_xpd_db", 24.7))
+        feasibility = str(d.get("feasibility", "Sangat Baik (Dual-Polarization Frequency Reuse Sangat Andal)"))
+        is_ok = bool(d.get("is_dual_pol_feasible", True))
+        badge_bg = "#ecfdf5" if is_ok else "#fff7ed"
+        badge_color = "#059669" if is_ok else "#c2410c"
+
+        return f"""    <div class="tu-satellite-xpd-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0284c7; font-size: 13px; text-transform: uppercase;">ITU-R P.618-13 &bull; Depolarisasi Propagasi</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{feasibility}</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="font-size: 13px; color: #475569; margin-bottom: 12px;">
+        Frekuensi: <strong>{freq:.1f} GHz</strong> &bull; Sudut Elevasi: <strong>{elev:.1f}&deg;</strong> &bull; Kemiringan Polarisasi: <strong>{tilt:.1f}&deg;</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">XPD Akibat Hujan</span>
+          <strong style="color: #0284c7; font-size: 16px;">{xpd_rain:.2f} dB</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Koreksi Kristal Es (C_ice)</span>
+          <strong style="color: #64748b; font-size: 16px;">-{c_ice:.2f} dB</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Total Net XPD</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{total_xpd:.2f} dB</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
@@ -8233,6 +8282,7 @@ render_pkm_vgk_proposal_card = EditorialComponents.render_pkm_vgk_proposal_card
 render_5g_srs_comb_pattern_svg = EditorialComponents.render_5g_srs_comb_pattern_svg
 render_optical_coherent_qam_card = EditorialComponents.render_optical_coherent_qam_card
 render_5g_nr_pucch_card = EditorialComponents.render_5g_nr_pucch_card
+render_satellite_depolarization_xpd_card = EditorialComponents.render_satellite_depolarization_xpd_card
 
 
 
