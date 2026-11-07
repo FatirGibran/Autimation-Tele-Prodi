@@ -7837,6 +7837,67 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_table_data_semantic_scope_headers(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits HTML <table> data structures to ensure screen reader accessibility compliance
+        (WCAG 2.1 SC 1.3.1 Info and Relationships) requiring <th> cells with explicit scope
+        ('col' or 'row') or valid headers associations.
+        """
+        if not html_content:
+            return {
+                "total_tables": 0,
+                "compliant_tables": 0,
+                "non_compliant_tables": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+        if not tables:
+            return {
+                "total_tables": 0,
+                "compliant_tables": 0,
+                "non_compliant_tables": 0,
+                "is_accessible": True,
+                "issues": []
+            }
+
+        compliant = 0
+        non_compliant = 0
+        issues = []
+
+        for idx, table in enumerate(tables, 1):
+            ths = table.find_all("th")
+            if not ths:
+                non_compliant += 1
+                issues.append(f"Tabel #{idx} tidak memiliki elemen <th> (header baris/kolom tidak terdefinisi).")
+                continue
+
+            missing_scope_or_id = 0
+            for th in ths:
+                scope = (th.get("scope") or "").strip().lower()
+                th_id = (th.get("id") or "").strip()
+                if scope not in ("col", "row", "colgroup", "rowgroup") and not th_id:
+                    missing_scope_or_id += 1
+
+            if missing_scope_or_id > 0:
+                non_compliant += 1
+                issues.append(f"Tabel #{idx} memiliki {missing_scope_or_id} elemen <th> tanpa atribut 'scope' (col/row) atau 'id'.")
+            else:
+                compliant += 1
+
+        is_accessible = non_compliant == 0
+
+        return {
+            "total_tables": len(tables),
+            "compliant_tables": compliant,
+            "non_compliant_tables": non_compliant,
+            "is_accessible": is_accessible,
+            "issues": issues
+        }
+
 
 
 
