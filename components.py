@@ -8243,6 +8243,59 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_rsh_proposal_card(
+        cls,
+        title: str = "Evaluasi Proposal Belmawa PKM Riset Sosial Humaniora (PKM-RSH)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying PKM-RSH student proposal evaluation,
+        assessing social problem urgency, qualitative/quantitative methodology,
+        ethical clearance, Belmawa funding status, and MBKM credit equivalency.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        student = str(d.get("student_leader", "Mahasiswa Telkom Purwokerto"))
+        nim = str(d.get("nim", "1101210045"))
+        prop_title = str(d.get("proposal_title", "Adopsi Sosio-Teknologi Digital Pedesaan"))
+        topic = str(d.get("research_topic", "Kesenjangan Digital & Sosio-Teknologi"))
+        composite = float(d.get("composite_score", 86.5))
+        letter_grade = str(d.get("letter_grade", "A"))
+        funding_status = str(d.get("funding_status", "Lolos Pendanaan Belmawa PKM-RSH Unggulan"))
+        budget_idr = int(d.get("allocated_budget_idr", 10000000))
+        sks = int(d.get("converted_sks", 5))
+        is_funded = bool(d.get("is_funded", True))
+        badge_bg = "#ecfdf5" if is_funded else "#fff7ed"
+        badge_color = "#059669" if is_funded else "#c2410c"
+
+        return f"""    <div class="tu-pkm-rsh-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0891b2; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0891b2; font-size: 13px; text-transform: uppercase;">Belmawa Kemendikbudristek &bull; PKM-RSH</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{funding_status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Judul Riset: <strong>{prop_title}</strong> (Topik: {topic})<br/>
+        Ketua Pengusul: <strong>{student}</strong> (NIM: {nim})
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Skor Komposit &amp; Nilai</span>
+          <strong style="color: #0891b2; font-size: 16px;">{composite:.2f}</strong> <span style="font-weight: 700; color: #0f172a;">({letter_grade})</span>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Alokasi Pendanaan Belmawa</span>
+          <strong style="color: {badge_color}; font-size: 15px;">Rp {budget_idr:,}</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Ekuivalensi MBKM</span>
+          <strong style="color: #0f172a; font-size: 16px;">{sks} SKS</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
@@ -8283,6 +8336,7 @@ render_5g_srs_comb_pattern_svg = EditorialComponents.render_5g_srs_comb_pattern_
 render_optical_coherent_qam_card = EditorialComponents.render_optical_coherent_qam_card
 render_5g_nr_pucch_card = EditorialComponents.render_5g_nr_pucch_card
 render_satellite_depolarization_xpd_card = EditorialComponents.render_satellite_depolarization_xpd_card
+render_pkm_rsh_proposal_card = EditorialComponents.render_pkm_rsh_proposal_card
 
 
 
