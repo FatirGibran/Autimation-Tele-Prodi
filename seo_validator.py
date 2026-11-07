@@ -8028,6 +8028,64 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_interactive_touch_target_sizes(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits interactive clickable elements (<button>, <a>, <input>) to ensure compliance
+        with WCAG 2.1 SC 2.5.5 / SC 2.5.8 Target Size requirements (minimum 24x24px, recommended 44x44px).
+        """
+        if not html_content:
+            return {
+                "total_targets": 0,
+                "compliant_targets": 0,
+                "sub_minimum_targets": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        targets = soup.find_all(lambda el: el.name in ("button", "a") or (el.name == "input" and el.get("type", "").lower() in ("button", "submit", "reset")))
+
+        if not targets:
+            return {
+                "total_targets": 0,
+                "compliant_targets": 0,
+                "sub_minimum_targets": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        def parse_px(val_str: str) -> Optional[float]:
+            m = re.search(r'([0-9]+(?:\.[0-9]+)?)\s*px', val_str.lower())
+            return float(m.group(1)) if m else None
+
+        sub_min = 0
+        compliant = 0
+        issues = []
+
+        for el in targets:
+            style = el.get("style", "").lower()
+            w = parse_px(re.search(r'(?:^|;)\s*(?:min-)?width\s*:\s*([^;]+)', style).group(1)) if re.search(r'(?:^|;)\s*(?:min-)?width\s*:\s*([^;]+)', style) else None
+            h = parse_px(re.search(r'(?:^|;)\s*(?:min-)?height\s*:\s*([^;]+)', style).group(1)) if re.search(r'(?:^|;)\s*(?:min-)?height\s*:\s*([^;]+)', style) else None
+
+            if (w is not None and w < 24.0) or (h is not None and h < 24.0):
+                sub_min += 1
+                dim_str = f"{w or '?'}x{h or '?'}px"
+                text_snip = el.get_text().strip()[:20] or el.get("aria-label", "") or el.name
+                issues.append(f"<{el.name}> '{text_snip}': Ukuran target interaktif ({dim_str}) berada di bawah standar minimum WCAG 2.1 (24x24px).")
+            else:
+                compliant += 1
+
+        is_compliant = sub_min == 0
+
+        return {
+            "total_targets": len(targets),
+            "compliant_targets": compliant,
+            "sub_minimum_targets": sub_min,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
