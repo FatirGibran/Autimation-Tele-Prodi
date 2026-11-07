@@ -8141,6 +8141,59 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_pucch_card(
+        cls,
+        title: str = "Konfigurasi Kapasitas Kanal Kontrol Uplink 5G NR PUCCH",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying 5G NR PUCCH Format specifications,
+        allocated PRBs, UCI payload capability, multiplexing UE capacity, and SNR threshold.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        fmt = int(d.get("pucch_format", 1))
+        desc = str(d.get("format_description", "Long PUCCH (Time OCC & Cyclic Shift, 4-14 symbols)"))
+        prbs = int(d.get("num_prbs", 1))
+        symbols = int(d.get("num_symbols", 14))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        max_uci = int(d.get("max_uci_payload_bits", 2))
+        max_ues = int(d.get("multiplexing_ue_capacity", 12))
+        req_snr = float(d.get("required_snr_db", -5.0))
+        overhead = float(d.get("slot_overhead_percent", 7.14))
+
+        return f"""    <div class="tu-pucch-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #059669; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #059669; font-size: 13px; text-transform: uppercase;">3GPP TS 38.211 &bull; PUCCH Format {fmt}</span>
+        <span style="font-size: 11px; background: #ecfdf5; color: #059669; padding: 3px 8px; border-radius: 4px; font-weight: 600;">SCS {scs} kHz &bull; {symbols} Simbol</span>
+      </div>
+      <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="font-size: 13px; color: #475569; margin-bottom: 12px;">{desc}</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 12px; margin-bottom: 12px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Alokasi PRB</span>
+          <strong style="color: #0f172a; font-size: 15px;">{prbs} PRB</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Max Payload UCI</span>
+          <strong style="color: #0284c7; font-size: 15px;">{max_uci} bit</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Kapasitas UE / PRB</span>
+          <strong style="color: #059669; font-size: 15px;">{max_ues} UE</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Target SNR Min</span>
+          <strong style="color: #6366f1; font-size: 15px;">{req_snr:.1f} dB</strong>
+        </div>
+      </div>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #166534;">
+        Overhead Alokasi Slot: <strong>{overhead:.2f}%</strong> dari total kapasitas Resource Element uplink slot radio.
+      </div>
+    </div>"""
+
 
 
 
@@ -8179,6 +8232,7 @@ render_satellite_ionospheric_scintillation_card = EditorialComponents.render_sat
 render_pkm_vgk_proposal_card = EditorialComponents.render_pkm_vgk_proposal_card
 render_5g_srs_comb_pattern_svg = EditorialComponents.render_5g_srs_comb_pattern_svg
 render_optical_coherent_qam_card = EditorialComponents.render_optical_coherent_qam_card
+render_5g_nr_pucch_card = EditorialComponents.render_5g_nr_pucch_card
 
 
 
