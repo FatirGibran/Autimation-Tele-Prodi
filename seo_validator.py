@@ -7975,6 +7975,59 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_language_of_parts_subtags(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits inline passage language declarations (WCAG 2.1 SC 3.1.2 Language of Parts)
+        to verify that 'lang' attributes on HTML elements comply with standard IETF BCP 47 subtags.
+        """
+        if not html_content:
+            return {
+                "total_lang_attributes": 0,
+                "valid_lang_attributes": 0,
+                "invalid_lang_attributes": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        elements_with_lang = soup.find_all(attrs={"lang": True})
+
+        if not elements_with_lang:
+            return {
+                "total_lang_attributes": 0,
+                "valid_lang_attributes": 0,
+                "invalid_lang_attributes": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        bcp47_pattern = re.compile(r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})*$')
+        valid_count = 0
+        invalid_count = 0
+        issues = []
+
+        for el in elements_with_lang:
+            lang_val = el["lang"].strip()
+            if not lang_val:
+                invalid_count += 1
+                issues.append(f"<{el.name}>: Atribut 'lang' bernilai kosong.")
+            elif not bcp47_pattern.match(lang_val):
+                invalid_count += 1
+                issues.append(f"<{el.name}>: Atribut lang='{lang_val}' tidak mematuhi format IETF BCP 47 standar.")
+            else:
+                valid_count += 1
+
+        is_compliant = invalid_count == 0
+
+        return {
+            "total_lang_attributes": len(elements_with_lang),
+            "valid_lang_attributes": valid_count,
+            "invalid_lang_attributes": invalid_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
