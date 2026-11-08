@@ -7769,6 +7769,74 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_external_link_security_attributes(
+        html_content: str,
+        internal_domains: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Audits external outbound hyperlinks for reverse tabnabbing vulnerabilities,
+        verifying that target="_blank" links properly enforce rel="noopener" or rel="noreferrer".
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_external_links": 0,
+                "blank_target_links": 0,
+                "secure_blank_target_links": 0,
+                "insecure_links_count": 0,
+                "is_secure": True,
+                "issues": []
+            }
+
+        allowed_domains = {"telkomuniversity.ac.id", "ittelkom-pwt.ac.id", "localhost"}
+        if internal_domains:
+            for d in internal_domains:
+                allowed_domains.add(d.strip().lower())
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        links = soup.find_all("a", href=True)
+
+        total_ext = 0
+        blank_targets = 0
+        secure_blanks = 0
+        insecure_count = 0
+        issues = []
+
+        for a in links:
+            href = a.get("href", "").strip()
+            if not href.startswith(("http://", "https://")):
+                continue
+
+            # Check if internal domain
+            is_internal = any(dom in href.lower() for dom in allowed_domains)
+            if is_internal:
+                continue
+
+            total_ext += 1
+            target = (a.get("target") or "").strip().lower()
+
+            if target == "_blank":
+                blank_targets += 1
+                rel_val = (a.get("rel") or "")
+                tokens = set(rel_val.lower().split()) if isinstance(rel_val, str) else set(rel_val)
+
+                if "noopener" in tokens or "noreferrer" in tokens:
+                    secure_blanks += 1
+                else:
+                    insecure_count += 1
+                    issues.append(f"{href}: Tautan target='_blank' membuka jendela baru tanpa 'rel=\"noopener noreferrer\"' (kerentanan Reverse Tabnabbing).")
+
+        is_secure = insecure_count == 0
+
+        return {
+            "total_external_links": total_ext,
+            "blank_target_links": blank_targets,
+            "secure_blank_target_links": secure_blanks,
+            "insecure_links_count": insecure_count,
+            "is_secure": is_secure,
+            "issues": issues
+        }
+
 
 
 
