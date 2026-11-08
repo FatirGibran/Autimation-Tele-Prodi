@@ -2757,6 +2757,42 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_social_research_article_json_ld(
+        headline: str,
+        abstract: str,
+        author_name: str,
+        institution_name: str,
+        research_topic: str,
+        date_published: str,
+        sdg_alignment: str = "",
+        policy_brief_url: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org ScholarlyArticle JSON-LD specialized for Social Science and Humanities Research (PKM-RSH).
+        """
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "ScholarlyArticle",
+            "headline": headline.strip(),
+            "description": abstract.strip(),
+            "author": {
+                "@type": "Person",
+                "name": author_name.strip(),
+                "affiliation": {
+                    "@type": "EducationalOrganization",
+                    "name": institution_name.strip()
+                }
+            },
+            "about": research_topic.strip(),
+            "datePublished": date_published.strip()
+        }
+        if sdg_alignment:
+            data["keywords"] = [research_topic.strip(), sdg_alignment.strip()]
+        if policy_brief_url:
+            data["citation"] = policy_brief_url.strip()
+        return data
+
 
 
 
