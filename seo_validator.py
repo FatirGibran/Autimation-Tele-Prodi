@@ -7520,6 +7520,88 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_breadcrumb_navigation_schema(html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic breadcrumb navigation markup and Schema.org BreadcrumbList structure
+        for search engine rich snippet eligibility and WCAG 2.1 navigational clarity.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "has_breadcrumbs": False,
+                "breadcrumb_type": "none",
+                "item_count": 0,
+                "is_valid": False,
+                "issues": ["Konten HTML kosong."]
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        item_count = 0
+        b_type = "none"
+
+        # Check JSON-LD schema
+        json_scripts = soup.find_all("script", type="application/ld+json")
+        for s in json_scripts:
+            try:
+                import json
+                data = json.loads(s.string or "{}")
+                if data.get("@type") == "BreadcrumbList" or (isinstance(data.get("@graph"), list) and any(x.get("@type") == "BreadcrumbList" for x in data["@graph"])):
+                    b_type = "json-ld"
+                    elements = data.get("itemListElement") or []
+                    if not elements and "@graph" in data:
+                        for g in data["@graph"]:
+                            if g.get("@type") == "BreadcrumbList":
+                                elements = g.get("itemListElement", [])
+                                break
+                    item_count = len(elements)
+                    # Verify positions
+                    for i, el in enumerate(elements, 1):
+                        pos = el.get("position")
+                        if pos != i:
+                            issues.append(f"JSON-LD breadcrumb item {i} memiliki urutan posisi {pos}, seharusnya {i}.")
+                    break
+            except Exception:
+                pass
+
+        # Check Microdata
+        if b_type == "none":
+            mdata = soup.find(attrs={"itemtype": re.compile(r'schema\.org/BreadcrumbList', re.IGNORECASE)})
+            if mdata:
+                b_type = "microdata"
+                items = mdata.find_all(attrs={"itemtype": re.compile(r'schema\.org/ListItem', re.IGNORECASE)})
+                item_count = len(items)
+                if item_count == 0:
+                    issues.append("Microdata BreadcrumbList tidak memiliki child item schema.org/ListItem.")
+
+        # Check HTML5 nav breadcrumb
+        if b_type == "none":
+            nav_bc = soup.find("nav", attrs={"aria-label": re.compile(r'breadcrumb', re.IGNORECASE)})
+            if nav_bc:
+                b_type = "aria-nav"
+                ol = nav_bc.find(["ol", "ul"])
+                if ol:
+                    items = ol.find_all("li")
+                    item_count = len(items)
+                if item_count == 0:
+                    issues.append("Elemen nav breadcrumb tidak memiliki daftar item li.")
+
+        has_breadcrumbs = b_type != "none"
+        if not has_breadcrumbs:
+            issues.append("Tidak ditemukan struktur navigasi breadcrumb (JSON-LD, Microdata, atau nav aria-label).")
+
+        is_valid = has_breadcrumbs and (item_count >= 2) and (len(issues) == 0)
+        if has_breadcrumbs and item_count < 2:
+            issues.append(f"Breadcrumb hanya memiliki {item_count} item; minimal 2 level hierarki disyaratkan.")
+
+        return {
+            "has_breadcrumbs": has_breadcrumbs,
+            "breadcrumb_type": b_type,
+            "item_count": item_count,
+            "is_valid": is_valid,
+            "issues": issues
+        }
+
 
 
 
