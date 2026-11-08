@@ -8588,6 +8588,81 @@ def calculate_satellite_ionospheric_scintillation_s4_itu_r_p531(
     }
 
 
+def parse_pkm_vgk_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates PKM Video Gagasan Konstruktif (PKM-VGK) proposals under Belmawa Kemendikbudristek guidelines,
+    assessing constructive societal vision, video storyboard/cinematography quality, SDGs alignment, and budget viability.
+    """
+    student_leader = str(data.get("student_leader", "")).strip() or "Mahasiswa Telkom Purwokerto"
+    nim = str(data.get("nim", "")).strip()
+    proposal_title = str(data.get("proposal_title", "")).strip() or "Inovasi Video Gagasan Konstruktif SDGs"
+    sdg_goal = str(data.get("sdg_goal", "")).strip() or "SDG 9: Industri, Inovasi, dan Infrastruktur"
+    duration = max(0.5, float(data.get("video_duration_minutes", 3.0)))
+
+    s_idea = max(0.0, min(100.0, float(data.get("idea_urgency_score", 0.0))))
+    s_story = max(0.0, min(100.0, float(data.get("storyboard_quality_score", 0.0))))
+    s_impact = max(0.0, min(100.0, float(data.get("solution_impact_score", 0.0))))
+    s_dissem = max(0.0, min(100.0, float(data.get("dissemination_score", 0.0))))
+
+    # Duration compliance penalty: Belmawa PKM-VGK video must be between 2.0 and 4.0 minutes
+    duration_penalty = 0.0
+    if duration < 2.0 or duration > 4.0:
+        duration_penalty = 5.0
+
+    raw_composite = (0.30 * s_idea) + (0.30 * s_story) + (0.25 * s_impact) + (0.15 * s_dissem)
+    composite = round(max(0.0, raw_composite - duration_penalty), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        allocated_budget_idr = 10000000
+        funding_status = "Lolos Pendanaan Belmawa PKM-VGK Unggulan"
+        converted_sks = 4
+    elif is_funded:
+        allocated_budget_idr = 8500000
+        funding_status = "Lolos Pendanaan Belmawa PKM-VGK Reguler"
+        converted_sks = 3
+    else:
+        allocated_budget_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "sdg_goal": sdg_goal,
+        "video_duration_minutes": duration,
+        "idea_urgency_score": s_idea,
+        "storyboard_quality_score": s_story,
+        "solution_impact_score": s_impact,
+        "dissemination_score": s_dissem,
+        "duration_penalty": duration_penalty,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "allocated_budget_idr": allocated_budget_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
 
 
 
