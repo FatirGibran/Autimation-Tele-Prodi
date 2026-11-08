@@ -2927,6 +2927,101 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("PDCCH DCI", html)
         self.assertIn("PDSCH Data Payload", html)
 
+    def test_render_optical_sbs_threshold_card(self):
+        html = EditorialComponents.render_optical_sbs_threshold_card(
+            data={
+                "fiber_length_km": 50.0,
+                "effective_length_km": 20.28,
+                "laser_linewidth_mhz": 10.0,
+                "threshold_power_mw": 8.95,
+                "threshold_power_dbm": 9.52,
+                "status": "Standard Power Tolerance"
+            }
+        )
+        self.assertIn("tu-optical-sbs-card", html)
+        self.assertIn("50.0 km", html)
+        self.assertIn("20.28 km", html)
+        self.assertIn("10.0 MHz", html)
+        self.assertIn("8.95 mW", html)
+        self.assertIn("9.52 dBm", html)
+
+    def test_render_5g_srs_sounding_card(self):
+        html = EditorialComponents.render_5g_srs_sounding_card(
+            data={
+                "bandwidth_mhz": 100.0,
+                "scs_khz": 30,
+                "comb_size": 4,
+                "cyclic_shift_count": 8,
+                "prb_count": 273,
+                "max_concurrent_ues_per_slot": 16,
+                "total_multiplexed_ues_per_period": 160,
+                "sounding_overhead_pct": 14.29,
+                "status": "High Capacity Sounding"
+            }
+        )
+        self.assertIn("tu-5g-srs-card", html)
+        self.assertIn("100.0 MHz (30 kHz SCS)", html)
+        self.assertIn("Comb-4", html)
+        self.assertIn("8 Cyclic Shifts", html)
+        self.assertIn("16 UE / slot", html)
+        self.assertIn("14.29%", html)
+
+    def test_render_satellite_ionospheric_scintillation_card(self):
+        html = EditorialComponents.render_satellite_ionospheric_scintillation_card(
+            data={
+                "carrier_frequency_ghz": 1.5,
+                "elevation_angle_deg": 30.0,
+                "obliquity_factor": 1.85,
+                "s4_index": 0.38,
+                "peak_to_peak_fluctuation_db": 8.42,
+                "fade_margin_db": 5.31,
+                "severity": "Moderate Scintillation",
+                "is_acceptable": True
+            }
+        )
+        self.assertIn("tu-satellite-ionospheric-card", html)
+        self.assertIn("1.50 GHz", html)
+        self.assertIn("30.0&deg; Elev", html)
+        self.assertIn("0.380", html)
+        self.assertIn("5.31 dB", html)
+
+    def test_render_pkm_vgk_proposal_card(self):
+        html = EditorialComponents.render_pkm_vgk_proposal_card(
+            data={
+                "student_leader": "Anisa Putri",
+                "nim": "1101210088",
+                "proposal_title": "AI Smart Ocean Guard Terumbu Karang",
+                "sdg_goal": "SDG 14: Ekosistem Lautan",
+                "video_duration_minutes": 3.0,
+                "composite_score": 88.5,
+                "letter_grade": "A",
+                "funding_status": "Lolos Pendanaan Belmawa PKM-VGK Unggulan",
+                "allocated_budget_idr": 10000000,
+                "converted_sks": 4,
+                "is_funded": True
+            }
+        )
+        self.assertIn("tu-pkm-vgk-card", html)
+        self.assertIn("Anisa Putri", html)
+        self.assertIn("10,000,000", html)
+        self.assertIn("4 SKS", html)
+
+    def test_render_5g_srs_comb_pattern_svg(self):
+        html = EditorialComponents.render_5g_srs_comb_pattern_svg(
+            data={
+                "comb_size": 4,
+                "scs_khz": 30,
+                "prb_count": 273,
+                "max_concurrent_ues_per_slot": 16,
+                "srs_symbols_per_slot": 2
+            }
+        )
+        self.assertIn("tu-nr-srs-svg-card", html)
+        self.assertIn("<svg", html)
+        self.assertIn("Comb-4 Active", html)
+        self.assertIn("SRS Simbol 12", html)
+        self.assertIn("16 UE / slot", html)
+
 
 if __name__ == "__main__":
     unittest.main()
