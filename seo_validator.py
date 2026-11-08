@@ -7721,7 +7721,7 @@ class YoastSEOValidator:
         }
 
         personal_patterns = re.compile(
-            r'\b(?:nama|name|email|surel|telepon|tel|phone|hp|alamat|address|kota|city|pos|kodepos|postal|instansi|institusi|organization|kampus|nim|username|password|sandi)\b',
+            r'(?:nama|name|email|surel|telepon|tel|phone|hp|alamat|address|kota|city|pos|kodepos|postal|instansi|institusi|organization|kampus|nim|username|password|sandi)',
             re.IGNORECASE
         )
 

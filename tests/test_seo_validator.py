@@ -2388,6 +2388,83 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_optimized"])
         self.assertGreater(len(res_bad["issues"]), 0)
 
+    def test_audit_breadcrumb_navigation_schema(self):
+        # JSON-LD breadcrumbs
+        html_jsonld = (
+            '<script type="application/ld+json">'
+            '{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": ['
+            '{"@type": "ListItem", "position": 1, "name": "Beranda", "item": "https://telkomuniversity.ac.id"},'
+            '{"@type": "ListItem", "position": 2, "name": "Akademik", "item": "https://telkomuniversity.ac.id/akademik"}'
+            ']}'
+            '</script>'
+        )
+        res_ok = YoastSEOValidator.audit_breadcrumb_navigation_schema(html_jsonld)
+        self.assertTrue(res_ok["is_valid"])
+        self.assertEqual(res_ok["breadcrumb_type"], "json-ld")
+        self.assertEqual(res_ok["item_count"], 2)
+
+        # Nav aria-label breadcrumb
+        html_nav = '<nav aria-label="breadcrumb"><ol><li><a href="/">Home</a></li><li>Telekomunikasi</li></ol></nav>'
+        res_nav = YoastSEOValidator.audit_breadcrumb_navigation_schema(html_nav)
+        self.assertTrue(res_nav["is_valid"])
+        self.assertEqual(res_nav["breadcrumb_type"], "aria-nav")
+        self.assertEqual(res_nav["item_count"], 2)
+
+        # Missing breadcrumbs
+        res_none = YoastSEOValidator.audit_breadcrumb_navigation_schema("<div>Konten biasa tanpa breadcrumbs</div>")
+        self.assertFalse(res_none["is_valid"])
+        self.assertFalse(res_none["has_breadcrumbs"])
+
+    def test_audit_audio_media_transcripts(self):
+        # Audio with transcript div
+        html_ok = (
+            '<div>'
+            '<audio controls src="kuliah-telecom.mp3"></audio>'
+            '<div class="tu-transcript">Transkrip lengkap kuliah teknik telekomunikasi: sinyal analog dan digital...</div>'
+            '</div>'
+        )
+        res_ok = YoastSEOValidator.audit_audio_media_transcripts(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["elements_with_transcripts"], 1)
+
+        # Audio missing transcript
+        html_bad = '<audio controls src="kuliah-podcast.mp3"></audio>'
+        res_bad = YoastSEOValidator.audit_audio_media_transcripts(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["elements_with_transcripts"], 0)
+
+    def test_audit_form_input_autocomplete_tokens(self):
+        # Valid autocomplete
+        html_ok = (
+            '<form>'
+            '<input type="text" name="nama_lengkap" autocomplete="name">'
+            '<input type="email" name="email_mahasiswa" autocomplete="email">'
+            '</form>'
+        )
+        res_ok = YoastSEOValidator.audit_form_input_autocomplete_tokens(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["valid_autocomplete_inputs"], 2)
+
+        # Missing autocomplete on personal field
+        html_bad = '<form><input type="email" name="surel_kontak"></form>'
+        res_bad = YoastSEOValidator.audit_form_input_autocomplete_tokens(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["valid_autocomplete_inputs"], 0)
+
+    def test_audit_external_link_security_attributes(self):
+        # Secure external link
+        html_ok = '<a href="https://itu.int" target="_blank" rel="noopener noreferrer">ITU-R Recommendation</a>'
+        res_ok = YoastSEOValidator.audit_external_link_security_attributes(html_ok)
+        self.assertTrue(res_ok["is_secure"])
+        self.assertEqual(res_ok["blank_target_links"], 1)
+        self.assertEqual(res_ok["secure_blank_target_links"], 1)
+
+        # Insecure blank target
+        html_bad = '<a href="https://external-untrusted.org" target="_blank">Insecure Link</a>'
+        res_bad = YoastSEOValidator.audit_external_link_security_attributes(html_bad)
+        self.assertFalse(res_bad["is_secure"])
+        self.assertEqual(res_bad["insecure_links_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
