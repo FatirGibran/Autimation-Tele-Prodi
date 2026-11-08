@@ -1519,6 +1519,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_scint_s4 ON satellite_ionospheric_scintillation_records(s4_index);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_srs_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    bandwidth_mhz REAL NOT NULL,
+                    scs_khz INTEGER NOT NULL,
+                    prb_count INTEGER NOT NULL,
+                    comb_size INTEGER NOT NULL,
+                    cyclic_shift_count INTEGER NOT NULL,
+                    srs_symbols_per_slot INTEGER NOT NULL,
+                    max_concurrent_ues_per_slot INTEGER NOT NULL,
+                    total_multiplexed_ues_per_period INTEGER NOT NULL,
+                    sounding_overhead_pct REAL NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_srs_comb ON nr_srs_records(comb_size);")
 
 
 
@@ -6964,6 +6981,61 @@ class StorageManager:
     record_satellite_ionospheric_scintillation = save_satellite_ionospheric_scintillation_record
     list_satellite_ionospheric_scintillation = list_satellite_ionospheric_scintillation_records
     get_satellite_ionospheric_scintillation_by_id = get_satellite_ionospheric_scintillation_record_by_id
+
+    def save_nr_srs_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a 5G NR Sounding Reference Signal (SRS) capacity and channel sounding configuration record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_srs_records (
+                    bandwidth_mhz, scs_khz, prb_count, comb_size,
+                    cyclic_shift_count, srs_symbols_per_slot,
+                    max_concurrent_ues_per_slot, total_multiplexed_ues_per_period,
+                    sounding_overhead_pct, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(d.get("bandwidth_mhz", 0.0)),
+                int(d.get("scs_khz", 30)),
+                int(d.get("prb_count", 0)),
+                int(d.get("comb_size", 4)),
+                int(d.get("cyclic_shift_count", 8)),
+                int(d.get("srs_symbols_per_slot", 2)),
+                int(d.get("max_concurrent_ues_per_slot", 0)),
+                int(d.get("total_multiplexed_ues_per_period", 0)),
+                float(d.get("sounding_overhead_pct", 0.0)),
+                str(d.get("status", "Standard Capacity Sounding")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_srs_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR SRS channel sounding capacity records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_srs_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_srs_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single 5G NR SRS sounding capacity record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_srs_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_nr_srs = save_nr_srs_record
+    list_nr_srs = list_nr_srs_records
+    get_nr_srs_by_id = get_nr_srs_record_by_id
 
 
 
