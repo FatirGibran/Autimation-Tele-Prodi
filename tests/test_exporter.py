@@ -1350,6 +1350,44 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("<title>Panduan Pengembangan Gatsby MDX</title>", res)
         self.assertIn("<p>Arsitektur Gatsby Head API dan MDX routing.</p>", res)
 
+    def test_generate_constructive_video_json_ld(self):
+        meta = {
+            "proposal_title": "AI Smart Ocean Guard Terumbu Karang",
+            "student_leader": "Anisa Putri",
+            "nim": "1101210088",
+            "sdg_goal": "SDG 14: Ekosistem Lautan",
+            "video_duration_minutes": 3.5,
+            "funding_status": "Lolos Pendanaan Belmawa PKM-VGK Unggulan",
+            "description": "Video animasi 3D gagasan restorasi ekosistem laut berbasis sensor IoT.",
+            "url": "https://bif-pwt.telkomuniversity.ac.id/pkm-vgk-ocean"
+        }
+        res = ArticleExporter.generate_constructive_video_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "VideoObject")
+        self.assertEqual(res["name"], "AI Smart Ocean Guard Terumbu Karang")
+        self.assertEqual(res["creator"]["name"], "Anisa Putri")
+        self.assertEqual(res["creator"]["identifier"], "1101210088")
+        self.assertEqual(res["duration"], "PT3M30S")
+        self.assertEqual(res["about"]["name"], "SDG 14: Ekosistem Lautan")
+        self.assertEqual(res["contentUrl"], "https://bif-pwt.telkomuniversity.ac.id/pkm-vgk-ocean")
+
+    def test_to_redwoodjs_mdx(self):
+        meta = {
+            "seo_title": "Panduan Pengembangan RedwoodJS MDX",
+            "meta_description": "Dokumentasi modern fullstack framework RedwoodJS.",
+            "slug": "panduan-redwoodjs-mdx",
+            "publish_date": "2026-11-08",
+            "tags": ["redwoodjs", "react", "graphql"]
+        }
+        res = ArticleExporter.to_redwoodjs_mdx(meta, "<p>Arsitektur RedwoodJS Cell dan MDX routes.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Pengembangan RedwoodJS MDX"', res)
+        self.assertIn('framework: "redwoodjs"', res)
+        self.assertIn("redwoodjs: true", res)
+        self.assertIn("import { Metadata } from '@redwoodjs/web';", res)
+        self.assertIn('<Metadata title="Panduan Pengembangan RedwoodJS MDX"', res)
+        self.assertIn("<p>Arsitektur RedwoodJS Cell dan MDX routes.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
