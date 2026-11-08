@@ -57,7 +57,10 @@ from parser import (
     parse_pkm_ki_proposal_evaluation,
     calculate_satellite_ionospheric_scintillation_s4_itu_r_p531,
     calculate_5g_nr_srs_capacity_and_coverage,
-    parse_pkm_vgk_proposal_evaluation
+    parse_pkm_vgk_proposal_evaluation,
+    calculate_optical_coherent_qam_evm_ber,
+    calculate_5g_nr_pucch_capacity_and_scheduling,
+    parse_pkm_rsh_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -3495,6 +3498,128 @@ def cmd_pkmvgk(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['sdg_goal'][:22]:<24} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
 
 
+def cmd_cohqam(args):
+    if args.action == "add":
+        fmt = args.fmt or "16QAM"
+        rate = float(args.rate) if args.rate is not None else 32.0
+        osnr = float(args.osnr) if args.osnr is not None else 22.0
+        linewidth = float(args.linewidth) if args.linewidth is not None else 100.0
+
+        res = calculate_optical_coherent_qam_evm_ber(
+            osnr_db=osnr,
+            symbol_rate_gbaud=rate,
+            modulation_format=fmt,
+            laser_linewidth_khz=linewidth
+        )
+        rec_id = storage.record_optical_coherent_qam(
+            modulation_format=res["modulation_format"],
+            symbol_rate_gbaud=rate,
+            raw_bitrate_gbps=res["raw_bitrate_gbps"],
+            osnr_db=osnr,
+            snr_db=res["snr_db"],
+            evm_rms_percent=res["evm_rms_percent"],
+            estimated_ber=res["estimated_ber"],
+            q_factor_db=res["q_factor_db"],
+            laser_linewidth_khz=linewidth,
+            fec_status=res["fec_status"],
+            is_error_free_post_fec=res["is_error_free_post_fec"]
+        )
+        print(f"Catatan Transponder Koheren berhasil disimpan dengan ID: {rec_id} (Format: {res['modulation_format']}, Rate: {res['raw_bitrate_gbps']} Gbps, SNR: {res['snr_db']} dB, EVM: {res['evm_rms_percent']}%, Status: {res['fec_status']})")
+    else:
+        records = storage.list_optical_coherent_qam(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan transponder optik koheren yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'MODULASI':<10} | {'RATE (Gbaud)':<12} | {'BITRATE':<10} | {'OSNR (dB)':<10} | {'SNR (dB)':<10} | {'EVM (%)':<8} | {'STATUS FEC'}")
+        print("-" * 88)
+        for r in records:
+            print(f"{r['id']:<4} | {r['modulation_format']:<10} | {r['symbol_rate_gbaud']:<12.1f} | {r['raw_bitrate_gbps']:<10.1f} | {r['osnr_db']:<10.2f} | {r['snr_db']:<10.2f} | {r['evm_rms_percent']:<8.2f} | {r['fec_status']}")
+
+
+def cmd_nrpucch(args):
+    if args.action == "add":
+        fmt = int(args.fmt) if args.fmt is not None else 1
+        prbs = int(args.prbs) if args.prbs is not None else 1
+        syms = int(args.syms) if args.syms is not None else 14
+        scs = int(args.scs) if args.scs is not None else 30
+
+        res = calculate_5g_nr_pucch_capacity_and_scheduling(
+            pucch_format=fmt,
+            num_prbs=prbs,
+            num_symbols=syms,
+            subcarrier_spacing_khz=scs
+        )
+        rec_id = storage.record_nr_pucch(
+            pucch_format=res["pucch_format"],
+            format_description=res["format_description"],
+            num_prbs=res["num_prbs"],
+            num_symbols=res["num_symbols"],
+            subcarrier_spacing_khz=res["subcarrier_spacing_khz"],
+            max_uci_payload_bits=res["max_uci_payload_bits"],
+            multiplexing_ue_capacity=res["multiplexing_ue_capacity"],
+            required_snr_db=res["required_snr_db"],
+            slot_overhead_percent=res["slot_overhead_percent"]
+        )
+        print(f"Catatan 5G NR PUCCH berhasil disimpan dengan ID: {rec_id} (Format: {res['pucch_format']}, PRBs: {res['num_prbs']}, UCI: {res['max_uci_payload_bits']} bit, UE/PRB: {res['multiplexing_ue_capacity']}, Overhead: {res['slot_overhead_percent']}%)")
+    else:
+        records = storage.list_nr_pucch(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR PUCCH yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FORMAT':<8} | {'PRB':<5} | {'SIMBOL':<8} | {'SCS (kHz)':<10} | {'MAX UCI':<9} | {'UE/PRB':<8} | {'OVERHEAD'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | Format {r['pucch_format']:<1} | {r['num_prbs']:<5} | {r['num_symbols']:<8} | {r['subcarrier_spacing_khz']:<10} | {r['max_uci_payload_bits']:<9} | {r['multiplexing_ue_capacity']:<8} | {r['slot_overhead_percent']:.2f}%")
+
+
+def cmd_pkmrsh(args):
+    if args.action == "add":
+        leader = args.leader or "Budi Santoso"
+        nim = args.nim or "1101210045"
+        title = args.title or "Adopsi Sosio-Teknologi Pedesaan"
+        topic = args.topic or "Kesenjangan Digital"
+        urgency = float(args.urgency) if args.urgency is not None else 85.0
+        lit = float(args.lit) if args.lit is not None else 85.0
+        method = float(args.method) if args.method is not None else 85.0
+        impact = float(args.impact) if args.impact is not None else 85.0
+        has_ethics = not bool(args.no_ethics)
+
+        res = parse_pkm_rsh_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "research_topic": topic,
+            "problem_urgency_score": urgency,
+            "literature_review_score": lit,
+            "methodology_ethics_score": method,
+            "social_impact_policy_score": impact,
+            "has_ethical_clearance": has_ethics
+        })
+        rec_id = storage.record_pkm_rsh_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            research_topic=topic,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            converted_sks=res["converted_sks"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-RSH berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,}, SKS: {res['converted_sks']})")
+    else:
+        records = storage.list_pkm_rsh_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-RSH yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'TOPIK':<22} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            funded_str = "Lolos" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['research_topic'][:20]:<22} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
+
+
 def main():
 
 
@@ -4698,6 +4823,40 @@ def main():
     pkmvgk_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmvgk_parser.set_defaults(func=cmd_pkmvgk)
 
+    # Coherent QAM command
+    cohqam_parser = subparsers.add_parser("cohqam", help="Kelola telemetri transponder optik koheren dual-polarization QAM (list, add)")
+    cohqam_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi transponder koheren")
+    cohqam_parser.add_argument("--fmt", default="16QAM", help="Format modulasi (QPSK, 16QAM, 64QAM)")
+    cohqam_parser.add_argument("--rate", type=float, default=32.0, help="Symbol rate transmisi (Gbaud)")
+    cohqam_parser.add_argument("--osnr", type=float, default=22.0, help="Optical Signal-to-Noise Ratio (dB)")
+    cohqam_parser.add_argument("--linewidth", type=float, default=100.0, help="Linewidth laser pemancar (kHz)")
+    cohqam_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    cohqam_parser.set_defaults(func=cmd_cohqam)
+
+    # 5G NR PUCCH command
+    nrpucch_parser = subparsers.add_parser("nrpucch", help="Kelola kapasitas kanal kontrol uplink 5G NR PUCCH (list, add)")
+    nrpucch_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi 5G NR PUCCH")
+    nrpucch_parser.add_argument("--fmt", type=int, default=1, help="Format PUCCH (0, 1, 2, 3, 4)")
+    nrpucch_parser.add_argument("--prbs", type=int, default=1, help="Jumlah alokasi Physical Resource Block (PRB)")
+    nrpucch_parser.add_argument("--syms", type=int, default=14, help="Jumlah alokasi simbol OFDM per slot")
+    nrpucch_parser.add_argument("--scs", type=int, default=30, help="Subcarrier Spacing SCS dalam kHz (15, 30, 60, 120)")
+    nrpucch_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrpucch_parser.set_defaults(func=cmd_nrpucch)
+
+    # PKM-RSH Proposal command
+    pkmrsh_parser = subparsers.add_parser("pkmrsh", help="Kelola evaluasi proposal Belmawa PKM Riset Sosial Humaniora (list, add)")
+    pkmrsh_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-RSH")
+    pkmrsh_parser.add_argument("--leader", default="Budi Santoso", help="Nama ketua mahasiswa pengusul")
+    pkmrsh_parser.add_argument("--nim", default="1101210045", help="NIM ketua mahasiswa")
+    pkmrsh_parser.add_argument("--title", default="Adopsi Sosio-Teknologi Digital Pedesaan", help="Judul riset sosial humaniora")
+    pkmrsh_parser.add_argument("--topic", default="Kesenjangan Digital & Sosio-Teknologi", help="Topik kajian riset")
+    pkmrsh_parser.add_argument("--urgency", type=float, default=85.0, help="Skor urgensi masalah & relevansi sosial (0-100)")
+    pkmrsh_parser.add_argument("--lit", type=float, default=85.0, help="Skor tinjauan pustaka & landasan teori (0-100)")
+    pkmrsh_parser.add_argument("--method", type=float, default=85.0, help="Skor metodologi & ethical clearance (0-100)")
+    pkmrsh_parser.add_argument("--impact", type=float, default=85.0, help="Skor luaran kebijakan / policy brief (0-100)")
+    pkmrsh_parser.add_argument("--no-ethics", action="store_true", help="Tandai jika proposal tidak memiliki ethical clearance")
+    pkmrsh_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmrsh_parser.set_defaults(func=cmd_pkmrsh)
 
     args = parser.parse_args()
 
