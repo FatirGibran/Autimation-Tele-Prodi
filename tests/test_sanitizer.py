@@ -60,7 +60,10 @@ from sanitizer import (
     sanitize_html5_mathml_math_elements,
     sanitize_html5_audio_source_track_attributes,
     sanitize_html5_table_colgroup_attributes,
-    sanitize_html5_del_ins_datetime_attributes
+    sanitize_html5_del_ins_datetime_attributes,
+    sanitize_html5_select_optgroup_attributes,
+    sanitize_html5_figure_figcaption_attributes,
+    sanitize_html5_fieldset_legend_attributes
 )
 
 
@@ -1371,6 +1374,47 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertNotIn("javascript:x", clean)
         self.assertIn('span="1"', clean)
         self.assertIn('width="50%"', clean)
+
+    def test_sanitize_html5_select_optgroup_attributes(self):
+        raw = '<select size="-5" onchange="alert(1)"><optgroup label="javascript:evil()" onclick="bad()"><option value="1">1</option></optgroup></select>'
+        cleaned = sanitize_html5_select_optgroup_attributes(raw)
+        self.assertNotIn("onchange=", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("javascript:evil()", cleaned)
+        self.assertNotIn('size="-5"', cleaned)
+        self.assertIn("<select", cleaned)
+        self.assertIn("<optgroup", cleaned)
+
+    def test_sanitize_html5_figure_figcaption_attributes(self):
+        raw = '<figure onclick="steal()" style="color:red"><img src="chart.png"><figcaption contenteditable="true" onerror="bad()">Figure 1</figcaption></figure>'
+        cleaned = sanitize_html5_figure_figcaption_attributes(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onerror=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("contenteditable=", cleaned)
+        self.assertIn("<figure", cleaned)
+        self.assertIn("<figcaption>Figure 1</figcaption>", cleaned)
+
+    def test_sanitize_html5_fieldset_legend_attributes(self):
+        raw = '<fieldset onclick="bad()" style="border:1px"><legend onmouseover="evil()" contenteditable="true">Form Header</legend></fieldset>'
+        cleaned = sanitize_html5_fieldset_legend_attributes(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertNotIn("contenteditable=", cleaned)
+        self.assertIn("<fieldset", cleaned)
+        self.assertIn("<legend>Form Header</legend>", cleaned)
+
+    def test_sanitize_html_with_select_figure_fieldset_elements(self):
+        html = '<div class="tu-editorial-container"><figure onclick="bad()"><figcaption>Caption</figcaption></figure><fieldset onchange="bad()"><legend>Legend</legend></fieldset><select onfocus="bad()"><option>1</option></select></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("onclick=", clean)
+        self.assertNotIn("onchange=", clean)
+        self.assertNotIn("onfocus=", clean)
+        self.assertIn("<figure", clean)
+        self.assertIn("<fieldset", clean)
+        self.assertIn("<select", clean)
+
 
 
 if __name__ == "__main__":
