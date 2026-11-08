@@ -1368,6 +1368,39 @@ class WordPressClient:
         except Exception:
             return []
 
+    def batch_update_tag_slugs(
+        self,
+        tag_slugs_map: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Batch updates URL slugs for multiple tags via POST /wp/v2/tags/{id}.
+        Each item in tag_slugs_map should be a dict with 'id' (or 'tag_id') and 'slug'.
+        """
+        updated = []
+        failed = []
+
+        for item in tag_slugs_map:
+            tid = item.get("id") or item.get("tag_id")
+            slug = str(item.get("slug", "")).strip()
+            if not tid or not slug:
+                continue
+
+            try:
+                endpoint = f"{self.api_url}/tags/{int(tid)}"
+                payload = {"slug": slug}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(tid))
+            except Exception as e:
+                failed.append({"tag_id": int(tid), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(tag_slugs_map)
+        }
+
 
 
 
