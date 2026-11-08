@@ -1388,6 +1388,42 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn('<Metadata title="Panduan Pengembangan RedwoodJS MDX"', res)
         self.assertIn("<p>Arsitektur RedwoodJS Cell dan MDX routes.</p>", res)
 
+    def test_generate_social_research_article_json_ld(self):
+        res = ArticleExporter.generate_social_research_article_json_ld(
+            headline="Adopsi Sosio-Teknologi Digital Pedesaan",
+            abstract="Studi empiris penetrasi teknologi broadband di pedesaan Banyumas.",
+            author_name="Budi Santoso",
+            institution_name="Telkom University Purwokerto",
+            research_topic="Kesenjangan Digital",
+            date_published="2026-11-09",
+            sdg_alignment="SDG 9: Industri, Inovasi, dan Infrastruktur",
+            policy_brief_url="https://policy.telkom.ac.id/brief-45.pdf"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "ScholarlyArticle")
+        self.assertEqual(res["headline"], "Adopsi Sosio-Teknologi Digital Pedesaan")
+        self.assertEqual(res["author"]["name"], "Budi Santoso")
+        self.assertEqual(res["author"]["affiliation"]["name"], "Telkom University Purwokerto")
+        self.assertIn("SDG 9: Industri, Inovasi, dan Infrastruktur", res["keywords"])
+        self.assertEqual(res["citation"], "https://policy.telkom.ac.id/brief-45.pdf")
+
+    def test_to_stripe_markdoc(self):
+        meta = {
+            "seo_title": "Panduan Integrasi Stripe Markdoc",
+            "meta_description": "Dokumentasi interaktif berbasis Markdoc AST.",
+            "slug": "panduan-stripe-markdoc",
+            "publish_date": "2026-11-09",
+            "tags": ["markdoc", "stripe", "docs"]
+        }
+        res = ArticleExporter.to_stripe_markdoc(meta, "<p>Konten dokumentasi Markdoc.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Integrasi Stripe Markdoc"', res)
+        self.assertIn('engine: "markdoc"', res)
+        self.assertIn("markdoc: true", res)
+        self.assertIn('{% callout type="info" %}', res)
+        self.assertIn("{% /callout %}", res)
+        self.assertIn("<p>Konten dokumentasi Markdoc.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
