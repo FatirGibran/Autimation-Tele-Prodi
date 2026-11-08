@@ -744,6 +744,11 @@ class HTMLSanitizer:
             cleaned = sanitize_html5_select_optgroup_attributes(cleaned)
             warnings.append("Sanitized HTML5 select and optgroup form selection elements.")
 
+        # 8af. Sanitize HTML5 figure and figcaption academic media elements
+        if "<figure" in cleaned.lower() or "<figcaption" in cleaned.lower():
+            cleaned = sanitize_html5_figure_figcaption_attributes(cleaned)
+            warnings.append("Sanitized HTML5 figure and figcaption academic media elements.")
+
         return cleaned, warnings
 
 
@@ -2862,6 +2867,28 @@ def sanitize_html5_select_optgroup_attributes(html: str) -> str:
     cleaned = re.sub(r'<select\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_select, cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r'<optgroup\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_optgroup, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_figure_figcaption_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <figure> and <figcaption> academic media elements by stripping
+    executable event handlers, neutralizing invalid inline styles, stripping scriptable
+    attributes, and ensuring safe structural presentation.
+    """
+    if not html or ("<figure" not in html.lower() and "<figcaption" not in html.lower()):
+        return html
+
+    cleaned = html
+
+    def fix_figure_figcaption(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<(?:figure|figcaption)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_figure_figcaption, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
