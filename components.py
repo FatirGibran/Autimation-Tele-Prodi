@@ -8296,6 +8296,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_pucch_resource_grid_svg(
+        cls,
+        title: str = "Diagram Alokasi Grid Sumber Daya 5G NR PUCCH & Frequency Hopping",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card featuring an inline responsive SVG diagram visualizing
+        3GPP 5G NR PUCCH short/long formats and slot-edge frequency hopping across the resource grid.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        fmt = int(d.get("pucch_format", 1))
+        scs = int(d.get("scs_khz", 30))
+        prbs = int(d.get("num_prbs", 1))
+
+        return f"""    <div class="tu-pucch-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase;">3GPP NR TS 38.211 &bull; PUCCH Resource Grid</span>
+        <span style="font-size: 11px; background: #1e293b; color: #38bdf8; border: 1px solid #0284c7; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Format {fmt}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #ffffff; font-size: 16px;">{title}</h4>
+      <div style="overflow-x: auto; margin-bottom: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 180" style="width: 100%; height: auto; min-width: 500px; display: block;">
+          <rect width="600" height="180" fill="#1e293b" rx="6"/>
+          <line x1="60" y1="20" x2="60" y2="140" stroke="#475569" stroke-width="1.5" />
+          <line x1="60" y1="140" x2="570" y2="140" stroke="#475569" stroke-width="1.5" />
+          <text x="30" y="80" fill="#94a3b8" font-size="10" transform="rotate(-90 30,80)" text-anchor="middle">Frekuensi (PRB)</text>
+          <text x="315" y="165" fill="#94a3b8" font-size="10" text-anchor="middle">Waktu (Simbol OFDM 0..13 dalam 1 Slot Radio)</text>
+
+          <rect x="70" y="30" width="230" height="24" rx="3" fill="#0284c7" fill-opacity="0.8" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="185" y="46" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">PUCCH Hop-1 (Upper Band Edge)</text>
+
+          <rect x="320" y="106" width="230" height="24" rx="3" fill="#059669" fill-opacity="0.8" stroke="#34d399" stroke-width="1.5"/>
+          <text x="435" y="122" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">PUCCH Hop-2 (Lower Band Edge)</text>
+
+          <path d="M 300 42 L 320 118" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4" />
+          <circle cx="300" cy="42" r="3" fill="#f59e0b"/>
+          <circle cx="320" cy="118" r="3" fill="#f59e0b"/>
+          <text x="310" y="80" fill="#f59e0b" font-size="9" text-anchor="middle">Intra-Slot Hopping</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Format: <strong style="color: #38bdf8;">PUCCH Format {fmt}</strong></div>
+        <div>Numerologi: <strong style="color: #34d399;">SCS {scs} kHz</strong></div>
+        <div>Alokasi: <strong style="color: #facc15;">{prbs} PRB Hopping</strong></div>
+      </div>
+    </div>"""
+
 
 
 
@@ -8337,6 +8387,7 @@ render_optical_coherent_qam_card = EditorialComponents.render_optical_coherent_q
 render_5g_nr_pucch_card = EditorialComponents.render_5g_nr_pucch_card
 render_satellite_depolarization_xpd_card = EditorialComponents.render_satellite_depolarization_xpd_card
 render_pkm_rsh_proposal_card = EditorialComponents.render_pkm_rsh_proposal_card
+render_5g_nr_pucch_resource_grid_svg = EditorialComponents.render_5g_nr_pucch_resource_grid_svg
 
 
 
