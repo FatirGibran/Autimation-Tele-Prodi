@@ -2671,6 +2671,59 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_constructive_video_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org VideoObject metadata for student constructive video proposals (PKM-VGK)
+        addressing UN Sustainable Development Goals (SDGs) under Belmawa Kemendikbudristek.
+        """
+        title = metadata.get("proposal_title", "Video Gagasan Konstruktif SDGs").strip()
+        student_leader = metadata.get("student_leader", "Mahasiswa TT").strip()
+        nim = metadata.get("nim", "1101210088").strip()
+        sdg_goal = metadata.get("sdg_goal", "SDG 9: Industri, Inovasi & Infrastruktur").strip()
+        duration_min = float(metadata.get("video_duration_minutes", 3.0))
+        funding_status = metadata.get("funding_status", "Lolos Pendanaan Belmawa PKM-VGK").strip()
+        desc = metadata.get("description", f"Video gagasan futuristik konstruktif {title} oleh {student_leader}.").strip()
+        article_url = metadata.get("url", "").strip()
+        thumbnail = metadata.get("thumbnail_url", "https://telecom.telkomuniversity.ac.id/img/pkm-vgk-default.jpg")
+
+        iso_mins = int(duration_min)
+        iso_secs = int(round((duration_min - iso_mins) * 60))
+        iso_duration = f"PT{iso_mins}M{iso_secs}S" if iso_secs > 0 else f"PT{iso_mins}M"
+
+        data = {
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            "name": title,
+            "description": desc,
+            "thumbnailUrl": thumbnail,
+            "uploadDate": metadata.get("publish_date", "2026-11-08"),
+            "duration": iso_duration,
+            "creator": {
+                "@type": "Person",
+                "name": student_leader,
+                "identifier": nim,
+                "affiliation": {
+                    "@type": "EducationalOrganization",
+                    "name": "Telkom University Purwokerto"
+                }
+            },
+            "about": {
+                "@type": "Thing",
+                "name": sdg_goal,
+                "description": "Sustainable Development Goals Prioritas Solusi Nasional"
+            },
+            "funder": {
+                "@type": "GovernmentOrganization",
+                "name": "Direktorat Pembelajaran dan Kemahasiswaan (Belmawa) Kemendikbudristek"
+            },
+            "award": funding_status
+        }
+        if article_url:
+            data["contentUrl"] = article_url
+
+        return data
+
 
 
 
