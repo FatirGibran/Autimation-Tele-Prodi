@@ -2681,6 +2681,83 @@ Status: Granted
         self.assertFalse(res_low["is_funded"])
         self.assertEqual(res_low["converted_sks"], 2)
 
+    def test_calculate_optical_sbs_threshold_power(self):
+        from parser import calculate_optical_sbs_threshold_power
+        res = calculate_optical_sbs_threshold_power(
+            fiber_length_km=50.0,
+            attenuation_db_per_km=0.20,
+            effective_area_um2=80.0,
+            laser_linewidth_mhz=10.0,
+            brillouin_linewidth_mhz=30.0
+        )
+        self.assertEqual(res["fiber_length_km"], 50.0)
+        self.assertGreater(res["effective_length_km"], 15.0)
+        self.assertLess(res["effective_length_km"], 22.0)
+        self.assertGreater(res["threshold_power_mw"], 1.0)
+        self.assertIn(res["status"], ["Critical SBS Susceptibility", "Standard Power Tolerance"])
+
+    def test_calculate_5g_nr_srs_capacity_and_coverage(self):
+        from parser import calculate_5g_nr_srs_capacity_and_coverage
+        res = calculate_5g_nr_srs_capacity_and_coverage(
+            bandwidth_mhz=100.0,
+            scs_khz=30,
+            comb_size=4,
+            cyclic_shift_count=8,
+            srs_symbols_per_slot=2,
+            periodicity_slots=10,
+            num_ports_per_ue=4
+        )
+        self.assertEqual(res["prb_count"], 273)
+        self.assertEqual(res["re_per_prb"], 3)
+        self.assertEqual(res["orthogonal_sequences_per_slot"], 64)
+        self.assertEqual(res["max_concurrent_ues_per_slot"], 16)
+        self.assertEqual(res["total_multiplexed_ues_per_period"], 160)
+        self.assertEqual(res["status"], "High Capacity Sounding")
+
+    def test_calculate_satellite_ionospheric_scintillation_s4_itu_r_p531(self):
+        from parser import calculate_satellite_ionospheric_scintillation_s4_itu_r_p531
+        res = calculate_satellite_ionospheric_scintillation_s4_itu_r_p531(
+            carrier_frequency_ghz=1.5,
+            elevation_angle_deg=30.0,
+            s4_zenith_1ghz=0.35,
+            link_availability_pct=99.0
+        )
+        self.assertGreater(res["obliquity_factor"], 1.0)
+        self.assertGreater(res["s4_index"], 0.1)
+        self.assertGreater(res["fade_margin_db"], 1.0)
+        self.assertIn(res["severity"], ["Weak Scintillation", "Moderate Scintillation", "Severe / Strong Scintillation"])
+
+    def test_parse_pkm_vgk_proposal_evaluation(self):
+        from parser import parse_pkm_vgk_proposal_evaluation
+        res_top = parse_pkm_vgk_proposal_evaluation({
+            "student_leader": "Anisa Putri",
+            "nim": "1101210088",
+            "proposal_title": "Visualisasi AI Smart Ocean Guard untuk Perlindungan Terumbu Karang",
+            "sdg_goal": "SDG 14: Ekosistem Lautan",
+            "video_duration_minutes": 3.0,
+            "idea_urgency_score": 92.0,
+            "storyboard_quality_score": 90.0,
+            "solution_impact_score": 88.0,
+            "dissemination_score": 85.0
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["allocated_budget_idr"], 10000000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_funded"])
+
+        # Out-of-bounds duration penalty test
+        res_penalized = parse_pkm_vgk_proposal_evaluation({
+            "video_duration_minutes": 5.5,
+            "idea_urgency_score": 85.0,
+            "storyboard_quality_score": 85.0,
+            "solution_impact_score": 85.0,
+            "dissemination_score": 85.0
+        })
+        self.assertEqual(res_penalized["duration_penalty"], 5.0)
+        self.assertEqual(res_penalized["composite_score"], 80.0)
+        self.assertTrue(res_penalized["is_funded"])
+
+
 
 if __name__ == "__main__":
     unittest.main()
