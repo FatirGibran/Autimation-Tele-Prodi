@@ -7602,6 +7602,89 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_audio_media_transcripts(html_content: str) -> Dict[str, Any]:
+        """
+        Audits audio elements for WCAG 2.1 Success Criterion 1.2.1 (Audio-only Prerecorded),
+        verifying the presence of synchronized text transcripts, descriptions, or accessible transcript containers.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_audio_elements": 0,
+                "elements_with_transcripts": 0,
+                "compliance_pct": 100.0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        audio_tags = soup.find_all("audio")
+
+        if not audio_tags:
+            return {
+                "total_audio_elements": 0,
+                "elements_with_transcripts": 0,
+                "compliance_pct": 100.0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        with_transcripts = 0
+        issues = []
+
+        for idx, audio in enumerate(audio_tags, 1):
+            src = audio.get("src")
+            if not src:
+                source_child = audio.find("source")
+                src = source_child.get("src") if source_child else f"Audio #{idx}"
+
+            has_transcript = False
+
+            # Check 1: aria-describedby pointing to an existing element
+            desc_id = audio.get("aria-describedby")
+            if desc_id:
+                target_el = soup.find(id=desc_id)
+                if target_el and len(target_el.get_text().strip()) >= 10:
+                    has_transcript = True
+
+            # Check 2: track descriptions/captions child
+            if not has_transcript:
+                track = audio.find("track", kind=re.compile(r'^(descriptions|captions|subtitles)$', re.IGNORECASE))
+                if track and track.get("src"):
+                    has_transcript = True
+
+            # Check 3: adjacent or sibling transcript container
+            if not has_transcript:
+                parent = audio.parent
+                if parent:
+                    t_container = parent.find(class_=re.compile(r'transcript', re.IGNORECASE)) or parent.find(id=re.compile(r'transcript', re.IGNORECASE))
+                    if t_container and len(t_container.get_text().strip()) >= 10:
+                        has_transcript = True
+
+            # Check 4: link containing 'transcript' or 'transkrip' text
+            if not has_transcript:
+                if parent:
+                    link = parent.find("a", string=re.compile(r'transkrip|transcript', re.IGNORECASE))
+                    if link:
+                        has_transcript = True
+
+            if has_transcript:
+                with_transcripts += 1
+            else:
+                issues.append(f"{src}: Audio rekaman kuliah/podcast tidak memiliki transkrip teks pendukung (WCAG 1.2.1).")
+
+        total = len(audio_tags)
+        compliance_pct = round((with_transcripts / total) * 100.0, 1)
+        is_compliant = with_transcripts == total
+
+        return {
+            "total_audio_elements": total,
+            "elements_with_transcripts": with_transcripts,
+            "compliance_pct": compliance_pct,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
