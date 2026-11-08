@@ -2724,6 +2724,39 @@ navigation: true
 
         return data
 
+    @staticmethod
+    def to_redwoodjs_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial content to RedwoodJS fullstack React MDX format
+        with @redwoodjs/web Metadata component integration.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        slug = metadata.get("slug", "")
+        pub_date = metadata.get("publish_date", "2026-11-08")
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'slug: "{slug}"',
+            f'date: "{pub_date}"',
+            f'tags: {json.dumps(tags)}',
+            'framework: "redwoodjs"',
+            "redwoodjs: true",
+            "---",
+            "",
+            "import { Metadata } from '@redwoodjs/web';",
+            "",
+            f'<Metadata title="{title}" description="{desc}" />',
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
