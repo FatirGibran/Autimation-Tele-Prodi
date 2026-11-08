@@ -1098,6 +1098,39 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_tags_by_ids(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 101, "name": "Fiber Optic"}, {"id": 102, "name": "Massive MIMO"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        self.assertEqual(self.client.get_tags_by_ids([]), [])
+        self.assertEqual(mock_urlopen.call_count, 0)
+
+        tags = self.client.get_tags_by_ids([101, 102])
+        self.assertEqual(len(tags), 2)
+        self.assertEqual(tags[0]["id"], 101)
+        self.assertEqual(tags[1]["name"], "Massive MIMO")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("include=101,102", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_update_category_descriptions(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 20, "description": "Kategori Telekomunikasi Baru"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        updates = [
+            {"id": 20, "description": "Deskripsi kategori 20"},
+            {"category_id": 21, "description": "Deskripsi kategori 21"}
+        ]
+        res = self.client.batch_update_category_descriptions(updates)
+        self.assertEqual(res["updated"], [20, 21])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(mock_urlopen.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
