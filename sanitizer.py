@@ -739,6 +739,11 @@ class HTMLSanitizer:
             cleaned = sanitize_html5_del_ins_datetime_attributes(cleaned)
             warnings.append("Sanitized HTML5 del and ins citation and datetime attributes.")
 
+        # 8ae. Sanitize HTML5 select and optgroup form selection elements
+        if "<select" in cleaned.lower() or "<optgroup" in cleaned.lower():
+            cleaned = sanitize_html5_select_optgroup_attributes(cleaned)
+            warnings.append("Sanitized HTML5 select and optgroup form selection elements.")
+
         return cleaned, warnings
 
 
@@ -2813,6 +2818,51 @@ def sanitize_html5_del_ins_datetime_attributes(html: str) -> str:
 
     cleaned = re.sub(r'<(?:del|ins)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_del_ins, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_select_optgroup_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <select> interactive selection controls and <optgroup> grouping elements
+    by stripping dangerous executable event handlers (e.g. onchange, onfocus), neutralizing
+    invalid inline styles, validating size attributes as positive integers, and cleaning optgroup labels.
+    """
+    if not html or ("<select" not in html.lower() and "<optgroup" not in html.lower()):
+        return html
+
+    cleaned = html
+
+    def fix_select(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Validate size attribute: positive integer
+        size_m = re.search(r'\bsize=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if size_m:
+            val = size_m.group(1).strip()
+            if not re.match(r'^[1-9]\d*$', val):
+                tag = re.sub(r'\s+size=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    def fix_optgroup(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        # Sanitize label attribute
+        label_m = re.search(r'\blabel=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if label_m:
+            val = label_m.group(1).strip()
+            if re.search(r'(?:javascript:|data:text/html|vbscript:|<script)', val, re.IGNORECASE):
+                tag = re.sub(r'\s+label=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+
+        return tag
+
+    cleaned = re.sub(r'<select\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_select, cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'<optgroup\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_optgroup, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
