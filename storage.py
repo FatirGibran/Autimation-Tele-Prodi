@@ -1552,6 +1552,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_vgk_nim ON pkm_vgk_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_coherent_qam_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    modulation_format TEXT NOT NULL,
+                    symbol_rate_gbaud REAL NOT NULL,
+                    raw_bitrate_gbps REAL NOT NULL,
+                    osnr_db REAL NOT NULL,
+                    snr_db REAL NOT NULL,
+                    evm_rms_percent REAL NOT NULL,
+                    estimated_ber REAL NOT NULL,
+                    q_factor_db REAL NOT NULL,
+                    laser_linewidth_khz REAL NOT NULL,
+                    fec_status TEXT NOT NULL,
+                    is_error_free_post_fec INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_optical_qam_fmt ON optical_coherent_qam_records(modulation_format);")
 
 
 
@@ -7103,6 +7121,61 @@ class StorageManager:
             return dict(row) if row else None
 
     record_pkm_vgk_proposal = save_pkm_vgk_proposal
+
+    def save_optical_coherent_qam_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a Dual-Polarization coherent optical QAM telemetry record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_coherent_qam_records (
+                    modulation_format, symbol_rate_gbaud, raw_bitrate_gbps,
+                    osnr_db, snr_db, evm_rms_percent, estimated_ber,
+                    q_factor_db, laser_linewidth_khz, fec_status, is_error_free_post_fec
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("modulation_format", "DP-16QAM")).strip(),
+                float(d.get("symbol_rate_gbaud", 32.0)),
+                float(d.get("raw_bitrate_gbps", 256.0)),
+                float(d.get("osnr_db", 22.0)),
+                float(d.get("snr_db", 18.0)),
+                float(d.get("evm_rms_percent", 12.5)),
+                float(d.get("estimated_ber", 1e-3)),
+                float(d.get("q_factor_db", 10.0)),
+                float(d.get("laser_linewidth_khz", 100.0)),
+                str(d.get("fec_status", "Lolos HD-FEC")).strip(),
+                1 if d.get("is_error_free_post_fec", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_optical_coherent_qam_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent optical coherent QAM telemetry records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_coherent_qam_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_coherent_qam_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single optical coherent QAM record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_coherent_qam_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_optical_coherent_qam = save_optical_coherent_qam_record
+    list_optical_coherent_qam = list_optical_coherent_qam_records
+    get_optical_coherent_qam_by_id = get_optical_coherent_qam_record_by_id
 
 
 
