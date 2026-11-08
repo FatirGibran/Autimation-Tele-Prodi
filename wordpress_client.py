@@ -1351,6 +1351,23 @@ class WordPressClient:
             "total": len(category_descriptions_map)
         }
 
+    def get_media_by_ids(self, media_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        Retrieves multiple media items by their numeric IDs using /wp/v2/media?include=...
+        """
+        if not media_ids:
+            return []
+        ids_str = ",".join(str(int(i)) for i in media_ids)
+        endpoint = f"{self.api_url}/media?include={ids_str}&per_page={min(100, len(media_ids))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            res = self._send_request(req)
+            if isinstance(res, list):
+                return res
+            return []
+        except Exception:
+            return []
+
 
 
 
