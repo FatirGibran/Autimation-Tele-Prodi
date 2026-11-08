@@ -54,7 +54,10 @@ from parser import (
     parse_pkm_pi_proposal_evaluation,
     calculate_optical_edfa_saturation_noise_figure,
     calculate_5g_nr_cross_carrier_scheduling_latency,
-    parse_pkm_ki_proposal_evaluation
+    parse_pkm_ki_proposal_evaluation,
+    calculate_satellite_ionospheric_scintillation_s4_itu_r_p531,
+    calculate_5g_nr_srs_capacity_and_coverage,
+    parse_pkm_vgk_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -3364,6 +3367,134 @@ def cmd_pkmki(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['prototype_type'][:20]:<22} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
 
 
+def cmd_ionoscint(args):
+    if args.action == "add":
+        freq = float(args.freq) if args.freq is not None else 1.5
+        elev = float(args.elev) if args.elev is not None else 30.0
+        s4_zenith = float(args.s4_zenith) if args.s4_zenith is not None else 0.35
+        avail = float(args.avail) if args.avail is not None else 99.0
+
+        res = calculate_satellite_ionospheric_scintillation_s4_itu_r_p531(
+            carrier_frequency_ghz=freq,
+            elevation_angle_deg=elev,
+            s4_zenith_1ghz=s4_zenith,
+            link_availability_pct=avail
+        )
+        rec_id = storage.record_satellite_ionospheric_scintillation(
+            carrier_frequency_ghz=res["carrier_frequency_ghz"],
+            elevation_angle_deg=res["elevation_angle_deg"],
+            s4_zenith_1ghz=res["s4_zenith_1ghz"],
+            obliquity_factor=res["obliquity_factor"],
+            s4_index=res["s4_index"],
+            peak_to_peak_fluctuation_db=res["peak_to_peak_fluctuation_db"],
+            fade_margin_db=res["fade_margin_db"],
+            link_availability_pct=res["link_availability_pct"],
+            severity=res["severity"],
+            is_acceptable=res["is_acceptable"]
+        )
+        print(f"Catatan Scintillation Ionosfer S4 berhasil disimpan dengan ID: {rec_id} (S4: {res['s4_index']}, Fade Margin: {res['fade_margin_db']} dB, Status: {res['severity']})")
+    else:
+        records = storage.list_satellite_ionospheric_scintillation(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan sintilasi ionosfer S4 yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FREQ (GHz)':<12} | {'ELEV (deg)':<12} | {'S4 INDEX':<10} | {'MARGIN (dB)':<12} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['carrier_frequency_ghz']:<12.2f} | {r['elevation_angle_deg']:<12.1f} | {r['s4_index']:<10.3f} | {r['fade_margin_db']:<12.2f} | {r['severity']}")
+
+
+def cmd_nrsrs(args):
+    if args.action == "add":
+        bw = float(args.bw) if args.bw is not None else 100.0
+        scs = int(args.scs) if args.scs is not None else 30
+        comb = int(args.comb) if args.comb is not None else 4
+        cs = int(args.cs) if args.cs is not None else 8
+        syms = int(args.syms) if args.syms is not None else 2
+        period = int(args.period) if args.period is not None else 10
+        ports = int(args.ports) if args.ports is not None else 4
+
+        res = calculate_5g_nr_srs_capacity_and_coverage(
+            bandwidth_mhz=bw,
+            scs_khz=scs,
+            comb_size=comb,
+            cyclic_shift_count=cs,
+            srs_symbols_per_slot=syms,
+            periodicity_slots=period,
+            num_ports_per_ue=ports
+        )
+        rec_id = storage.record_nr_srs(
+            bandwidth_mhz=res["bandwidth_mhz"],
+            scs_khz=res["scs_khz"],
+            prb_count=res["prb_count"],
+            comb_size=res["comb_size"],
+            cyclic_shift_count=res["cyclic_shift_count"],
+            srs_symbols_per_slot=res["srs_symbols_per_slot"],
+            max_concurrent_ues_per_slot=res["max_concurrent_ues_per_slot"],
+            total_multiplexed_ues_per_period=res["total_multiplexed_ues_per_period"],
+            sounding_overhead_pct=res["sounding_overhead_pct"],
+            status=res["status"]
+        )
+        print(f"Catatan 5G NR SRS Sounding berhasil disimpan dengan ID: {rec_id} (Kapasitas: {res['max_concurrent_ues_per_slot']} UE/slot, Total: {res['total_multiplexed_ues_per_period']} UE, Status: {res['status']})")
+    else:
+        records = storage.list_nr_srs(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR SRS yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'BW (MHz)':<10} | {'COMB':<8} | {'UE/SLOT':<10} | {'TOTAL UE':<10} | {'OVERHEAD':<10} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['bandwidth_mhz']:<10.1f} | Comb-{r['comb_size']:<3} | {r['max_concurrent_ues_per_slot']:<10} | {r['total_multiplexed_ues_per_period']:<10} | {r['sounding_overhead_pct']:<9.2f}% | {r['status']}")
+
+
+def cmd_pkmvgk(args):
+    if args.action == "add":
+        leader = args.leader or "Ketua Tim PKM-VGK"
+        nim = args.nim or "1101210088"
+        title = args.title or "AI Smart Ocean Guard Terumbu Karang"
+        sdg = args.sdg or "SDG 14: Ekosistem Lautan"
+        duration = float(args.duration) if args.duration is not None else 3.0
+        idea = float(args.idea) if args.idea is not None else 85.0
+        story = float(args.story) if args.story is not None else 85.0
+        impact = float(args.impact) if args.impact is not None else 85.0
+        dissem = float(args.dissem) if args.dissem is not None else 85.0
+
+        res = parse_pkm_vgk_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "sdg_goal": sdg,
+            "video_duration_minutes": duration,
+            "idea_urgency_score": idea,
+            "storyboard_quality_score": story,
+            "solution_impact_score": impact,
+            "dissemination_score": dissem
+        })
+        rec_id = storage.record_pkm_vgk_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            sdg_goal=sdg,
+            video_duration_minutes=duration,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            allocated_budget_idr=res["allocated_budget_idr"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-VGK berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Dana: Rp {res['allocated_budget_idr']:,})")
+    else:
+        records = storage.list_pkm_vgk_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-VGK yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'SDG GOAL':<24} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            funded_str = "Lolos" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['sdg_goal'][:22]:<24} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
+
+
 def main():
 
 
@@ -4528,6 +4659,44 @@ def main():
     pkmki_parser.add_argument("--budget", type=float, default=85.0, help="Skor kewajaran RAB & jadwal (0-100)")
     pkmki_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmki_parser.set_defaults(func=cmd_pkmki)
+
+    # Satellite Ionospheric Scintillation S4 command
+    ionoscint_parser = subparsers.add_parser("ionoscint", help="Kelola analisis sintilasi ionosfer S4 satelit ITU-R P.531 (list, add)")
+    ionoscint_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi sintilasi ionosfer S4")
+    ionoscint_parser.add_argument("--freq", type=float, default=1.5, help="Frekuensi carrier gelombang satelit (GHz)")
+    ionoscint_parser.add_argument("--elev", type=float, default=30.0, help="Sudut elevasi stasiun bumi (derajat)")
+    ionoscint_parser.add_argument("--s4-zenith", type=float, default=0.35, help="Indeks sintilasi baseline zenith 1 GHz")
+    ionoscint_parser.add_argument("--avail", type=float, default=99.0, help="Target availability link satelit (%)")
+    ionoscint_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    ionoscint_parser.set_defaults(func=cmd_ionoscint)
+
+    # 5G NR SRS Sounding command
+    nrsrs_parser = subparsers.add_parser("nrsrs", help="Kelola kapasitas sounding reference signal 5G NR (list, add)")
+    nrsrs_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi 5G NR SRS")
+    nrsrs_parser.add_argument("--bw", type=float, default=100.0, help="Bandwidth transmisi kanal (MHz)")
+    nrsrs_parser.add_argument("--scs", type=int, default=30, help="Subcarrier spacing SCS (15, 30, 60, 120 kHz)")
+    nrsrs_parser.add_argument("--comb", type=int, default=4, help="SRS transmission comb size (2 atau 4)")
+    nrsrs_parser.add_argument("--cs", type=int, default=8, help="Jumlah orthogonal cyclic shifts")
+    nrsrs_parser.add_argument("--syms", type=int, default=2, help="Jumlah simbol SRS per slot (1, 2, 4)")
+    nrsrs_parser.add_argument("--period", type=int, default=10, help="Periodisitas sounding slot (slots)")
+    nrsrs_parser.add_argument("--ports", type=int, default=4, help="Jumlah port sounding antena per UE")
+    nrsrs_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrsrs_parser.set_defaults(func=cmd_nrsrs)
+
+    # PKM-VGK Proposal command
+    pkmvgk_parser = subparsers.add_parser("pkmvgk", help="Kelola evaluasi proposal Belmawa PKM Video Gagasan Konstruktif (list, add)")
+    pkmvgk_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-VGK")
+    pkmvgk_parser.add_argument("--leader", default="Ketua Tim PKM-VGK", help="Nama ketua mahasiswa pengusul")
+    pkmvgk_parser.add_argument("--nim", default="1101210088", help="NIM ketua mahasiswa")
+    pkmvgk_parser.add_argument("--title", default="AI Smart Ocean Guard Terumbu Karang", help="Judul video gagasan konstruktif")
+    pkmvgk_parser.add_argument("--sdg", default="SDG 14: Ekosistem Lautan", help="Pilar target Sustainable Development Goals")
+    pkmvgk_parser.add_argument("--duration", type=float, default=3.0, help="Durasi video dalam menit (standar: 2.0-4.0 menit)")
+    pkmvgk_parser.add_argument("--idea", type=float, default=85.0, help="Skor urgensi isu & gagasan konstruktif (0-100)")
+    pkmvgk_parser.add_argument("--story", type=float, default=85.0, help="Skor alur skenario/storyboard & estetika (0-100)")
+    pkmvgk_parser.add_argument("--impact", type=float, default=85.0, help="Skor realitas & dampak solusi masa depan (0-100)")
+    pkmvgk_parser.add_argument("--dissem", type=float, default=85.0, help="Skor potensi diseminasi & kelayakan anggaran (0-100)")
+    pkmvgk_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmvgk_parser.set_defaults(func=cmd_pkmvgk)
 
 
     args = parser.parse_args()
