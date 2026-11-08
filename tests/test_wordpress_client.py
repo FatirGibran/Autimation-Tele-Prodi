@@ -1131,6 +1131,38 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_ids(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 301, "source_url": "https://example.com/wp-content/uploads/diagram.png"}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        self.assertEqual(self.client.get_media_by_ids([]), [])
+        self.assertEqual(mock_urlopen.call_count, 0)
+
+        media = self.client.get_media_by_ids([301])
+        self.assertEqual(len(media), 1)
+        self.assertEqual(media[0]["id"], 301)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("include=301", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_update_tag_slugs(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 40, "slug": "5g-nr-pucch"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        updates = [
+            {"id": 40, "slug": "5g-nr-pucch"},
+            {"tag_id": 41, "slug": "dp-16qam-coherent"}
+        ]
+        res = self.client.batch_update_tag_slugs(updates)
+        self.assertEqual(res["updated"], [40, 41])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(mock_urlopen.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
