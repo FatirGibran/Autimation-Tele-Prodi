@@ -1820,6 +1820,33 @@ class TelegramFormatter:
             f"🚀 *Selamat merealisasikan prototipe karya inovatif siap guna menuju perlindungan kekayaan intelektual (Paten)!*"
         )
 
+    @staticmethod
+    def format_5g_nr_srs_telegram(
+        bandwidth_mhz: float,
+        scs_khz: int,
+        comb_size: int,
+        cyclic_shift_count: int,
+        max_concurrent_ues_per_slot: int,
+        total_multiplexed_ues_per_period: int,
+        sounding_overhead_pct: float,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a 5G NR Sounding Reference Signal (SRS) capacity and channel sounding performance card for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal 5G NR Telemetri:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"📡 **Telemetri Sounding Reference Signal (SRS) 5G NR (3GPP TS 38.211)**\n\n"
+            f"📶 **Bandwidth Kanal:** `{float(bandwidth_mhz):.1f} MHz ({int(scs_khz)} kHz SCS)`\n"
+            f"🪮 **Alokasi Comb & Pola Sisir:** `Comb-{int(comb_size)}` (`{int(cyclic_shift_count)} Cyclic Shifts`)\n"
+            f"👥 **Kapasitas UE per Slot:** `{int(max_concurrent_ues_per_slot)} UE / slot`\n"
+            f"🌐 **Kapasitas Periodik Total:** `{int(total_multiplexed_ues_per_period)} UE / periode`\n"
+            f"📊 **Overhead Simbol SRS:** `{float(sounding_overhead_pct):.2f}%`\n"
+            f"🌟 **Status Sounding:** `{status.strip()}`{portal_link}\n\n"
+            f"ℹ️ *Sounding uplink channel reciprocity untuk Massive MIMO beamforming dan precoding CSI.*"
+        )
+
 
 
 
