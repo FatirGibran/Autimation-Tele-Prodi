@@ -8527,6 +8527,67 @@ def calculate_5g_nr_srs_capacity_and_coverage(
     }
 
 
+def calculate_satellite_ionospheric_scintillation_s4_itu_r_p531(
+    carrier_frequency_ghz: float = 1.5,
+    elevation_angle_deg: float = 30.0,
+    s4_zenith_1ghz: float = 0.35,
+    link_availability_pct: float = 99.0
+) -> Dict[str, Any]:
+    """
+    Calculates ionospheric amplitude scintillation index S4 and required fade margin for satellite
+    trans-ionospheric space-to-ground links based on ITU-R P.531-14 recommendations.
+    """
+    freq_ghz = max(0.1, float(carrier_frequency_ghz))
+    elev_deg = max(5.0, min(90.0, float(elevation_angle_deg)))
+    s4_ref = max(0.01, min(1.5, float(s4_zenith_1ghz)))
+    avail_pct = max(90.0, min(99.99, float(link_availability_pct)))
+
+    # Earth radius and ionospheric peak layer height (F-layer, typically 400 km)
+    re_km = 6378.0
+    h_layer_km = 400.0
+
+    # Obliquity factor: secant of propagation angle through ionospheric screen
+    elev_rad = math.radians(elev_deg)
+    cos_theta = math.cos(elev_rad)
+    sin_alpha = (re_km / (re_km + h_layer_km)) * cos_theta
+    cos_alpha = math.sqrt(max(0.0, 1.0 - sin_alpha ** 2))
+    obliquity_factor = 1.0 / cos_alpha if cos_alpha > 0 else 1.0
+
+    # Frequency scaling: S4 varies with f^(-1.5) for weak/moderate scintillation
+    freq_scaling = (1.0 / freq_ghz) ** 1.5
+
+    # Slant path scintillation index S4
+    s4_slant = min(1.2, s4_ref * freq_scaling * (obliquity_factor ** 0.65))
+
+    # Scintillation fade margin estimate (ITU-R P.531 empirical model for Nakagami-m fading)
+    # Peak-to-peak fluctuation P_fluc = 27.5 * (S4^1.26)
+    p_fluc_db = 27.5 * (s4_slant ** 1.26)
+    # Fade depth below unperturbed carrier for target availability
+    avail_coeff = 1.0 if avail_pct <= 95.0 else (1.4 if avail_pct <= 99.0 else 1.8)
+    fade_margin_db = round(min(30.0, (p_fluc_db * 0.45) * avail_coeff), 2)
+
+    # Scintillation classification
+    if s4_slant < 0.30:
+        severity = "Weak Scintillation"
+    elif s4_slant <= 0.60:
+        severity = "Moderate Scintillation"
+    else:
+        severity = "Severe / Strong Scintillation"
+
+    return {
+        "carrier_frequency_ghz": freq_ghz,
+        "elevation_angle_deg": elev_deg,
+        "s4_zenith_1ghz": s4_ref,
+        "obliquity_factor": round(obliquity_factor, 3),
+        "s4_index": round(s4_slant, 3),
+        "peak_to_peak_fluctuation_db": round(p_fluc_db, 2),
+        "fade_margin_db": fade_margin_db,
+        "link_availability_pct": avail_pct,
+        "severity": severity,
+        "is_acceptable": bool(s4_slant <= 0.50)
+    }
+
+
 
 
 
