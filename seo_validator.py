@@ -7685,6 +7685,90 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @staticmethod
+    def audit_form_input_autocomplete_tokens(html_content: str) -> Dict[str, Any]:
+        """
+        Audits form input elements for WCAG 2.1 Success Criterion 1.3.5 (Identify Input Purpose),
+        validating appropriate autocomplete tokens on fields collecting student or user personal data.
+        """
+        if not html_content or not isinstance(html_content, str):
+            return {
+                "total_personal_inputs": 0,
+                "valid_autocomplete_inputs": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        inputs = soup.find_all(["input", "select", "textarea"])
+
+        if not inputs:
+            return {
+                "total_personal_inputs": 0,
+                "valid_autocomplete_inputs": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        valid_tokens = {
+            "name", "honorific-prefix", "given-name", "additional-name", "family-name",
+            "honorific-suffix", "nickname", "email", "username", "new-password",
+            "current-password", "one-time-code", "organization-title", "organization",
+            "street-address", "address-line1", "address-line2", "address-level1",
+            "address-level2", "country", "country-name", "postal-code", "tel",
+            "tel-country-code", "tel-national", "tel-area-code", "tel-local", "tel-extension",
+            "url", "bday", "bday-day", "bday-month", "bday-year", "sex", "off", "on"
+        }
+
+        personal_patterns = re.compile(
+            r'\b(?:nama|name|email|surel|telepon|tel|phone|hp|alamat|address|kota|city|pos|kodepos|postal|instansi|institusi|organization|kampus|nim|username|password|sandi)\b',
+            re.IGNORECASE
+        )
+
+        total_personal = 0
+        valid_personal = 0
+        issues = []
+
+        for inp in inputs:
+            itype = (inp.get("type") or "text").lower()
+            if itype in {"hidden", "submit", "reset", "button", "checkbox", "radio"}:
+                continue
+
+            name_val = inp.get("name") or ""
+            id_val = inp.get("id") or ""
+            placeholder_val = inp.get("placeholder") or ""
+            auto_val = (inp.get("autocomplete") or "").strip().lower()
+
+            # Determine if this input collects personal identifiable information
+            is_personal = bool(
+                itype in {"email", "tel"}
+                or personal_patterns.search(name_val)
+                or personal_patterns.search(id_val)
+                or personal_patterns.search(placeholder_val)
+            )
+
+            if is_personal:
+                total_personal += 1
+                identifier = name_val or id_val or f"Input-{itype}"
+                if not auto_val:
+                    issues.append(f"{identifier}: Bidang isian data pengguna tidak menyertakan atribut 'autocomplete' (WCAG 1.3.5).")
+                else:
+                    tokens = auto_val.split()
+                    token_candidate = tokens[-1] if tokens else ""
+                    if token_candidate not in valid_tokens and not token_candidate.startswith("section-"):
+                        issues.append(f"{identifier}: Token autocomplete '{auto_val}' tidak sesuai standar spesifikasi HTML5 / WCAG 2.1.")
+                    else:
+                        valid_personal += 1
+
+        is_compliant = (total_personal == 0) or (valid_personal == total_personal)
+
+        return {
+            "total_personal_inputs": total_personal,
+            "valid_autocomplete_inputs": valid_personal,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
