@@ -1586,6 +1586,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_pucch_fmt ON nr_pucch_records(pucch_format);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_rsh_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    research_topic TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    allocated_budget_idr REAL NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_rsh_nim ON pkm_rsh_proposal_records(nim);")
 
 
 
@@ -7245,6 +7261,57 @@ class StorageManager:
     record_nr_pucch = save_nr_pucch_record
     list_nr_pucch = list_nr_pucch_records
     get_nr_pucch_by_id = get_nr_pucch_record_by_id
+
+    def save_pkm_rsh_proposal(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a student Belmawa PKM Riset Sosial Humaniora (PKM-RSH) proposal evaluation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_rsh_proposal_records (
+                    student_leader, nim, proposal_title, research_topic,
+                    composite_score, letter_grade, allocated_budget_idr,
+                    converted_sks, is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("student_leader", "")).strip(),
+                str(d.get("nim", "")).strip(),
+                str(d.get("proposal_title", "")).strip(),
+                str(d.get("research_topic", "")).strip(),
+                float(d.get("composite_score", 0.0)),
+                str(d.get("letter_grade", "C")).strip(),
+                float(d.get("allocated_budget_idr", 0.0)),
+                int(d.get("converted_sks", 2)),
+                1 if d.get("is_funded") else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_rsh_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent PKM-RSH proposal evaluation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_rsh_proposal_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_rsh_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single PKM-RSH proposal record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_rsh_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_pkm_rsh_proposal = save_pkm_rsh_proposal
 
 
 
