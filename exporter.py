@@ -2793,6 +2793,36 @@ navigation: true
             data["citation"] = policy_brief_url.strip()
         return data
 
+    @staticmethod
+    def to_stripe_markdoc(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports article to Stripe Markdoc documentation format with frontmatter,
+        declarative tag structure, and editorial content.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f"tags: [{tags_yaml}]",
+            'engine: "markdoc"',
+            "markdoc: true",
+            "---",
+            "",
+            '{% callout type="info" %}',
+            f"{desc}",
+            "{% /callout %}",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
