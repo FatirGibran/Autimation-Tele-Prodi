@@ -1876,6 +1876,35 @@ class TelegramFormatter:
             f"🚀 *Selamat berkarya memproduksi video sinematografi futuristik konstruktif untuk kemajuan Indonesia!*"
         )
 
+    @staticmethod
+    def format_5g_nr_pucch_telegram(
+        pucch_format: int,
+        format_description: str,
+        num_prbs: int,
+        num_symbols: int,
+        subcarrier_spacing_khz: int,
+        max_uci_payload_bits: int,
+        multiplexing_ue_capacity: int,
+        required_snr_db: float,
+        slot_overhead_percent: float,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a 5G NR PUCCH uplink control channel capacity and multiplexing notification for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal Optimasi RAN 5G:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"📡 **Telemetri Kapasitas Kanal Kontrol Uplink 5G NR PUCCH (3GPP TS 38.211)**\n\n"
+            f"📶 **Format PUCCH:** `PUCCH Format {int(pucch_format)}`\n"
+            f"📝 **Deskripsi Format:** {format_description.strip()}\n"
+            f"📊 **Alokasi Sumber Daya:** `{int(num_prbs)} PRB` &bull; `{int(num_symbols)} Simbol OFDM` (`SCS {int(subcarrier_spacing_khz)} kHz`)\n"
+            f"📦 **Kapasitas Payload UCI:** `{int(max_uci_payload_bits)} bit`\n"
+            f"👥 **Kapasitas Multiplexing UE:** `{int(multiplexing_ue_capacity)} UE / PRB`\n"
+            f"🎯 **Ambang Batas Target SNR:** `{float(required_snr_db):.1f} dB`\n"
+            f"⚡ **Overhead Slot Uplink:** `{float(slot_overhead_percent):.2f}%`{portal_link}\n\n"
+            f"✨ *Konfigurasi transmisi kanal kontrol uplink sel radio 5G NR terverifikasi optimal!*"
+        )
+
 
 
 
