@@ -1502,6 +1502,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_ki_nim ON pkm_ki_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS satellite_ionospheric_scintillation_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    carrier_frequency_ghz REAL NOT NULL,
+                    elevation_angle_deg REAL NOT NULL,
+                    s4_zenith_1ghz REAL NOT NULL,
+                    obliquity_factor REAL NOT NULL,
+                    s4_index REAL NOT NULL,
+                    peak_to_peak_fluctuation_db REAL NOT NULL,
+                    fade_margin_db REAL NOT NULL,
+                    link_availability_pct REAL NOT NULL,
+                    severity TEXT NOT NULL,
+                    is_acceptable INTEGER NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_scint_s4 ON satellite_ionospheric_scintillation_records(s4_index);")
 
 
 
@@ -6893,6 +6910,60 @@ class StorageManager:
     list_nr_cross_carrier = list_nr_cross_carrier_records
     get_nr_cross_carrier_by_id = get_nr_cross_carrier_record_by_id
     record_pkm_ki_proposal = save_pkm_ki_proposal
+
+    def save_satellite_ionospheric_scintillation_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a satellite ITU-R P.531 ionospheric scintillation index S4 and fade margin calculation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO satellite_ionospheric_scintillation_records (
+                    carrier_frequency_ghz, elevation_angle_deg, s4_zenith_1ghz,
+                    obliquity_factor, s4_index, peak_to_peak_fluctuation_db,
+                    fade_margin_db, link_availability_pct, severity, is_acceptable
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(d.get("carrier_frequency_ghz", 0.0)),
+                float(d.get("elevation_angle_deg", 0.0)),
+                float(d.get("s4_zenith_1ghz", 0.0)),
+                float(d.get("obliquity_factor", 0.0)),
+                float(d.get("s4_index", 0.0)),
+                float(d.get("peak_to_peak_fluctuation_db", 0.0)),
+                float(d.get("fade_margin_db", 0.0)),
+                float(d.get("link_availability_pct", 0.0)),
+                str(d.get("severity", "Moderate Scintillation")).strip(),
+                1 if d.get("is_acceptable", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_satellite_ionospheric_scintillation_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent satellite ionospheric scintillation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_ionospheric_scintillation_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_satellite_ionospheric_scintillation_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single satellite ionospheric scintillation record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_ionospheric_scintillation_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_satellite_ionospheric_scintillation = save_satellite_ionospheric_scintillation_record
+    list_satellite_ionospheric_scintillation = list_satellite_ionospheric_scintillation_records
+    get_satellite_ionospheric_scintillation_by_id = get_satellite_ionospheric_scintillation_record_by_id
 
 
 
