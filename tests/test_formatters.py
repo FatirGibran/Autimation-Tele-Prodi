@@ -1270,6 +1270,49 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Rp 10,000,000", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/ki/55", msg)
 
+    def test_format_5g_nr_srs_telegram(self):
+        msg = TelegramFormatter.format_5g_nr_srs_telegram(
+            bandwidth_mhz=100.0,
+            scs_khz=30,
+            comb_size=4,
+            cyclic_shift_count=8,
+            max_concurrent_ues_per_slot=16,
+            total_multiplexed_ues_per_period=160,
+            sounding_overhead_pct=14.29,
+            status="High Capacity Sounding",
+            portal_url="https://telemetry.telkom.ac.id/nr/srs"
+        )
+        self.assertIn("Sounding Reference Signal (SRS) 5G NR", msg)
+        self.assertIn("100.0 MHz (30 kHz SCS)", msg)
+        self.assertIn("Comb-4", msg)
+        self.assertIn("8 Cyclic Shifts", msg)
+        self.assertIn("16 UE / slot", msg)
+        self.assertIn("160 UE / periode", msg)
+        self.assertIn("14.29%", msg)
+        self.assertIn("https://telemetry.telkom.ac.id/nr/srs", msg)
+
+    def test_format_pkm_vgk_telegram(self):
+        msg = TelegramFormatter.format_pkm_vgk_telegram(
+            student_leader="Anisa Putri",
+            nim="1101210088",
+            proposal_title="AI Smart Ocean Guard Terumbu Karang",
+            sdg_goal="SDG 14: Ekosistem Lautan",
+            video_duration_minutes=3.0,
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=10000000,
+            funding_status="Lolos Pendanaan Belmawa PKM-VGK Unggulan",
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/vgk/88"
+        )
+        self.assertIn("Pengumuman Kelulusan Pendanaan Belmawa PKM-VGK", msg)
+        self.assertIn("Anisa Putri", msg)
+        self.assertIn("1101210088", msg)
+        self.assertIn("AI Smart Ocean Guard", msg)
+        self.assertIn("SDG 14: Ekosistem Lautan", msg)
+        self.assertIn("3.0 Menit", msg)
+        self.assertIn("Rp 10,000,000", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/vgk/88", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
