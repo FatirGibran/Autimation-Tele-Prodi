@@ -1536,6 +1536,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_srs_comb ON nr_srs_records(comb_size);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_vgk_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    sdg_goal TEXT NOT NULL,
+                    video_duration_minutes REAL NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    allocated_budget_idr REAL NOT NULL,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_vgk_nim ON pkm_vgk_proposal_records(nim);")
 
 
 
@@ -7036,6 +7052,57 @@ class StorageManager:
     record_nr_srs = save_nr_srs_record
     list_nr_srs = list_nr_srs_records
     get_nr_srs_by_id = get_nr_srs_record_by_id
+
+    def save_pkm_vgk_proposal(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a student Belmawa PKM Video Gagasan Konstruktif (PKM-VGK) proposal evaluation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_vgk_proposal_records (
+                    student_leader, nim, proposal_title, sdg_goal,
+                    video_duration_minutes, composite_score, letter_grade,
+                    allocated_budget_idr, is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("student_leader", "")).strip(),
+                str(d.get("nim", "")).strip(),
+                str(d.get("proposal_title", "")).strip(),
+                str(d.get("sdg_goal", "")).strip(),
+                float(d.get("video_duration_minutes", 3.0)),
+                float(d.get("composite_score", 0.0)),
+                str(d.get("letter_grade", "C")).strip(),
+                float(d.get("allocated_budget_idr", 0.0)),
+                1 if d.get("is_funded") else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_vgk_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent PKM-VGK proposal evaluation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_vgk_proposal_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_vgk_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single PKM-VGK proposal record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_vgk_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_pkm_vgk_proposal = save_pkm_vgk_proposal
 
 
 
