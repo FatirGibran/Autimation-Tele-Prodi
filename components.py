@@ -7860,6 +7860,58 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_srs_sounding_card(
+        cls,
+        title: str = "Kapasitas & Alokasi Sounding Reference Signal (SRS) 5G NR",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor performance card presenting 5G NR Sounding Reference Signal (SRS)
+        multiplexing capacity, subcarrier comb structure, cyclic shift allocations, and channel sounding overhead.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        bw_mhz = float(d.get("bandwidth_mhz", 100.0))
+        scs = int(d.get("scs_khz", 30))
+        comb = int(d.get("comb_size", 4))
+        cs_count = int(d.get("cyclic_shift_count", 8))
+        prb_count = int(d.get("prb_count", 273))
+        max_ues = int(d.get("max_concurrent_ues_per_slot", 16))
+        total_ues = int(d.get("total_multiplexed_ues_per_period", 160))
+        overhead = float(d.get("sounding_overhead_pct", 14.29))
+        status = str(d.get("status", "High Capacity Sounding"))
+
+        badge_bg = "#ecfdf5" if "High" in status else "#f8fafc"
+        badge_color = "#047857" if "High" in status else "#64748b"
+
+        return f"""    <div class="tu-5g-srs-card" style="border: 1px solid #0284c7; border-radius: 8px; padding: 18px; margin: 16px 0; background: #f0f9ff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0369a1; font-size: 13px; text-transform: uppercase;">5G NR Sounding Reference Signal (SRS)</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0c4a6e; font-size: 16px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Bandwidth &amp; PRB Grid</span>
+          <strong style="color: #0369a1;">{bw_mhz:.1f} MHz ({scs} kHz SCS)</strong> &bull; <strong>{prb_count} PRBs</strong>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Konfigurasi Comb &amp; Cyclic Shift</span>
+          <strong style="color: #0f172a;">Comb-{comb}</strong> &bull; <strong>{cs_count} Cyclic Shifts</strong>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Kapasitas Multiplexing UE</span>
+          <strong style="color: #0284c7; font-size: 15px;">{max_ues} UE / slot</strong> &bull; <span>{total_ues} UE / periode</span>
+        </div>
+        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Overhead Simbol SRS</span>
+          <strong style="color: #047857; font-size: 15px;">{overhead:.2f}%</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
@@ -7893,6 +7945,7 @@ render_satellite_cloud_attenuation_card = EditorialComponents.render_satellite_c
 render_pkm_ki_proposal_card = EditorialComponents.render_pkm_ki_proposal_card
 render_5g_cross_carrier_scheduling_svg = EditorialComponents.render_5g_cross_carrier_scheduling_svg
 render_optical_sbs_threshold_card = EditorialComponents.render_optical_sbs_threshold_card
+render_5g_srs_sounding_card = EditorialComponents.render_5g_srs_sounding_card
 
 
 
