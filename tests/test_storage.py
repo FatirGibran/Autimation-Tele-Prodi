@@ -2972,6 +2972,78 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["prototype_type"], "Prototipe Teruji Lapangan (TRL 5)")
         self.assertIsNone(self.storage.get_pkm_ki_proposal_by_id(99999))
 
+    def test_satellite_ionospheric_scintillation_storage(self):
+        rec_id = self.storage.record_satellite_ionospheric_scintillation(
+            carrier_frequency_ghz=1.5,
+            elevation_angle_deg=30.0,
+            s4_zenith_1ghz=0.35,
+            obliquity_factor=1.85,
+            s4_index=0.38,
+            peak_to_peak_fluctuation_db=8.42,
+            fade_margin_db=5.31,
+            link_availability_pct=99.0,
+            severity="Moderate Scintillation",
+            is_acceptable=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_satellite_ionospheric_scintillation()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["carrier_frequency_ghz"], 1.5)
+        self.assertEqual(items[0]["severity"], "Moderate Scintillation")
+        self.assertEqual(items[0]["is_acceptable"], 1)
+
+        single = self.storage.get_satellite_ionospheric_scintillation_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["s4_index"], 0.38)
+        self.assertIsNone(self.storage.get_satellite_ionospheric_scintillation_by_id(99999))
+
+    def test_nr_srs_storage(self):
+        rec_id = self.storage.record_nr_srs(
+            bandwidth_mhz=100.0,
+            scs_khz=30,
+            prb_count=273,
+            comb_size=4,
+            cyclic_shift_count=8,
+            srs_symbols_per_slot=2,
+            max_concurrent_ues_per_slot=16,
+            total_multiplexed_ues_per_period=160,
+            sounding_overhead_pct=14.29,
+            status="High Capacity Sounding"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_srs()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["comb_size"], 4)
+        self.assertEqual(items[0]["max_concurrent_ues_per_slot"], 16)
+
+        single = self.storage.get_nr_srs_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["bandwidth_mhz"], 100.0)
+        self.assertIsNone(self.storage.get_nr_srs_by_id(99999))
+
+    def test_pkm_vgk_proposal_storage(self):
+        rec_id = self.storage.record_pkm_vgk_proposal(
+            student_leader="Anisa Putri",
+            nim="1101210088",
+            proposal_title="AI Smart Ocean Guard Terumbu Karang",
+            sdg_goal="SDG 14: Ekosistem Lautan",
+            video_duration_minutes=3.0,
+            composite_score=88.5,
+            letter_grade="A",
+            allocated_budget_idr=10000000.0,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_vgk_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Anisa Putri")
+        self.assertEqual(items[0]["is_funded"], 1)
+
+        single = self.storage.get_pkm_vgk_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["sdg_goal"], "SDG 14: Ekosistem Lautan")
+        self.assertIsNone(self.storage.get_pkm_vgk_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
