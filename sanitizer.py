@@ -749,6 +749,11 @@ class HTMLSanitizer:
             cleaned = sanitize_html5_figure_figcaption_attributes(cleaned)
             warnings.append("Sanitized HTML5 figure and figcaption academic media elements.")
 
+        # 8ag. Sanitize HTML5 legend and fieldset technical grouping elements
+        if "<fieldset" in cleaned.lower() or "<legend" in cleaned.lower():
+            cleaned = sanitize_html5_fieldset_legend_attributes(cleaned)
+            warnings.append("Sanitized HTML5 legend and fieldset technical grouping elements.")
+
         return cleaned, warnings
 
 
@@ -2888,6 +2893,27 @@ def sanitize_html5_figure_figcaption_attributes(html: str) -> str:
 
     cleaned = re.sub(r'<(?:figure|figcaption)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_figure_figcaption, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_fieldset_legend_attributes(html: str) -> str:
+    """
+    Sanitizes HTML5 <fieldset> form grouping and <legend> caption elements by stripping
+    executable event handlers, invalid inline styles, and scriptable attributes.
+    """
+    if not html or ("<fieldset" not in html.lower() and "<legend" not in html.lower()):
+        return html
+
+    cleaned = html
+
+    def fix_fieldset_legend(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<(?:fieldset|legend)\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_fieldset_legend, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
