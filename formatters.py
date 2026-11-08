@@ -1905,6 +1905,35 @@ class TelegramFormatter:
             f"✨ *Konfigurasi transmisi kanal kontrol uplink sel radio 5G NR terverifikasi optimal!*"
         )
 
+    @staticmethod
+    def format_pkm_rsh_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        research_topic: str,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        converted_sks: int,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Riset Sosial Humaniora (PKM-RSH) funding and MBKM recognition broadcast card for Telegram.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"📚 **Pengumuman Kelulusan Pendanaan Belmawa PKM-RSH (Riset Sosial Humaniora)**\n\n"
+            f"📖 **Judul Penelitian Sosial:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Peneliti:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🔍 **Topik Riset:** `{research_topic.strip()}`\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Hibah:** `Rp {allocated_budget_idr:,}`\n"
+            f"🎓 **Ekuivalensi MBKM:** `{int(converted_sks)} SKS Diakui`\n"
+            f"🌟 **Status Pendanaan:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"🚀 *Selamat berkontribusi dalam riset sosial humaniora dan advokasi kebijakan publik untuk kemaslahatan masyarakat!*"
+        )
+
 
 
 
