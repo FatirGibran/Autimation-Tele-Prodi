@@ -1302,6 +1302,22 @@ class WordPressClient:
             "total": len(tag_descriptions_map)
         }
 
+    def get_tags_by_ids(self, tag_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        Fetches tag details for a list of tag IDs via GET /wp/v2/tags?include=id1,id2,...
+        Returns an empty list if tag_ids is empty.
+        """
+        if not tag_ids:
+            return []
+        valid_ids = [str(int(tid)) for tid in tag_ids if tid]
+        if not valid_ids:
+            return []
+        include_param = ",".join(valid_ids)
+        endpoint = f"{self.api_url}/tags?include={include_param}&per_page={len(valid_ids)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        res = self._send_request(req)
+        return res if isinstance(res, list) else []
+
 
 
 
