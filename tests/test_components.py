@@ -3022,6 +3022,98 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("SRS Simbol 12", html)
         self.assertIn("16 UE / slot", html)
 
+    def test_render_optical_coherent_qam_card(self):
+        html = EditorialComponents.render_optical_coherent_qam_card(
+            data={
+                "modulation_format": "DP-16QAM",
+                "raw_bitrate_gbps": 256.0,
+                "osnr_db": 22.0,
+                "snr_db": 18.0,
+                "evm_rms_percent": 12.5,
+                "estimated_ber_str": "1.20e-03",
+                "fec_status": "Lolos HD-FEC (Margin Tinggi)",
+                "is_error_free_post_fec": True
+            }
+        )
+        self.assertIn("tu-coherent-qam-card", html)
+        self.assertIn("DP-16QAM", html)
+        self.assertIn("256.0 Gbps", html)
+        self.assertIn("18.00 dB", html)
+        self.assertIn("12.50%", html)
+        self.assertIn("1.20e-03", html)
+
+    def test_render_5g_nr_pucch_card(self):
+        html = EditorialComponents.render_5g_nr_pucch_card(
+            data={
+                "pucch_format": 1,
+                "format_description": "Long PUCCH",
+                "num_prbs": 2,
+                "num_symbols": 14,
+                "subcarrier_spacing_khz": 30,
+                "max_uci_payload_bits": 2,
+                "multiplexing_ue_capacity": 12,
+                "required_snr_db": -5.0,
+                "slot_overhead_percent": 7.14
+            }
+        )
+        self.assertIn("tu-pucch-card", html)
+        self.assertIn("PUCCH Format 1", html)
+        self.assertIn("2 PRB", html)
+        self.assertIn("12 UE", html)
+        self.assertIn("-5.0 dB", html)
+
+    def test_render_satellite_depolarization_xpd_card(self):
+        html = EditorialComponents.render_satellite_depolarization_xpd_card(
+            data={
+                "carrier_frequency_ghz": 18.0,
+                "elevation_angle_deg": 35.0,
+                "polarization_tilt_deg": 45.0,
+                "xpd_rain_db": 26.5,
+                "ice_depol_c_ice_db": 1.8,
+                "total_xpd_db": 24.7,
+                "feasibility": "Sangat Baik (Dual-Polarization Frequency Reuse Sangat Andal)",
+                "is_dual_pol_feasible": True
+            }
+        )
+        self.assertIn("tu-satellite-xpd-card", html)
+        self.assertIn("18.0 GHz", html)
+        self.assertIn("26.50 dB", html)
+        self.assertIn("24.70 dB", html)
+
+    def test_render_pkm_rsh_proposal_card(self):
+        html = EditorialComponents.render_pkm_rsh_proposal_card(
+            data={
+                "student_leader": "Budi Santoso",
+                "nim": "1101210045",
+                "proposal_title": "Adopsi Sosio-Teknologi Digital Pedesaan",
+                "research_topic": "Kesenjangan Digital & Sosio-Teknologi",
+                "composite_score": 86.5,
+                "letter_grade": "A",
+                "funding_status": "Lolos Pendanaan Belmawa PKM-RSH Unggulan",
+                "allocated_budget_idr": 10000000,
+                "converted_sks": 5,
+                "is_funded": True
+            }
+        )
+        self.assertIn("tu-pkm-rsh-card", html)
+        self.assertIn("Budi Santoso", html)
+        self.assertIn("10,000,000", html)
+        self.assertIn("5 SKS", html)
+
+    def test_render_5g_nr_pucch_resource_grid_svg(self):
+        html = EditorialComponents.render_5g_nr_pucch_resource_grid_svg(
+            data={
+                "pucch_format": 1,
+                "scs_khz": 30,
+                "num_prbs": 1
+            }
+        )
+        self.assertIn("tu-pucch-svg-card", html)
+        self.assertIn("<svg", html)
+        self.assertIn("PUCCH Hop-1", html)
+        self.assertIn("PUCCH Hop-2", html)
+        self.assertIn("Intra-Slot Hopping", html)
+
 
 if __name__ == "__main__":
     unittest.main()
