@@ -8019,6 +8019,79 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_srs_comb_pattern_svg(
+        cls,
+        title: str = "Diagram Alokasi Subcarrier Comb & Slot Garis Waktu 5G NR SRS",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card featuring an inline responsive SVG diagram visualizing
+        3GPP 5G NR Sounding Reference Signal (SRS) subcarrier comb interleaving patterns
+        and slot OFDM symbol timing.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        comb = int(d.get("comb_size", 4))
+        scs = int(d.get("scs_khz", 30))
+        prbs = int(d.get("prb_count", 273))
+        max_ues = int(d.get("max_concurrent_ues_per_slot", 16))
+        syms = int(d.get("srs_symbols_per_slot", 2))
+
+        return f"""    <div class="tu-nr-srs-svg-card" style="border: 1px solid #334155; border-radius: 8px; padding: 18px; margin: 16px 0; background: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 14px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">5G NR SRS Comb Interleaving &amp; Slot Timing</span>
+        <span style="font-size: 11px; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Comb-{comb} Active</span>
+      </div>
+      <h4 style="margin: 0 0 10px 0; color: #f1f5f9; font-size: 15px;">{title}</h4>
+      <div style="margin: 14px 0; display: flex; justify-content: center; background: #1e293b; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <svg viewBox="0 0 540 220" width="100%" height="220" style="max-width: 580px; display: block;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Frequency Subcarrier Axis -->
+          <line x1="40" y1="180" x2="500" y2="180" stroke="#64748b" stroke-width="1.5" />
+          <text x="270" y="205" fill="#94a3b8" font-size="10" text-anchor="middle">Sumbu Subcarrier (Frekuensi f / kHz)</text>
+
+          <!-- Slot Symbol Blocks -->
+          <rect x="40" y="25" width="220" height="30" rx="3" fill="#1e293b" stroke="#475569" />
+          <text x="150" y="44" fill="#94a3b8" font-size="10" text-anchor="middle">Data PUSCH / PUCCH (Simbol 0 - 11)</text>
+
+          <rect x="270" y="25" width="100" height="30" rx="3" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="320" y="44" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">SRS Simbol 12</text>
+
+          <rect x="380" y="25" width="100" height="30" rx="3" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="430" y="44" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">SRS Simbol 13</text>
+
+          <!-- Comb Interleaving Grid Visualization -->
+          <rect x="50" y="80" width="30" height="40" rx="2" fill="#38bdf8" />
+          <text x="65" y="104" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">C0</text>
+
+          <rect x="90" y="80" width="30" height="40" rx="2" fill="#334155" />
+          <rect x="130" y="80" width="30" height="40" rx="2" fill="#334155" />
+          <rect x="170" y="80" width="30" height="40" rx="2" fill="#334155" />
+
+          <rect x="210" y="80" width="30" height="40" rx="2" fill="#38bdf8" />
+          <text x="225" y="104" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">C0</text>
+
+          <rect x="250" y="80" width="30" height="40" rx="2" fill="#334155" />
+          <rect x="290" y="80" width="30" height="40" rx="2" fill="#334155" />
+          <rect x="330" y="80" width="30" height="40" rx="2" fill="#334155" />
+
+          <rect x="370" y="80" width="30" height="40" rx="2" fill="#38bdf8" />
+          <text x="385" y="104" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle">C0</text>
+
+          <rect x="410" y="80" width="30" height="40" rx="2" fill="#334155" />
+          <rect x="450" y="80" width="30" height="40" rx="2" fill="#334155" />
+
+          <text x="270" y="145" fill="#38bdf8" font-size="10" text-anchor="middle">Interleaving Pola Sisir Comb-4 (Subcarrier Jarak K_TC = 4)</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Konfigurasi Comb: <strong style="color: #38bdf8;">Comb-{comb} ({scs} kHz)</strong></div>
+        <div>Alokasi PRB: <strong style="color: #34d399;">{prbs} PRBs</strong></div>
+        <div>Kapasitas UE: <strong style="color: #facc15;">{max_ues} UE / slot</strong></div>
+      </div>
+    </div>"""
+
 
 
 
@@ -8055,6 +8128,7 @@ render_optical_sbs_threshold_card = EditorialComponents.render_optical_sbs_thres
 render_5g_srs_sounding_card = EditorialComponents.render_5g_srs_sounding_card
 render_satellite_ionospheric_scintillation_card = EditorialComponents.render_satellite_ionospheric_scintillation_card
 render_pkm_vgk_proposal_card = EditorialComponents.render_pkm_vgk_proposal_card
+render_5g_srs_comb_pattern_svg = EditorialComponents.render_5g_srs_comb_pattern_svg
 
 
 
