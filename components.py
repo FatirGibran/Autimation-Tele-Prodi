@@ -7912,6 +7912,58 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_ionospheric_scintillation_card(
+        cls,
+        title: str = "Scintillation Ionosfer S4 & Margin Redaman Satelit (ITU-R P.531)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card displaying ITU-R P.531 ionospheric amplitude scintillation
+        index S4, obliquity geometry, peak-to-peak signal fluctuations, and required fade margin.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        freq_ghz = float(d.get("carrier_frequency_ghz", 1.5))
+        elev_deg = float(d.get("elevation_angle_deg", 30.0))
+        obliquity = float(d.get("obliquity_factor", 1.85))
+        s4_val = float(d.get("s4_index", 0.38))
+        fluc_db = float(d.get("peak_to_peak_fluctuation_db", 8.42))
+        fade_margin = float(d.get("fade_margin_db", 5.31))
+        severity = str(d.get("severity", "Moderate Scintillation"))
+        is_acc = bool(d.get("is_acceptable", True))
+
+        badge_bg = "#ecfdf5" if is_acc else "#fef2f2"
+        badge_color = "#047857" if is_acc else "#b91c1c"
+        border_color = "#10b981" if is_acc else "#ef4444"
+
+        return f"""    <div class="tu-satellite-ionospheric-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase;">Ionospheric Scintillation S4 (ITU-R P.531)</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{severity}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Frekuensi &amp; Sudut Elevasi</span>
+          <strong style="color: #0f172a;">{freq_ghz:.2f} GHz</strong> &bull; <strong>{elev_deg:.1f}&deg; Elev</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Faktor Obliquity Layar F-Layer</span>
+          <strong style="color: #0f172a;">{obliquity:.3f}</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Indeks Scintillation S4</span>
+          <strong style="color: #0284c7; font-size: 15px;">{s4_val:.3f}</strong> &bull; <span style="font-size: 11px; color: #64748b;">Fluktuasi: {fluc_db:.2f} dB</span>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Margin Redaman Disyaratkan</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{fade_margin:.2f} dB</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
@@ -7946,6 +7998,7 @@ render_pkm_ki_proposal_card = EditorialComponents.render_pkm_ki_proposal_card
 render_5g_cross_carrier_scheduling_svg = EditorialComponents.render_5g_cross_carrier_scheduling_svg
 render_optical_sbs_threshold_card = EditorialComponents.render_optical_sbs_threshold_card
 render_5g_srs_sounding_card = EditorialComponents.render_5g_srs_sounding_card
+render_satellite_ionospheric_scintillation_card = EditorialComponents.render_satellite_ionospheric_scintillation_card
 
 
 
