@@ -3044,6 +3044,77 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["sdg_goal"], "SDG 14: Ekosistem Lautan")
         self.assertIsNone(self.storage.get_pkm_vgk_proposal_by_id(99999))
 
+    def test_optical_coherent_qam_storage(self):
+        rec_id = self.storage.record_optical_coherent_qam(
+            modulation_format="DP-16QAM",
+            symbol_rate_gbaud=32.0,
+            raw_bitrate_gbps=256.0,
+            osnr_db=22.0,
+            snr_db=18.0,
+            evm_rms_percent=12.5,
+            estimated_ber=0.0012,
+            q_factor_db=10.0,
+            laser_linewidth_khz=100.0,
+            fec_status="Lolos HD-FEC",
+            is_error_free_post_fec=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_coherent_qam()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["modulation_format"], "DP-16QAM")
+        self.assertEqual(items[0]["raw_bitrate_gbps"], 256.0)
+
+        single = self.storage.get_optical_coherent_qam_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["snr_db"], 18.0)
+        self.assertIsNone(self.storage.get_optical_coherent_qam_by_id(99999))
+
+    def test_nr_pucch_storage(self):
+        rec_id = self.storage.record_nr_pucch(
+            pucch_format=1,
+            format_description="Long PUCCH",
+            num_prbs=2,
+            num_symbols=14,
+            subcarrier_spacing_khz=30,
+            max_uci_payload_bits=2,
+            multiplexing_ue_capacity=12,
+            required_snr_db=-5.0,
+            slot_overhead_percent=7.14
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_pucch()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["pucch_format"], 1)
+        self.assertEqual(items[0]["multiplexing_ue_capacity"], 12)
+
+        single = self.storage.get_nr_pucch_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["num_prbs"], 2)
+        self.assertIsNone(self.storage.get_nr_pucch_by_id(99999))
+
+    def test_pkm_rsh_proposal_storage(self):
+        rec_id = self.storage.record_pkm_rsh_proposal(
+            student_leader="Budi Santoso",
+            nim="1101210045",
+            proposal_title="Adopsi Sosio-Teknologi Digital Pedesaan",
+            research_topic="Kesenjangan Digital",
+            composite_score=86.5,
+            letter_grade="A",
+            allocated_budget_idr=10000000.0,
+            converted_sks=5,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_rsh_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Budi Santoso")
+        self.assertEqual(items[0]["converted_sks"], 5)
+
+        single = self.storage.get_pkm_rsh_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["research_topic"], "Kesenjangan Digital")
+        self.assertIsNone(self.storage.get_pkm_rsh_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
