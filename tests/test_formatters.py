@@ -1313,6 +1313,51 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Rp 10,000,000", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/vgk/88", msg)
 
+    def test_format_5g_nr_pucch_telegram(self):
+        msg = TelegramFormatter.format_5g_nr_pucch_telegram(
+            pucch_format=1,
+            format_description="Long PUCCH (Time OCC)",
+            num_prbs=2,
+            num_symbols=14,
+            subcarrier_spacing_khz=30,
+            max_uci_payload_bits=2,
+            multiplexing_ue_capacity=12,
+            required_snr_db=-5.0,
+            slot_overhead_percent=7.14,
+            portal_url="https://telemetry.telkom.ac.id/nr/pucch"
+        )
+        self.assertIn("PUCCH Format 1", msg)
+        self.assertIn("Long PUCCH (Time OCC)", msg)
+        self.assertIn("2 PRB", msg)
+        self.assertIn("14 Simbol OFDM", msg)
+        self.assertIn("SCS 30 kHz", msg)
+        self.assertIn("12 UE / PRB", msg)
+        self.assertIn("-5.0 dB", msg)
+        self.assertIn("7.14%", msg)
+        self.assertIn("https://telemetry.telkom.ac.id/nr/pucch", msg)
+
+    def test_format_pkm_rsh_telegram(self):
+        msg = TelegramFormatter.format_pkm_rsh_telegram(
+            student_leader="Budi Santoso",
+            nim="1101210045",
+            proposal_title="Adopsi Sosio-Teknologi Digital Pedesaan",
+            research_topic="Kesenjangan Digital & Sosio-Teknologi",
+            composite_score=86.5,
+            letter_grade="A",
+            allocated_budget_idr=10000000,
+            funding_status="Lolos Pendanaan Belmawa PKM-RSH Unggulan",
+            converted_sks=5,
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/rsh/45"
+        )
+        self.assertIn("Belmawa PKM-RSH (Riset Sosial Humaniora)", msg)
+        self.assertIn("Budi Santoso", msg)
+        self.assertIn("1101210045", msg)
+        self.assertIn("Adopsi Sosio-Teknologi Digital Pedesaan", msg)
+        self.assertIn("Kesenjangan Digital & Sosio-Teknologi", msg)
+        self.assertIn("Rp 10,000,000", msg)
+        self.assertIn("5 SKS Diakui", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/rsh/45", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
