@@ -8401,6 +8401,62 @@ def parse_pkm_ki_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_sbs_threshold_power(
+    fiber_length_km: float = 50.0,
+    attenuation_db_per_km: float = 0.20,
+    effective_area_um2: float = 80.0,
+    brillouin_gain_m_per_w: float = 4.0e-11,
+    laser_linewidth_mhz: float = 10.0,
+    brillouin_linewidth_mhz: float = 30.0
+) -> Dict[str, Any]:
+    """
+    Calculates the Stimulated Brillouin Scattering (SBS) threshold optical power in single-mode fibers (SMF)
+    based on the Smith formula accounting for laser linewidth broadening and effective interaction length.
+    """
+    length_km = max(0.1, float(fiber_length_km))
+    alpha_db = max(0.01, float(attenuation_db_per_km))
+    a_eff_um2 = max(1.0, float(effective_area_um2))
+    a_eff_m2 = a_eff_um2 * 1e-12
+    g_b = max(1e-12, float(brillouin_gain_m_per_w))
+    delta_nu_p = max(0.0, float(laser_linewidth_mhz))
+    delta_nu_b = max(1.0, float(brillouin_linewidth_mhz))
+
+    # Attenuation coefficient in 1/m: alpha_linear = alpha_db * ln(10) / (10 * 1000)
+    alpha_linear_per_m = (alpha_db * math.log(10.0)) / 10000.0
+    length_m = length_km * 1000.0
+
+    # Effective length: L_eff = (1 - exp(-alpha * L)) / alpha
+    exp_factor = math.exp(-alpha_linear_per_m * length_m)
+    l_eff_m = (1.0 - exp_factor) / alpha_linear_per_m
+    l_eff_km = l_eff_m / 1000.0
+
+    # Linewidth broadening factor: (1 + delta_nu_p / delta_nu_b)
+    linewidth_factor = 1.0 + (delta_nu_p / delta_nu_b)
+
+    # Smith threshold equation: P_th = 21 * A_eff / (g_B * L_eff) * (1 + delta_nu_p / delta_nu_b)
+    p_th_w = (21.0 * a_eff_m2 / (g_b * l_eff_m)) * linewidth_factor
+    p_th_mw = p_th_w * 1000.0
+    p_th_dbm = 10.0 * math.log10(p_th_mw)
+
+    status = "Critical SBS Susceptibility" if p_th_dbm < 10.0 else "Standard Power Tolerance"
+
+    return {
+        "fiber_length_km": length_km,
+        "attenuation_db_per_km": alpha_db,
+        "effective_area_um2": a_eff_um2,
+        "effective_length_km": round(l_eff_km, 3),
+        "effective_length_m": round(l_eff_m, 2),
+        "brillouin_gain_m_per_w": g_b,
+        "laser_linewidth_mhz": delta_nu_p,
+        "brillouin_linewidth_mhz": delta_nu_b,
+        "linewidth_enhancement_factor": round(linewidth_factor, 3),
+        "threshold_power_watts": round(p_th_w, 6),
+        "threshold_power_mw": round(p_th_mw, 3),
+        "threshold_power_dbm": round(p_th_dbm, 2),
+        "status": status
+    }
+
+
 
 
 
