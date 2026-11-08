@@ -3171,6 +3171,77 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Ketua VGK Test", out)
 
+    def test_cmd_cohqam(self):
+        class ArgsAdd:
+            action = "add"
+            fmt = "16QAM"
+            rate = 32.0
+            osnr = 22.0
+            linewidth = 100.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_cohqam(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Transponder Koheren berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_cohqam(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("DP-16QAM", out)
+
+    def test_cmd_nrpucch(self):
+        class ArgsAdd:
+            action = "add"
+            fmt = 1
+            prbs = 2
+            syms = 14
+            scs = 30
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrpucch(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR PUCCH berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrpucch(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Format 1", out)
+
+    def test_cmd_pkmrsh(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Budi Santoso"
+            nim = "1101210045"
+            title = "Adopsi Sosio-Teknologi Pedesaan"
+            topic = "Kesenjangan Digital"
+            urgency = 90.0
+            lit = 88.0
+            method = 88.0
+            impact = 85.0
+            no_ethics = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmrsh(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-RSH berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmrsh(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Budi Santoso", out)
+
 
 if __name__ == "__main__":
     unittest.main()
