@@ -3095,6 +3095,82 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Ketua KI Test", out)
 
+    def test_cmd_ionoscint(self):
+        class ArgsAdd:
+            action = "add"
+            freq = 1.5
+            elev = 30.0
+            s4_zenith = 0.35
+            avail = 99.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ionoscint(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Scintillation Ionosfer S4 berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_ionoscint(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("1.50", out)
+            self.assertIn("30.0", out)
+
+    def test_cmd_nrsrs(self):
+        class ArgsAdd:
+            action = "add"
+            bw = 100.0
+            scs = 30
+            comb = 4
+            cs = 8
+            syms = 2
+            period = 10
+            ports = 4
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrsrs(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR SRS Sounding berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrsrs(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Comb-4", out)
+            self.assertIn("100.0", out)
+
+    def test_cmd_pkmvgk(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Ketua VGK Test"
+            nim = "1101210088"
+            title = "AI Smart Ocean Guard"
+            sdg = "SDG 14: Ekosistem Lautan"
+            duration = 3.0
+            idea = 90.0
+            story = 90.0
+            impact = 88.0
+            dissem = 85.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmvgk(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-VGK berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmvgk(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Ketua VGK Test", out)
+
 
 if __name__ == "__main__":
     unittest.main()

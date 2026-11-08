@@ -746,13 +746,17 @@ class HTMLSanitizer:
 
         # 8af. Sanitize HTML5 figure and figcaption academic media elements
         if "<figure" in cleaned.lower() or "<figcaption" in cleaned.lower():
+            old_val = cleaned
             cleaned = sanitize_html5_figure_figcaption_attributes(cleaned)
-            warnings.append("Sanitized HTML5 figure and figcaption academic media elements.")
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 figure and figcaption academic media elements.")
 
         # 8ag. Sanitize HTML5 legend and fieldset technical grouping elements
         if "<fieldset" in cleaned.lower() or "<legend" in cleaned.lower():
+            old_val = cleaned
             cleaned = sanitize_html5_fieldset_legend_attributes(cleaned)
-            warnings.append("Sanitized HTML5 legend and fieldset technical grouping elements.")
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 legend and fieldset technical grouping elements.")
 
         return cleaned, warnings
 
