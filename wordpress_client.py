@@ -1318,6 +1318,39 @@ class WordPressClient:
         res = self._send_request(req)
         return res if isinstance(res, list) else []
 
+    def batch_update_category_descriptions(
+        self,
+        category_descriptions_map: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Batch updates descriptions for multiple categories via POST /wp/v2/categories/{id}.
+        Each item in category_descriptions_map should be a dict with 'id' (or 'category_id') and 'description'.
+        """
+        updated = []
+        failed = []
+
+        for item in category_descriptions_map:
+            cid = item.get("id") or item.get("category_id")
+            desc = str(item.get("description", "")).strip()
+            if not cid:
+                continue
+
+            try:
+                endpoint = f"{self.api_url}/categories/{int(cid)}"
+                payload = {"description": desc}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(cid))
+            except Exception as e:
+                failed.append({"category_id": int(cid), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(category_descriptions_map)
+        }
+
 
 
 
