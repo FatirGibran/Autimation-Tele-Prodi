@@ -7810,6 +7810,56 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_sbs_threshold_card(
+        cls,
+        title: str = "Ambang Batas Stimulated Brillouin Scattering (SBS) Fiber Optik",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card presenting optical fiber Stimulated Brillouin Scattering (SBS)
+        threshold power limits, effective interaction length, and laser linewidth broadening.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        length_km = float(d.get("fiber_length_km", 50.0))
+        eff_len_km = float(d.get("effective_length_km", 20.28))
+        laser_lw = float(d.get("laser_linewidth_mhz", 10.0))
+        p_th_mw = float(d.get("threshold_power_mw", 8.95))
+        p_th_dbm = float(d.get("threshold_power_dbm", 9.52))
+        status = str(d.get("status", "Standard Power Tolerance"))
+
+        badge_bg = "#ecfdf5" if "Standard" in status else "#fef2f2"
+        badge_color = "#047857" if "Standard" in status else "#b91c1c"
+        border_color = "#10b981" if "Standard" in status else "#ef4444"
+
+        return f"""    <div class="tu-optical-sbs-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase;">Optical SBS Nonlinear Threshold</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Panjang Fisik &amp; Efektif Leff</span>
+          <strong style="color: #0f172a;">{length_km:.1f} km</strong> &bull; <strong>{eff_len_km:.2f} km</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Linewidth Sumber Laser</span>
+          <strong style="color: #0f172a;">{laser_lw:.1f} MHz</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Daya Ambang Batas SBS (mW)</span>
+          <strong style="color: #0284c7; font-size: 15px;">{p_th_mw:.2f} mW</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Daya Ambang Batas SBS (dBm)</span>
+          <strong style="color: {badge_color}; font-size: 15px;">{p_th_dbm:.2f} dBm</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
@@ -7842,6 +7892,7 @@ render_5g_cross_carrier_scheduling_card = EditorialComponents.render_5g_cross_ca
 render_satellite_cloud_attenuation_card = EditorialComponents.render_satellite_cloud_attenuation_card
 render_pkm_ki_proposal_card = EditorialComponents.render_pkm_ki_proposal_card
 render_5g_cross_carrier_scheduling_svg = EditorialComponents.render_5g_cross_carrier_scheduling_svg
+render_optical_sbs_threshold_card = EditorialComponents.render_optical_sbs_threshold_card
 
 
 
