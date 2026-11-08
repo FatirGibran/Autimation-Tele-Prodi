@@ -1847,6 +1847,35 @@ class TelegramFormatter:
             f"ℹ️ *Sounding uplink channel reciprocity untuk Massive MIMO beamforming dan precoding CSI.*"
         )
 
+    @staticmethod
+    def format_pkm_vgk_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        sdg_goal: str,
+        video_duration_minutes: float,
+        composite_score: float,
+        letter_grade: str,
+        allocated_budget_idr: int,
+        funding_status: str,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Video Gagasan Konstruktif (PKM-VGK) funding and MBKM recognition broadcast card for Telegram.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"🎬 **Pengumuman Kelulusan Pendanaan Belmawa PKM-VGK (Video Gagasan Konstruktif)**\n\n"
+            f"📽️ **Judul Video Gagasan:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Tim Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🌍 **Pilar SDGs Sasaran:** `{sdg_goal.strip()}`\n"
+            f"⏱️ **Durasi Konten Video:** `{float(video_duration_minutes):.1f} Menit`\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"💰 **Dana Hibah:** `Rp {allocated_budget_idr:,}`\n"
+            f"🌟 **Status Pendanaan:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"🚀 *Selamat berkarya memproduksi video sinematografi futuristik konstruktif untuk kemajuan Indonesia!*"
+        )
+
 
 
 
