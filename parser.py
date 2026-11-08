@@ -8457,6 +8457,76 @@ def calculate_optical_sbs_threshold_power(
     }
 
 
+def calculate_5g_nr_srs_capacity_and_coverage(
+    bandwidth_mhz: float = 100.0,
+    scs_khz: int = 30,
+    comb_size: int = 4,
+    cyclic_shift_count: int = 8,
+    srs_symbols_per_slot: int = 2,
+    periodicity_slots: int = 10,
+    num_ports_per_ue: int = 4
+) -> Dict[str, Any]:
+    """
+    Calculates 5G NR Sounding Reference Signal (SRS) multiplexing capacity, subcarrier comb allocation,
+    and uplink channel sounding coverage in accordance with 3GPP TS 38.211 and TS 38.214 specifications.
+    """
+    bw_mhz = max(5.0, float(bandwidth_mhz))
+    valid_scs = [15, 30, 60, 120]
+    scs = scs_khz if scs_khz in valid_scs else 30
+
+    comb = 4 if comb_size not in (2, 4) else comb_size
+    cs_count = max(1, min(12, int(cyclic_shift_count)))
+    syms = max(1, min(4, int(srs_symbols_per_slot)))
+    period = max(1, int(periodicity_slots))
+    ports = max(1, min(8, int(num_ports_per_ue)))
+
+    # Estimate active transmission PRBs according to 3GPP channel bandwidth tables
+    if bw_mhz >= 100.0 and scs == 30:
+        prb_count = 273
+    elif bw_mhz >= 100.0 and scs == 60:
+        prb_count = 135
+    elif bw_mhz >= 50.0 and scs == 30:
+        prb_count = 133
+    elif bw_mhz >= 20.0 and scs == 15:
+        prb_count = 106
+    elif bw_mhz >= 20.0 and scs == 30:
+        prb_count = 51
+    else:
+        prb_count = max(24, int((bw_mhz * 1000.0 * 0.95) / (scs * 12.0)))
+
+    # RE density: each PRB has 12 subcarriers; SRS occupies 12 / comb REs per PRB
+    re_per_prb = 12 // comb
+    total_sounding_subcarriers = prb_count * re_per_prb
+
+    # Orthogonal SRS multiplexing capacity per slot: Combs * Cyclic Shifts * SRS Symbols
+    orthogonal_sequences_per_slot = comb * cs_count * syms
+    max_concurrent_ues_per_slot = max(1, orthogonal_sequences_per_slot // ports)
+    total_multiplexed_ues_per_period = max_concurrent_ues_per_slot * period
+
+    # Sounding overhead percentage per slot (14 symbols total per normal slot)
+    sounding_overhead_pct = round((syms / 14.0) * 100.0, 2)
+
+    status = "High Capacity Sounding" if total_multiplexed_ues_per_period >= 80 else "Standard Capacity Sounding"
+
+    return {
+        "bandwidth_mhz": bw_mhz,
+        "scs_khz": scs,
+        "prb_count": prb_count,
+        "comb_size": comb,
+        "cyclic_shift_count": cs_count,
+        "srs_symbols_per_slot": syms,
+        "periodicity_slots": period,
+        "num_ports_per_ue": ports,
+        "re_per_prb": re_per_prb,
+        "total_sounding_subcarriers": total_sounding_subcarriers,
+        "orthogonal_sequences_per_slot": orthogonal_sequences_per_slot,
+        "max_concurrent_ues_per_slot": max_concurrent_ues_per_slot,
+        "total_multiplexed_ues_per_period": total_multiplexed_ues_per_period,
+        "sounding_overhead_pct": sounding_overhead_pct,
+        "status": status
+    }
+
+
 
 
 
