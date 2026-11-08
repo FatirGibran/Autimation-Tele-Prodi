@@ -7964,6 +7964,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_vgk_proposal_card(
+        cls,
+        title: str = "Evaluasi Proposal PKM-VGK (Video Gagasan Konstruktif)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor academic evaluation card for Belmawa Kemendikbudristek PKM-VGK proposals,
+        displaying SDGs alignment, video storytelling duration, composite scoring, and MBKM conversion.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        student = str(d.get("student_leader", "Mahasiswa Telkom Purwokerto"))
+        nim = str(d.get("nim", "-"))
+        prop_title = str(d.get("proposal_title", "Video Gagasan Konstruktif Masa Depan"))
+        sdg = str(d.get("sdg_goal", "SDG 9: Industri, Inovasi & Infrastruktur"))
+        duration = float(d.get("video_duration_minutes", 3.0))
+        composite = float(d.get("composite_score", 85.0))
+        letter_grade = str(d.get("letter_grade", "A"))
+        funding_status = str(d.get("funding_status", "Lolos Pendanaan Belmawa PKM-VGK Unggulan"))
+        budget_idr = int(d.get("allocated_budget_idr", 10000000))
+        sks = int(d.get("converted_sks", 4))
+        is_funded = bool(d.get("is_funded", True))
+
+        badge_bg = "#ecfdf5" if is_funded else "#fef2f2"
+        badge_color = "#047857" if is_funded else "#b91c1c"
+        border_color = "#10b981" if is_funded else "#ef4444"
+
+        return f"""    <div class="tu-pkm-vgk-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid {border_color}; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase;">Evaluasi Belmawa PKM-VGK</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{funding_status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Judul Video: <strong>{prop_title}</strong> (Target: {sdg})<br/>
+        Ketua Pengusul: <strong>{student}</strong> (NIM: {nim}) &bull; Durasi: <strong>{duration:.1f} Menit</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Skor Komposit &amp; Nilai</span>
+          <strong style="color: #0284c7; font-size: 16px;">{composite:.2f}</strong> <span style="font-weight: 700; color: #0f172a;">({letter_grade})</span>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Alokasi Pendanaan Belmawa</span>
+          <strong style="color: {badge_color}; font-size: 15px;">Rp {budget_idr:,}</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Ekuivalensi MBKM</span>
+          <strong style="color: #0f172a; font-size: 16px;">{sks} SKS</strong>
+        </div>
+      </div>
+    </div>"""
+
 
 
 
@@ -7999,6 +8054,7 @@ render_5g_cross_carrier_scheduling_svg = EditorialComponents.render_5g_cross_car
 render_optical_sbs_threshold_card = EditorialComponents.render_optical_sbs_threshold_card
 render_5g_srs_sounding_card = EditorialComponents.render_5g_srs_sounding_card
 render_satellite_ionospheric_scintillation_card = EditorialComponents.render_satellite_ionospheric_scintillation_card
+render_pkm_vgk_proposal_card = EditorialComponents.render_pkm_vgk_proposal_card
 
 
 
