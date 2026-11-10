@@ -8457,6 +8457,62 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_leo_doppler_slant_range_card(
+        cls,
+        title: str = "Telemetri Dinamika Slant Range & Pergeseran Doppler Satelit LEO",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying LEO satellite altitude, elevation, slant range,
+        orbital speed, maximum Doppler frequency shift, Doppler rate, and C/N0 link margin.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        alt = float(d.get("orbit_altitude_km", 600.0))
+        freq = float(d.get("carrier_frequency_ghz", 12.0))
+        elev = float(d.get("elevation_angle_deg", 25.0))
+        slant = float(d.get("slant_range_km", 1120.5))
+        v_orb = float(d.get("orbital_velocity_kms", 7.56))
+        dop_khz = float(d.get("max_doppler_shift_khz", 245.5))
+        dop_rate = float(d.get("doppler_rate_hz_per_sec", 450.2))
+        cn0 = float(d.get("carrier_to_noise_density_c_n0_dbhz", 72.4))
+        is_ok = bool(d.get("is_link_viable", True))
+        status = str(d.get("status_category", "STABLE"))
+        recom = str(d.get("tracking_recommendation", "Aktifkan pelacakan Kalman Filter Doppler."))
+
+        badge_bg = "#ecfdf5" if is_ok else "#fef2f2"
+        badge_color = "#059669" if is_ok else "#dc2626"
+
+        return f"""    <div class="tu-leo-doppler-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #7c3aed; font-size: 13px; text-transform: uppercase;">Komunikasi Satelit &bull; LEO Constellation Orbit</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Ketinggian Orbit: <strong>{alt:.0f} km</strong> &bull; Frekuensi: <strong>{freq:.1f} GHz</strong> &bull; Sudut Elevasi: <strong>{elev:.1f}&deg;</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Jarak Slant Range</span>
+          <strong style="color: #7c3aed; font-size: 16px;">{slant:.1f} km</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Maks. Doppler Shift</span>
+          <strong style="color: #0f172a; font-size: 16px;">&plusmn;{dop_khz:.1f} kHz</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Densitas Carrier C/N0</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{cn0:.1f} dB-Hz</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Kecepatan Orbit: <strong>{v_orb:.2f} km/s</strong> &bull; Doppler Rate: <strong>{dop_rate:.1f} Hz/s</strong> &bull; Status: <em>{recom}</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -8501,6 +8557,7 @@ render_pkm_rsh_proposal_card = EditorialComponents.render_pkm_rsh_proposal_card
 render_5g_nr_pucch_resource_grid_svg = EditorialComponents.render_5g_nr_pucch_resource_grid_svg
 render_optical_pmd_dgd_penalty_card = EditorialComponents.render_optical_pmd_dgd_penalty_card
 render_5g_nr_prach_capacity_card = EditorialComponents.render_5g_nr_prach_capacity_card
+render_satellite_leo_doppler_slant_range_card = EditorialComponents.render_satellite_leo_doppler_slant_range_card
 
 
 
