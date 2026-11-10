@@ -779,6 +779,27 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 portal embedded navigation elements.")
 
+        # 8ak. Sanitize HTML5 fencedframe privacy sandbox elements
+        if "<fencedframe" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_fencedframe_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 fencedframe privacy sandbox elements.")
+
+        # 8al. Sanitize HTML5 embed media and plugin elements
+        if "<embed" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_embed_plugin_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 embed media and plugin elements.")
+
+        # 8am. Sanitize HTML5 object and param multimedia elements
+        if "<object" in cleaned.lower() or "<param" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_object_param_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 object and param multimedia elements.")
+
         return cleaned, warnings
 
 

@@ -66,7 +66,10 @@ from sanitizer import (
     sanitize_html5_fieldset_legend_attributes,
     sanitize_html5_hgroup_elements,
     sanitize_html5_menu_elements,
-    sanitize_html5_portal_elements
+    sanitize_html5_portal_elements,
+    sanitize_html5_fencedframe_elements,
+    sanitize_html5_embed_plugin_elements,
+    sanitize_html5_object_param_elements
 )
 
 
@@ -1453,6 +1456,41 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertIn("<hgroup", clean)
         self.assertIn("<menu", clean)
         self.assertIn("<portal", clean)
+
+    def test_sanitize_html5_fencedframe_elements(self):
+        raw = '<fencedframe src="javascript:alert(1)" onload="evil()" style="width:100%"></fencedframe>'
+        cleaned = sanitize_html5_fencedframe_elements(raw)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertNotIn("onload=", cleaned)
+        self.assertNotIn("style=", cleaned)
+        self.assertIn("<fencedframe", cleaned)
+
+    def test_sanitize_html5_embed_plugin_elements(self):
+        raw = '<embed src="javascript:evil()" type="application/x-shockwave-flash" onmouseover="bad()">'
+        cleaned = sanitize_html5_embed_plugin_elements(raw)
+        self.assertNotIn("javascript:evil()", cleaned)
+        self.assertNotIn("application/x-shockwave-flash", cleaned)
+        self.assertNotIn("onmouseover=", cleaned)
+        self.assertIn("<embed", cleaned)
+
+    def test_sanitize_html5_object_param_elements(self):
+        raw = '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" data="javascript:alert(1)" onclick="run()"><param name="allowScriptAccess" value="always"><param name="movie" value="javascript:payload()"></object>'
+        cleaned = sanitize_html5_object_param_elements(raw)
+        self.assertNotIn("classid=", cleaned)
+        self.assertNotIn("javascript:alert(1)", cleaned)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertIn('value="never"', cleaned)
+        self.assertNotIn("javascript:payload()", cleaned)
+
+    def test_sanitize_html_with_fencedframe_embed_object_elements(self):
+        html = '<div class="tu-editorial-container"><fencedframe style="position:fixed"></fencedframe><embed type="application/x-shockwave-flash"><object classid="clsid:bad"></object></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("position:fixed", clean)
+        self.assertNotIn("application/x-shockwave-flash", clean)
+        self.assertNotIn("clsid:bad", clean)
+        self.assertTrue(any("fencedframe" in w for w in warnings))
+        self.assertTrue(any("embed" in w for w in warnings))
+        self.assertTrue(any("object" in w for w in warnings))
 
 
 if __name__ == "__main__":
