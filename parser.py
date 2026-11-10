@@ -9011,6 +9011,92 @@ def calculate_optical_pmd_dgd_penalty(
     }
 
 
+def calculate_5g_nr_prach_link_budget_and_capacity(
+    prach_format: str = "Format 0",
+    carrier_frequency_ghz: float = 3.5,
+    cell_radius_km: float = 5.0,
+    cyclic_shift_ncs: int = 13,
+    num_root_sequences: int = 2,
+    ue_tx_power_dbm: float = 23.0,
+    gnb_rx_gain_dbi: float = 18.0
+) -> Dict[str, Any]:
+    """
+    Calculates 5G NR PRACH (Physical Random Access Channel) coverage link budget, preamble capacity,
+    maximum unambiguous cell radius, and gNB detection margin under 3GPP TS 38.211 specifications.
+    """
+    fmt = str(prach_format).strip()
+    freq_ghz = max(0.4, float(carrier_frequency_ghz))
+    radius_km = max(0.1, float(cell_radius_km))
+    n_cs = max(0, int(cyclic_shift_ncs))
+    num_roots = max(1, int(num_root_sequences))
+    p_tx = float(ue_tx_power_dbm)
+    g_rx = float(gnb_rx_gain_dbi)
+
+    # 3GPP TS 38.211 sequence length L_RA determination
+    is_long_sequence = fmt.lower() in ("format 0", "format 1", "format 2", "format 3", "0", "1", "2", "3")
+    seq_length_l_ra = 839 if is_long_sequence else 139
+    scs_khz = 1.25 if fmt.lower() in ("format 0", "format 1") else (5.0 if fmt.lower() in ("format 2", "format 3") else 30.0)
+
+    # Preambles per root sequence
+    preambles_per_root = max(1, seq_length_l_ra // n_cs) if n_cs > 0 else 1
+    total_preambles = min(64, num_roots * preambles_per_root)
+
+    # Unambiguous cell radius derived from cyclic shift duration
+    c_kms = 300000.0  # Speed of light in km/s
+    if n_cs > 1:
+        # Time duration per cyclic shift = (N_cs - 1) / (L_RA * Delta_f)
+        t_shift_s = (n_cs - 1) / (seq_length_l_ra * (scs_khz * 1000.0))
+        max_unambiguous_radius_km = round((c_kms * t_shift_s) / 2.0, 3)
+    else:
+        max_unambiguous_radius_km = 100.0
+
+    # Free Space Path Loss (FSPL) at cell edge radius
+    freq_mhz = freq_ghz * 1000.0
+    fspl_db = round(32.44 + (20.0 * math.log10(freq_mhz)) + (20.0 * math.log10(radius_km)), 2)
+
+    # gNodeB received power at cell edge
+    received_power_dbm = round(p_tx + g_rx - fspl_db, 2)
+
+    # 3GPP PRACH receiver sensitivity threshold (typically -115 dBm to -120 dBm depending on sequence gain)
+    sequence_gain_db = round(10.0 * math.log10(seq_length_l_ra), 2)
+    gnb_sensitivity_threshold_dbm = round(-125.0 + (10.0 * math.log10(scs_khz / 1.25)) - (sequence_gain_db * 0.2), 2)
+    detection_margin_db = round(received_power_dbm - gnb_sensitivity_threshold_dbm, 2)
+
+    is_coverage_compliant = (radius_km <= max_unambiguous_radius_km) and (detection_margin_db >= 0.0)
+
+    if detection_margin_db >= 6.0 and radius_km <= max_unambiguous_radius_km:
+        status_category = "EXCELLENT"
+        recommendation = "Link budget PRACH sangat kuat, probabilitas deteksi preamble > 99%."
+    elif detection_margin_db >= 0.0 and radius_km <= max_unambiguous_radius_km:
+        status_category = "SUFFICIENT"
+        recommendation = "Kapasitas dan jangkauan PRACH memadai untuk sel perkotaan/suburban."
+    elif radius_km > max_unambiguous_radius_km:
+        status_category = "RADIUS_AMBIGUITY_WARNING"
+        recommendation = "Radius sel melampaui batas siklik! Naikkan cyclic shift N_CS atau gunakan format long."
+    else:
+        status_category = "DEFICIT_LINK_BUDGET"
+        recommendation = "Margin PRACH negatif! Tingkatkan daya pancar UE atau optimasi antenna tilt gNB."
+
+    return {
+        "prach_format": fmt,
+        "is_long_sequence": is_long_sequence,
+        "sequence_length_l_ra": seq_length_l_ra,
+        "subcarrier_spacing_khz": scs_khz,
+        "cyclic_shift_ncs": n_cs,
+        "preambles_per_root": preambles_per_root,
+        "total_available_preambles": total_preambles,
+        "max_unambiguous_radius_km": max_unambiguous_radius_km,
+        "cell_radius_km": radius_km,
+        "fspl_db": fspl_db,
+        "received_power_dbm": received_power_dbm,
+        "gnb_sensitivity_threshold_dbm": gnb_sensitivity_threshold_dbm,
+        "detection_margin_db": detection_margin_db,
+        "is_coverage_compliant": is_coverage_compliant,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
