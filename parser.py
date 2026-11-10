@@ -9097,6 +9097,97 @@ def calculate_5g_nr_prach_link_budget_and_capacity(
     }
 
 
+def calculate_satellite_leo_doppler_slant_range_budget(
+    orbit_altitude_km: float = 600.0,
+    carrier_frequency_ghz: float = 12.0,
+    elevation_angle_deg: float = 25.0,
+    tx_power_dbw: float = 10.0,
+    tx_antenna_gain_dbi: float = 35.0,
+    rx_antenna_gain_dbi: float = 30.0,
+    system_noise_temp_k: float = 300.0
+) -> Dict[str, Any]:
+    """
+    Calculates LEO (Low Earth Orbit) satellite dynamic slant range, orbital velocity, maximum Doppler frequency
+    shift, Doppler rate, and link budget power telemetry under orbital mechanics equations.
+    """
+    alt_km = max(150.0, float(orbit_altitude_km))
+    freq_ghz = max(0.1, float(carrier_frequency_ghz))
+    elev_deg = max(0.0, min(90.0, float(elevation_angle_deg)))
+    elev_rad = math.radians(elev_deg)
+    r_earth = 6378.137  # Earth radius in km
+    r_orbit = r_earth + alt_km
+    c_kms = 299792.458  # Speed of light in km/s
+
+    # Slant range distance d(theta) via spherical law of cosines
+    slant_range_km = round(
+        math.sqrt((r_earth * math.sin(elev_rad)) ** 2 + 2.0 * r_earth * alt_km + (alt_km ** 2)) - (r_earth * math.sin(elev_rad)),
+        3
+    )
+
+    # LEO circular orbital velocity: v = sqrt(GM / r)
+    mu_earth = 398600.4418  # km^3/s^2
+    orbital_velocity_kms = round(math.sqrt(mu_earth / r_orbit), 4)
+
+    # Maximum line-of-sight component velocity along pass
+    v_los_max_kms = round(orbital_velocity_kms * math.cos(elev_rad) * (r_earth / r_orbit), 4)
+
+    # Doppler frequency shift: Delta_f = (v_los / c) * f_c
+    freq_hz = freq_ghz * 1e9
+    max_doppler_shift_hz = round((v_los_max_kms / c_kms) * freq_hz, 2)
+    max_doppler_shift_khz = round(max_doppler_shift_hz / 1000.0, 2)
+
+    # Maximum Doppler rate at zenith (closest approach)
+    doppler_rate_hz_per_sec = round((orbital_velocity_kms ** 2 / (alt_km * c_kms)) * freq_hz, 2)
+
+    # Free Space Path Loss (FSPL) at instantaneous slant range
+    freq_mhz = freq_ghz * 1000.0
+    fspl_db = round(32.44 + (20.0 * math.log10(freq_mhz)) + (20.0 * math.log10(slant_range_km)), 2)
+
+    # EIRP and received signal power
+    eirp_dbw = round(float(tx_power_dbw) + float(tx_antenna_gain_dbi), 2)
+    p_rx_dbw = round(eirp_dbw - fspl_db + float(rx_antenna_gain_dbi), 2)
+
+    # Thermal noise power density N0 = k * T
+    k_boltzmann_dbw = -228.6  # dBW/(Hz*K)
+    n0_dbw_hz = round(k_boltzmann_dbw + 10.0 * math.log10(max(1.0, float(system_noise_temp_k))), 2)
+
+    # Carrier-to-Noise density ratio C/N0
+    c_over_n0_dbhz = round(p_rx_dbw - n0_dbw_hz, 2)
+    is_link_viable = c_over_n0_dbhz >= 65.0
+
+    if c_over_n0_dbhz >= 75.0 and elev_deg >= 20.0:
+        tracking_recommendation = "Kualitas link LEO prima; aktifkan modul AFC (Automatic Frequency Control) standar."
+        status_category = "EXCELLENT"
+    elif c_over_n0_dbhz >= 65.0:
+        tracking_recommendation = "Link memadai; kompensasi Doppler shift dengan Kalman Filter Tracking pada demodulator."
+        status_category = "STABLE"
+    elif elev_deg < 10.0:
+        tracking_recommendation = "Elevasi rendah rawan multipath fading dan deviasi Doppler ekstrem."
+        status_category = "LOW_ELEVATION_WARNING"
+    else:
+        tracking_recommendation = "C/N0 di bawah ambang batas sinkronisasi; perbesar gain antena ground station."
+        status_category = "DEFICIT_LINK"
+
+    return {
+        "orbit_altitude_km": alt_km,
+        "carrier_frequency_ghz": freq_ghz,
+        "elevation_angle_deg": elev_deg,
+        "slant_range_km": slant_range_km,
+        "orbital_velocity_kms": orbital_velocity_kms,
+        "max_los_velocity_kms": v_los_max_kms,
+        "max_doppler_shift_hz": max_doppler_shift_hz,
+        "max_doppler_shift_khz": max_doppler_shift_khz,
+        "doppler_rate_hz_per_sec": doppler_rate_hz_per_sec,
+        "fspl_db": fspl_db,
+        "eirp_dbw": eirp_dbw,
+        "received_power_dbw": p_rx_dbw,
+        "carrier_to_noise_density_c_n0_dbhz": c_over_n0_dbhz,
+        "is_link_viable": is_link_viable,
+        "status_category": status_category,
+        "tracking_recommendation": tracking_recommendation
+    }
+
+
 
 
 
