@@ -8086,6 +8086,64 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_form_input_label_associations(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits form controls (<input>, <select>, <textarea>) to ensure programmatic label associations
+        via explicit <label for="id">, nesting, aria-label, aria-labelledby, or title (WCAG 2.1 SC 3.3.2).
+        """
+        if not html_content:
+            return {
+                "total_controls": 0,
+                "labeled_controls": 0,
+                "unlabeled_controls": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        # Collect explicit label 'for' attributes
+        label_for_ids = set()
+        for lbl in soup.find_all("label"):
+            for_val = lbl.get("for", "").strip()
+            if for_val:
+                label_for_ids.add(for_val)
+
+        controls = soup.find_all(["input", "select", "textarea"])
+        labeled = 0
+        unlabeled = 0
+        issues = []
+
+        exempt_types = {"hidden", "submit", "reset", "button", "image"}
+
+        for el in controls:
+            if el.name == "input" and el.get("type", "text").lower() in exempt_types:
+                continue
+
+            control_id = el.get("id", "").strip()
+            has_explicit_label = control_id and (control_id in label_for_ids)
+            has_aria_label = bool(el.get("aria-label", "").strip() or el.get("aria-labelledby", "").strip())
+            has_title = bool(el.get("title", "").strip())
+            is_nested_in_label = el.find_parent("label") is not None
+
+            if has_explicit_label or has_aria_label or has_title or is_nested_in_label:
+                labeled += 1
+            else:
+                unlabeled += 1
+                ctrl_name = el.get("name") or control_id or el.name
+                issues.append(f"<{el.name}> '{ctrl_name}' tidak memiliki asosiasi label programatik (<label for>, aria-label, atau title).")
+
+        total_checked = labeled + unlabeled
+        is_compliant = unlabeled == 0
+
+        return {
+            "total_controls": total_checked,
+            "labeled_controls": labeled,
+            "unlabeled_controls": unlabeled,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
