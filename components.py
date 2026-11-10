@@ -8401,6 +8401,62 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_prach_capacity_card(
+        cls,
+        title: str = "Konfigurasi Kapasitas Kanal Akses Acak 5G NR PRACH",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying 5G NR PRACH preamble format, sequence length,
+        subcarrier spacing, unambiguous cell radius, and gNodeB detection margin under 3GPP TS 38.211.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        fmt = str(d.get("prach_format", "Format 0"))
+        seq_len = int(d.get("sequence_length_l_ra", 839))
+        scs = float(d.get("subcarrier_spacing_khz", 1.25))
+        n_cs = int(d.get("cyclic_shift_ncs", 13))
+        preambles = int(d.get("total_available_preambles", 64))
+        max_rad = float(d.get("max_unambiguous_radius_km", 14.5))
+        radius = float(d.get("cell_radius_km", 5.0))
+        margin = float(d.get("detection_margin_db", 7.5))
+        is_ok = bool(d.get("is_coverage_compliant", True))
+        status = str(d.get("status_category", "SUFFICIENT"))
+        recom = str(d.get("recommendation", "Link budget PRACH memadai."))
+
+        badge_bg = "#ecfdf5" if is_ok else "#fef2f2"
+        badge_color = "#059669" if is_ok else "#dc2626"
+
+        return f"""    <div class="tu-nr-prach-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #2563eb; font-size: 13px; text-transform: uppercase;">5G NR Uplink Control &bull; 3GPP TS 38.211</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Format Preamble: <strong>{fmt} (L_RA={seq_len})</strong> &bull; SCS: <strong>{scs:.2f} kHz</strong> &bull; Siklik N_CS: <strong>{n_cs}</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Preamble Tersedia</span>
+          <strong style="color: #2563eb; font-size: 16px;">{preambles} / 64</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Radius Ambang Batas</span>
+          <strong style="color: #0f172a; font-size: 16px;">{max_rad:.1f} km</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Margin Deteksi gNodeB</span>
+          <strong style="color: {badge_color}; font-size: 16px;">+{margin:.2f} dB</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Radius Sel: <strong>{radius:.1f} km</strong> &bull; Panduan: <em>{recom}</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -8444,6 +8500,7 @@ render_satellite_depolarization_xpd_card = EditorialComponents.render_satellite_
 render_pkm_rsh_proposal_card = EditorialComponents.render_pkm_rsh_proposal_card
 render_5g_nr_pucch_resource_grid_svg = EditorialComponents.render_5g_nr_pucch_resource_grid_svg
 render_optical_pmd_dgd_penalty_card = EditorialComponents.render_optical_pmd_dgd_penalty_card
+render_5g_nr_prach_capacity_card = EditorialComponents.render_5g_nr_prach_capacity_card
 
 
 
