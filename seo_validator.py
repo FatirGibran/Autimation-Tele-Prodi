@@ -8256,6 +8256,59 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_css_text_overflow_truncation(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits inline styled elements using CSS text-overflow: ellipsis or overflow: hidden
+        to ensure full text remains accessible via title or aria-label attributes (WCAG 2.1 SC 1.4.4 / SC 1.3.1).
+        """
+        if not html_content:
+            return {
+                "total_truncated_elements": 0,
+                "accessible_truncated": 0,
+                "inaccessible_truncated": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        truncated_elements = []
+
+        for el in soup.find_all(True):
+            style = el.get("style", "").lower()
+            cls_str = " ".join(el.get("class", [])).lower()
+
+            is_ellipsis = "text-overflow: ellipsis" in style or "text-overflow:ellipsis" in style or "truncate" in cls_str
+            is_clipped = "overflow: hidden" in style and "white-space: nowrap" in style
+
+            if is_ellipsis or is_clipped:
+                truncated_elements.append(el)
+
+        accessible = 0
+        inaccessible = 0
+        issues = []
+
+        for el in truncated_elements:
+            has_title = bool(el.get("title", "").strip())
+            has_aria = bool(el.get("aria-label", "").strip())
+
+            if has_title or has_aria:
+                accessible += 1
+            else:
+                inaccessible += 1
+                text_snip = el.get_text().strip()[:25] or el.name
+                issues.append(f"<{el.name}> '{text_snip}': Teks dipotong (CSS ellipsis/overflow) tanpa atribut title atau aria-label untuk teks lengkap.")
+
+        is_compliant = inaccessible == 0
+
+        return {
+            "total_truncated_elements": len(truncated_elements),
+            "accessible_truncated": accessible,
+            "inaccessible_truncated": inaccessible,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
