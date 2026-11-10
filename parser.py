@@ -9188,6 +9188,79 @@ def calculate_satellite_leo_doppler_slant_range_budget(
     }
 
 
+def parse_pkm_gft_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates PKM Gagasan Futuristik Tertulis (PKM-GFT) student proposals under Belmawa Kemendikbudristek guidelines,
+    assessing futuristic vision, originality, systemic feasibility, SDGs 2030 / Indonesia Emas 2045 alignment,
+    national incentive awards, and MBKM credit equivalency.
+    """
+    student_leader = str(data.get("student_leader", "")).strip() or "Mahasiswa Telkom Purwokerto"
+    nim = str(data.get("nim", "")).strip()
+    proposal_title = str(data.get("proposal_title", "")).strip() or "Gagasan Futuristik Transformasi Telekomunikasi Nasional"
+    futuristic_theme = str(data.get("futuristic_theme", "")).strip() or "SDGs 2030 & Smart Digital Archipelago"
+
+    s_vision = max(0.0, min(100.0, float(data.get("futuristic_vision_score", 0.0))))
+    s_orig = max(0.0, min(100.0, float(data.get("originality_creativity_score", 0.0))))
+    s_feas = max(0.0, min(100.0, float(data.get("feasibility_implementation_score", 0.0))))
+    s_sdgs = max(0.0, min(100.0, float(data.get("societal_impact_sdgs_score", 0.0))))
+    has_sdgs = bool(data.get("has_sdgs_alignment", True))
+
+    sdgs_penalty = 0.0 if has_sdgs else 8.0
+
+    raw_composite = (0.30 * s_vision) + (0.25 * s_orig) + (0.25 * s_feas) + (0.20 * s_sdgs)
+    composite = round(max(0.0, raw_composite - sdgs_penalty), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_incentive_awarded = composite >= 80.0
+    if composite >= 85.0:
+        incentive_amount_idr = 3000000
+        award_status = "Lolos Insentif Nasional PKM-GFT Belmawa & Nominasi PIMNAS"
+        converted_sks = 4
+    elif is_incentive_awarded:
+        incentive_amount_idr = 3000000
+        award_status = "Lolos Insentif Nasional PKM-GFT Belmawa"
+        converted_sks = 3
+    else:
+        incentive_amount_idr = 0
+        award_status = "Belum Lolos Insentif Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "proposal_title": proposal_title,
+        "futuristic_theme": futuristic_theme,
+        "futuristic_vision_score": s_vision,
+        "originality_creativity_score": s_orig,
+        "feasibility_implementation_score": s_feas,
+        "societal_impact_sdgs_score": s_sdgs,
+        "has_sdgs_alignment": has_sdgs,
+        "sdgs_penalty": sdgs_penalty,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "award_status": award_status,
+        "incentive_amount_idr": incentive_amount_idr,
+        "converted_sks": converted_sks,
+        "is_incentive_awarded": is_incentive_awarded
+    }
+
+
 
 
 
