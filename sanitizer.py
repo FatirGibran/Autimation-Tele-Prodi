@@ -3047,6 +3047,39 @@ def sanitize_html5_embed_plugin_elements(html: str) -> str:
     return cleaned
 
 
+def sanitize_html5_object_param_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <object> and <param> embedded elements by stripping inline event handlers,
+    ActiveX classid attributes, unsafe javascript:/vbscript: data URLs, and restricting
+    script access parameter values.
+    """
+    if not html or ("<object" not in html.lower() and "<param" not in html.lower()):
+        return html
+
+    cleaned = html
+
+    def fix_object(m):
+        tag = m.group(0)
+        # Strip script execution vectors and inline handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+data=["\'](?:javascript:|vbscript:|data:(?!image/|application/pdf))[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Strip legacy ActiveX classid references
+        tag = re.sub(r'\s+classid=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    def fix_param(m):
+        tag = m.group(0)
+        # Neutralize parameter allowing external script execution
+        if re.search(r'name=["\']allowScriptAccess["\']', tag, re.IGNORECASE):
+            tag = re.sub(r'value=["\'](?:always|samedomain)["\']', 'value="never"', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+value=["\'](?:javascript:|vbscript:)[^"\']*["\']', ' value=""', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<object\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_object, cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'<param\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_param, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
 
 
 
