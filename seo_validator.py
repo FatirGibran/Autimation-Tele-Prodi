@@ -8144,6 +8144,61 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_bypass_blocks_skip_navigation(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits page structure for skip links or primary <main> landmarks allowing assistive
+        technologies and keyboard users to bypass repeated navigation blocks (WCAG 2.1 SC 2.4.1).
+        """
+        if not html_content:
+            return {
+                "has_skip_link": False,
+                "has_main_landmark": False,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        has_main_landmark = soup.find("main") is not None or soup.find(attrs={"role": "main"}) is not None
+
+        # Detect skip link in early page anchors
+        skip_link_found = False
+        skip_target_valid = False
+        skip_text = ""
+        issues = []
+
+        all_ids = {el.get("id") for el in soup.find_all(id=True)}
+
+        for a in soup.find_all("a", href=True):
+            href = a.get("href", "").strip()
+            text = a.get_text().strip().lower()
+            cls_str = " ".join(a.get("class", [])).lower()
+
+            if href.startswith("#") and len(href) > 1:
+                target_id = href[1:]
+                if any(k in text for k in ("skip", "lompat", "lewati", "bypass", "konten", "main")) or "skip-link" in cls_str:
+                    skip_link_found = True
+                    skip_text = a.get_text().strip()
+                    if target_id in all_ids:
+                        skip_target_valid = True
+                    break
+
+        if skip_link_found and not skip_target_valid:
+            issues.append(f"Skip link '{skip_text}' menunjuk ke ID target internal yang tidak ditemukan dalam dokumen.")
+
+        if not skip_link_found and not has_main_landmark:
+            issues.append("Dokumen tidak memiliki tautan lewati navigasi (skip link) maupun penanda semantik <main> / role='main'.")
+
+        is_compliant = (skip_link_found and skip_target_valid) or has_main_landmark
+
+        return {
+            "has_skip_link": skip_link_found,
+            "skip_target_valid": skip_target_valid,
+            "has_main_landmark": has_main_landmark,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
