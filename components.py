@@ -8346,6 +8346,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_pmd_dgd_penalty_card(
+        cls,
+        title: str = "Estimasi Penalti Dispersi Mode Polarisasi (PMD) & DGD Serat Optik",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying optical link PMD coefficient, mean DGD,
+        Maxwellian peak DGD, bit duration ratio, and OSNR power penalty under ITU-T G.652/G.655.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        length = float(d.get("fiber_length_km", 80.0))
+        d_pmd = float(d.get("pmd_coefficient_ps_per_sqrt_km", 0.1))
+        bitrate = float(d.get("bit_rate_gbps", 100.0))
+        mean_dgd = float(d.get("mean_dgd_ps", 0.8944))
+        max_dgd = float(d.get("max_statistical_dgd_ps", 2.6833))
+        ratio = float(d.get("dgd_to_bit_period_ratio", 0.0894))
+        penalty = float(d.get("pmd_power_penalty_db", 0.20))
+        is_ok = bool(d.get("is_compliant", True))
+        status = str(d.get("status_category", "COMPLIANT"))
+        recom = str(d.get("recommendation", "Kinerja dalam batas aman ITU-T G.652."))
+
+        badge_bg = "#ecfdf5" if is_ok else "#fef2f2"
+        badge_color = "#059669" if is_ok else "#dc2626"
+
+        return f"""    <div class="tu-pmd-dgd-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0891b2; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0891b2; font-size: 13px; text-transform: uppercase;">Transmisi Serat Optik &bull; ITU-T G.652/G.655</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Jarak Link: <strong>{length:.1f} km</strong> &bull; Koefisien PMD: <strong>{d_pmd:.3f} ps/&radic;km</strong> &bull; Laju Data: <strong>{bitrate:.1f} Gbps</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Rerata DGD &lang;&Delta;&tau;&rang;</span>
+          <strong style="color: #0891b2; font-size: 16px;">{mean_dgd:.3f} ps</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">DGD Maksimum Statistik</span>
+          <strong style="color: #0f172a; font-size: 16px;">{max_dgd:.3f} ps</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Penalti Daya OSNR</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{penalty:.2f} dB</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Rasio DGD/Bit: <strong>{ratio*100:.1f}%</strong> &bull; Rekomendasi: <em>{recom}</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -8388,6 +8443,7 @@ render_5g_nr_pucch_card = EditorialComponents.render_5g_nr_pucch_card
 render_satellite_depolarization_xpd_card = EditorialComponents.render_satellite_depolarization_xpd_card
 render_pkm_rsh_proposal_card = EditorialComponents.render_pkm_rsh_proposal_card
 render_5g_nr_pucch_resource_grid_svg = EditorialComponents.render_5g_nr_pucch_resource_grid_svg
+render_optical_pmd_dgd_penalty_card = EditorialComponents.render_optical_pmd_dgd_penalty_card
 
 
 
