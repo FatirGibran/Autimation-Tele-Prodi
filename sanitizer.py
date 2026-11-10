@@ -3001,6 +3001,29 @@ def sanitize_html5_portal_elements(html: str) -> str:
     return cleaned
 
 
+def sanitize_html5_fencedframe_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 Privacy Sandbox <fencedframe> elements by removing inline event handlers,
+    unsafe javascript: URI schemes, and dangerous scriptable attributes while maintaining
+    privacy-isolated frame mode.
+    """
+    if not html or "<fencedframe" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_fencedframe(m):
+        tag = m.group(0)
+        # Strip script execution vectors and inline handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+src=["\'](?:javascript:|data:)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:style|contenteditable)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<fencedframe\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_fencedframe, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
 
 
 
