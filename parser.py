@@ -8948,6 +8948,69 @@ def parse_pkm_rsh_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_optical_pmd_dgd_penalty(
+    fiber_length_km: float,
+    pmd_coefficient_ps_per_sqrt_km: float = 0.1,
+    bit_rate_gbps: float = 100.0,
+    is_polarization_multiplexed: bool = True
+) -> Dict[str, Any]:
+    """
+    Calculates optical fiber Polarization Mode Dispersion (PMD), mean Differential Group Delay (DGD),
+    statistical Maxwellian maximum DGD, and OSNR power penalty according to ITU-T G.652/G.655 standards.
+    """
+    length = max(0.1, float(fiber_length_km))
+    d_pmd = max(0.001, float(pmd_coefficient_ps_per_sqrt_km))
+    bit_rate = max(1.0, float(bit_rate_gbps))
+
+    # Mean DGD across fiber link length: <Delta tau> = D_pmd * sqrt(L)
+    mean_dgd_ps = round(d_pmd * math.sqrt(length), 4)
+
+    # Maximum statistical DGD at outage probability 10^-5 (approx 3x mean DGD in Maxwellian distribution)
+    max_statistical_dgd_ps = round(3.0 * mean_dgd_ps, 4)
+
+    # Bit period in picoseconds
+    bit_period_ps = round(1000.0 / bit_rate, 4)
+
+    # Ratio of mean DGD to bit duration
+    dgd_ratio = round(mean_dgd_ps / bit_period_ps, 4)
+
+    # First-order PMD OSNR power penalty calculation (dB)
+    # Polarization-multiplexed coherent systems feature lower PMD sensitivity factor
+    penalty_factor = 25.0 if is_polarization_multiplexed else 70.0
+    power_penalty_db = round(penalty_factor * (dgd_ratio ** 2), 4)
+
+    # ITU-T G.652 recommendation requires mean DGD <= 10% of bit period for robust uncompensated transmission
+    is_compliant = dgd_ratio <= 0.10
+
+    if dgd_ratio <= 0.05:
+        recommendation = "Kompensasi PMD tidak diperlukan, dispersi polarisasi dapat diabaikan."
+        status_category = "EXCELLENT"
+    elif dgd_ratio <= 0.10:
+        recommendation = "Kinerja dalam ambang batas aman standar ITU-T G.652/G.655."
+        status_category = "ACCEPTABLE"
+    elif dgd_ratio <= 0.20:
+        recommendation = "Diperlukan Adaptive Equalization DSP atau optical PMD compensator."
+        status_category = "MARGINAL_WARNING"
+    else:
+        recommendation = "Outage probability tinggi! Wajib menggunakan modul Dynamic PMDC aktif."
+        status_category = "CRITICAL_EXCEEDED"
+
+    return {
+        "fiber_length_km": length,
+        "pmd_coefficient_ps_per_sqrt_km": d_pmd,
+        "bit_rate_gbps": bit_rate,
+        "is_polarization_multiplexed": is_polarization_multiplexed,
+        "mean_dgd_ps": mean_dgd_ps,
+        "max_statistical_dgd_ps": max_statistical_dgd_ps,
+        "bit_period_ps": bit_period_ps,
+        "dgd_to_bit_period_ratio": dgd_ratio,
+        "pmd_power_penalty_db": power_penalty_db,
+        "is_compliant": is_compliant,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
