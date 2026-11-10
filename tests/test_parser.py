@@ -2841,6 +2841,80 @@ Status: Granted
         self.assertEqual(res_penalized["composite_score"], 75.0)
         self.assertFalse(res_penalized["is_funded"])
 
+    def test_calculate_optical_pmd_dgd_penalty(self):
+        from parser import calculate_optical_pmd_dgd_penalty
+        res = calculate_optical_pmd_dgd_penalty(
+            fiber_length_km=100.0,
+            pmd_coefficient_ps_per_sqrt_km=0.1,
+            bit_rate_gbps=100.0,
+            is_polarization_multiplexed=True
+        )
+        self.assertEqual(res["mean_dgd_ps"], 1.0)
+        self.assertEqual(res["max_statistical_dgd_ps"], 3.0)
+        self.assertEqual(res["bit_period_ps"], 10.0)
+        self.assertEqual(res["dgd_to_bit_period_ratio"], 0.1)
+        self.assertTrue(res["is_compliant"])
+        self.assertGreater(res["pmd_power_penalty_db"], 0.0)
+
+    def test_calculate_5g_nr_prach_link_budget_and_capacity(self):
+        from parser import calculate_5g_nr_prach_link_budget_and_capacity
+        res = calculate_5g_nr_prach_link_budget_and_capacity(
+            prach_format="Format 0",
+            carrier_frequency_ghz=3.5,
+            cell_radius_km=3.0,
+            cyclic_shift_ncs=13,
+            num_root_sequences=2
+        )
+        self.assertTrue(res["is_long_sequence"])
+        self.assertEqual(res["sequence_length_l_ra"], 839)
+        self.assertGreater(res["max_unambiguous_radius_km"], 0.0)
+        self.assertGreater(res["total_available_preambles"], 0)
+        self.assertIn("detection_margin_db", res)
+
+    def test_calculate_satellite_leo_doppler_slant_range_budget(self):
+        from parser import calculate_satellite_leo_doppler_slant_range_budget
+        res = calculate_satellite_leo_doppler_slant_range_budget(
+            orbit_altitude_km=600.0,
+            carrier_frequency_ghz=12.0,
+            elevation_angle_deg=30.0,
+            tx_power_dbw=10.0,
+            tx_antenna_gain_dbi=35.0,
+            rx_antenna_gain_dbi=30.0
+        )
+        self.assertGreater(res["slant_range_km"], 600.0)
+        self.assertGreater(res["orbital_velocity_kms"], 7.0)
+        self.assertGreater(res["max_doppler_shift_khz"], 0.0)
+        self.assertGreater(res["carrier_to_noise_density_c_n0_dbhz"], 50.0)
+
+    def test_parse_pkm_gft_proposal_evaluation(self):
+        from parser import parse_pkm_gft_proposal_evaluation
+        res_top = parse_pkm_gft_proposal_evaluation({
+            "student_leader": "Anisa Rahma",
+            "nim": "1101210088",
+            "proposal_title": "Desain Jaringan Terestrial Seluler-Satelit Terintegrasi Kawasan 3T Nusantara Emas 2045",
+            "futuristic_theme": "Indonesia Emas 2045 & Smart Connectivity",
+            "futuristic_vision_score": 95.0,
+            "originality_creativity_score": 90.0,
+            "feasibility_implementation_score": 88.0,
+            "societal_impact_sdgs_score": 92.0,
+            "has_sdgs_alignment": True
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["incentive_amount_idr"], 3000000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_incentive_awarded"])
+
+        res_penalized = parse_pkm_gft_proposal_evaluation({
+            "futuristic_vision_score": 80.0,
+            "originality_creativity_score": 80.0,
+            "feasibility_implementation_score": 80.0,
+            "societal_impact_sdgs_score": 80.0,
+            "has_sdgs_alignment": False
+        })
+        self.assertEqual(res_penalized["sdgs_penalty"], 8.0)
+        self.assertEqual(res_penalized["composite_score"], 72.0)
+        self.assertFalse(res_penalized["is_incentive_awarded"])
+
 
 if __name__ == "__main__":
     unittest.main()
