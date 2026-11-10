@@ -3024,6 +3024,29 @@ def sanitize_html5_fencedframe_elements(html: str) -> str:
     return cleaned
 
 
+def sanitize_html5_embed_plugin_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <embed> plugin and media elements by stripping inline JavaScript event handlers,
+    unsafe URI schemes (javascript:, vbscript:, arbitrary data:), and legacy executable plugin mime types.
+    """
+    if not html or "<embed" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_embed(m):
+        tag = m.group(0)
+        # Strip script execution vectors and inline handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+src=["\'](?:javascript:|vbscript:|data:(?!image/|application/pdf))[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Prevent vulnerable legacy plugin execution
+        tag = re.sub(r'\s+type=["\'](?:application/x-shockwave-flash|application/x-silverlight|application/x-java-applet)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<embed\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_embed, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
 
 
 
