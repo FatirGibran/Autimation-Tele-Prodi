@@ -2509,6 +2509,51 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertEqual(res_bad["sub_minimum_targets"], 1)
 
+    def test_audit_form_input_label_associations(self):
+        html_ok = '<form><label for="uname">Nama:</label><input id="uname" type="text"><input type="hidden" name="csrf"><button type="submit">Submit</button></form>'
+        res_ok = YoastSEOValidator.audit_form_input_label_associations(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["labeled_controls"], 1)
+
+        html_bad = '<form><input type="text" name="email"><textarea name="pesan"></textarea></form>'
+        res_bad = YoastSEOValidator.audit_form_input_label_associations(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["unlabeled_controls"], 2)
+
+    def test_audit_bypass_blocks_skip_navigation(self):
+        html_ok_skip = '<div><a href="#main-content" class="skip-link">Lompat ke konten</a><main id="main-content"><p>Content</p></main></div>'
+        res_ok = YoastSEOValidator.audit_bypass_blocks_skip_navigation(html_ok_skip)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertTrue(res_ok["has_skip_link"])
+        self.assertTrue(res_ok["skip_target_valid"])
+
+        html_bad = '<div><header><nav><a href="/page1">1</a></nav></header><section><p>No main or skip</p></section></div>'
+        res_bad = YoastSEOValidator.audit_bypass_blocks_skip_navigation(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertFalse(res_bad["has_skip_link"])
+
+    def test_audit_color_only_state_indicators(self):
+        html_ok = '<div><span class="status-badge" style="background-color: green">Aktif</span><span class="indicator" style="border-radius: 50%; background: red" aria-label="Error"></span></div>'
+        res_ok = YoastSEOValidator.audit_color_only_state_indicators(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_indicators"], 2)
+
+        html_bad = '<div><span class="indicator rounded-full" style="background: red"></span></div>'
+        res_bad = YoastSEOValidator.audit_color_only_state_indicators(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["color_only_indicators"], 1)
+
+    def test_audit_css_text_overflow_truncation(self):
+        html_ok = '<div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap" title="Deskripsi Lengkap Riset Telekomunikasi">Deskripsi Lengkap...</div>'
+        res_ok = YoastSEOValidator.audit_css_text_overflow_truncation(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["accessible_truncated"], 1)
+
+        html_bad = '<div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Teks Tanpa Tooltip</div>'
+        res_bad = YoastSEOValidator.audit_css_text_overflow_truncation(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["inaccessible_truncated"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
