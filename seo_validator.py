@@ -8199,6 +8199,63 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_color_only_state_indicators(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits visual status badges and indicator dots to ensure state or meaning is not conveyed
+        solely through color without textual descriptions or accessible ARIA attributes (WCAG 2.1 SC 1.4.1).
+        """
+        if not html_content:
+            return {
+                "total_indicators": 0,
+                "accessible_indicators": 0,
+                "color_only_indicators": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        indicators = []
+
+        # Find status indicator badges or dots
+        for el in soup.find_all(["span", "div", "i"]):
+            style = el.get("style", "").lower()
+            cls_str = " ".join(el.get("class", [])).lower()
+
+            is_dot = "border-radius" in style or "rounded-full" in cls_str or "indicator" in cls_str or "badge" in cls_str or "status" in cls_str
+            has_color = ("background" in style or "color:" in style or "bg-" in cls_str)
+
+            if is_dot and has_color:
+                indicators.append(el)
+
+        accessible = 0
+        color_only = 0
+        issues = []
+
+        for el in indicators:
+            inner_text = el.get_text().strip()
+            aria_label = el.get("aria-label", "").strip()
+            aria_hidden = el.get("aria-hidden", "").strip().lower() == "true"
+            title = el.get("title", "").strip()
+
+            # If it's purely decorative, aria-hidden="true" is acceptable
+            if inner_text or aria_label or title or aria_hidden:
+                accessible += 1
+            else:
+                color_only += 1
+                cls_name = el.get("class", [el.name])
+                issues.append(f"<{el.name} class='{' '.join(cls_name)}'> Indikator status visual hanya mengandalkan warna tanpa label tekstual atau atribut aria-label.")
+
+        is_compliant = color_only == 0
+
+        return {
+            "total_indicators": len(indicators),
+            "accessible_indicators": accessible,
+            "color_only_indicators": color_only,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
