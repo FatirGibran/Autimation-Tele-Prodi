@@ -1358,6 +1358,48 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("5 SKS Diakui", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/rsh/45", msg)
 
+    def test_format_nr_prach_capacity_telegram(self):
+        msg = TelegramFormatter.format_nr_prach_capacity_telegram(
+            cell_id="gNB-PWT-01-SecA",
+            prach_format="Format 0",
+            sequence_length_l_ra=839,
+            subcarrier_spacing_khz=1.25,
+            cyclic_shift_ncs=13,
+            total_preambles=64,
+            max_unambiguous_radius_km=14.5,
+            cell_radius_km=5.0,
+            detection_margin_db=7.5,
+            status="SUFFICIENT",
+            portal_url="https://noc.telkomuniversity.ac.id/nr/prach"
+        )
+        self.assertIn("Kapasitas Kanal Akses Acak 5G NR PRACH", msg)
+        self.assertIn("gNB-PWT-01-SecA", msg)
+        self.assertIn("Format 0", msg)
+        self.assertIn("64 / 64 Preamble", msg)
+        self.assertIn("+7.50 dB", msg)
+        self.assertIn("https://noc.telkomuniversity.ac.id/nr/prach", msg)
+
+    def test_format_pkm_gft_proposal_telegram(self):
+        msg = TelegramFormatter.format_pkm_gft_proposal_telegram(
+            student_leader="Anisa Rahma",
+            nim="1101210088",
+            proposal_title="Desain Jaringan Terestrial Seluler-Satelit Terintegrasi Kawasan 3T",
+            futuristic_theme="Indonesia Emas 2045 & SDGs",
+            composite_score=91.5,
+            letter_grade="A",
+            award_status="Lolos Insentif Nasional PKM-GFT",
+            incentive_amount_idr=3000000,
+            converted_sks=4,
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/gft/88"
+        )
+        self.assertIn("Belmawa PKM-GFT (Gagasan Futuristik Tertulis)", msg)
+        self.assertIn("Anisa Rahma", msg)
+        self.assertIn("1101210088", msg)
+        self.assertIn("Indonesia Emas 2045 & SDGs", msg)
+        self.assertIn("Rp 3,000,000", msg)
+        self.assertIn("4 SKS Diakui", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/gft/88", msg)
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
