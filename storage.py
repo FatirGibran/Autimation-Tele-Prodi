@@ -1620,6 +1620,27 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_optical_pmd_len ON optical_pmd_dgd_records(fiber_length_km);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_prach_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cell_id TEXT NOT NULL,
+                    prach_format TEXT NOT NULL,
+                    sequence_length_l_ra INTEGER NOT NULL,
+                    subcarrier_spacing_khz REAL NOT NULL,
+                    cyclic_shift_ncs INTEGER NOT NULL,
+                    total_available_preambles INTEGER NOT NULL,
+                    max_unambiguous_radius_km REAL NOT NULL,
+                    cell_radius_km REAL NOT NULL,
+                    fspl_db REAL NOT NULL,
+                    received_power_dbm REAL NOT NULL,
+                    gnb_sensitivity_threshold_dbm REAL NOT NULL,
+                    detection_margin_db REAL NOT NULL,
+                    is_coverage_compliant INTEGER NOT NULL DEFAULT 1,
+                    status_category TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_prach_cell ON nr_prach_records(cell_id);")
 
 
 
@@ -7386,6 +7407,65 @@ class StorageManager:
     record_optical_pmd_dgd = save_optical_pmd_dgd_record
     list_optical_pmd_dgd = list_optical_pmd_dgd_records
     get_optical_pmd_dgd_by_id = get_optical_pmd_dgd_record_by_id
+
+    def save_nr_prach_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a 5G NR PRACH preamble capacity and link budget record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_prach_records (
+                    cell_id, prach_format, sequence_length_l_ra, subcarrier_spacing_khz,
+                    cyclic_shift_ncs, total_available_preambles, max_unambiguous_radius_km,
+                    cell_radius_km, fspl_db, received_power_dbm, gnb_sensitivity_threshold_dbm,
+                    detection_margin_db, is_coverage_compliant, status_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("cell_id", "gNB-Cell-01")).strip(),
+                str(d.get("prach_format", "Format 0")).strip(),
+                int(d.get("sequence_length_l_ra", 839)),
+                float(d.get("subcarrier_spacing_khz", 1.25)),
+                int(d.get("cyclic_shift_ncs", 13)),
+                int(d.get("total_available_preambles", 64)),
+                float(d.get("max_unambiguous_radius_km", 14.5)),
+                float(d.get("cell_radius_km", 5.0)),
+                float(d.get("fspl_db", 117.3)),
+                float(d.get("received_power_dbm", -76.3)),
+                float(d.get("gnb_sensitivity_threshold_dbm", -125.0)),
+                float(d.get("detection_margin_db", 48.7)),
+                1 if d.get("is_coverage_compliant", True) else 0,
+                str(d.get("status_category", "SUFFICIENT")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_prach_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR PRACH capacity records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_prach_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_prach_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single 5G NR PRACH record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_prach_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_nr_prach = save_nr_prach_record
+    list_nr_prach = list_nr_prach_records
+    get_nr_prach_by_id = get_nr_prach_record_by_id
 
 
 
