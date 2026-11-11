@@ -1163,6 +1163,38 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_users_by_roles(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 12, "name": "Dr. Dosen Tele", "roles": ["author"]}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        self.assertEqual(self.client.get_users_by_roles([]), [])
+        self.assertEqual(mock_urlopen.call_count, 0)
+
+        users = self.client.get_users_by_roles(["author", "editor"])
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]["id"], 12)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("roles=author%2Ceditor", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_update_media_alt_texts(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 105, "alt_text": "Diagram Konstelasi DP-QAM"}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        updates = [
+            {"id": 105, "alt_text": "Diagram Konstelasi DP-QAM"},
+            {"media_id": 106, "alt_text": "Skema Slot 5G PRACH"}
+        ]
+        res = self.client.batch_update_media_alt_texts(updates)
+        self.assertEqual(res["updated"], [105, 106])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(mock_urlopen.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
