@@ -3114,6 +3114,100 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("PUCCH Hop-2", html)
         self.assertIn("Intra-Slot Hopping", html)
 
+    def test_render_optical_pmd_dgd_penalty_card(self):
+        html = EditorialComponents.render_optical_pmd_dgd_penalty_card(
+            data={
+                "fiber_length_km": 100.0,
+                "pmd_coefficient_ps_per_sqrt_km": 0.1,
+                "bit_rate_gbps": 100.0,
+                "mean_dgd_ps": 1.0,
+                "max_statistical_dgd_ps": 3.0,
+                "dgd_to_bit_period_ratio": 0.1,
+                "pmd_power_penalty_db": 0.25,
+                "is_compliant": True,
+                "status_category": "ACCEPTABLE"
+            }
+        )
+        self.assertIn("tu-pmd-dgd-card", html)
+        self.assertIn("100.0 km", html)
+        self.assertIn("1.000 ps", html)
+        self.assertIn("0.25 dB", html)
+        self.assertIn("ACCEPTABLE", html)
+
+    def test_render_5g_nr_prach_capacity_card(self):
+        html = EditorialComponents.render_5g_nr_prach_capacity_card(
+            data={
+                "prach_format": "Format 0",
+                "sequence_length_l_ra": 839,
+                "subcarrier_spacing_khz": 1.25,
+                "cyclic_shift_ncs": 13,
+                "total_available_preambles": 64,
+                "max_unambiguous_radius_km": 14.5,
+                "cell_radius_km": 5.0,
+                "detection_margin_db": 6.8,
+                "is_coverage_compliant": True,
+                "status_category": "EXCELLENT"
+            }
+        )
+        self.assertIn("tu-nr-prach-card", html)
+        self.assertIn("Format 0", html)
+        self.assertIn("64 / 64", html)
+        self.assertIn("+6.80 dB", html)
+
+    def test_render_satellite_leo_doppler_slant_range_card(self):
+        html = EditorialComponents.render_satellite_leo_doppler_slant_range_card(
+            data={
+                "orbit_altitude_km": 550.0,
+                "carrier_frequency_ghz": 12.0,
+                "elevation_angle_deg": 35.0,
+                "slant_range_km": 890.5,
+                "orbital_velocity_kms": 7.59,
+                "max_doppler_shift_khz": 195.4,
+                "carrier_to_noise_density_c_n0_dbhz": 74.2,
+                "is_link_viable": True,
+                "status_category": "EXCELLENT"
+            }
+        )
+        self.assertIn("tu-leo-doppler-card", html)
+        self.assertIn("550 km", html)
+        self.assertIn("890.5 km", html)
+        self.assertIn("195.4 kHz", html)
+
+    def test_render_pkm_gft_card(self):
+        html = EditorialComponents.render_pkm_gft_card(
+            data={
+                "student_leader": "Anisa Rahma",
+                "nim": "1101210088",
+                "proposal_title": "Desain Jaringan Terestrial Seluler-Satelit Terintegrasi Kawasan 3T",
+                "futuristic_theme": "Indonesia Emas 2045 & SDGs",
+                "composite_score": 91.5,
+                "letter_grade": "A",
+                "award_status": "Lolos Insentif Nasional PKM-GFT",
+                "incentive_amount_idr": 3000000,
+                "converted_sks": 4,
+                "is_incentive_awarded": True
+            }
+        )
+        self.assertIn("tu-pkm-gft-card", html)
+        self.assertIn("Anisa Rahma", html)
+        self.assertIn("3,000,000", html)
+        self.assertIn("4 SKS", html)
+
+    def test_render_5g_nr_prach_preamble_svg(self):
+        html = EditorialComponents.render_5g_nr_prach_preamble_svg(
+            data={
+                "prach_format": "Format 0",
+                "subcarrier_spacing_khz": 1.25,
+                "cyclic_shift_ncs": 13,
+                "max_unambiguous_radius_km": 14.5
+            }
+        )
+        self.assertIn("tu-nr-prach-svg-container", html)
+        self.assertIn("<svg", html)
+        self.assertIn("Cyclic Prefix (T_CP)", html)
+        self.assertIn("Zadoff-Chu Preamble Sequence", html)
+        self.assertIn("Guard Time (T_GT)", html)
+
 
 if __name__ == "__main__":
     unittest.main()
