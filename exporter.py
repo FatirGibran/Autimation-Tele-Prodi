@@ -2823,6 +2823,54 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_creative_work_foresight_json_ld(
+        title: str,
+        student_leader: str,
+        futuristic_theme: str,
+        abstract: str,
+        published_date: str = "2026-11-11",
+        url: str = "",
+        sdg_goal: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org CreativeWork / Technology Foresight JSON-LD metadata for student
+        PKM-GFT visionary ideas and futuristic telecommunications research.
+        """
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            "headline": title.strip(),
+            "name": title.strip(),
+            "description": abstract.strip(),
+            "inLanguage": "id-ID",
+            "genre": "Technology Foresight & Futuristic Engineering",
+            "datePublished": published_date.strip(),
+            "author": {
+                "@type": "Person",
+                "name": student_leader.strip(),
+                "affiliation": {
+                    "@type": "EducationalOrganization",
+                    "name": "Telkom University Purwokerto",
+                    "department": "S1 Teknik Telekomunikasi"
+                }
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Belmawa Kemendikbudristek",
+                "url": "https://simbelmawa.kemdikbud.go.id"
+            },
+            "about": {
+                "@type": "Thing",
+                "name": futuristic_theme.strip()
+            }
+        }
+        if url:
+            data["url"] = url.strip()
+        if sdg_goal:
+            data["keywords"] = [futuristic_theme.strip(), sdg_goal.strip()]
+        return data
+
 
 
 
