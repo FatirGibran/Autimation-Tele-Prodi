@@ -1934,6 +1934,36 @@ class TelegramFormatter:
             f"🚀 *Selamat berkontribusi dalam riset sosial humaniora dan advokasi kebijakan publik untuk kemaslahatan masyarakat!*"
         )
 
+    @staticmethod
+    def format_nr_prach_capacity_telegram(
+        cell_id: str,
+        prach_format: str,
+        sequence_length_l_ra: int,
+        subcarrier_spacing_khz: float,
+        cyclic_shift_ncs: int,
+        total_preambles: int,
+        max_unambiguous_radius_km: float,
+        cell_radius_km: float,
+        detection_margin_db: float,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a 5G NR PRACH preamble capacity and coverage link budget bulletin for Telegram.
+        """
+        portal_link = f"\n🔗 **OSS NOC Tele:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"📡 **Telemetri Kapasitas Kanal Akses Acak 5G NR PRACH (3GPP TS 38.211)**\n\n"
+            f"📍 **Cell ID / Sektor:** `{cell_id.strip()}`\n"
+            f"⚡ **Format Preamble:** `{prach_format.strip()}` (`L_RA: {sequence_length_l_ra}`)\n"
+            f"📶 **Numerologi SCS:** `{float(subcarrier_spacing_khz):.2f} kHz`\n"
+            f"🔢 **Alokasi Preamble:** `{int(total_preambles)} / 64 Preamble` (`N_cs: {int(cyclic_shift_ncs)}`)\n"
+            f"📏 **Radius Ambang Batas:** `{float(max_unambiguous_radius_km):.1f} km` (Radius Sel: `{float(cell_radius_km):.1f} km`)\n"
+            f"📊 **Margin Deteksi gNodeB:** `+{float(detection_margin_db):.2f} dB`\n"
+            f"🌟 **Status Operasional:** `{status.strip()}`{portal_link}\n\n"
+            f"🚀 *Optimasi alokasi preamble random access aktif demi mitigasi tabrakan transmisi awal UE.*"
+        )
+
 
 
 
