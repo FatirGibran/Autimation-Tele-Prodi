@@ -1424,6 +1424,39 @@ class WordPressClient:
         except Exception:
             return []
 
+    def batch_update_media_alt_texts(
+        self,
+        media_alt_map: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Batch updates accessibility alternative texts for multiple media library items via POST /wp/v2/media/{id}.
+        Each item in media_alt_map should contain 'id' (or 'media_id') and 'alt_text'.
+        """
+        updated = []
+        failed = []
+
+        for item in media_alt_map:
+            mid = item.get("id") or item.get("media_id")
+            alt_text = str(item.get("alt_text", "")).strip()
+            if not mid:
+                continue
+
+            try:
+                endpoint = f"{self.api_url}/media/{int(mid)}"
+                payload = {"alt_text": alt_text}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(mid))
+            except Exception as e:
+                failed.append({"media_id": int(mid), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(media_alt_map)
+        }
+
 
 
 
