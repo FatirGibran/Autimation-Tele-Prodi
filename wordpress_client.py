@@ -1401,6 +1401,29 @@ class WordPressClient:
             "total": len(tag_slugs_map)
         }
 
+    def get_users_by_roles(
+        self,
+        roles: List[str],
+        page: int = 1,
+        per_page: int = 50
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress users filtered by user roles (e.g. administrator, editor, author)
+        via GET /wp/v2/users?roles=...
+        """
+        if not roles:
+            return []
+        try:
+            roles_str = ",".join(r.strip() for r in roles if r.strip())
+            endpoint = f"{self.api_url}/users?roles={urllib.parse.quote(roles_str)}&page={int(page)}&per_page={int(per_page)}"
+            req = urllib.request.Request(endpoint, headers=self._get_headers())
+            res = self._send_request(req)
+            if isinstance(res, list):
+                return res
+            return []
+        except Exception:
+            return []
+
 
 
 
