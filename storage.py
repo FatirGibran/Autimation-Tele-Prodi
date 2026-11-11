@@ -1641,6 +1641,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_prach_cell ON nr_prach_records(cell_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_gft_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    futuristic_theme TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    award_status TEXT NOT NULL,
+                    incentive_amount_idr INTEGER NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    is_incentive_awarded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_gft_nim ON pkm_gft_proposal_records(nim);")
 
 
 
@@ -7466,6 +7483,60 @@ class StorageManager:
     record_nr_prach = save_nr_prach_record
     list_nr_prach = list_nr_prach_records
     get_nr_prach_by_id = get_nr_prach_record_by_id
+
+    def save_pkm_gft_proposal(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a Belmawa PKM-GFT (Gagasan Futuristik Tertulis) proposal evaluation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_gft_proposal_records (
+                    student_leader, nim, proposal_title, futuristic_theme,
+                    composite_score, letter_grade, award_status, incentive_amount_idr,
+                    converted_sks, is_incentive_awarded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("student_leader", "Mahasiswa Telkom Purwokerto")).strip(),
+                str(d.get("nim", "")).strip(),
+                str(d.get("proposal_title", "Gagasan Futuristik Digital")).strip(),
+                str(d.get("futuristic_theme", "Indonesia Emas 2045")).strip(),
+                float(d.get("composite_score", 0.0)),
+                str(d.get("letter_grade", "C")).strip(),
+                str(d.get("award_status", "Belum Lolos Insentif Nasional")).strip(),
+                int(d.get("incentive_amount_idr", 0)),
+                int(d.get("converted_sks", 2)),
+                1 if d.get("is_incentive_awarded", False) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_gft_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent PKM-GFT proposal evaluation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_gft_proposal_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_gft_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single PKM-GFT proposal record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_gft_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_pkm_gft_proposal = save_pkm_gft_proposal
+    list_pkm_gft_proposals_alias = list_pkm_gft_proposals
+    get_pkm_gft_proposal_by_id_alias = get_pkm_gft_proposal_by_id
 
 
 
