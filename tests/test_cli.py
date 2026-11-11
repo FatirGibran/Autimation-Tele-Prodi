@@ -3242,6 +3242,78 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Budi Santoso", out)
 
+    def test_cmd_pmdpen(self):
+        class ArgsAdd:
+            action = "add"
+            length = 100.0
+            pmd = 0.1
+            rate = 100.0
+            no_dp = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pmdpen(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Penalti PMD berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pmdpen(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("100.0", out)
+
+    def test_cmd_nrprach(self):
+        class ArgsAdd:
+            action = "add"
+            cell = "gNB-Cell-01"
+            fmt = "Format 0"
+            freq = 3.5
+            radius = 5.0
+            ncs = 13
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrprach(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Kapasitas PRACH berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrprach(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("gNB-Cell-01", out)
+
+    def test_cmd_pkmgft(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Anisa Rahma"
+            nim = "1101210088"
+            title = "Desain Jaringan Terestrial Seluler-Satelit Terintegrasi"
+            theme = "Indonesia Emas 2045 & SDGs"
+            vision = 92.0
+            orig = 90.0
+            feas = 88.0
+            sdgs = 90.0
+            no_sdgs = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmgft(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-GFT berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmgft(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Anisa Rahma", out)
+
 
 if __name__ == "__main__":
     unittest.main()
