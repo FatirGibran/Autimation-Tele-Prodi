@@ -1602,6 +1602,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_rsh_nim ON pkm_rsh_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_pmd_dgd_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fiber_length_km REAL NOT NULL,
+                    pmd_coefficient_ps_per_sqrt_km REAL NOT NULL,
+                    bit_rate_gbps REAL NOT NULL,
+                    is_polarization_multiplexed INTEGER NOT NULL DEFAULT 1,
+                    mean_dgd_ps REAL NOT NULL,
+                    max_statistical_dgd_ps REAL NOT NULL,
+                    bit_period_ps REAL NOT NULL,
+                    dgd_to_bit_period_ratio REAL NOT NULL,
+                    pmd_power_penalty_db REAL NOT NULL,
+                    is_compliant INTEGER NOT NULL DEFAULT 1,
+                    status_category TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_optical_pmd_len ON optical_pmd_dgd_records(fiber_length_km);")
 
 
 
@@ -7312,6 +7330,62 @@ class StorageManager:
             return dict(row) if row else None
 
     record_pkm_rsh_proposal = save_pkm_rsh_proposal
+
+    def save_optical_pmd_dgd_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves an optical fiber PMD and DGD dispersion calculation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_pmd_dgd_records (
+                    fiber_length_km, pmd_coefficient_ps_per_sqrt_km, bit_rate_gbps,
+                    is_polarization_multiplexed, mean_dgd_ps, max_statistical_dgd_ps,
+                    bit_period_ps, dgd_to_bit_period_ratio, pmd_power_penalty_db,
+                    is_compliant, status_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(d.get("fiber_length_km", 80.0)),
+                float(d.get("pmd_coefficient_ps_per_sqrt_km", 0.1)),
+                float(d.get("bit_rate_gbps", 100.0)),
+                1 if d.get("is_polarization_multiplexed", True) else 0,
+                float(d.get("mean_dgd_ps", 0.8944)),
+                float(d.get("max_statistical_dgd_ps", 2.6833)),
+                float(d.get("bit_period_ps", 10.0)),
+                float(d.get("dgd_to_bit_period_ratio", 0.0894)),
+                float(d.get("pmd_power_penalty_db", 0.20)),
+                1 if d.get("is_compliant", True) else 0,
+                str(d.get("status_category", "COMPLIANT")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_optical_pmd_dgd_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent optical PMD/DGD calculation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_pmd_dgd_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_pmd_dgd_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single optical PMD/DGD record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_pmd_dgd_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_optical_pmd_dgd = save_optical_pmd_dgd_record
+    list_optical_pmd_dgd = list_optical_pmd_dgd_records
+    get_optical_pmd_dgd_by_id = get_optical_pmd_dgd_record_by_id
 
 
 
