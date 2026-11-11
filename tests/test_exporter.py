@@ -1424,6 +1424,38 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("{% /callout %}", res)
         self.assertIn("<p>Konten dokumentasi Markdoc.</p>", res)
 
+    def test_generate_creative_work_foresight_json_ld(self):
+        res = ArticleExporter.generate_creative_work_foresight_json_ld(
+            title="Desain Jaringan Terestrial Seluler-Satelit Terintegrasi Kawasan 3T Nusantara Emas 2045",
+            student_leader="Anisa Rahma",
+            futuristic_theme="Indonesia Emas 2045 & SDGs",
+            abstract="Gagasan futuristik sistem konstelasi hibrida nirkabel terestrial dan LEO satellite.",
+            published_date="2026-11-11",
+            url="https://simbelmawa.kemdikbud.go.id/gft/88",
+            sdg_goal="SDG 9: Industry, Innovation, and Infrastructure"
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "CreativeWork")
+        self.assertIn("Nusantara Emas 2045", res["name"])
+        self.assertEqual(res["author"]["name"], "Anisa Rahma")
+        self.assertEqual(res["author"]["affiliation"]["name"], "Telkom University Purwokerto")
+        self.assertEqual(res["publisher"]["name"], "Belmawa Kemendikbudristek")
+        self.assertIn("SDG 9: Industry, Innovation, and Infrastructure", res["keywords"])
+
+    def test_to_mintlify_mdx(self):
+        meta = {
+            "seo_title": "Panduan Arsitektur Mintlify MDX",
+            "meta_description": "Dokumentasi modern telekomunikasi berbasis Mintlify.",
+            "tags": ["mintlify", "docs", "telecom"]
+        }
+        res = ArticleExporter.to_mintlify_mdx(meta, "<p>Dokumentasi Mintlify MDX.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Arsitektur Mintlify MDX"', res)
+        self.assertIn('icon: "signal-stream"', res)
+        self.assertIn("<Info>", res)
+        self.assertIn("</Info>", res)
+        self.assertIn("<p>Dokumentasi Mintlify MDX.</p>", res)
+
 
 if __name__ == "__main__":
     unittest.main()
