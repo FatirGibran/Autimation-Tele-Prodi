@@ -1964,6 +1964,35 @@ class TelegramFormatter:
             f"🚀 *Optimasi alokasi preamble random access aktif demi mitigasi tabrakan transmisi awal UE.*"
         )
 
+    @staticmethod
+    def format_pkm_gft_proposal_telegram(
+        student_leader: str,
+        nim: str,
+        proposal_title: str,
+        futuristic_theme: str,
+        composite_score: float,
+        letter_grade: str,
+        award_status: str,
+        incentive_amount_idr: int,
+        converted_sks: int,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Gagasan Futuristik Tertulis (PKM-GFT) incentive and MBKM award card for Telegram.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        return (
+            f"💡 **Pengumuman Kelulusan Insentif Belmawa PKM-GFT (Gagasan Futuristik Tertulis)**\n\n"
+            f"📖 **Judul Gagasan Futuristik:**\n_{proposal_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🌐 **Tema Futuristik:** `{futuristic_theme.strip()}`\n"
+            f"📈 **Skor Evaluasi Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"🏆 **Insentif Nasional:** `Rp {incentive_amount_idr:,}`\n"
+            f"🎓 **Ekuivalensi MBKM:** `{int(converted_sks)} SKS Diakui`\n"
+            f"🌟 **Status Capaian:** `{award_status.strip()}`{simbelmawa_link}\n\n"
+            f"🚀 *Selamat atas perolehan apresiasi gagasan visioner Indonesia Emas 2045 dan SDGs tingkat nasional!*"
+        )
+
 
 
 
