@@ -3115,6 +3115,83 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["research_topic"], "Kesenjangan Digital")
         self.assertIsNone(self.storage.get_pkm_rsh_proposal_by_id(99999))
 
+    def test_optical_pmd_dgd_storage(self):
+        rec_id = self.storage.record_optical_pmd_dgd(
+            fiber_length_km=100.0,
+            pmd_coefficient_ps_per_sqrt_km=0.1,
+            bit_rate_gbps=100.0,
+            is_polarization_multiplexed=True,
+            mean_dgd_ps=1.0,
+            max_statistical_dgd_ps=3.0,
+            bit_period_ps=10.0,
+            dgd_to_bit_period_ratio=0.1,
+            pmd_power_penalty_db=0.25,
+            is_compliant=True,
+            status_category="ACCEPTABLE"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_pmd_dgd()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["fiber_length_km"], 100.0)
+        self.assertEqual(items[0]["mean_dgd_ps"], 1.0)
+
+        single = self.storage.get_optical_pmd_dgd_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status_category"], "ACCEPTABLE")
+        self.assertIsNone(self.storage.get_optical_pmd_dgd_by_id(99999))
+
+    def test_nr_prach_storage(self):
+        rec_id = self.storage.record_nr_prach(
+            cell_id="gNB-001",
+            prach_format="Format 0",
+            sequence_length_l_ra=839,
+            subcarrier_spacing_khz=1.25,
+            cyclic_shift_ncs=13,
+            total_available_preambles=64,
+            max_unambiguous_radius_km=14.5,
+            cell_radius_km=5.0,
+            fspl_db=117.3,
+            received_power_dbm=-76.3,
+            gnb_sensitivity_threshold_dbm=-125.0,
+            detection_margin_db=48.7,
+            is_coverage_compliant=True,
+            status_category="SUFFICIENT"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_prach()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cell_id"], "gNB-001")
+        self.assertEqual(items[0]["total_available_preambles"], 64)
+
+        single = self.storage.get_nr_prach_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["prach_format"], "Format 0")
+        self.assertIsNone(self.storage.get_nr_prach_by_id(99999))
+
+    def test_pkm_gft_proposal_storage(self):
+        rec_id = self.storage.record_pkm_gft_proposal(
+            student_leader="Anisa Rahma",
+            nim="1101210088",
+            proposal_title="Desain Jaringan Terestrial Seluler-Satelit Terintegrasi",
+            futuristic_theme="Indonesia Emas 2045",
+            composite_score=91.5,
+            letter_grade="A",
+            award_status="Lolos Insentif Nasional PKM-GFT",
+            incentive_amount_idr=3000000,
+            converted_sks=4,
+            is_incentive_awarded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_gft_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Anisa Rahma")
+        self.assertEqual(items[0]["incentive_amount_idr"], 3000000)
+
+        single = self.storage.get_pkm_gft_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["nim"], "1101210088")
+        self.assertIsNone(self.storage.get_pkm_gft_proposal_by_id(99999))
+
 
 if __name__ == "__main__":
     unittest.main()
