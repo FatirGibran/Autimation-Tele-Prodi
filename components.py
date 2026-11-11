@@ -8568,6 +8568,62 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_prach_preamble_svg(
+        cls,
+        title: str = "Struktur Waktu Slot Preamble 5G NR PRACH & Guard Period",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders a responsive inline SVG illustrating 5G NR PRACH preamble time domain structure
+        including Cyclic Prefix (TCP), Zadoff-Chu sequence duration (TSEQ), Guard Time (TGT),
+        and subcarrier spacing under 3GPP TS 38.211.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        fmt = str(d.get("prach_format", "Format 0"))
+        scs = float(d.get("subcarrier_spacing_khz", 1.25))
+        n_cs = int(d.get("cyclic_shift_ncs", 13))
+        max_rad = float(d.get("max_unambiguous_radius_km", 14.5))
+
+        return f"""    <div class="tu-nr-prach-svg-container" style="margin: 20px 0; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+      <h5 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 14px; font-weight: 600;">{title}</h5>
+      <div style="width: 100%; overflow-x: auto;">
+        <svg viewBox="0 0 760 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg" style="display: block; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+          <!-- Grid lines -->
+          <line x1="40" y1="30" x2="720" y2="30" stroke="#334155" stroke-dasharray="4,4" />
+          <line x1="40" y1="110" x2="720" y2="110" stroke="#334155" stroke-dasharray="4,4" />
+
+          <!-- Cyclic Prefix Block -->
+          <rect x="50" y="45" width="130" height="50" rx="4" fill="#2563eb" opacity="0.9" />
+          <text x="115" y="70" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">Cyclic Prefix (T_CP)</text>
+          <text x="115" y="86" fill="#bfdbfe" font-size="10" text-anchor="middle">Meredam Delay Spread</text>
+
+          <!-- Sequence Block -->
+          <rect x="185" y="45" width="410" height="50" rx="4" fill="#0d9488" opacity="0.9" />
+          <text x="390" y="70" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">Zadoff-Chu Preamble Sequence (T_SEQ = 800 &mu;s)</text>
+          <text x="390" y="86" fill="#ccfbf1" font-size="10" text-anchor="middle">Korelasi Silang Nol (Zero Auto-Correlation Zone)</text>
+
+          <!-- Guard Time Block -->
+          <rect x="600" y="45" width="110" height="50" rx="4" fill="#d97706" opacity="0.9" />
+          <text x="655" y="70" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">Guard Time (T_GT)</text>
+          <text x="655" y="86" fill="#fef3c7" font-size="10" text-anchor="middle">Round-Trip Margin</text>
+
+          <!-- Brackets / Duration Indicators -->
+          <path d="M 50 120 L 710 120" stroke="#94a3b8" stroke-width="1.5" />
+          <line x1="50" y1="115" x2="50" y2="125" stroke="#94a3b8" stroke-width="1.5" />
+          <line x1="710" y1="115" x2="710" y2="125" stroke="#94a3b8" stroke-width="1.5" />
+          <text x="380" y="138" fill="#cbd5e1" font-size="11" text-anchor="middle">Durasi Total Slot PRACH (1 Subframe = 1.0 ms)</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Preamble: <strong style="color: #60a5fa;">{fmt}</strong></div>
+        <div>Numerologi: <strong style="color: #2dd4bf;">SCS {scs} kHz</strong></div>
+        <div>Radius: <strong style="color: #fbbf24;">{max_rad:.1f} km</strong> (N_cs={n_cs})</div>
+      </div>
+    </div>"""
+
 
 
 
@@ -8614,6 +8670,7 @@ render_optical_pmd_dgd_penalty_card = EditorialComponents.render_optical_pmd_dgd
 render_5g_nr_prach_capacity_card = EditorialComponents.render_5g_nr_prach_capacity_card
 render_satellite_leo_doppler_slant_range_card = EditorialComponents.render_satellite_leo_doppler_slant_range_card
 render_pkm_gft_card = EditorialComponents.render_pkm_gft_card
+render_5g_nr_prach_preamble_svg = EditorialComponents.render_5g_nr_prach_preamble_svg
 
 
 
