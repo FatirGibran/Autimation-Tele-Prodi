@@ -60,7 +60,10 @@ from parser import (
     parse_pkm_vgk_proposal_evaluation,
     calculate_optical_coherent_qam_evm_ber,
     calculate_5g_nr_pucch_capacity_and_scheduling,
-    parse_pkm_rsh_proposal_evaluation
+    parse_pkm_rsh_proposal_evaluation,
+    calculate_optical_pmd_dgd_penalty,
+    calculate_5g_nr_prach_link_budget_and_capacity,
+    parse_pkm_gft_proposal_evaluation
 )
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
@@ -3620,6 +3623,133 @@ def cmd_pkmrsh(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['research_topic'][:20]:<22} | {r['composite_score']:<6.2f} | {funded_str} ({r['letter_grade']})")
 
 
+def cmd_pmdpen(args):
+    if args.action == "add":
+        length = float(args.length) if args.length is not None else 80.0
+        d_pmd = float(args.pmd) if args.pmd is not None else 0.1
+        rate = float(args.rate) if args.rate is not None else 100.0
+        res = calculate_optical_pmd_dgd_penalty(
+            fiber_length_km=length,
+            pmd_coefficient_ps_per_sqrt_km=d_pmd,
+            bit_rate_gbps=rate,
+            is_polarization_multiplexed=not args.no_dp
+        )
+        rec_id = storage.record_optical_pmd_dgd(
+            fiber_length_km=length,
+            pmd_coefficient_ps_per_sqrt_km=d_pmd,
+            bit_rate_gbps=rate,
+            is_polarization_multiplexed=not args.no_dp,
+            mean_dgd_ps=res["mean_dgd_ps"],
+            max_statistical_dgd_ps=res["max_statistical_dgd_ps"],
+            bit_period_ps=res["bit_period_ps"],
+            dgd_to_bit_period_ratio=res["dgd_to_bit_period_ratio"],
+            pmd_power_penalty_db=res["pmd_power_penalty_db"],
+            is_compliant=res["is_compliant"],
+            status_category=res["status_category"]
+        )
+        status_label = "AMAN" if res["is_compliant"] else "PERLU_KOMPENSASI"
+        print(f"Catatan Penalti PMD berhasil disimpan dengan ID: {rec_id} (DGD: {res['mean_dgd_ps']} ps, Penalti: {res['pmd_power_penalty_db']} dB, Status: {status_label})")
+    else:
+        records = storage.list_optical_pmd_dgd(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan dispersi PMD yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'JARAK (KM)':<10} | {'PMD (ps/√km)':<13} | {'LAJU (Gbps)':<11} | {'DGD (ps)':<9} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['fiber_length_km']:<10.1f} | {r['pmd_coefficient_ps_per_sqrt_km']:<13.3f} | {r['bit_rate_gbps']:<11.1f} | {r['mean_dgd_ps']:<9.3f} | {r['status_category']}")
+
+
+def cmd_nrprach(args):
+    if args.action == "add":
+        cell_id = args.cell or "gNB-Cell-01"
+        fmt = args.fmt or "Format 0"
+        freq = float(args.freq) if args.freq is not None else 3.5
+        radius = float(args.radius) if args.radius is not None else 5.0
+        n_cs = int(args.ncs) if args.ncs is not None else 13
+        res = calculate_5g_nr_prach_link_budget_and_capacity(
+            prach_format=fmt,
+            carrier_frequency_ghz=freq,
+            cell_radius_km=radius,
+            cyclic_shift_ncs=n_cs
+        )
+        rec_id = storage.record_nr_prach(
+            cell_id=cell_id,
+            prach_format=fmt,
+            sequence_length_l_ra=res["sequence_length_l_ra"],
+            subcarrier_spacing_khz=res["subcarrier_spacing_khz"],
+            cyclic_shift_ncs=n_cs,
+            total_available_preambles=res["total_available_preambles"],
+            max_unambiguous_radius_km=res["max_unambiguous_radius_km"],
+            cell_radius_km=radius,
+            fspl_db=res["fspl_db"],
+            received_power_dbm=res["received_power_dbm"],
+            gnb_sensitivity_threshold_dbm=res["gnb_sensitivity_threshold_dbm"],
+            detection_margin_db=res["detection_margin_db"],
+            is_coverage_compliant=res["is_coverage_compliant"],
+            status_category=res["status_category"]
+        )
+        print(f"Catatan Kapasitas PRACH berhasil disimpan dengan ID: {rec_id} (Cell: {cell_id}, Preambles: {res['total_available_preambles']}, Max Rad: {res['max_unambiguous_radius_km']} km, Margin: {res['detection_margin_db']} dB)")
+    else:
+        records = storage.list_nr_prach(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan kapasitas PRACH yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CELL ID':<14} | {'FORMAT':<10} | {'PREAMBLE':<10} | {'MAX RAD':<10} | {'STATUS'}")
+        print("-" * 70)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cell_id']:<14} | {r['prach_format']:<10} | {r['total_available_preambles']:<10} | {r['max_unambiguous_radius_km']:<10.1f} | {r['status_category']}")
+
+
+def cmd_pkmgft(args):
+    if args.action == "add":
+        leader = args.leader or "Anisa Rahma"
+        nim = args.nim or "1101210088"
+        title = args.title or "Gagasan Futuristik Telekomunikasi"
+        theme = args.theme or "Indonesia Emas 2045"
+        vision = float(args.vision) if args.vision is not None else 85.0
+        orig = float(args.orig) if args.orig is not None else 85.0
+        feas = float(args.feas) if args.feas is not None else 85.0
+        sdgs = float(args.sdgs) if args.sdgs is not None else 85.0
+        has_sdgs = not args.no_sdgs
+
+        res = parse_pkm_gft_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "proposal_title": title,
+            "futuristic_theme": theme,
+            "futuristic_vision_score": vision,
+            "originality_creativity_score": orig,
+            "feasibility_implementation_score": feas,
+            "societal_impact_sdgs_score": sdgs,
+            "has_sdgs_alignment": has_sdgs
+        })
+        rec_id = storage.record_pkm_gft_proposal(
+            student_leader=leader,
+            nim=nim,
+            proposal_title=title,
+            futuristic_theme=theme,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            award_status=res["award_status"],
+            incentive_amount_idr=res["incentive_amount_idr"],
+            converted_sks=res["converted_sks"],
+            is_incentive_awarded=res["is_incentive_awarded"]
+        )
+        status_label = "LOLOS_INSENTIF" if res["is_incentive_awarded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-GFT berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Insentif: Rp {res['incentive_amount_idr']:,}, SKS: {res['converted_sks']})")
+    else:
+        records = storage.list_pkm_gft_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-GFT yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'TEMA':<22} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            award_str = "Insentif" if r.get("is_incentive_awarded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['futuristic_theme'][:20]:<22} | {r['composite_score']:<6.2f} | {award_str} ({r['letter_grade']})")
+
+
 def main():
 
 
@@ -4857,6 +4987,42 @@ def main():
     pkmrsh_parser.add_argument("--no-ethics", action="store_true", help="Tandai jika proposal tidak memiliki ethical clearance")
     pkmrsh_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmrsh_parser.set_defaults(func=cmd_pkmrsh)
+
+    # PMD Penalty command
+    pmdpen_parser = subparsers.add_parser("pmdpen", help="Kelola estimasi penalti dispersi PMD/DGD serat optik (list, add)")
+    pmdpen_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi penalti PMD")
+    pmdpen_parser.add_argument("--length", type=float, default=80.0, help="Panjang link serat optik dalam km")
+    pmdpen_parser.add_argument("--pmd", type=float, default=0.1, help="Koefisien PMD serat optik (ps/√km)")
+    pmdpen_parser.add_argument("--rate", type=float, default=100.0, help="Laju data saluran dalam Gbps")
+    pmdpen_parser.add_argument("--no-dp", action="store_true", help="Tandai jika tidak menggunakan polarisasi ganda (DP)")
+    pmdpen_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pmdpen_parser.set_defaults(func=cmd_pmdpen)
+
+    # 5G NR PRACH command
+    nrprach_parser = subparsers.add_parser("nrprach", help="Kelola kapasitas preamble kanal akses acak 5G NR PRACH (list, add)")
+    nrprach_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PRACH")
+    nrprach_parser.add_argument("--cell", default="gNB-Cell-01", help="Identifier sektor/sel gNodeB")
+    nrprach_parser.add_argument("--fmt", default="Format 0", help="Format preamble PRACH (Format 0, 1, A1, B4, dll)")
+    nrprach_parser.add_argument("--freq", type=float, default=3.5, help="Frekuensi pembawa dalam GHz")
+    nrprach_parser.add_argument("--radius", type=float, default=5.0, help="Radius target jangkauan sel dalam km")
+    nrprach_parser.add_argument("--ncs", type=int, default=13, help="Konfigurasi cyclic shift N_CS")
+    nrprach_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrprach_parser.set_defaults(func=cmd_nrprach)
+
+    # PKM-GFT Proposal command
+    pkmgft_parser = subparsers.add_parser("pkmgft", help="Kelola evaluasi proposal Belmawa PKM Gagasan Futuristik Tertulis (list, add)")
+    pkmgft_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-GFT")
+    pkmgft_parser.add_argument("--leader", default="Anisa Rahma", help="Nama ketua mahasiswa pengusul")
+    pkmgft_parser.add_argument("--nim", default="1101210088", help="NIM ketua mahasiswa")
+    pkmgft_parser.add_argument("--title", default="Desain Jaringan Terestrial Seluler-Satelit Terintegrasi Kawasan 3T", help="Judul gagasan futuristik")
+    pkmgft_parser.add_argument("--theme", default="Indonesia Emas 2045 & SDGs", help="Tema futuristik")
+    pkmgft_parser.add_argument("--vision", type=float, default=90.0, help="Skor visi futuristik & antisipasi disrupsi (0-100)")
+    pkmgft_parser.add_argument("--orig", type=float, default=85.0, help="Skor orisinalitas ide & kebaruan konsep (0-100)")
+    pkmgft_parser.add_argument("--feas", type=float, default=85.0, help="Skor kelayakan sistemik & transfer solusi (0-100)")
+    pkmgft_parser.add_argument("--sdgs", type=float, default=85.0, help="Skor keselarasan SDGs / Indonesia 2045 (0-100)")
+    pkmgft_parser.add_argument("--no-sdgs", action="store_true", help="Tandai jika tidak memiliki keselarasan SDGs")
+    pkmgft_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmgft_parser.set_defaults(func=cmd_pkmgft)
 
     args = parser.parse_args()
 
