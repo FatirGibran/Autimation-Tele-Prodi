@@ -2871,6 +2871,36 @@ navigation: true
             data["keywords"] = [futuristic_theme.strip(), sdg_goal.strip()]
         return data
 
+    @staticmethod
+    def to_mintlify_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial article to Mintlify documentation MDX format with YAML frontmatter,
+        <Info> callout, and <CardGroup> metadata representation.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f"tags: [{tags_yaml}]",
+            'icon: "signal-stream"',
+            'mode: "wide"',
+            "---",
+            "",
+            "<Info>",
+            f"  {desc}",
+            "</Info>",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
