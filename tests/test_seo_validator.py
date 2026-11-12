@@ -2554,6 +2554,51 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertEqual(res_bad["inaccessible_truncated"], 1)
 
+    def test_audit_display_orientation_lock(self):
+        html_ok = '<div class="tu-editorial-container"><p>Konten artikel responsif fleksibel.</p></div>'
+        res_ok = YoastSEOValidator.audit_display_orientation_lock(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertFalse(res_ok["has_orientation_lock"])
+
+        html_bad = '<div style="transform: rotate(90deg);"><p>Halaman ini dikunci secara rotasi transform 90 derajat teks panjang.</p></div>'
+        res_bad = YoastSEOValidator.audit_display_orientation_lock(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(res_bad["has_orientation_lock"])
+
+    def test_audit_meta_http_equiv_timing_redirect(self):
+        html_ok = '<html><head><meta charset="utf-8"></head><body><p>Normal Page</p></body></html>'
+        res_ok = YoastSEOValidator.audit_meta_http_equiv_timing_redirect(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertFalse(res_ok["has_timed_refresh"])
+
+        html_bad = '<html><head><meta http-equiv="refresh" content="5; url=https://example.com/target"></head></html>'
+        res_bad = YoastSEOValidator.audit_meta_http_equiv_timing_redirect(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertTrue(res_bad["has_timed_refresh"])
+        self.assertEqual(res_bad["refresh_delay_seconds"], 5)
+
+    def test_audit_form_auto_submitting_on_input(self):
+        html_ok = '<form><select name="prodi"><option>Telekomunikasi</option></select><button type="submit">Cari</button></form>'
+        res_ok = YoastSEOValidator.audit_form_auto_submitting_on_input(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["auto_submitting_controls"], 0)
+
+        html_bad = '<form><select name="sort" onchange="this.form.submit()"><option>Asc</option></select></form>'
+        res_bad = YoastSEOValidator.audit_form_auto_submitting_on_input(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["auto_submitting_controls"], 1)
+
+    def test_audit_positive_tabindex_focus_order(self):
+        html_ok = '<div><button tabindex="0">A</button><a href="/link" tabindex="-1">B</a></div>'
+        res_ok = YoastSEOValidator.audit_positive_tabindex_focus_order(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["positive_tabindex_elements"], 0)
+
+        html_bad = '<div><button tabindex="5">Bad Order</button><input tabindex="2"></div>'
+        res_bad = YoastSEOValidator.audit_positive_tabindex_focus_order(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["positive_tabindex_elements"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
