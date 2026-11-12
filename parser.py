@@ -9489,6 +9489,81 @@ def calculate_satellite_earth_station_antenna_pattern_itu_r_s580(
     }
 
 
+def parse_pkm_ai_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates PKM Artikel Ilmiah (PKM-AI) student scientific article submissions under Belmawa Kemendikbudristek guidelines,
+    assessing abstract clarity, literature state-of-the-art, experimental engineering methodology, results discussion depth,
+    Turnitin similarity clearance, national incentive awards, and MBKM credit equivalency.
+    """
+    student_author = str(data.get("student_author", "")).strip() or "Mahasiswa Telkom Purwokerto"
+    nim = str(data.get("nim", "")).strip()
+    article_title = str(data.get("article_title", "")).strip() or "Artikel Ilmiah Rekayasa Jaringan Telekomunikasi"
+    journal_scope = str(data.get("journal_scope", "")).strip() or "Sistem Telekomunikasi & Jaringan Nirkabel"
+
+    s_abs = max(0.0, min(100.0, float(data.get("abstract_title_score", 0.0))))
+    s_intro = max(0.0, min(100.0, float(data.get("introduction_state_of_art_score", 0.0))))
+    s_meth = max(0.0, min(100.0, float(data.get("methodology_experiment_score", 0.0))))
+    s_res = max(0.0, min(100.0, float(data.get("results_discussion_depth_score", 0.0))))
+    s_conc = max(0.0, min(100.0, float(data.get("conclusion_reference_format_score", 0.0))))
+    has_turnitin = bool(data.get("has_turnitin_clearance", True))
+
+    similarity_penalty = 0.0 if has_turnitin else 10.0
+
+    raw_composite = (0.15 * s_abs) + (0.25 * s_intro) + (0.25 * s_meth) + (0.25 * s_res) + (0.10 * s_conc)
+    composite = round(max(0.0, raw_composite - similarity_penalty), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_incentive_awarded = composite >= 80.0
+    if composite >= 85.0:
+        incentive_amount_idr = 3000000
+        award_status = "Lolos Insentif Nasional PKM-AI Belmawa Publikasi Unggulan"
+        converted_sks = 4
+    elif is_incentive_awarded:
+        incentive_amount_idr = 3000000
+        award_status = "Lolos Insentif Nasional PKM-AI Belmawa"
+        converted_sks = 3
+    else:
+        incentive_amount_idr = 0
+        award_status = "Belum Lolos Insentif Nasional"
+        converted_sks = 2
+
+    return {
+        "student_author": student_author,
+        "nim": nim,
+        "article_title": article_title,
+        "journal_scope": journal_scope,
+        "abstract_title_score": s_abs,
+        "introduction_state_of_art_score": s_intro,
+        "methodology_experiment_score": s_meth,
+        "results_discussion_depth_score": s_res,
+        "conclusion_reference_format_score": s_conc,
+        "has_turnitin_clearance": has_turnitin,
+        "similarity_penalty": similarity_penalty,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "award_status": award_status,
+        "incentive_amount_idr": incentive_amount_idr,
+        "converted_sks": converted_sks,
+        "is_incentive_awarded": is_incentive_awarded
+    }
+
+
 
 
 
