@@ -3113,6 +3113,31 @@ def sanitize_html5_base_element_injection(html: str) -> str:
     return re.sub(r'<base\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*/?>', '', html, flags=re.IGNORECASE)
 
 
+def sanitize_html5_marquee_animation_elements(html: str) -> str:
+    """
+    Sanitizes legacy <marquee> animation elements by removing inline event handlers (onstart, onbounce, onfinish)
+    and capping excessive scrolling speeds to prevent seizure/accessibility hazards (WCAG 2.1 SC 2.2.2).
+    """
+    if not html or "<marquee" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_marquee(m):
+        tag = m.group(0)
+        # Strip script execution vectors and inline handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Cap excessive scrollamount values (above 20px/frame can cause visual discomfort)
+        def cap_scroll(sm):
+            val = int(sm.group(1))
+            return f'scrollamount="{min(val, 10)}"'
+        tag = re.sub(r'scrollamount=["\'](\d+)["\']', cap_scroll, tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<marquee\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_marquee, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
 
 
 
