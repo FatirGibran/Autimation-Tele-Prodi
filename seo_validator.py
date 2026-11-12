@@ -8348,6 +8348,51 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_meta_http_equiv_timing_redirect(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits page metadata for automated timing redirects or refreshes using
+        <meta http-equiv="refresh"> which violate WCAG 2.1 SC 2.2.1 Timing Adjustable.
+        """
+        if not html_content:
+            return {
+                "has_timed_refresh": False,
+                "refresh_delay_seconds": None,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        has_refresh = False
+        delay_sec = None
+
+        meta_refreshes = soup.find_all("meta", attrs={"http-equiv": re.compile(r"^refresh$", re.IGNORECASE)})
+
+        for meta in meta_refreshes:
+            content_val = meta.get("content", "").strip()
+            if content_val:
+                has_refresh = True
+                # Extract numeric delay
+                m = re.match(r"^(\d+)", content_val)
+                if m:
+                    delay_sec = int(m.group(1))
+                    if delay_sec > 0:
+                        issues.append(f"<meta http-equiv='refresh'> dengan penundaan {delay_sec} detik melanggar WCAG 2.1 SC 2.2.1 (Timing Adjustable).")
+                    else:
+                        issues.append("<meta http-equiv='refresh'> instan (0 detik) terdeteksi; disarankan menggunakan redirect HTTP 301/308 pada sisi server.")
+                else:
+                    issues.append(f"<meta http-equiv='refresh'> dengan format konten '{content_val}' tidak standar.")
+
+        is_compliant = not (has_refresh and (delay_sec is None or delay_sec > 0))
+
+        return {
+            "has_timed_refresh": has_refresh,
+            "refresh_delay_seconds": delay_sec,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
