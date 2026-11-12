@@ -3101,6 +3101,18 @@ def sanitize_html5_object_param_elements(html: str) -> str:
     return cleaned
 
 
+def sanitize_html5_base_element_injection(html: str) -> str:
+    """
+    Sanitizes HTML content by removing injected <base> tags that alter document base URI,
+    preventing URL hijacking and relative resource redirection attacks in editorial bodies.
+    """
+    if not html or "<base" not in html.lower():
+        return html
+
+    # Strip unauthorized <base> elements from content fragments
+    return re.sub(r'<base\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*/?>', '', html, flags=re.IGNORECASE)
+
+
 
 
 
