@@ -9345,6 +9345,78 @@ def calculate_fso_optical_atmospheric_link_budget(
     }
 
 
+def calculate_5g_nr_pdcch_cce_capacity(
+    coreset_id: int = 1,
+    frequency_domain_rbs: int = 48,
+    coreset_duration_symbols: int = 2,
+    cce_aggregation_level: int = 4,
+    subcarrier_spacing_khz: int = 30,
+    scheduled_ues_count: int = 4
+) -> Dict[str, Any]:
+    """
+    Calculates 5G NR PDCCH (Physical Downlink Control Channel) CORESET Resource Element Groups (REG),
+    Control Channel Elements (CCE), blind decoding candidates, and UE scheduling blocking capacity
+    under 3GPP TS 38.211 and TS 38.213 specifications.
+    """
+    cid = max(0, min(11, int(coreset_id)))
+    # Frequency resources must be multiple of 6 PRBs (1 REG bundle = 6 REGs)
+    raw_rbs = max(6, int(frequency_domain_rbs))
+    rbs = (raw_rbs // 6) * 6
+    duration_syms = max(1, min(3, int(coreset_duration_symbols)))
+    # 3GPP valid aggregation levels
+    valid_agg_levels = [1, 2, 4, 8, 16]
+    agg_level = int(cce_aggregation_level) if int(cce_aggregation_level) in valid_agg_levels else 4
+    scs = int(subcarrier_spacing_khz) if int(subcarrier_spacing_khz) in (15, 30, 60, 120) else 30
+    num_ues = max(1, int(scheduled_ues_count))
+
+    # Total REGs: 1 REG = 1 PRB over 1 OFDM symbol
+    total_regs = rbs * duration_syms
+
+    # 1 CCE = 6 REGs = 72 Resource Elements
+    total_cces = total_regs // 6
+
+    # Maximum concurrent DCI scheduling grants supported at selected Aggregation Level
+    max_dci_grants = max(1, total_cces // agg_level)
+
+    # CCE overhead and utilization by scheduled UEs
+    cces_required = num_ues * agg_level
+    utilization_percent = round(min(100.0, (cces_required / total_cces) * 100.0), 2)
+    is_blocked = cces_required > total_cces
+
+    # Blind decoding maximum candidates according to 3GPP TS 38.213 Table 10.1-1
+    # Search space candidates per aggregation level
+    bd_candidates_map = {1: 8, 2: 8, 4: 4, 8: 2, 16: 1}
+    max_bd_candidates = bd_candidates_map.get(agg_level, 4)
+
+    if not is_blocked and utilization_percent <= 75.0:
+        status_category = "OPTIMAL_CAPACITY"
+        recommendation = "Kapasitas CCE PDCCH lapang; penjadwalan DCI seluruh UE terpenuhi tanpa blocking."
+    elif not is_blocked:
+        status_category = "HIGH_LOAD"
+        recommendation = "Beban CCE tinggi; pertimbangkan penurunan aggregation level untuk UE dengan SNR baik."
+    else:
+        status_category = "BLOCKING_OVERFLOW"
+        recommendation = "Kapasitas CCE terlampaui! Perlebar bandwidth CORESET atau alokasikan UE ke slot berikutnya."
+
+    return {
+        "coreset_id": cid,
+        "frequency_domain_rbs": rbs,
+        "coreset_duration_symbols": duration_syms,
+        "cce_aggregation_level": agg_level,
+        "subcarrier_spacing_khz": scs,
+        "total_regs": total_regs,
+        "total_cces": total_cces,
+        "max_dci_grants": max_dci_grants,
+        "scheduled_ues_count": num_ues,
+        "cces_required": cces_required,
+        "utilization_percent": utilization_percent,
+        "is_blocked": is_blocked,
+        "max_blind_decoding_candidates": max_bd_candidates,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
