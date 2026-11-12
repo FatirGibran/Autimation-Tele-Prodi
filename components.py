@@ -8736,6 +8736,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_earth_station_antenna_pattern_card(
+        cls,
+        title: str = "Pola Radiasi Antena Stasiun Bumi Satelit (ITU-R S.580)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card displaying Earth Station parabolic antenna
+        radiation pattern, boresight gain, HPBW, and off-axis sidelobe envelope suppression.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        diam = float(d.get("antenna_diameter_m", 3.0))
+        freq = float(d.get("carrier_frequency_ghz", 14.2))
+        d_lambda = float(d.get("d_over_lambda", 142.1))
+        g_max = float(d.get("boresight_gain_dbi", 50.8))
+        hpbw = float(d.get("half_power_beamwidth_deg", 0.49))
+        phi = float(d.get("off_axis_angle_deg", 2.5))
+        env_gain = float(d.get("envelope_gain_dbi", 19.05))
+        suppression = float(d.get("sidelobe_suppression_db", 31.75))
+        status = d.get("status_category", "COMPLIANT")
+        recom = d.get("recommendation", "")
+
+        badge_color = "#16a34a" if "COMPLIANT" in status or "EXCELLENT" in status else ("#ea580c" if "SMALL" in status else "#dc2626")
+        badge_bg = "#f0fdf4" if "COMPLIANT" in status or "EXCELLENT" in status else ("#fff7ed" if "SMALL" in status else "#fef2f2")
+
+        return f"""<div class="elementor-telecom-card sat-antenna-pattern" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #ffffff; margin-bottom: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0369a1; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0369a1; font-size: 13px; text-transform: uppercase;">Antena Satelit &bull; ITU-R S.580 Sidelobe Envelope</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Diameter: <strong>{diam:.2f} m</strong> &bull; Frekuensi: <strong>{freq:.2f} GHz</strong> &bull; D/&lambda;: <strong>{d_lambda:.1f}</strong> &bull; HPBW: <strong>{hpbw:.3f}&deg;</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Boresight Gain (G_max)</span>
+          <strong style="color: #0369a1; font-size: 16px;">{g_max:.2f} dBi</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Gain Off-Axis (&phi;={phi}&deg;)</span>
+          <strong style="color: #0f172a; font-size: 16px;">{env_gain:.2f} dBi</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Supresi Sidelobe</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{suppression:.2f} dB</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Kesesuaian Standar: <strong>ITU-R S.580 Sidelobe Reference</strong> &bull; Analisis: <em>{recom}</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -8785,6 +8840,8 @@ render_pkm_gft_card = EditorialComponents.render_pkm_gft_card
 render_5g_nr_prach_preamble_svg = EditorialComponents.render_5g_nr_prach_preamble_svg
 render_fso_optical_link_card = EditorialComponents.render_fso_optical_link_card
 render_5g_nr_pdcch_cce_capacity_card = EditorialComponents.render_5g_nr_pdcch_cce_capacity_card
+render_satellite_earth_station_antenna_pattern_card = EditorialComponents.render_satellite_earth_station_antenna_pattern_card
+
 
 
 
