@@ -8431,6 +8431,45 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_positive_tabindex_focus_order(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits interactive elements for positive tabindex attributes (tabindex > 0)
+        which break natural DOM keyboard navigation sequence (WCAG 2.1 SC 2.1.1 / SC 2.4.3).
+        """
+        if not html_content:
+            return {
+                "total_tabindex_elements": 0,
+                "positive_tabindex_elements": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        elements_with_tabindex = soup.find_all(attrs={"tabindex": True})
+        positive_count = 0
+        issues = []
+
+        for el in elements_with_tabindex:
+            raw_val = str(el.get("tabindex", "")).strip()
+            try:
+                val = int(raw_val)
+                if val > 0:
+                    positive_count += 1
+                    text_snip = el.get_text().strip()[:20] or el.name
+                    issues.append(f"<{el.name}> '{text_snip}': Memiliki tabindex={val} (> 0) yang mengacaukan urutan fokus keyboard alami pengguna.")
+            except ValueError:
+                continue
+
+        is_compliant = positive_count == 0
+
+        return {
+            "total_tabindex_elements": len(elements_with_tabindex),
+            "positive_tabindex_elements": positive_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
