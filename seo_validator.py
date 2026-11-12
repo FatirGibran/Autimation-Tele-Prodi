@@ -8309,6 +8309,45 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_display_orientation_lock(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits page structure and inline styles for forced display orientation locks
+        such as rotational transforms or hard orientation restrictions (WCAG 2.1 SC 1.3.4).
+        """
+        if not html_content:
+            return {
+                "has_orientation_lock": False,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        has_lock = False
+
+        # Check inline styles on structural containers
+        for el in soup.find_all(True):
+            style = el.get("style", "").lower()
+            if "rotate(90deg)" in style or "rotate(270deg)" in style or "rotate(-90deg)" in style:
+                if el.name in ("body", "main", "html", "div", "section") and len(el.get_text().strip()) > 30:
+                    has_lock = True
+                    issues.append(f"<{el.name}>: Rotasi CSS inline (90/270 derajat) membatasi tampilan pada orientasi tertentu tanpa fleksibilitas rotasi layar.")
+
+            # Check for hard orientation text blocks
+            text = el.get_text().strip().lower()
+            if "hanya dapat dilihat pada mode landscape" in text or "putar perangkat anda ke mode landscape" in text:
+                has_lock = True
+                issues.append("Ditemukan pesan restriksi orientasi paksa perangkat tanpa alternatif fungsional.")
+
+        is_compliant = not has_lock
+
+        return {
+            "has_orientation_lock": has_lock,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
