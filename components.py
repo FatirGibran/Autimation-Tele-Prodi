@@ -8679,6 +8679,63 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_pdcch_cce_capacity_card(
+        cls,
+        title: str = "Evaluasi Kapasitas Kanal Kontrol 5G NR PDCCH & CCE",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card displaying 5G NR PDCCH CORESET configuration,
+        CCE aggregation utilization, concurrent DCI grants, and blind decoding limits.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        cid = int(d.get("coreset_id", 1))
+        rbs = int(d.get("frequency_domain_rbs", 48))
+        duration = int(d.get("coreset_duration_symbols", 2))
+        agg_level = int(d.get("cce_aggregation_level", 4))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        total_cces = int(d.get("total_cces", 16))
+        max_dci = int(d.get("max_dci_grants", 4))
+        ues = int(d.get("scheduled_ues_count", 4))
+        util = float(d.get("utilization_percent", 100.0))
+        is_blocked = bool(d.get("is_blocked", False))
+        status = d.get("status_category", "OPTIMAL_CAPACITY")
+        recom = d.get("recommendation", "")
+
+        badge_color = "#dc2626" if is_blocked else ("#ea580c" if util > 75.0 else "#16a34a")
+        badge_bg = "#fef2f2" if is_blocked else ("#fff7ed" if util > 75.0 else "#f0fdf4")
+
+        return f"""<div class="elementor-telecom-card nr-pdcch-cce" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #ffffff; margin-bottom: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #7c3aed; font-size: 13px; text-transform: uppercase;">5G NR PDCCH &bull; 3GPP TS 38.211 / 38.213</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        CORESET ID: <strong>{cid}</strong> &bull; Alokasi: <strong>{rbs} PRB ({duration} Simbol)</strong> &bull; SCS: <strong>{scs} kHz</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Kapasitas CCE</span>
+          <strong style="color: #7c3aed; font-size: 16px;">{total_cces} CCE</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Max DCI (AL={agg_level})</span>
+          <strong style="color: #0f172a; font-size: 16px;">{max_dci} Hibah</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Utilitas ({ues} UE)</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{util:.1f}%</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Status Blocking: <strong>{'TERBLOKIR' if is_blocked else 'AMAN'}</strong> &bull; Rekomendasi: <em>{recom}</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -8727,6 +8784,8 @@ render_satellite_leo_doppler_slant_range_card = EditorialComponents.render_satel
 render_pkm_gft_card = EditorialComponents.render_pkm_gft_card
 render_5g_nr_prach_preamble_svg = EditorialComponents.render_5g_nr_prach_preamble_svg
 render_fso_optical_link_card = EditorialComponents.render_fso_optical_link_card
+render_5g_nr_pdcch_cce_capacity_card = EditorialComponents.render_5g_nr_pdcch_cce_capacity_card
+
 
 
 
