@@ -2915,6 +2915,85 @@ Status: Granted
         self.assertEqual(res_penalized["composite_score"], 72.0)
         self.assertFalse(res_penalized["is_incentive_awarded"])
 
+    def test_calculate_fso_optical_atmospheric_link_budget(self):
+        from parser import calculate_fso_optical_atmospheric_link_budget
+        res = calculate_fso_optical_atmospheric_link_budget(
+            link_distance_km=1.0,
+            wavelength_nm=1550.0,
+            visibility_km=2.0,
+            tx_power_dbm=10.0,
+            tx_beam_divergence_mrad=1.5,
+            rx_aperture_diameter_cm=20.0,
+            rx_sensitivity_dbm=-35.0
+        )
+        self.assertEqual(res["link_distance_km"], 1.0)
+        self.assertGreater(res["atmospheric_loss_db"], 0.0)
+        self.assertGreater(res["geometrical_loss_db"], 0.0)
+        self.assertIn("link_margin_db", res)
+        self.assertTrue(res["is_link_viable"])
+
+    def test_calculate_5g_nr_pdcch_cce_capacity(self):
+        from parser import calculate_5g_nr_pdcch_cce_capacity
+        res = calculate_5g_nr_pdcch_cce_capacity(
+            coreset_id=1,
+            frequency_domain_rbs=48,
+            coreset_duration_symbols=2,
+            cce_aggregation_level=4,
+            subcarrier_spacing_khz=30,
+            scheduled_ues_count=4
+        )
+        self.assertEqual(res["total_regs"], 96)
+        self.assertEqual(res["total_cces"], 16)
+        self.assertEqual(res["max_dci_grants"], 4)
+        self.assertEqual(res["cces_required"], 16)
+        self.assertEqual(res["utilization_percent"], 100.0)
+        self.assertFalse(res["is_blocked"])
+
+    def test_calculate_satellite_earth_station_antenna_pattern_itu_r_s580(self):
+        from parser import calculate_satellite_earth_station_antenna_pattern_itu_r_s580
+        res = calculate_satellite_earth_station_antenna_pattern_itu_r_s580(
+            antenna_diameter_m=3.0,
+            carrier_frequency_ghz=14.2,
+            off_axis_angle_deg=2.5,
+            aperture_efficiency=0.65
+        )
+        self.assertGreater(res["boresight_gain_dbi"], 45.0)
+        self.assertGreater(res["d_over_lambda"], 100.0)
+        self.assertLess(res["envelope_gain_dbi"], 25.0)
+        self.assertGreater(res["sidelobe_suppression_db"], 25.0)
+        self.assertTrue(res["is_itu_compliant"])
+
+    def test_parse_pkm_ai_proposal_evaluation(self):
+        from parser import parse_pkm_ai_proposal_evaluation
+        res_top = parse_pkm_ai_proposal_evaluation({
+            "student_author": "Fauzan Hakim",
+            "nim": "1101210012",
+            "article_title": "Optimasi Throughput MIMO Massive 5G NR TDD 3.5 GHz",
+            "journal_scope": "Sistem Nirkabel & Telekomunikasi",
+            "abstract_title_score": 90.0,
+            "introduction_state_of_art_score": 92.0,
+            "methodology_experiment_score": 88.0,
+            "results_discussion_depth_score": 90.0,
+            "conclusion_reference_format_score": 95.0,
+            "has_turnitin_clearance": True
+        })
+        self.assertEqual(res_top["letter_grade"], "A")
+        self.assertEqual(res_top["incentive_amount_idr"], 3000000)
+        self.assertEqual(res_top["converted_sks"], 4)
+        self.assertTrue(res_top["is_incentive_awarded"])
+
+        res_penalized = parse_pkm_ai_proposal_evaluation({
+            "abstract_title_score": 85.0,
+            "introduction_state_of_art_score": 85.0,
+            "methodology_experiment_score": 85.0,
+            "results_discussion_depth_score": 85.0,
+            "conclusion_reference_format_score": 85.0,
+            "has_turnitin_clearance": False
+        })
+        self.assertEqual(res_penalized["similarity_penalty"], 10.0)
+        self.assertEqual(res_penalized["composite_score"], 75.0)
+        self.assertFalse(res_penalized["is_incentive_awarded"])
+
 
 if __name__ == "__main__":
     unittest.main()
