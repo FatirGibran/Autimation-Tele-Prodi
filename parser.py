@@ -9417,6 +9417,78 @@ def calculate_5g_nr_pdcch_cce_capacity(
     }
 
 
+def calculate_satellite_earth_station_antenna_pattern_itu_r_s580(
+    antenna_diameter_m: float = 3.0,
+    carrier_frequency_ghz: float = 14.2,
+    off_axis_angle_deg: float = 2.5,
+    aperture_efficiency: float = 0.65
+) -> Dict[str, Any]:
+    """
+    Calculates Earth Station parabolic antenna radiation pattern, boresight gain,
+    and off-axis copolar sidelobe gain envelope under ITU-R S.580-6 design objectives
+    for geostationary satellite orbit (GSO) coordination.
+    """
+    diam = max(0.5, float(antenna_diameter_m))
+    freq = max(1.0, float(carrier_frequency_ghz))
+    phi = max(0.1, min(180.0, float(off_axis_angle_deg)))
+    eta = max(0.4, min(0.85, float(aperture_efficiency)))
+
+    c_m_s = 299792458.0
+    wavelength_m = c_m_s / (freq * 1e9)
+    d_over_lambda = round(diam / wavelength_m, 2)
+
+    # Boresight peak gain G_max in dBi
+    boresight_gain_dbi = round(10.0 * math.log10(eta * ((math.pi * diam / wavelength_m) ** 2)), 2)
+
+    # 3 dB beamwidth approximation in degrees: theta_3db = 70 * lambda / D
+    half_power_beamwidth_deg = round(70.0 * (wavelength_m / diam), 3)
+
+    # ITU-R S.580-6 sidelobe envelope calculation:
+    # Valid for D/lambda >= 100
+    phi_min = max(1.0, round(100.0 * (wavelength_m / diam), 2))
+
+    if phi < half_power_beamwidth_deg / 2.0:
+        # Inside main lobe
+        envelope_gain_dbi = boresight_gain_dbi
+    elif phi <= 20.0:
+        envelope_gain_dbi = round(29.0 - (25.0 * math.log10(max(1.0, phi))), 2)
+    elif phi <= 48.0:
+        envelope_gain_dbi = -3.5
+    else:
+        envelope_gain_dbi = round(max(-10.0, 32.0 - (25.0 * math.log10(phi))), 2)
+
+    sidelobe_suppression_db = round(boresight_gain_dbi - envelope_gain_dbi, 2)
+    is_itu_compliant = d_over_lambda >= 100.0 and (phi >= 2.0 and envelope_gain_dbi <= 21.5)
+
+    if d_over_lambda < 100.0:
+        status_category = "SMALL_APERTURE_EXCEPTION"
+        recommendation = "D/lambda < 100; rujukan ITU-R S.580 dialihkan ke pola ITU-R S.465 untuk stasiun bumi kecil."
+    elif envelope_gain_dbi <= 20.0:
+        status_category = "EXCELLENT_ISOLATION"
+        recommendation = "Peredaman sidelobe sangat tinggi; aman untuk spasi orbital satelit 2 derajat."
+    elif envelope_gain_dbi <= 25.0:
+        status_category = "COMPLIANT"
+        recommendation = "Memenuhi batas desain radiasi ITU-R S.580 untuk koordinasi orbit GSO."
+    else:
+        status_category = "SIDELOBE_WARNING"
+        recommendation = "Tingkat radiasi off-axis berpotensi interferensi terhadap satelit tetangga."
+
+    return {
+        "antenna_diameter_m": diam,
+        "carrier_frequency_ghz": freq,
+        "wavelength_cm": round(wavelength_m * 100.0, 2),
+        "d_over_lambda": d_over_lambda,
+        "boresight_gain_dbi": boresight_gain_dbi,
+        "half_power_beamwidth_deg": half_power_beamwidth_deg,
+        "off_axis_angle_deg": phi,
+        "envelope_gain_dbi": envelope_gain_dbi,
+        "sidelobe_suppression_db": sidelobe_suppression_db,
+        "is_itu_compliant": is_itu_compliant,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
