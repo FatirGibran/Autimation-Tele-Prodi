@@ -8393,6 +8393,44 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_form_auto_submitting_on_input(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits form controls (<select>, <input>) for unexpected auto-submitting event handlers
+        (such as onchange="this.form.submit()") violating WCAG 2.1 SC 3.2.2 On Input.
+        """
+        if not html_content:
+            return {
+                "total_controls_checked": 0,
+                "auto_submitting_controls": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        controls = soup.find_all(["select", "input"])
+        auto_submitting = 0
+        issues = []
+
+        for ctrl in controls:
+            onchange = ctrl.get("onchange", "").strip().lower()
+            oninput = ctrl.get("oninput", "").strip().lower()
+
+            is_auto_submit = "submit()" in onchange or "submit()" in oninput
+            if is_auto_submit:
+                auto_submitting += 1
+                ctrl_name = ctrl.get("name") or ctrl.get("id") or ctrl.name
+                issues.append(f"<{ctrl.name}> '{ctrl_name}': Handler onchange/oninput langsung men-submit form otomatis tanpa tombol konfirmasi pengguna (WCAG 2.1 SC 3.2.2).")
+
+        is_compliant = auto_submitting == 0
+
+        return {
+            "total_controls_checked": len(controls),
+            "auto_submitting_controls": auto_submitting,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
 
 
 
