@@ -69,7 +69,10 @@ from sanitizer import (
     sanitize_html5_portal_elements,
     sanitize_html5_fencedframe_elements,
     sanitize_html5_embed_plugin_elements,
-    sanitize_html5_object_param_elements
+    sanitize_html5_object_param_elements,
+    sanitize_html5_base_element_injection,
+    sanitize_html5_marquee_animation_elements,
+    sanitize_html5_applet_legacy_elements
 )
 
 
@@ -1491,6 +1494,38 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertTrue(any("fencedframe" in w for w in warnings))
         self.assertTrue(any("embed" in w for w in warnings))
         self.assertTrue(any("object" in w for w in warnings))
+
+    def test_sanitize_html5_base_element_injection(self):
+        raw = '<div class="tu-editorial-container"><base href="https://attacker.com/"><p>Konten</p></div>'
+        cleaned = sanitize_html5_base_element_injection(raw)
+        self.assertNotIn("<base", cleaned)
+        self.assertNotIn("attacker.com", cleaned)
+        self.assertIn("<p>Konten</p>", cleaned)
+
+    def test_sanitize_html5_marquee_animation_elements(self):
+        raw = '<marquee scrollamount="50" onbounce="evil()" onstart="alert(1)">Teks Pengumuman</marquee>'
+        cleaned = sanitize_html5_marquee_animation_elements(raw)
+        self.assertNotIn("onbounce=", cleaned)
+        self.assertNotIn("onstart=", cleaned)
+        self.assertIn('scrollamount="10"', cleaned)
+        self.assertIn("Teks Pengumuman", cleaned)
+
+    def test_sanitize_html5_applet_legacy_elements(self):
+        raw = '<applet code="Malicious.class" archive="evil.jar"><param name="payload" value="1">Fallback</applet>'
+        cleaned = sanitize_html5_applet_legacy_elements(raw)
+        self.assertNotIn("<applet", cleaned)
+        self.assertNotIn("evil.jar", cleaned)
+        self.assertNotIn("Malicious.class", cleaned)
+
+    def test_sanitize_html_with_base_marquee_applet_elements(self):
+        html = '<div class="tu-editorial-container"><base href="https://evil.com"><marquee scrollamount="50">Info</marquee><applet code="bad.class">Old</applet></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("https://evil.com", clean)
+        self.assertIn('scrollamount="10"', clean)
+        self.assertNotIn("<applet", clean)
+        self.assertTrue(any("base" in w for w in warnings))
+        self.assertTrue(any("marquee" in w for w in warnings))
+        self.assertTrue(any("applet" in w for w in warnings))
 
 
 if __name__ == "__main__":
