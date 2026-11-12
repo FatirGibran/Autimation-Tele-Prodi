@@ -9261,6 +9261,90 @@ def parse_pkm_gft_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_fso_optical_atmospheric_link_budget(
+    link_distance_km: float = 1.0,
+    wavelength_nm: float = 1550.0,
+    visibility_km: float = 2.0,
+    tx_power_dbm: float = 10.0,
+    tx_beam_divergence_mrad: float = 1.5,
+    rx_aperture_diameter_cm: float = 20.0,
+    rx_sensitivity_dbm: float = -35.0
+) -> Dict[str, Any]:
+    """
+    Calculates Free Space Optics (FSO) terrestrial wireless optical link budget,
+    atmospheric fog attenuation using the Kim/Kruse Mie scattering model,
+    geometrical beam divergence loss, and link margin for high-speed campus interconnects.
+    """
+    dist_km = max(0.05, float(link_distance_km))
+    wlen_nm = max(400.0, float(wavelength_nm))
+    vis_km = max(0.05, float(visibility_km))
+    p_tx = float(tx_power_dbm)
+    theta_mrad = max(0.2, float(tx_beam_divergence_mrad))
+    d_rx_cm = max(2.0, float(rx_aperture_diameter_cm))
+    p_sens = float(rx_sensitivity_dbm)
+
+    # Size parameter q based on Kim empirical visibility distribution model
+    if vis_km > 50.0:
+        q = 1.6
+    elif vis_km > 6.0:
+        q = 1.3
+    elif vis_km > 1.0:
+        q = 0.16 * vis_km + 0.34
+    elif vis_km > 0.5:
+        q = vis_km - 0.5
+    else:
+        q = 0.0
+
+    # Atmospheric attenuation coefficient beta (dB/km)
+    beta_atm_db_per_km = round((3.91 / vis_km) * ((wlen_nm / 550.0) ** (-q)), 3)
+    atmospheric_loss_db = round(beta_atm_db_per_km * dist_km, 2)
+
+    # Geometrical loss calculation from beam divergence
+    # Beam spot diameter at distance L: D_spot = theta * L (mrad * km = meters)
+    spot_diameter_m = (theta_mrad * 1e-3) * (dist_km * 1000.0)
+    d_rx_m = d_rx_cm / 100.0
+    # Ratio of receiver aperture area to optical beam area
+    area_ratio = min(1.0, (d_rx_m / spot_diameter_m) ** 2) if spot_diameter_m > 0 else 1.0
+    geometrical_loss_db = round(abs(10.0 * math.log10(area_ratio)), 2)
+
+    # Received optical power and link margin
+    p_rx_dbm = round(p_tx - geometrical_loss_db - atmospheric_loss_db, 2)
+    link_margin_db = round(p_rx_dbm - p_sens, 2)
+    is_link_viable = link_margin_db >= 0.0
+
+    if link_margin_db >= 10.0:
+        status_category = "EXCELLENT"
+        recommendation = "Kualitas link FSO sangat stabil dengan margin fading atmosfer memadai."
+    elif link_margin_db >= 3.0:
+        status_category = "OPERATIONAL"
+        recommendation = "Link FSO andal dalam cuaca normal hingga kabut ringan."
+    elif link_margin_db >= 0.0:
+        status_category = "MARGINAL"
+        recommendation = "Margin tipis; rentan terhadap kabut tebal atau turbulensi termal siang hari."
+    else:
+        status_category = "OUTAGE_DEFICIT"
+        recommendation = "Link terputus (outage); perbesar aperture receiver atau tingkatkan daya laser."
+
+    return {
+        "link_distance_km": dist_km,
+        "wavelength_nm": wlen_nm,
+        "visibility_km": vis_km,
+        "tx_power_dbm": p_tx,
+        "tx_beam_divergence_mrad": theta_mrad,
+        "rx_aperture_diameter_cm": d_rx_cm,
+        "rx_sensitivity_dbm": p_sens,
+        "size_parameter_q": round(q, 3),
+        "attenuation_coefficient_db_per_km": beta_atm_db_per_km,
+        "atmospheric_loss_db": atmospheric_loss_db,
+        "geometrical_loss_db": geometrical_loss_db,
+        "received_power_dbm": p_rx_dbm,
+        "link_margin_db": link_margin_db,
+        "is_link_viable": is_link_viable,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
