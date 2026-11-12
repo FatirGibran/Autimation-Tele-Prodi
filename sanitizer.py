@@ -800,6 +800,27 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 object and param multimedia elements.")
 
+        # 8an. Sanitize HTML5 base element url hijacking injection
+        if "<base" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_base_element_injection(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 base element url hijacking injection.")
+
+        # 8ao. Sanitize HTML5 marquee animation elements
+        if "<marquee" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_marquee_animation_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 marquee animation elements.")
+
+        # 8ap. Sanitize HTML5 legacy applet elements
+        if "<applet" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_applet_legacy_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 legacy applet elements.")
+
         return cleaned, warnings
 
 
@@ -3136,6 +3157,18 @@ def sanitize_html5_marquee_animation_elements(html: str) -> str:
 
     cleaned = re.sub(r'<marquee\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_marquee, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_applet_legacy_elements(html: str) -> str:
+    """
+    Sanitizes and neutralizes obsolete, insecure HTML <applet> executable elements and archive
+    codebase references, removing remote bytecode execution vectors.
+    """
+    if not html or "<applet" not in html.lower():
+        return html
+
+    # Completely strip legacy executable applet elements and nested fallback contents
+    return re.sub(r'<applet\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>[\s\S]*?</applet>', '', html, flags=re.IGNORECASE)
 
 
 
