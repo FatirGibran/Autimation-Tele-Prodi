@@ -8624,6 +8624,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_fso_optical_link_card(
+        cls,
+        title: str = "Link Budget Komunikasi Nirkabel Optik Ruang Bebas (FSO)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying Free Space Optics (FSO) link parameters,
+        fog attenuation coefficient (Kim model), geometrical loss, and link margin.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        dist = float(d.get("link_distance_km", 1.0))
+        wlen = float(d.get("wavelength_nm", 1550.0))
+        vis = float(d.get("visibility_km", 2.0))
+        beta = float(d.get("attenuation_coefficient_db_per_km", 3.25))
+        geo = float(d.get("geometrical_loss_db", 14.5))
+        p_rx = float(d.get("received_power_dbm", -20.25))
+        margin = float(d.get("link_margin_db", 14.75))
+        is_ok = bool(d.get("is_link_viable", True))
+        status = str(d.get("status_category", "EXCELLENT"))
+        recom = str(d.get("recommendation", "Link FSO sangat stabil."))
+
+        badge_bg = "#ecfdf5" if is_ok else "#fef2f2"
+        badge_color = "#059669" if is_ok else "#dc2626"
+
+        return f"""    <div class="tu-fso-link-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0284c7; font-size: 13px; text-transform: uppercase;">Free Space Optics (FSO) &bull; Kim/Kruse Model</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Jarak Link: <strong>{dist:.2f} km</strong> &bull; Panjang Gelombang: <strong>{wlen:.0f} nm</strong> &bull; Visibilitas: <strong>{vis:.1f} km</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Koefisien Redaman</span>
+          <strong style="color: #0284c7; font-size: 16px;">{beta:.2f} dB/km</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Rugi Geometrik</span>
+          <strong style="color: #0f172a; font-size: 16px;">{geo:.2f} dB</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Margin Fading Link</span>
+          <strong style="color: {badge_color}; font-size: 16px;">+{margin:.2f} dB</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Daya Terima: <strong>{p_rx:.2f} dBm</strong> &bull; Panduan: <em>{recom}</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -8671,6 +8726,7 @@ render_5g_nr_prach_capacity_card = EditorialComponents.render_5g_nr_prach_capaci
 render_satellite_leo_doppler_slant_range_card = EditorialComponents.render_satellite_leo_doppler_slant_range_card
 render_pkm_gft_card = EditorialComponents.render_pkm_gft_card
 render_5g_nr_prach_preamble_svg = EditorialComponents.render_5g_nr_prach_preamble_svg
+render_fso_optical_link_card = EditorialComponents.render_fso_optical_link_card
 
 
 
