@@ -3314,6 +3314,84 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Anisa Rahma", out)
 
+    def test_cmd_fsolink(self):
+        class ArgsAdd:
+            action = "add"
+            link_id = "FSO-TEST-01"
+            distance = 1.5
+            wavelength = 1550.0
+            tx_power = 10.0
+            rx_sens = -30.0
+            visibility = 2.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fsolink(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Link FSO berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fsolink(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("FSO-TEST-01", out)
+
+    def test_cmd_nrpdcch(self):
+        class ArgsAdd:
+            action = "add"
+            cell = "gNB-TEST-01"
+            coreset_id = 1
+            rbs = 48
+            duration = 2
+            aggregation = 4
+            scs = 30
+            ues = 4
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrpdcch(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Kapasitas PDCCH berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrpdcch(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("gNB-TEST-01", out)
+
+    def test_cmd_pkmai(self):
+        class ArgsAdd:
+            action = "add"
+            author = "Fauzan Fadhil"
+            nim = "1101210099"
+            title = "Analisis Beamforming 5G Sub-6 GHz"
+            scope = "Sistem Telekomunikasi"
+            abstract = 92.0
+            intro = 90.0
+            method = 88.0
+            results = 90.0
+            conclusion = 88.0
+            no_turnitin = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmai(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-AI berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmai(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Fauzan Fadhil", out)
+
+
 
 if __name__ == "__main__":
     unittest.main()
