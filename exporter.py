@@ -2872,7 +2872,57 @@ navigation: true
         return data
 
     @staticmethod
+    def generate_scientific_article_publication_json_ld(
+        headline: str,
+        author: str,
+        journal_scope: str,
+        abstract: str,
+        published_date: str = "2026-11-13",
+        url: str = "",
+        turnitin_similarity_percent: float = 12.5,
+        sks_conversion: int = 4
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org ScholarlyArticle JSON-LD metadata for student PKM-AI scientific articles,
+        including academic journal scope, Belmawa incentive grant attribution, and Turnitin clearance.
+        """
+        data: Dict[str, Any] = {
+            "@context": "https://schema.org",
+            "@type": "ScholarlyArticle",
+            "headline": headline.strip(),
+            "name": headline.strip(),
+            "description": abstract.strip(),
+            "inLanguage": "id-ID",
+            "datePublished": published_date.strip(),
+            "author": {
+                "@type": "Person",
+                "name": author.strip(),
+                "affiliation": {
+                    "@type": "EducationalOrganization",
+                    "name": "Telkom University Purwokerto",
+                    "department": "S1 Teknik Telekomunikasi"
+                }
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Belmawa Kemendikbudristek",
+                "url": "https://simbelmawa.kemdikbud.go.id"
+            },
+            "about": {
+                "@type": "Thing",
+                "name": journal_scope.strip()
+            },
+            "educationalCredentialAwarded": f"{int(sks_conversion)} SKS MBKM Equivalency",
+            "award": "Insentif Nasional PKM-AI Belmawa Kemdikbud"
+        }
+        if url:
+            data["url"] = url.strip()
+        data["comment"] = f"Turnitin Similarity Clearance: {float(turnitin_similarity_percent):.1f}%"
+        return data
+
+    @staticmethod
     def to_mintlify_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+
         """
         Exports editorial article to Mintlify documentation MDX format with YAML frontmatter,
         <Info> callout, and <CardGroup> metadata representation.
