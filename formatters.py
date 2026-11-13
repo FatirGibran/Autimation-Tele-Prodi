@@ -1993,6 +1993,38 @@ class TelegramFormatter:
             f"🚀 *Selamat atas perolehan apresiasi gagasan visioner Indonesia Emas 2045 dan SDGs tingkat nasional!*"
         )
 
+    @staticmethod
+    def format_nr_pdcch_capacity_telegram(
+        cell_id: str,
+        coreset_id: int,
+        frequency_domain_rbs: int,
+        coreset_duration_symbols: int,
+        cce_aggregation_level: int,
+        total_cces: int,
+        max_dci_grants: int,
+        scheduled_ues_count: int,
+        utilization_percent: float,
+        is_blocked: bool,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a 5G NR PDCCH CCE aggregation capacity and DCI scheduling bulletin for Telegram.
+        """
+        portal_link = f"\n🔗 **OSS NOC Tele:** {portal_url.strip()}" if portal_url else ""
+        blocking_str = "TERBLOKIR" if is_blocked else "NORMAL"
+        return (
+            f"📡 **Telemetri Kapasitas Kanal Kontrol 5G NR PDCCH & CCE (3GPP TS 38.211)**\n\n"
+            f"📍 **Cell ID / Sektor:** `{cell_id.strip()}`\n"
+            f"⚡ **CORESET ID:** `{int(coreset_id)}` (`{int(frequency_domain_rbs)} PRB &bull; {int(coreset_duration_symbols)} Simbol`)\n"
+            f"🔢 **Kapasitas CCE:** `{int(total_cces)} CCE` (`Max {int(max_dci_grants)} DCI Grants @ AL-{int(cce_aggregation_level)}`)\n"
+            f"👥 **UE Terjadwal:** `{int(scheduled_ues_count)} UE`\n"
+            f"📊 **Utilitas Sumber Daya:** `{float(utilization_percent):.1f}%` (`Status Blocking: {blocking_str}`)\n"
+            f"🌟 **Kategori Status:** `{status.strip()}`{portal_link}\n\n"
+            f"🚀 *Manajemen penjadwalan DCI kanal kontrol gNodeB terpantau aktif demi efisiensi spektrum NR.*"
+        )
+
+
 
 
 
