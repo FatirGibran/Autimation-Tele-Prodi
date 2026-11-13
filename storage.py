@@ -1706,6 +1706,26 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_pdcch_cell ON nr_pdcch_records(cell_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_ai_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_author TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    article_title TEXT NOT NULL,
+                    journal_scope TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    grade_point REAL NOT NULL,
+                    award_status TEXT NOT NULL,
+                    incentive_amount_idr INTEGER NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    has_turnitin_clearance INTEGER NOT NULL DEFAULT 1,
+                    is_incentive_awarded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_ai_nim ON pkm_ai_proposal_records(nim);")
+
 
 
 
@@ -7714,6 +7734,64 @@ class StorageManager:
     record_nr_pdcch = save_nr_pdcch_record
     list_nr_pdcch = list_nr_pdcch_records
     get_nr_pdcch_by_id = get_nr_pdcch_record_by_id
+
+    def save_pkm_ai_proposal(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a Belmawa PKM-AI (Artikel Ilmiah) scientific publication evaluation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_ai_proposal_records (
+                    student_author, nim, article_title, journal_scope,
+                    composite_score, letter_grade, grade_point, award_status,
+                    incentive_amount_idr, converted_sks, has_turnitin_clearance,
+                    is_incentive_awarded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("student_author", "Mahasiswa Telkom Purwokerto")).strip(),
+                str(d.get("nim", "")).strip(),
+                str(d.get("article_title", "Artikel Ilmiah Telekomunikasi")).strip(),
+                str(d.get("journal_scope", "Sistem Telekomunikasi")).strip(),
+                float(d.get("composite_score", 0.0)),
+                str(d.get("letter_grade", "C")).strip(),
+                float(d.get("grade_point", 2.0)),
+                str(d.get("award_status", "Belum Lolos Insentif Nasional")).strip(),
+                int(d.get("incentive_amount_idr", 0)),
+                int(d.get("converted_sks", 2)),
+                1 if d.get("has_turnitin_clearance", True) else 0,
+                1 if d.get("is_incentive_awarded", False) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_ai_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent PKM-AI article evaluation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_ai_proposal_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_ai_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single PKM-AI article evaluation record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_ai_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_pkm_ai_proposal = save_pkm_ai_proposal
+    list_pkm_ai_proposals_alias = list_pkm_ai_proposals
+    get_pkm_ai_proposal_by_id_alias = get_pkm_ai_proposal_by_id
+
 
 
 
