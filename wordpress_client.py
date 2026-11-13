@@ -1491,6 +1491,40 @@ class WordPressClient:
             logger.warning(f"Failed to fetch posts by taxonomies: {e}")
             return []
 
+    def batch_update_post_featured_media(
+        self,
+        post_media_map: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Batch updates featured media IDs for multiple WordPress posts via POST /wp/v2/posts/{id}.
+        Each item in post_media_map should contain 'id' (or 'post_id') and 'featured_media'.
+        """
+        updated = []
+        failed = []
+
+        for item in post_media_map:
+            pid = item.get("id") or item.get("post_id")
+            media_id = item.get("featured_media")
+            if not pid or media_id is None:
+                continue
+
+            try:
+                endpoint = f"{self.api_url}/posts/{int(pid)}"
+                payload = {"featured_media": int(media_id)}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(pid))
+            except Exception as e:
+                failed.append({"post_id": int(pid), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(post_media_map)
+        }
+
+
 
 
 
