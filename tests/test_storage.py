@@ -3192,6 +3192,95 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["nim"], "1101210088")
         self.assertIsNone(self.storage.get_pkm_gft_proposal_by_id(99999))
 
+    def test_fso_link_storage(self):
+        rec_id = self.storage.record_fso_link(
+            link_identifier="FSO-PWT-CAMPUS-01",
+            link_distance_km=1.5,
+            wavelength_nm=1550.0,
+            tx_power_dbm=10.0,
+            rx_sensitivity_dbm=-30.0,
+            tx_aperture_diameter_m=0.1,
+            rx_aperture_diameter_m=0.2,
+            beam_divergence_mrad=1.0,
+            visibility_km=2.0,
+            attenuation_coefficient_db_per_km=3.25,
+            atmospheric_attenuation_db=4.88,
+            geometrical_loss_db=14.5,
+            total_path_loss_db=19.38,
+            received_power_dbm=-18.5,
+            link_margin_db=11.5,
+            is_link_viable=True,
+            status_category="ROBUST_FSO_LINK",
+            recommendation="Link FSO stabil dan andal."
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_fso_links()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["link_identifier"], "FSO-PWT-CAMPUS-01")
+        self.assertAlmostEqual(items[0]["link_margin_db"], 11.5)
+
+        single = self.storage.get_fso_link_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["link_identifier"], "FSO-PWT-CAMPUS-01")
+        self.assertIsNone(self.storage.get_fso_link_by_id(99999))
+
+    def test_nr_pdcch_storage(self):
+        rec_id = self.storage.record_nr_pdcch(
+            cell_id="gNB-PWT-01-SecA",
+            coreset_id=1,
+            frequency_domain_rbs=48,
+            coreset_duration_symbols=2,
+            cce_aggregation_level=4,
+            subcarrier_spacing_khz=30,
+            total_regs=96,
+            total_cces=16,
+            max_dci_grants=4,
+            scheduled_ues_count=4,
+            cces_required=16,
+            utilization_percent=100.0,
+            is_blocked=False,
+            max_blind_decoding_candidates=4,
+            status_category="OPTIMAL_CAPACITY",
+            recommendation="Kapasitas CCE lapang."
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_pdcch()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cell_id"], "gNB-PWT-01-SecA")
+        self.assertEqual(items[0]["total_cces"], 16)
+
+        single = self.storage.get_nr_pdcch_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["coreset_id"], 1)
+        self.assertIsNone(self.storage.get_nr_pdcch_by_id(99999))
+
+    def test_pkm_ai_proposal_storage(self):
+        rec_id = self.storage.record_pkm_ai_proposal(
+            student_author="Fauzan Fadhil",
+            nim="1101210099",
+            article_title="Analisis Performansi Algoritma Beamforming Hybrid Massive MIMO 5G Sub-6 GHz",
+            journal_scope="Sistem Telekomunikasi & Jaringan Nirkabel",
+            composite_score=89.2,
+            letter_grade="A",
+            grade_point=4.0,
+            award_status="Lolos Insentif Nasional PKM-AI Belmawa Publikasi Unggulan",
+            incentive_amount_idr=3000000,
+            converted_sks=4,
+            has_turnitin_clearance=True,
+            is_incentive_awarded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_ai_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_author"], "Fauzan Fadhil")
+        self.assertEqual(items[0]["incentive_amount_idr"], 3000000)
+
+        single = self.storage.get_pkm_ai_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["nim"], "1101210099")
+        self.assertIsNone(self.storage.get_pkm_ai_proposal_by_id(99999))
+
+
 
 if __name__ == "__main__":
     unittest.main()
