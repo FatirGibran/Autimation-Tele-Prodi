@@ -63,8 +63,12 @@ from parser import (
     parse_pkm_rsh_proposal_evaluation,
     calculate_optical_pmd_dgd_penalty,
     calculate_5g_nr_prach_link_budget_and_capacity,
-    parse_pkm_gft_proposal_evaluation
+    parse_pkm_gft_proposal_evaluation,
+    calculate_fso_optical_atmospheric_link_budget,
+    calculate_5g_nr_pdcch_cce_capacity,
+    parse_pkm_ai_proposal_evaluation
 )
+
 from seo_validator import YoastSEOValidator
 from sanitizer import HTMLSanitizer
 from storage import StorageManager
@@ -3750,6 +3754,157 @@ def cmd_pkmgft(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['futuristic_theme'][:20]:<22} | {r['composite_score']:<6.2f} | {award_str} ({r['letter_grade']})")
 
 
+def cmd_fsolink(args):
+    if args.action == "add":
+        link_id = args.link_id or "FSO-LINK-01"
+        dist = float(args.distance) if args.distance is not None else 1.0
+        wlen = float(args.wavelength) if args.wavelength is not None else 1550.0
+        tx_pwr = float(args.tx_power) if args.tx_power is not None else 10.0
+        rx_sens = float(args.rx_sens) if args.rx_sens is not None else -30.0
+        vis = float(args.visibility) if args.visibility is not None else 2.0
+
+        res = calculate_fso_optical_atmospheric_link_budget(
+            link_distance_km=dist,
+            wavelength_nm=wlen,
+            tx_power_dbm=tx_pwr,
+            rx_sensitivity_dbm=rx_sens,
+            visibility_km=vis
+        )
+        rec_id = storage.record_fso_link(
+            link_identifier=link_id,
+            link_distance_km=dist,
+            wavelength_nm=wlen,
+            tx_power_dbm=tx_pwr,
+            rx_sensitivity_dbm=rx_sens,
+            tx_aperture_diameter_m=0.1,
+            rx_aperture_diameter_m=res["rx_aperture_diameter_cm"] / 100.0,
+            beam_divergence_mrad=res["tx_beam_divergence_mrad"],
+            visibility_km=vis,
+            attenuation_coefficient_db_per_km=res["attenuation_coefficient_db_per_km"],
+            atmospheric_attenuation_db=res["atmospheric_loss_db"],
+            geometrical_loss_db=res["geometrical_loss_db"],
+            total_path_loss_db=res["atmospheric_loss_db"] + res["geometrical_loss_db"],
+            received_power_dbm=res["received_power_dbm"],
+            link_margin_db=res["link_margin_db"],
+            is_link_viable=res["is_link_viable"],
+            status_category=res["status_category"],
+            recommendation=res["recommendation"]
+        )
+        print(f"Catatan Link FSO berhasil disimpan dengan ID: {rec_id} (Link: {link_id}, Margin: {res['link_margin_db']} dB, Daya Terima: {res['received_power_dbm']} dBm, Status: {res['status_category']})")
+    else:
+        records = storage.list_fso_links(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan link FSO yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'LINK ID':<16} | {'JARAK':<8} | {'REDAMAN':<10} | {'MARGIN':<10} | {'STATUS'}")
+        print("-" * 72)
+        for r in records:
+            print(f"{r['id']:<4} | {r['link_identifier']:<16} | {r['link_distance_km']:<8.2f} | {r['attenuation_coefficient_db_per_km']:<10.2f} | {r['link_margin_db']:<10.2f} | {r['status_category']}")
+
+
+
+def cmd_nrpdcch(args):
+    if args.action == "add":
+        cell_id = args.cell or "gNB-Cell-01"
+        cid = int(args.coreset_id) if args.coreset_id is not None else 1
+        rbs = int(args.rbs) if args.rbs is not None else 48
+        duration = int(args.duration) if args.duration is not None else 2
+        al = int(args.aggregation) if args.aggregation is not None else 4
+        scs = int(args.scs) if args.scs is not None else 30
+        ues = int(args.ues) if args.ues is not None else 4
+
+        res = calculate_5g_nr_pdcch_cce_capacity(
+            coreset_id=cid,
+            frequency_domain_rbs=rbs,
+            coreset_duration_symbols=duration,
+            cce_aggregation_level=al,
+            subcarrier_spacing_khz=scs,
+            scheduled_ues_count=ues
+        )
+        rec_id = storage.record_nr_pdcch(
+            cell_id=cell_id,
+            coreset_id=cid,
+            frequency_domain_rbs=res["frequency_domain_rbs"],
+            coreset_duration_symbols=duration,
+            cce_aggregation_level=al,
+            subcarrier_spacing_khz=scs,
+            total_regs=res["total_regs"],
+            total_cces=res["total_cces"],
+            max_dci_grants=res["max_dci_grants"],
+            scheduled_ues_count=ues,
+            cces_required=res["cces_required"],
+            utilization_percent=res["utilization_percent"],
+            is_blocked=res["is_blocked"],
+            max_blind_decoding_candidates=res["max_blind_decoding_candidates"],
+            status_category=res["status_category"],
+            recommendation=res["recommendation"]
+        )
+        print(f"Catatan Kapasitas PDCCH berhasil disimpan dengan ID: {rec_id} (Cell: {cell_id}, CCE: {res['total_cces']}, Max DCI: {res['max_dci_grants']}, Utilitas: {res['utilization_percent']}%, Status: {res['status_category']})")
+    else:
+        records = storage.list_nr_pdcch(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan kapasitas PDCCH yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CELL ID':<14} | {'CORESET':<8} | {'CCE':<8} | {'UTIL':<8} | {'STATUS'}")
+        print("-" * 65)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cell_id']:<14} | {r['coreset_id']:<8} | {r['total_cces']:<8} | {r['utilization_percent']:<8.1f} | {r['status_category']}")
+
+
+def cmd_pkmai(args):
+    if args.action == "add":
+        author = args.author or "Mahasiswa Telkom Purwokerto"
+        nim = args.nim or "1101210099"
+        title = args.title or "Artikel Ilmiah Telekomunikasi"
+        scope = args.scope or "Sistem Telekomunikasi"
+        abs_score = float(args.abstract) if args.abstract is not None else 85.0
+        intro_score = float(args.intro) if args.intro is not None else 85.0
+        meth_score = float(args.method) if args.method is not None else 85.0
+        res_score = float(args.results) if args.results is not None else 85.0
+        conc_score = float(args.conclusion) if args.conclusion is not None else 85.0
+        has_turnitin = not args.no_turnitin
+
+        res = parse_pkm_ai_proposal_evaluation({
+            "student_author": author,
+            "nim": nim,
+            "article_title": title,
+            "journal_scope": scope,
+            "abstract_title_score": abs_score,
+            "introduction_state_of_art_score": intro_score,
+            "methodology_experiment_score": meth_score,
+            "results_discussion_depth_score": res_score,
+            "conclusion_reference_format_score": conc_score,
+            "has_turnitin_clearance": has_turnitin
+        })
+        rec_id = storage.record_pkm_ai_proposal(
+            student_author=author,
+            nim=nim,
+            article_title=title,
+            journal_scope=scope,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            grade_point=res["grade_point"],
+            award_status=res["award_status"],
+            incentive_amount_idr=res["incentive_amount_idr"],
+            converted_sks=res["converted_sks"],
+            has_turnitin_clearance=res["has_turnitin_clearance"],
+            is_incentive_awarded=res["is_incentive_awarded"]
+        )
+        status_label = "LOLOS_INSENTIF" if res["is_incentive_awarded"] else "TIDAK_LOLOS"
+        print(f"Catatan Evaluasi PKM-AI berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Insentif: Rp {res['incentive_amount_idr']:,}, SKS: {res['converted_sks']})")
+    else:
+        records = storage.list_pkm_ai_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan artikel PKM-AI yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'PENULIS':<18} | {'NIM':<12} | {'RUMPUN':<22} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            award_str = "Insentif" if r.get("is_incentive_awarded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_author'][:16]:<18} | {r['nim']:<12} | {r['journal_scope'][:20]:<22} | {r['composite_score']:<6.2f} | {award_str} ({r['letter_grade']})")
+
+
+
 def main():
 
 
@@ -5024,7 +5179,49 @@ def main():
     pkmgft_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmgft_parser.set_defaults(func=cmd_pkmgft)
 
+    # FSO Link Budget command
+    fsolink_parser = subparsers.add_parser("fsolink", help="Kelola perhitungan link budget Free Space Optics (list, add)")
+    fsolink_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan link FSO")
+    fsolink_parser.add_argument("--link-id", default="FSO-LINK-01", help="Identifikasi link FSO")
+    fsolink_parser.add_argument("--distance", type=float, default=1.0, help="Jarak link FSO (km)")
+    fsolink_parser.add_argument("--wavelength", type=float, default=1550.0, help="Panjang gelombang optik (nm)")
+    fsolink_parser.add_argument("--tx-power", type=float, default=10.0, help="Daya pancar laser transmitter (dBm)")
+    fsolink_parser.add_argument("--rx-sens", type=float, default=-30.0, help="Sensitivitas receiver fotodioda (dBm)")
+    fsolink_parser.add_argument("--visibility", type=float, default=2.0, help="Visibilitas atmosfer kabut (km)")
+    fsolink_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    fsolink_parser.set_defaults(func=cmd_fsolink)
+
+    # 5G NR PDCCH Capacity command
+    nrpdcch_parser = subparsers.add_parser("nrpdcch", help="Kelola evaluasi kapasitas kanal kontrol 5G NR PDCCH & CCE (list, add)")
+    nrpdcch_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PDCCH CCE")
+    nrpdcch_parser.add_argument("--cell", default="gNB-Cell-01", help="ID sel atau sektor gNodeB")
+    nrpdcch_parser.add_argument("--coreset-id", type=int, default=1, help="ID CORESET (0-11)")
+    nrpdcch_parser.add_argument("--rbs", type=int, default=48, help="Bandwidth frekuensi PRB CORESET")
+    nrpdcch_parser.add_argument("--duration", type=int, default=2, help="Durasi simbol OFDM CORESET (1-3)")
+    nrpdcch_parser.add_argument("--aggregation", type=int, default=4, help="Level agregasi CCE (1, 2, 4, 8, 16)")
+    nrpdcch_parser.add_argument("--scs", type=int, default=30, help="Subcarrier Spacing SCS (kHz)")
+    nrpdcch_parser.add_argument("--ues", type=int, default=4, help="Jumlah UE yang dijadwalkan secara simultan")
+    nrpdcch_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrpdcch_parser.set_defaults(func=cmd_nrpdcch)
+
+    # PKM-AI Scientific Article command
+    pkmai_parser = subparsers.add_parser("pkmai", help="Kelola evaluasi artikel ilmiah Belmawa PKM-AI (list, add)")
+    pkmai_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-AI")
+    pkmai_parser.add_argument("--author", default="Fauzan Fadhil", help="Nama mahasiswa penulis utama")
+    pkmai_parser.add_argument("--nim", default="1101210099", help="NIM penulis utama")
+    pkmai_parser.add_argument("--title", default="Analisis Performansi Beamforming 5G", help="Judul artikel ilmiah")
+    pkmai_parser.add_argument("--scope", default="Sistem Telekomunikasi", help="Rumpun keilmuan jurnal")
+    pkmai_parser.add_argument("--abstract", type=float, default=90.0, help="Skor judul dan abstrak (0-100)")
+    pkmai_parser.add_argument("--intro", type=float, default=85.0, help="Skor pendahuluan & state of the art (0-100)")
+    pkmai_parser.add_argument("--method", type=float, default=85.0, help="Skor metodologi & rekayasa eksperimen (0-100)")
+    pkmai_parser.add_argument("--results", type=float, default=85.0, help="Skor kedalaman pembahasan hasil (0-100)")
+    pkmai_parser.add_argument("--conclusion", type=float, default=85.0, help="Skor kesimpulan & format sitasi (0-100)")
+    pkmai_parser.add_argument("--no-turnitin", action="store_true", help="Tandai jika tidak lolos uji Turnitin")
+    pkmai_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmai_parser.set_defaults(func=cmd_pkmai)
+
     args = parser.parse_args()
+
 
 
 
