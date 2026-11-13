@@ -2951,6 +2951,36 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def to_vocs_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial article to Vocs MDX documentation format with YAML frontmatter,
+        :::info callout admonitions, and clean technical documentation blocks.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f"tags: [{tags_yaml}]",
+            'layout: "docs"',
+            "---",
+            "",
+            ":::info",
+            f"{desc}",
+            ":::",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
+
 
 
 
