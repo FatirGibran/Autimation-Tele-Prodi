@@ -8850,6 +8850,69 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_pdcch_coreset_cce_svg(
+        cls,
+        title: str = "Struktur Kisi Sumber Daya 5G NR PDCCH CORESET & CCE",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders a responsive inline SVG illustrating 5G NR PDCCH CORESET time-frequency resource grid,
+        showing Resource Element Groups (REG = 1 PRB x 1 symbol) grouped into Control Channel Elements (CCE = 6 REGs)
+        and CCE aggregation levels under 3GPP TS 38.211.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        cid = int(d.get("coreset_id", 1))
+        rbs = int(d.get("frequency_domain_rbs", 48))
+        syms = int(d.get("coreset_duration_symbols", 2))
+        agg_level = int(d.get("cce_aggregation_level", 4))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        total_cces = int(d.get("total_cces", 16))
+
+        return f"""    <div class="tu-nr-pdcch-svg-container" style="margin: 20px 0; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+      <h5 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 14px; font-weight: 600;">{title}</h5>
+      <div style="width: 100%; overflow-x: auto;">
+        <svg viewBox="0 0 760 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg" style="display: block; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+          <!-- Grid Background & Guides -->
+          <line x1="40" y1="30" x2="720" y2="30" stroke="#334155" stroke-dasharray="4,4" />
+          <line x1="40" y1="110" x2="720" y2="110" stroke="#334155" stroke-dasharray="4,4" />
+
+          <!-- CCE Bundle 0 (REG 0..5) -->
+          <rect x="50" y="40" width="155" height="55" rx="4" fill="#7c3aed" opacity="0.9" />
+          <text x="127" y="65" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">CCE #0 (6 REGs)</text>
+          <text x="127" y="82" fill="#ddd6fe" font-size="10" text-anchor="middle">72 Resource Elements</text>
+
+          <!-- CCE Bundle 1 (REG 6..11) -->
+          <rect x="215" y="40" width="155" height="55" rx="4" fill="#2563eb" opacity="0.9" />
+          <text x="292" y="65" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">CCE #1 (6 REGs)</text>
+          <text x="292" y="82" fill="#bfdbfe" font-size="10" text-anchor="middle">Interleaved / Non-interleaved</text>
+
+          <!-- CCE Bundle 2..N -->
+          <rect x="380" y="40" width="155" height="55" rx="4" fill="#0d9488" opacity="0.9" />
+          <text x="457" y="65" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">CCE #2 (6 REGs)</text>
+          <text x="457" y="82" fill="#ccfbf1" font-size="10" text-anchor="middle">DCI Search Space</text>
+
+          <!-- Aggregation Level Bracket -->
+          <rect x="545" y="40" width="165" height="55" rx="4" fill="#d97706" opacity="0.9" />
+          <text x="627" y="65" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">Aggregation Level {agg_level}</text>
+          <text x="627" y="82" fill="#fef3c7" font-size="10" text-anchor="middle">Blind Decoding Candidate</text>
+
+          <!-- Timeline Indicator -->
+          <path d="M 50 125 L 710 125" stroke="#94a3b8" stroke-width="1.5" />
+          <line x1="50" y1="120" x2="50" y2="130" stroke="#94a3b8" stroke-width="1.5" />
+          <line x1="710" y1="120" x2="710" y2="130" stroke="#94a3b8" stroke-width="1.5" />
+          <text x="380" y="145" fill="#cbd5e1" font-size="11" text-anchor="middle">CORESET Bandwidth: {rbs} PRBs &bull; Durasi: {syms} Simbol OFDM (SCS {scs} kHz)</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>CORESET: <strong style="color: #a78bfa;">ID {cid}</strong></div>
+        <div>Total CCE: <strong style="color: #60a5fa;">{total_cces} CCE</strong></div>
+        <div>Agregasi: <strong style="color: #fbbf24;">Level {agg_level}</strong></div>
+      </div>
+    </div>"""
+
 
 
 
@@ -8901,6 +8964,8 @@ render_fso_optical_link_card = EditorialComponents.render_fso_optical_link_card
 render_5g_nr_pdcch_cce_capacity_card = EditorialComponents.render_5g_nr_pdcch_cce_capacity_card
 render_satellite_earth_station_antenna_pattern_card = EditorialComponents.render_satellite_earth_station_antenna_pattern_card
 render_pkm_ai_card = EditorialComponents.render_pkm_ai_card
+render_5g_nr_pdcch_coreset_cce_svg = EditorialComponents.render_5g_nr_pdcch_coreset_cce_svg
+
 
 
 
