@@ -1400,6 +1400,52 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("4 SKS Diakui", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/gft/88", msg)
 
+    def test_format_nr_pdcch_capacity_telegram(self):
+        msg = TelegramFormatter.format_nr_pdcch_capacity_telegram(
+            cell_id="gNB-PWT-01-SecA",
+            coreset_id=1,
+            frequency_domain_rbs=48,
+            coreset_duration_symbols=2,
+            cce_aggregation_level=4,
+            total_cces=16,
+            max_dci_grants=4,
+            scheduled_ues_count=4,
+            utilization_percent=100.0,
+            is_blocked=False,
+            status="OPTIMAL_CAPACITY",
+            portal_url="https://noc.telkomuniversity.ac.id/nr/pdcch"
+        )
+        self.assertIn("Kapasitas Kanal Kontrol 5G NR PDCCH & CCE", msg)
+        self.assertIn("gNB-PWT-01-SecA", msg)
+        self.assertIn("CORESET ID:** `1`", msg)
+        self.assertIn("16 CCE", msg)
+        self.assertIn("4 DCI Grants @ AL-4", msg)
+        self.assertIn("https://noc.telkomuniversity.ac.id/nr/pdcch", msg)
+
+    def test_format_pkm_ai_proposal_telegram(self):
+        msg = TelegramFormatter.format_pkm_ai_proposal_telegram(
+            student_author="Fauzan Fadhil",
+            nim="1101210099",
+            article_title="Analisis Performansi Algoritma Beamforming Hybrid Massive MIMO 5G Sub-6 GHz",
+            journal_scope="Sistem Telekomunikasi & Jaringan Nirkabel",
+            composite_score=89.2,
+            letter_grade="A",
+            award_status="Lolos Insentif Nasional PKM-AI Belmawa Publikasi Unggulan",
+            incentive_amount_idr=3000000,
+            converted_sks=4,
+            has_turnitin_clearance=True,
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/ai/99"
+        )
+        self.assertIn("Belmawa PKM-AI (Artikel Ilmiah)", msg)
+        self.assertIn("Fauzan Fadhil", msg)
+        self.assertIn("1101210099", msg)
+        self.assertIn("Massive MIMO 5G Sub-6 GHz", msg)
+        self.assertIn("Rp 3,000,000", msg)
+        self.assertIn("4 SKS Diakui", msg)
+        self.assertIn("Lolos Uji Similaritas (< 20%)", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/ai/99", msg)
+
+
 
 class TestCommandRateLimiter(unittest.TestCase):
 
