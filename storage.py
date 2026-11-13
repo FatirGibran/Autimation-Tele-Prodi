@@ -1658,6 +1658,32 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_gft_nim ON pkm_gft_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS fso_link_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_identifier TEXT NOT NULL,
+                    link_distance_km REAL NOT NULL,
+                    wavelength_nm REAL NOT NULL,
+                    tx_power_dbm REAL NOT NULL,
+                    rx_sensitivity_dbm REAL NOT NULL,
+                    tx_aperture_diameter_m REAL NOT NULL,
+                    rx_aperture_diameter_m REAL NOT NULL,
+                    beam_divergence_mrad REAL NOT NULL,
+                    visibility_km REAL NOT NULL,
+                    attenuation_coefficient_db_per_km REAL NOT NULL,
+                    atmospheric_attenuation_db REAL NOT NULL,
+                    geometrical_loss_db REAL NOT NULL,
+                    total_path_loss_db REAL NOT NULL,
+                    received_power_dbm REAL NOT NULL,
+                    link_margin_db REAL NOT NULL,
+                    is_link_viable INTEGER NOT NULL DEFAULT 1,
+                    status_category TEXT NOT NULL,
+                    recommendation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_fso_link_id ON fso_link_records(link_identifier);")
+
 
 
 
@@ -7537,6 +7563,72 @@ class StorageManager:
     record_pkm_gft_proposal = save_pkm_gft_proposal
     list_pkm_gft_proposals_alias = list_pkm_gft_proposals
     get_pkm_gft_proposal_by_id_alias = get_pkm_gft_proposal_by_id
+
+    def save_fso_link_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a Free Space Optics (FSO) atmospheric link budget calculation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO fso_link_records (
+                    link_identifier, link_distance_km, wavelength_nm, tx_power_dbm,
+                    rx_sensitivity_dbm, tx_aperture_diameter_m, rx_aperture_diameter_m,
+                    beam_divergence_mrad, visibility_km, attenuation_coefficient_db_per_km,
+                    atmospheric_attenuation_db, geometrical_loss_db, total_path_loss_db,
+                    received_power_dbm, link_margin_db, is_link_viable,
+                    status_category, recommendation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("link_identifier", "FSO-DEFAULT-LINK")).strip(),
+                float(d.get("link_distance_km", 1.0)),
+                float(d.get("wavelength_nm", 1550.0)),
+                float(d.get("tx_power_dbm", 10.0)),
+                float(d.get("rx_sensitivity_dbm", -30.0)),
+                float(d.get("tx_aperture_diameter_m", 0.1)),
+                float(d.get("rx_aperture_diameter_m", 0.2)),
+                float(d.get("beam_divergence_mrad", 1.0)),
+                float(d.get("visibility_km", 2.0)),
+                float(d.get("attenuation_coefficient_db_per_km", 3.25)),
+                float(d.get("atmospheric_attenuation_db", 3.25)),
+                float(d.get("geometrical_loss_db", 14.5)),
+                float(d.get("total_path_loss_db", 17.75)),
+                float(d.get("received_power_dbm", -20.25)),
+                float(d.get("link_margin_db", 9.75)),
+                1 if d.get("is_link_viable", True) else 0,
+                str(d.get("status_category", "ROBUST_FSO_LINK")).strip(),
+                str(d.get("recommendation", "")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_fso_link_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent FSO link calculation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM fso_link_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_fso_link_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single FSO link record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM fso_link_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_fso_link = save_fso_link_record
+    list_fso_links = list_fso_link_records
+    get_fso_link_by_id = get_fso_link_record_by_id
+
 
 
 
