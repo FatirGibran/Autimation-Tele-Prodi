@@ -3208,6 +3208,109 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("Zadoff-Chu Preamble Sequence", html)
         self.assertIn("Guard Time (T_GT)", html)
 
+    def test_render_fso_optical_link_card(self):
+        html = EditorialComponents.render_fso_optical_link_card(
+            data={
+                "link_distance_km": 1.5,
+                "wavelength_nm": 1550.0,
+                "visibility_km": 2.0,
+                "attenuation_coefficient_db_per_km": 3.25,
+                "geometrical_loss_db": 14.5,
+                "received_power_dbm": -18.5,
+                "link_margin_db": 11.5,
+                "status_category": "ROBUST_FSO_LINK",
+                "recommendation": "Margin transmisi optik ruang bebas aman terhadap redaman kabut tebal."
+            }
+        )
+        self.assertIn("tu-fso-link-card", html)
+        self.assertIn("1.50 km", html)
+        self.assertIn("1550 nm", html)
+        self.assertIn("3.25 dB/km", html)
+        self.assertIn("+11.50 dB", html)
+
+    def test_render_5g_nr_pdcch_cce_capacity_card(self):
+        html = EditorialComponents.render_5g_nr_pdcch_cce_capacity_card(
+            data={
+                "coreset_id": 1,
+                "frequency_domain_rbs": 48,
+                "coreset_duration_symbols": 2,
+                "cce_aggregation_level": 4,
+                "subcarrier_spacing_khz": 30,
+                "total_cces": 16,
+                "max_dci_grants": 4,
+                "scheduled_ues_count": 4,
+                "utilization_percent": 100.0,
+                "is_blocked": False,
+                "status_category": "OPTIMAL_CAPACITY",
+                "recommendation": "Kapasitas CCE lapang."
+            }
+        )
+        self.assertIn("elementor-telecom-card nr-pdcch-cce", html)
+        self.assertIn("CORESET ID: <strong>1</strong>", html)
+        self.assertIn("48 PRB (2 Simbol)", html)
+        self.assertIn("16 CCE", html)
+        self.assertIn("4 Hibah", html)
+
+    def test_render_satellite_earth_station_antenna_pattern_card(self):
+        html = EditorialComponents.render_satellite_earth_station_antenna_pattern_card(
+            data={
+                "antenna_diameter_m": 3.0,
+                "carrier_frequency_ghz": 14.2,
+                "d_over_lambda": 142.1,
+                "boresight_gain_dbi": 50.8,
+                "half_power_beamwidth_deg": 0.493,
+                "off_axis_angle_deg": 2.5,
+                "envelope_gain_dbi": 19.05,
+                "sidelobe_suppression_db": 31.75,
+                "status_category": "COMPLIANT",
+                "recommendation": "Memenuhi batas desain radiasi ITU-R S.580."
+            }
+        )
+        self.assertIn("elementor-telecom-card sat-antenna-pattern", html)
+        self.assertIn("3.00 m", html)
+        self.assertIn("14.20 GHz", html)
+        self.assertIn("50.80 dBi", html)
+        self.assertIn("31.75 dB", html)
+
+    def test_render_pkm_ai_card(self):
+        html = EditorialComponents.render_pkm_ai_card(
+            data={
+                "student_author": "Fauzan Fadhil",
+                "nim": "1101210099",
+                "article_title": "Analisis Performansi Algoritma Beamforming Hybrid Massive MIMO 5G Sub-6 GHz",
+                "journal_scope": "Sistem Telekomunikasi & Jaringan Nirkabel",
+                "composite_score": 89.2,
+                "letter_grade": "A",
+                "award_status": "Lolos Insentif Nasional PKM-AI Belmawa Publikasi Unggulan",
+                "incentive_amount_idr": 3000000,
+                "converted_sks": 4,
+                "has_turnitin_clearance": True,
+                "is_incentive_awarded": True
+            }
+        )
+        self.assertIn("tu-pkm-ai-card", html)
+        self.assertIn("Fauzan Fadhil", html)
+        self.assertIn("Massive MIMO 5G", html)
+        self.assertIn("3,000,000", html)
+        self.assertIn("4 SKS", html)
+
+    def test_render_5g_nr_pdcch_coreset_cce_svg(self):
+        html = EditorialComponents.render_5g_nr_pdcch_coreset_cce_svg(
+            data={
+                "coreset_id": 1,
+                "frequency_domain_rbs": 48,
+                "coreset_duration_symbols": 2,
+                "cce_aggregation_level": 4,
+                "subcarrier_spacing_khz": 30,
+                "total_cces": 16
+            }
+        )
+        self.assertIn("tu-nr-pdcch-svg-container", html)
+        self.assertIn("<svg", html)
+        self.assertIn("CCE #0 (6 REGs)", html)
+        self.assertIn("Aggregation Level 4", html)
+
+
 
 if __name__ == "__main__":
     unittest.main()
