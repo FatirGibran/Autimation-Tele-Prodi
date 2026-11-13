@@ -2024,6 +2024,39 @@ class TelegramFormatter:
             f"🚀 *Manajemen penjadwalan DCI kanal kontrol gNodeB terpantau aktif demi efisiensi spektrum NR.*"
         )
 
+    @staticmethod
+    def format_pkm_ai_proposal_telegram(
+        student_author: str,
+        nim: str,
+        article_title: str,
+        journal_scope: str,
+        composite_score: float,
+        letter_grade: str,
+        award_status: str,
+        incentive_amount_idr: int,
+        converted_sks: int,
+        has_turnitin_clearance: bool = True,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Artikel Ilmiah (PKM-AI) scientific publication award card for Telegram.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        turnitin_str = "Lolos Uji Similaritas (< 20%)" if has_turnitin_clearance else "Penalti Similaritas Tinggi"
+        return (
+            f"📑 **Pengumuman Kelulusan Insentif Belmawa PKM-AI (Artikel Ilmiah)**\n\n"
+            f"📖 **Judul Naskah Artikel Ilmiah:**\n_{article_title.strip()}_\n\n"
+            f"👤 **Penulis Utama:** {student_author.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🌐 **Rumpun Keilmuan:** `{journal_scope.strip()}`\n"
+            f"📈 **Skor Komposit:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"🔍 **Uji Plagiarisme:** `{turnitin_str}`\n"
+            f"🏆 **Insentif Nasional:** `Rp {incentive_amount_idr:,}`\n"
+            f"🎓 **Ekuivalensi MBKM:** `{int(converted_sks)} SKS Diakui`\n"
+            f"🌟 **Status Publikasi:** `{award_status.strip()}`{simbelmawa_link}\n\n"
+            f"🚀 *Selamat atas diterimanya artikel ilmiah dalam seleksi insentif publikasi bereputasi nasional!*"
+        )
+
+
 
 
 
