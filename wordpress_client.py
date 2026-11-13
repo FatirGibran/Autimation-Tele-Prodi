@@ -1457,6 +1457,41 @@ class WordPressClient:
             "total": len(media_alt_map)
         }
 
+    def get_posts_by_taxonomies(
+        self,
+        category_ids: Optional[List[int]] = None,
+        tag_ids: Optional[List[int]] = None,
+        page: int = 1,
+        per_page: int = 10,
+        status: str = "publish"
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress posts filtered by multiple categories and tags with pagination support.
+        """
+        query_params: Dict[str, Any] = {
+            "page": max(1, int(page)),
+            "per_page": max(1, min(100, int(per_page))),
+            "status": str(status).strip() or "publish"
+        }
+        if category_ids:
+            clean_cats = [str(int(c)) for c in category_ids if str(c).isdigit() and int(c) > 0]
+            if clean_cats:
+                query_params["categories"] = ",".join(clean_cats)
+        if tag_ids:
+            clean_tags = [str(int(t)) for t in tag_ids if str(t).isdigit() and int(t) > 0]
+            if clean_tags:
+                query_params["tags"] = ",".join(clean_tags)
+
+        endpoint = f"{self.api_url}/posts?{urllib.parse.urlencode(query_params)}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            results = self._send_request(req)
+            return results if isinstance(results, list) else []
+        except Exception as e:
+            logger.warning(f"Failed to fetch posts by taxonomies: {e}")
+            return []
+
+
 
 
 
