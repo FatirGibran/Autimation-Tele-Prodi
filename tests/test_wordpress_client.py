@@ -1195,6 +1195,39 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_posts_by_taxonomies(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 401, "title": {"rendered": "Post FSO"}}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        posts = self.client.get_posts_by_taxonomies(category_ids=[5, 8], tag_ids=[12, 19], page=2, per_page=15)
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts[0]["id"], 401)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("categories=5%2C8", req.full_url)
+        self.assertIn("tags=12%2C19", req.full_url)
+        self.assertIn("page=2", req.full_url)
+        self.assertIn("per_page=15", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_batch_update_post_featured_media(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"id": 201, "featured_media": 55}'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        updates = [
+            {"id": 201, "featured_media": 55},
+            {"post_id": 202, "featured_media": 56}
+        ]
+        res = self.client.batch_update_post_featured_media(updates)
+        self.assertEqual(res["updated"], [201, 202])
+        self.assertEqual(len(res["failed"]), 0)
+        self.assertEqual(res["total"], 2)
+        self.assertEqual(mock_urlopen.call_count, 2)
+
+
 
 if __name__ == "__main__":
     unittest.main()
