@@ -1683,6 +1683,30 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fso_link_id ON fso_link_records(link_identifier);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_pdcch_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cell_id TEXT NOT NULL,
+                    coreset_id INTEGER NOT NULL,
+                    frequency_domain_rbs INTEGER NOT NULL,
+                    coreset_duration_symbols INTEGER NOT NULL,
+                    cce_aggregation_level INTEGER NOT NULL,
+                    subcarrier_spacing_khz INTEGER NOT NULL,
+                    total_regs INTEGER NOT NULL,
+                    total_cces INTEGER NOT NULL,
+                    max_dci_grants INTEGER NOT NULL,
+                    scheduled_ues_count INTEGER NOT NULL,
+                    cces_required INTEGER NOT NULL,
+                    utilization_percent REAL NOT NULL,
+                    is_blocked INTEGER NOT NULL DEFAULT 0,
+                    max_blind_decoding_candidates INTEGER NOT NULL,
+                    status_category TEXT NOT NULL,
+                    recommendation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_pdcch_cell ON nr_pdcch_records(cell_id);")
+
 
 
 
@@ -7628,6 +7652,69 @@ class StorageManager:
     record_fso_link = save_fso_link_record
     list_fso_links = list_fso_link_records
     get_fso_link_by_id = get_fso_link_record_by_id
+
+    def save_nr_pdcch_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a 5G NR PDCCH CCE aggregation capacity and DCI scheduling record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_pdcch_records (
+                    cell_id, coreset_id, frequency_domain_rbs, coreset_duration_symbols,
+                    cce_aggregation_level, subcarrier_spacing_khz, total_regs, total_cces,
+                    max_dci_grants, scheduled_ues_count, cces_required,
+                    utilization_percent, is_blocked, max_blind_decoding_candidates,
+                    status_category, recommendation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("cell_id", "CELL-5G-01")).strip(),
+                int(d.get("coreset_id", 1)),
+                int(d.get("frequency_domain_rbs", 48)),
+                int(d.get("coreset_duration_symbols", 2)),
+                int(d.get("cce_aggregation_level", 4)),
+                int(d.get("subcarrier_spacing_khz", 30)),
+                int(d.get("total_regs", 96)),
+                int(d.get("total_cces", 16)),
+                int(d.get("max_dci_grants", 4)),
+                int(d.get("scheduled_ues_count", 4)),
+                int(d.get("cces_required", 16)),
+                float(d.get("utilization_percent", 100.0)),
+                1 if d.get("is_blocked", False) else 0,
+                int(d.get("max_blind_decoding_candidates", 4)),
+                str(d.get("status_category", "OPTIMAL_CAPACITY")).strip(),
+                str(d.get("recommendation", "")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_pdcch_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR PDCCH capacity evaluation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_pdcch_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_pdcch_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single 5G NR PDCCH capacity record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_pdcch_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_nr_pdcch = save_nr_pdcch_record
+    list_nr_pdcch = list_nr_pdcch_records
+    get_nr_pdcch_by_id = get_nr_pdcch_record_by_id
+
 
 
 
