@@ -1456,6 +1456,41 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("</Info>", res)
         self.assertIn("<p>Dokumentasi Mintlify MDX.</p>", res)
 
+    def test_generate_scientific_article_publication_json_ld(self):
+        res = ArticleExporter.generate_scientific_article_publication_json_ld(
+            headline="Analisis Performansi Algoritma Beamforming Hybrid Massive MIMO 5G Sub-6 GHz",
+            author="Fauzan Fadhil",
+            journal_scope="Sistem Telekomunikasi & Jaringan Nirkabel",
+            abstract="Evaluasi spectral efficiency dan computational complexity algoritma beamforming.",
+            published_date="2026-11-13",
+            url="https://simbelmawa.kemdikbud.go.id/ai/99",
+            turnitin_similarity_percent=11.2,
+            sks_conversion=4
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "ScholarlyArticle")
+        self.assertIn("Massive MIMO 5G", res["headline"])
+        self.assertEqual(res["author"]["name"], "Fauzan Fadhil")
+        self.assertEqual(res["author"]["affiliation"]["department"], "S1 Teknik Telekomunikasi")
+        self.assertEqual(res["publisher"]["name"], "Belmawa Kemendikbudristek")
+        self.assertIn("4 SKS MBKM Equivalency", res["educationalCredentialAwarded"])
+        self.assertIn("11.2%", res["comment"])
+
+    def test_to_vocs_mdx(self):
+        meta = {
+            "seo_title": "Panduan Arsitektur Vocs MDX",
+            "meta_description": "Dokumentasi modern telekomunikasi berbasis Vocs.",
+            "tags": ["vocs", "wevm", "telecom"]
+        }
+        res = ArticleExporter.to_vocs_mdx(meta, "<p>Dokumentasi Vocs MDX.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Arsitektur Vocs MDX"', res)
+        self.assertIn('layout: "docs"', res)
+        self.assertIn(":::info", res)
+        self.assertIn(":::", res)
+        self.assertIn("<p>Dokumentasi Vocs MDX.</p>", res)
+
+
 
 if __name__ == "__main__":
     unittest.main()
