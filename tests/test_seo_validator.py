@@ -2599,6 +2599,51 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertEqual(res_bad["positive_tabindex_elements"], 2)
 
+    def test_audit_data_table_header_cells(self):
+        html_ok = '<table><tr><th>Mata Kuliah</th><th>SKS</th></tr><tr><td>Jaringan Nirkabel</td><td>3</td></tr></table>'
+        res_ok = YoastSEOValidator.audit_data_table_header_cells(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["tables_without_headers"], 0)
+
+        html_bad = '<table><tr><td>Data 1</td><td>Data 2</td></tr></table>'
+        res_bad = YoastSEOValidator.audit_data_table_header_cells(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["tables_without_headers"], 1)
+
+    def test_audit_touch_target_minimum_dimensions(self):
+        html_ok = '<div><button style="width: 44px; height: 44px;">Aksi</button></div>'
+        res_ok = YoastSEOValidator.audit_touch_target_minimum_dimensions(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["undersized_touch_targets"], 0)
+
+        html_bad = '<div><button style="width: 16px; height: 16px;">x</button></div>'
+        res_bad = YoastSEOValidator.audit_touch_target_minimum_dimensions(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["undersized_touch_targets"], 1)
+
+    def test_audit_landmark_unique_accessible_labels(self):
+        html_ok = '<nav aria-label="Navigasi Utama"><ul><li>Home</li></ul></nav><nav aria-label="Navigasi Footer"><ul><li>About</li></ul></nav>'
+        res_ok = YoastSEOValidator.audit_landmark_unique_accessible_labels(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["duplicate_unlabeled_landmarks"], 0)
+
+        html_bad = '<nav><ul><li>Home</li></ul></nav><nav><ul><li>About</li></ul></nav>'
+        res_bad = YoastSEOValidator.audit_landmark_unique_accessible_labels(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertGreater(res_bad["duplicate_unlabeled_landmarks"], 0)
+
+    def test_audit_flickering_blinking_content_safety(self):
+        html_ok = '<div style="animation: pulse 2s infinite;"><p>Normal</p></div>'
+        res_ok = YoastSEOValidator.audit_flickering_blinking_content_safety(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["flickering_elements"], 0)
+
+        html_bad = '<div style="animation: flash 0.1s infinite;"><blink>Danger</blink></div>'
+        res_bad = YoastSEOValidator.audit_flickering_blinking_content_safety(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertGreater(res_bad["flickering_elements"], 0)
+
+
 
 if __name__ == "__main__":
     unittest.main()
