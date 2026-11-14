@@ -828,7 +828,15 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 dialog modal elements.")
 
+        # 8ar. Sanitize HTML5 declarative shadow dom template elements
+        if "<template" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_shadow_dom_template_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 declarative shadow dom template elements.")
+
         return cleaned, warnings
+
 
 
 
@@ -3197,6 +3205,29 @@ def sanitize_html5_dialog_element_autofocus_trap(html: str) -> str:
 
     cleaned = re.sub(r'<dialog\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_dialog, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_shadow_dom_template_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 Declarative Shadow DOM <template shadowrootmode="..."> elements by stripping
+    declarative shadow roots and unescaped script payloads inside template tags.
+    """
+    if not html or "<template" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_template(m):
+        tag = m.group(0)
+        # Strip shadowrootmode and shadowroot attributes
+        tag = re.sub(r'\s+shadowroot(?:mode)?=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Strip inline event handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<template\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_template, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
