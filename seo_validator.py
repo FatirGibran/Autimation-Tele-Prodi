@@ -8566,6 +8566,63 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_landmark_unique_accessible_labels(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic landmark regions (nav, aside, header, footer, main, region) for unique accessible
+        names when multiple instances of the same landmark role exist on the page (WCAG 2.1 SC 1.3.1 / SC 2.4.1).
+        """
+        if not html_content:
+            return {
+                "total_landmarks": 0,
+                "duplicate_unlabeled_landmarks": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        landmark_tags = ["nav", "aside", "main", "header", "footer"]
+        landmarks_by_type: Dict[str, List[Any]] = {tag: [] for tag in landmark_tags}
+
+        for tag in landmark_tags:
+            for el in soup.find_all(tag):
+                landmarks_by_type[tag].append(el)
+
+        for el in soup.find_all(attrs={"role": True}):
+            r = str(el["role"]).strip().lower()
+            if r == "navigation" and el.name != "nav":
+                landmarks_by_type["nav"].append(el)
+            elif r == "complementary" and el.name != "aside":
+                landmarks_by_type["aside"].append(el)
+
+        issues = []
+        duplicate_count = 0
+        total_found = sum(len(items) for items in landmarks_by_type.values())
+
+        for lm_type, items in landmarks_by_type.items():
+            if len(items) > 1:
+                seen_labels = []
+                for el in items:
+                    lbl = str(el.get("aria-label", "") or el.get("aria-labelledby", "")).strip().lower()
+                    if not lbl:
+                        duplicate_count += 1
+                        issues.append(f"<{lm_type}>: Terdapat {len(items)} landmark '{lm_type}', tetapi salah satunya tidak memiliki 'aria-label' pembeda.")
+                    elif lbl in seen_labels:
+                        duplicate_count += 1
+                        issues.append(f"<{lm_type}>: Memiliki duplikasi aria-label='{lbl}' yang sama dengan landmark '{lm_type}' lain.")
+                    else:
+                        seen_labels.append(lbl)
+
+        is_compliant = duplicate_count == 0
+
+        return {
+            "total_landmarks": total_found,
+            "duplicate_unlabeled_landmarks": duplicate_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
+
 
 
 
