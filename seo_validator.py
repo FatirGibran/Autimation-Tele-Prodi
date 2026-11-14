@@ -8520,6 +8520,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_touch_target_minimum_dimensions(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits interactive controls for minimum touch target dimensions (24x24 CSS pixels)
+        to prevent tap collision errors on touchscreens (WCAG 2.1 SC 2.5.5 / SC 2.5.8).
+        """
+        if not html_content:
+            return {
+                "total_interactive_elements": 0,
+                "undersized_touch_targets": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        controls = soup.find_all(["a", "button", "input"])
+        undersized_count = 0
+        issues = []
+
+        dim_pattern = re.compile(r'\b(?:width|height|min-width|min-height)\s*:\s*(\d+(?:\.\d+)?)\s*px\b', re.IGNORECASE)
+
+        for ctrl in controls:
+            if ctrl.name == "input" and ctrl.get("type", "text").lower() in ("hidden", "text", "search"):
+                continue
+
+            style = str(ctrl.get("style", "")).lower()
+            if not style:
+                continue
+
+            dims = [float(val) for val in dim_pattern.findall(style)]
+            undersized_dims = [d for d in dims if d < 24.0]
+            if undersized_dims:
+                undersized_count += 1
+                label = ctrl.get_text().strip()[:20] or ctrl.get("aria-label", "") or ctrl.name
+                min_dim = min(undersized_dims)
+                issues.append(f"<{ctrl.name}> '{label}': Memiliki dimensi touch target {min_dim:.0f}px (< 24px minimum).")
+
+        is_compliant = undersized_count == 0
+
+        return {
+            "total_interactive_elements": len(controls),
+            "undersized_touch_targets": undersized_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
+
 
 
 
