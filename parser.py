@@ -9802,6 +9802,82 @@ def calculate_satellite_faraday_rotation_itu_r_p531(
     }
 
 
+def parse_pkm_k_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates PKM Kewirausahaan (PKM-K) student techno-entrepreneurship business proposals under
+    Belmawa Kemendikbudristek guidelines, evaluating product value proposition, market sizing,
+    cashflow and break-even point feasibility, execution capability, and MBKM credit equivalency.
+    """
+    student_leader = str(data.get("student_leader", "")).strip() or "Mahasiswa Telkom Purwokerto"
+    nim = str(data.get("nim", "")).strip()
+    business_title = str(data.get("business_title", "")).strip() or "Techno-venture Telekomunikasi Cerdas"
+    business_category = str(data.get("business_category", "")).strip() or "Teknologi Digital & IoT"
+
+    s_prod = max(0.0, min(100.0, float(data.get("product_innovation_score", 0.0))))
+    s_mkt = max(0.0, min(100.0, float(data.get("market_feasibility_score", 0.0))))
+    s_fin = max(0.0, min(100.0, float(data.get("financial_projection_bep_score", 0.0))))
+    s_exec = max(0.0, min(100.0, float(data.get("team_execution_capability_score", 0.0))))
+    s_sust = max(0.0, min(100.0, float(data.get("business_sustainability_score", 0.0))))
+    has_turnitin = bool(data.get("has_turnitin_clearance", True))
+
+    similarity_penalty = 0.0 if has_turnitin else 10.0
+
+    raw_composite = (0.25 * s_prod) + (0.25 * s_mkt) + (0.25 * s_fin) + (0.15 * s_exec) + (0.10 * s_sust)
+    composite = round(max(0.0, raw_composite - similarity_penalty), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        grant_amount_idr = 7000000
+        funding_status = "Lolos Pendanaan Nasional PKM-K Belmawa Unggulan"
+        converted_sks = 4
+    elif is_funded:
+        grant_amount_idr = 7000000
+        funding_status = "Lolos Pendanaan Nasional PKM-K Belmawa"
+        converted_sks = 3
+    else:
+        grant_amount_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "business_title": business_title,
+        "business_category": business_category,
+        "product_innovation_score": s_prod,
+        "market_feasibility_score": s_mkt,
+        "financial_projection_bep_score": s_fin,
+        "team_execution_capability_score": s_exec,
+        "business_sustainability_score": s_sust,
+        "has_turnitin_clearance": has_turnitin,
+        "similarity_penalty": similarity_penalty,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "grant_amount_idr": grant_amount_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
+
 
 
 
