@@ -8913,6 +8913,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_uwoc_optical_link_card(
+        cls,
+        title: str = "Link Budget Komunikasi Optik Nirkabel Bawah Air (UWOC)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card displaying Underwater Optical Wireless Communication (UWOC)
+        parameters, water extinction coefficient (Beer-Lambert), geometrical loss, and link margin.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        wtype = str(d.get("water_type", "clear_ocean")).replace("_", " ").title()
+        dist = float(d.get("link_distance_m", 20.0))
+        wlen = float(d.get("wavelength_nm", 532.0))
+        coeff = float(d.get("extinction_coefficient_per_m", 0.151))
+        p_rx = float(d.get("received_power_dbm", -25.5))
+        margin = float(d.get("link_margin_db", 12.5))
+        is_viable = bool(d.get("is_link_viable", True))
+        status = d.get("status_category", "VIABLE_LINK")
+        recom = d.get("recommendation", "")
+
+        badge_bg = "#ecfdf5" if is_viable else "#fef2f2"
+        badge_color = "#059669" if is_viable else "#dc2626"
+
+        return f"""    <div class="tu-uwoc-link-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0d9488; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0d9488; font-size: 13px; text-transform: uppercase;">Underwater Optical Wireless &bull; {wtype}</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Jarak Link: <strong>{dist:.1f} m</strong> &bull; Panjang Gelombang: <strong>{wlen:.0f} nm (Biru-Hijau)</strong> &bull; Tipe Air: <strong>{wtype}</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Koefisien Ekstingsi (c)</span>
+          <strong style="color: #0d9488; font-size: 16px;">{coeff:.3f} m⁻¹</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Daya Terima (P_rx)</span>
+          <strong style="color: #0f172a; font-size: 16px;">{p_rx:.2f} dBm</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Margin Link</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{margin:+.2f} dB</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Kelayakan Link: <strong>{'MEMADAI' if is_viable else 'OUTAGE'}</strong> &bull; Panduan: <em>{recom}</em>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -8965,6 +9020,8 @@ render_5g_nr_pdcch_cce_capacity_card = EditorialComponents.render_5g_nr_pdcch_cc
 render_satellite_earth_station_antenna_pattern_card = EditorialComponents.render_satellite_earth_station_antenna_pattern_card
 render_pkm_ai_card = EditorialComponents.render_pkm_ai_card
 render_5g_nr_pdcch_coreset_cce_svg = EditorialComponents.render_5g_nr_pdcch_coreset_cce_svg
+render_uwoc_optical_link_card = EditorialComponents.render_uwoc_optical_link_card
+
 
 
 
