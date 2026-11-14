@@ -72,8 +72,12 @@ from sanitizer import (
     sanitize_html5_object_param_elements,
     sanitize_html5_base_element_injection,
     sanitize_html5_marquee_animation_elements,
-    sanitize_html5_applet_legacy_elements
+    sanitize_html5_applet_legacy_elements,
+    sanitize_html5_dialog_element_autofocus_trap,
+    sanitize_html5_shadow_dom_template_elements,
+    sanitize_html5_media_track_elements
 )
+
 
 
 class TestHTMLSanitizer(unittest.TestCase):
@@ -1527,9 +1531,45 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertTrue(any("marquee" in w for w in warnings))
         self.assertTrue(any("applet" in w for w in warnings))
 
+    def test_sanitize_html5_dialog_element_autofocus_trap(self):
+        raw = '<dialog open autofocus onclose="steal()" formmethod="dialog"><p>Modal content</p></dialog>'
+        cleaned = sanitize_html5_dialog_element_autofocus_trap(raw)
+        self.assertNotIn("onclose=", cleaned)
+        self.assertNotIn("autofocus", cleaned)
+        self.assertNotIn("formmethod=", cleaned)
+        self.assertIn("<dialog open", cleaned)
+        self.assertIn("Modal content", cleaned)
+
+    def test_sanitize_html5_shadow_dom_template_elements(self):
+        raw = '<template shadowrootmode="open" onfocus="evil()"><p>Shadow Content</p></template>'
+        cleaned = sanitize_html5_shadow_dom_template_elements(raw)
+        self.assertNotIn("shadowrootmode=", cleaned)
+        self.assertNotIn("onfocus=", cleaned)
+        self.assertIn("<template", cleaned)
+
+    def test_sanitize_html5_media_track_elements(self):
+        raw = '<track kind="subtitles" src="javascript:evil()" oncuechange="alert(1)">'
+        cleaned = sanitize_html5_media_track_elements(raw)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertNotIn("oncuechange=", cleaned)
+        self.assertIn('kind="subtitles"', cleaned)
+
+    def test_sanitize_html_with_dialog_shadow_track_elements(self):
+        html = '<div class="tu-editorial-container"><dialog autofocus oncancel="bad()">Modal</dialog><template shadowrootmode="open">Hidden</template><track src="javascript:alert(1)"></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("autofocus", clean)
+        self.assertNotIn("oncancel=", clean)
+        self.assertNotIn("shadowrootmode=", clean)
+        self.assertNotIn("javascript:", clean)
+        self.assertTrue(any("dialog" in w.lower() for w in warnings))
+        self.assertTrue(any("shadow dom" in w.lower() for w in warnings))
+        self.assertTrue(any("media track" in w.lower() for w in warnings))
+
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
