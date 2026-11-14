@@ -9564,6 +9564,94 @@ def parse_pkm_ai_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_uwoc_oceanic_link_budget(
+    water_type: str = "clear_ocean",
+    link_distance_m: float = 20.0,
+    wavelength_nm: float = 532.0,
+    tx_power_dbm: float = 20.0,
+    tx_divergence_mrad: float = 15.0,
+    rx_aperture_diameter_cm: float = 15.0,
+    rx_sensitivity_dbm: float = -38.0
+) -> Dict[str, Any]:
+    """
+    Calculates Underwater Optical Wireless Communication (UWOC) oceanic link budget,
+    extinction attenuation under Haltrin/Petzold oceanic water classification models (Beer-Lambert law),
+    geometrical expansion loss, received power, and link margin for underwater blue-green laser links.
+    """
+    dist_m = max(0.5, float(link_distance_m))
+    wlen = max(400.0, min(700.0, float(wavelength_nm)))
+    p_tx = float(tx_power_dbm)
+    theta_mrad = max(0.5, float(tx_divergence_mrad))
+    d_rx_cm = max(1.0, float(rx_aperture_diameter_cm))
+    p_sens = float(rx_sensitivity_dbm)
+
+    # Oceanic water extinction coefficient c(lambda) in m^-1 (Haltrin/Petzold parameters around 520-532 nm)
+    water_models = {
+        "pure_sea_water": 0.056,
+        "clear_ocean": 0.151,
+        "coastal_ocean": 0.398,
+        "turbid_harbor": 2.190
+    }
+    wtype = water_type.strip().lower()
+    if wtype not in water_models:
+        wtype = "clear_ocean"
+    extinction_coeff = water_models[wtype]
+
+    # Water attenuation via Beer-Lambert Law in dB: A_water = 10 * log10(e) * c * d = 4.3429 * c * d
+    water_attenuation_db = round(4.3429448 * extinction_coeff * dist_m, 2)
+
+    # Receiver aperture area (A_rx = pi * (D_rx / 2)^2) in m^2
+    r_rx_m = (d_rx_cm / 100.0) / 2.0
+    a_rx_m2 = math.pi * (r_rx_m ** 2)
+
+    # Beam spot area at distance d (theta in radians = theta_mrad / 1000)
+    theta_rad = theta_mrad / 1000.0
+    # Spot radius assuming small angle approximation r_spot = d * tan(theta / 2) + r_tx
+    r_spot_m = max(r_rx_m, dist_m * math.tan(theta_rad / 2.0) + 0.01)
+    a_spot_m2 = math.pi * (r_spot_m ** 2)
+
+    geom_efficiency = min(1.0, a_rx_m2 / a_spot_m2)
+    geom_loss_db = round(abs(10.0 * math.log10(geom_efficiency)), 2)
+
+    total_loss_db = round(water_attenuation_db + geom_loss_db, 2)
+    received_power_dbm = round(p_tx - total_loss_db, 2)
+    link_margin_db = round(received_power_dbm - p_sens, 2)
+    is_link_viable = link_margin_db >= 3.0
+
+    if link_margin_db >= 10.0:
+        status_category = "ROBUST_UWOC_LINK"
+        recommendation = "Link optik bawah air memiliki margin tinggi; mampu mendukung modulasi kecepatan tinggi (QAM-OFDM)."
+    elif link_margin_db >= 3.0:
+        status_category = "VIABLE_LINK"
+        recommendation = "Kanal optik bawah laut stabil; gunakan modulasi OOK atau PPM dengan kode koreksi kesalahan FEC."
+    elif link_margin_db >= 0.0:
+        status_category = "CRITICAL_MARGIN"
+        recommendation = "Margin sangat tipis; rentan degradasi akibat turbulensi air atau peningkatan kekeruhan partikel."
+    else:
+        status_category = "LINK_OUTAGE"
+        recommendation = "Link terputus (outage); perbesar aperture receiver, persempit divergensi berkas, atau dekati jarak node."
+
+    return {
+        "water_type": wtype,
+        "link_distance_m": dist_m,
+        "wavelength_nm": wlen,
+        "tx_power_dbm": p_tx,
+        "tx_divergence_mrad": theta_mrad,
+        "rx_aperture_diameter_cm": d_rx_cm,
+        "rx_sensitivity_dbm": p_sens,
+        "extinction_coefficient_per_m": extinction_coeff,
+        "water_attenuation_db": water_attenuation_db,
+        "geometrical_loss_db": geom_loss_db,
+        "total_path_loss_db": total_loss_db,
+        "received_power_dbm": received_power_dbm,
+        "link_margin_db": link_margin_db,
+        "is_link_viable": is_link_viable,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
+
 
 
 
