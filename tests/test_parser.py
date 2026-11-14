@@ -2994,9 +2994,101 @@ Status: Granted
         self.assertEqual(res_penalized["composite_score"], 75.0)
         self.assertFalse(res_penalized["is_incentive_awarded"])
 
+    def test_calculate_uwoc_oceanic_link_budget(self):
+        from parser import calculate_uwoc_oceanic_link_budget
+        res = calculate_uwoc_oceanic_link_budget(
+            water_type="clear_ocean",
+            link_distance_m=15.0,
+            wavelength_nm=532.0,
+            tx_power_dbm=20.0,
+            tx_divergence_mrad=15.0,
+            rx_aperture_diameter_cm=15.0,
+            rx_sensitivity_dbm=-38.0
+        )
+        self.assertEqual(res["water_type"], "clear_ocean")
+        self.assertEqual(res["extinction_coefficient_per_m"], 0.151)
+        self.assertAlmostEqual(res["water_attenuation_db"], 9.84, places=1)
+        self.assertTrue(res["is_link_viable"])
+        self.assertGreater(res["link_margin_db"], 3.0)
+
+        # Turbid harbor has high extinction leading to outage
+        res_turbid = calculate_uwoc_oceanic_link_budget(
+            water_type="turbid_harbor",
+            link_distance_m=20.0,
+            tx_power_dbm=10.0
+        )
+        self.assertEqual(res_turbid["status_category"], "LINK_OUTAGE")
+        self.assertFalse(res_turbid["is_link_viable"])
+
+    def test_calculate_5g_nr_pusch_throughput_and_spectral_efficiency(self):
+        from parser import calculate_5g_nr_pusch_throughput_and_spectral_efficiency
+        res = calculate_5g_nr_pusch_throughput_and_spectral_efficiency(
+            allocated_prbs=50,
+            numerology_mu=1,
+            allocated_symbols=14,
+            dmrs_symbols=2,
+            mcs_index=16,
+            mimo_layers=1,
+            transform_precoding=False
+        )
+        self.assertEqual(res["allocated_prbs"], 50)
+        self.assertEqual(res["subcarrier_spacing_khz"], 30)
+        self.assertEqual(res["modulation"], "16QAM")
+        self.assertGreater(res["tbs_bits"], 1000)
+        self.assertGreater(res["throughput_mbps"], 10.0)
+        self.assertGreater(res["spectral_efficiency_bps_hz"], 1.0)
+        self.assertIn(res["status_category"], ["HIGH_SPECTRAL_EFFICIENCY", "BALANCED_THROUGHPUT"])
+
+    def test_calculate_satellite_faraday_rotation_itu_r_p531(self):
+        from parser import calculate_satellite_faraday_rotation_itu_r_p531
+        res = calculate_satellite_faraday_rotation_itu_r_p531(
+            carrier_frequency_ghz=1.5,
+            tec_tecu=50.0,
+            geomagnetic_field_microtesla=35.0,
+            elevation_angle_deg=45.0
+        )
+        self.assertEqual(res["carrier_frequency_ghz"], 1.5)
+        self.assertGreater(res["faraday_rotation_deg"], 0.0)
+        self.assertGreaterEqual(res["effective_tilt_deg"], 0.0)
+        self.assertLessEqual(res["effective_tilt_deg"], 90.0)
+        self.assertGreaterEqual(res["polarization_mismatch_loss_db"], 0.0)
+
+    def test_parse_pkm_k_proposal_evaluation(self):
+        from parser import parse_pkm_k_proposal_evaluation
+        res_funded = parse_pkm_k_proposal_evaluation({
+            "student_leader": "Daffa Ramadhan",
+            "nim": "1101210034",
+            "business_title": "AgriSensing: Solusi IoT LoRaWAN Pemantau Presisi Pertanian",
+            "business_category": "Teknologi Digital & IoT",
+            "product_innovation_score": 90.0,
+            "market_feasibility_score": 88.0,
+            "financial_projection_bep_score": 86.0,
+            "team_execution_capability_score": 85.0,
+            "business_sustainability_score": 90.0,
+            "has_turnitin_clearance": True
+        })
+        self.assertEqual(res_funded["letter_grade"], "A")
+        self.assertEqual(res_funded["grant_amount_idr"], 7000000)
+        self.assertEqual(res_funded["converted_sks"], 4)
+        self.assertTrue(res_funded["is_funded"])
+
+        res_unfunded = parse_pkm_k_proposal_evaluation({
+            "product_innovation_score": 60.0,
+            "market_feasibility_score": 60.0,
+            "financial_projection_bep_score": 60.0,
+            "team_execution_capability_score": 60.0,
+            "business_sustainability_score": 60.0,
+            "has_turnitin_clearance": False
+        })
+        self.assertEqual(res_unfunded["similarity_penalty"], 10.0)
+        self.assertEqual(res_unfunded["composite_score"], 50.0)
+        self.assertFalse(res_unfunded["is_funded"])
+        self.assertEqual(res_unfunded["grant_amount_idr"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
