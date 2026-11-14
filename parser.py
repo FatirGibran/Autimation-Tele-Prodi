@@ -9747,6 +9747,62 @@ def calculate_5g_nr_pusch_throughput_and_spectral_efficiency(
     }
 
 
+def calculate_satellite_faraday_rotation_itu_r_p531(
+    carrier_frequency_ghz: float = 1.5,
+    tec_tecu: float = 50.0,
+    geomagnetic_field_microtesla: float = 35.0,
+    elevation_angle_deg: float = 45.0
+) -> Dict[str, Any]:
+    """
+    Calculates satellite ionospheric Faraday rotation, polarization angle tilt,
+    and linear polarization mismatch loss under ITU-R P.531-14 recommendations.
+    """
+    freq_ghz = max(0.1, float(carrier_frequency_ghz))
+    tec = max(1.0, float(tec_tecu))
+    b_field_ut = max(5.0, float(geomagnetic_field_microtesla))
+    elev = max(5.0, min(90.0, float(elevation_angle_deg)))
+
+    # Slant TEC factor (obliquity factor 1 / sin(elev))
+    elev_rad = math.radians(elev)
+    slant_factor = 1.0 / math.sin(elev_rad)
+    slant_tec = tec * slant_factor
+
+    b_tesla = b_field_ut * 1e-6
+    faraday_angle_deg = round((135.22 * b_tesla * 1e4 * slant_tec) / (freq_ghz ** 2), 2)
+    mod_rotation_deg = round(faraday_angle_deg % 180.0, 2)
+    if mod_rotation_deg > 90.0:
+        effective_tilt_deg = round(180.0 - mod_rotation_deg, 2)
+    else:
+        effective_tilt_deg = mod_rotation_deg
+
+    cos_val = max(0.001, math.cos(math.radians(effective_tilt_deg)))
+    pol_mismatch_loss_db = round(-20.0 * math.log10(cos_val), 2)
+
+    if effective_tilt_deg <= 3.0:
+        status_category = "NEGLIGIBLE_ROTATION"
+        recommendation = "Rotasi Faraday sangat kecil (< 3 deg); polarisasi linier aman digunakan tanpa pelacakan."
+    elif effective_tilt_deg <= 15.0:
+        status_category = "MODERATE_TILT"
+        recommendation = "Perputaran polarisasi terdeteksi; gunakan penyesuaian sudut polarisasi feed horn stasiun bumi."
+    else:
+        status_category = "SEVERE_POLARIZATION_ROTATION"
+        recommendation = "Rotasi polarisasi parah! Gunakan polarisasi melingkar (RHCP/LHCP) atau sistem pelacak polarisasi otomatis."
+
+    return {
+        "carrier_frequency_ghz": freq_ghz,
+        "vertical_tec_tecu": tec,
+        "slant_tec_tecu": round(slant_tec, 2),
+        "elevation_angle_deg": elev,
+        "geomagnetic_field_microtesla": b_field_ut,
+        "faraday_rotation_deg": faraday_angle_deg,
+        "effective_tilt_deg": effective_tilt_deg,
+        "polarization_mismatch_loss_db": pol_mismatch_loss_db,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
+
 
 
 
