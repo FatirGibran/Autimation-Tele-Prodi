@@ -8470,6 +8470,57 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_data_table_header_cells(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits data tables for programmatic header cell associations (<th> with scope or headers),
+        ensuring screen readers can communicate tabular structures (WCAG 2.1 SC 1.3.1).
+        """
+        if not html_content:
+            return {
+                "total_tables": 0,
+                "tables_without_headers": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        tables = soup.find_all("table")
+        non_compliant_tables = 0
+        issues = []
+
+        for idx, tbl in enumerate(tables, start=1):
+            role = str(tbl.get("role", "")).lower()
+            if role in ("presentation", "none"):
+                continue
+
+            th_elements = tbl.find_all("th")
+            td_elements = tbl.find_all("td")
+
+            if not td_elements:
+                continue
+
+            if not th_elements:
+                non_compliant_tables += 1
+                caption = tbl.find("caption")
+                tbl_name = caption.get_text().strip() if caption else f"Tabel #{idx}"
+                issues.append(f"{tbl_name}: Tidak memiliki elemen header <th>; seluruh sel hanya didefinisikan dengan <td>.")
+            else:
+                empty_ths = [th for th in th_elements if not th.get_text().strip() and not th.get("aria-label")]
+                if empty_ths:
+                    non_compliant_tables += 1
+                    issues.append(f"Tabel #{idx}: Memiliki {len(empty_ths)} sel <th> tanpa teks label judul kolom/baris yang jelas.")
+
+        is_compliant = non_compliant_tables == 0
+
+        return {
+            "total_tables": len(tables),
+            "tables_without_headers": non_compliant_tables,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
+
 
 
 
