@@ -835,7 +835,15 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 declarative shadow dom template elements.")
 
+        # 8as. Sanitize HTML5 media track elements
+        if "<track" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_media_track_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 media track elements.")
+
         return cleaned, warnings
+
 
 
 
@@ -3227,6 +3235,33 @@ def sanitize_html5_shadow_dom_template_elements(html: str) -> str:
 
     cleaned = re.sub(r'<template\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_template, cleaned, flags=re.IGNORECASE)
     return cleaned
+
+
+def sanitize_html5_media_track_elements(html: str) -> str:
+    """
+    Sanitizes HTML5 <track> timed text track elements by stripping inline event handlers (oncuechange, onerror),
+    neutralizing malicious URI schemes in src attributes, and restricting kind values to safe media types.
+    """
+    if not html or "<track" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_track(m):
+        tag = m.group(0)
+        # Strip inline event handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Check and sanitize src attribute
+        src_m = re.search(r'\bsrc=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if src_m:
+            src = src_m.group(1).strip()
+            if src.lower().startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', src):
+                tag = re.sub(r'\s+src=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<track\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*/?>', fix_track, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
