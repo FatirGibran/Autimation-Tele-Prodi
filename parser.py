@@ -9651,6 +9651,103 @@ def calculate_uwoc_oceanic_link_budget(
     }
 
 
+def calculate_5g_nr_pusch_throughput_and_spectral_efficiency(
+    allocated_prbs: int = 50,
+    numerology_mu: int = 1,
+    allocated_symbols: int = 14,
+    dmrs_symbols: int = 2,
+    mcs_index: int = 16,
+    mimo_layers: int = 1,
+    transform_precoding: bool = False
+) -> Dict[str, Any]:
+    """
+    Calculates 5G NR PUSCH (Physical Uplink Shared Channel) resource elements, transport block size (TBS),
+    uplink peak data throughput, and spectral efficiency under 3GPP TS 38.211 and TS 38.214 specifications.
+    """
+    prbs = max(1, min(273, int(allocated_prbs)))
+    mu = max(0, min(3, int(numerology_mu)))
+    scs_khz = 15 * (2 ** mu)
+    slot_duration_ms = 1.0 / (2 ** mu)
+
+    alloc_syms = max(4, min(14, int(allocated_symbols)))
+    dmrs_syms = max(1, min(4, int(dmrs_symbols)))
+    layers = max(1, min(4, int(mimo_layers)))
+    use_dfts = bool(transform_precoding)
+
+    # 3GPP TS 38.214 Table 5.1.3.1-1 (MCS table 1 for PUSCH)
+    # Mapping of MCS index to Modulation order Q_m and code rate R (x 1024)
+    mcs_table = {
+        0: (2, 120, "QPSK"),
+        4: (2, 438, "QPSK"),
+        8: (2, 772, "QPSK"),
+        10: (4, 340, "16QAM"),
+        14: (4, 616, "16QAM"),
+        16: (4, 772, "16QAM"),
+        18: (6, 567, "64QAM"),
+        22: (6, 772, "64QAM"),
+        26: (6, 910, "64QAM"),
+        28: (8, 772, "256QAM")
+    }
+    valid_mcs = sorted(mcs_table.keys())
+    nearest_mcs = min(valid_mcs, key=lambda x: abs(x - int(mcs_index)))
+    q_m, target_code_rate_1024, mod_name = mcs_table[nearest_mcs]
+    code_rate = target_code_rate_1024 / 1024.0
+
+    # DMRS RE overhead per PRB: Type 1 has 6 REs per DMRS symbol
+    dmrs_re_per_prb = dmrs_syms * 6
+    total_re_per_prb = 12 * alloc_syms
+    data_re_per_prb = max(1, total_re_per_prb - dmrs_re_per_prb)
+    total_data_re = prbs * data_re_per_prb
+
+    # Unquantized info bits: N_info = N_RE * R * Q_m * v
+    n_info = total_data_re * code_rate * q_m * layers
+
+    if n_info <= 3824:
+        tbs_bits = max(24, int(math.floor(n_info / 24) * 24))
+    else:
+        c = math.ceil((n_info + 24) / 8424)
+        tbs_bits = max(3840, int(8 * c * math.ceil((n_info + 24) / (8 * c)) - 24))
+
+    slot_seconds = slot_duration_ms / 1000.0
+    throughput_mbps = round((tbs_bits / slot_seconds) / 1e6, 2)
+
+    bandwidth_mhz = (prbs * 12 * scs_khz) / 1000.0
+    spectral_efficiency_bps_hz = round(throughput_mbps / bandwidth_mhz, 3)
+
+    if spectral_efficiency_bps_hz >= 3.0:
+        status_category = "HIGH_SPECTRAL_EFFICIENCY"
+        recommendation = "Throughput uplink sangat prima dengan modulasi orde tinggi; cocok untuk live video feed industri."
+    elif spectral_efficiency_bps_hz >= 1.5:
+        status_category = "BALANCED_THROUGHPUT"
+        recommendation = "Kinerja PUSCH seimbang dan stabil pada kondisi kanal radio nominal."
+    else:
+        status_category = "ROBUST_COVERAGE_MODE"
+        recommendation = "Efisiensi spektral rendah; disarankan untuk UE di tepi sel (cell-edge) guna menjaga stabilitas koneksi uplink."
+
+    return {
+        "allocated_prbs": prbs,
+        "numerology_mu": mu,
+        "subcarrier_spacing_khz": scs_khz,
+        "slot_duration_ms": slot_duration_ms,
+        "allocated_symbols": alloc_syms,
+        "dmrs_symbols": dmrs_syms,
+        "mcs_index": nearest_mcs,
+        "modulation": mod_name,
+        "modulation_order_qm": q_m,
+        "code_rate": round(code_rate, 4),
+        "mimo_layers": layers,
+        "transform_precoding_enabled": use_dfts,
+        "total_data_re": total_data_re,
+        "tbs_bits": tbs_bits,
+        "bandwidth_mhz": round(bandwidth_mhz, 2),
+        "throughput_mbps": throughput_mbps,
+        "spectral_efficiency_bps_hz": spectral_efficiency_bps_hz,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
+
 
 
 
