@@ -821,7 +821,15 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 legacy applet elements.")
 
+        # 8aq. Sanitize HTML5 dialog modal elements
+        if "<dialog" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_dialog_element_autofocus_trap(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 dialog modal elements.")
+
         return cleaned, warnings
+
 
 
 def sanitize_html5_meter_elements(html: str) -> str:
@@ -3169,6 +3177,27 @@ def sanitize_html5_applet_legacy_elements(html: str) -> str:
 
     # Completely strip legacy executable applet elements and nested fallback contents
     return re.sub(r'<applet\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>[\s\S]*?</applet>', '', html, flags=re.IGNORECASE)
+
+
+def sanitize_html5_dialog_element_autofocus_trap(html: str) -> str:
+    """
+    Sanitizes HTML5 <dialog> modal elements by stripping inline event handlers (oncancel, onclose),
+    removing autofocus focus traps, and neutralizing modal escape hijacking.
+    """
+    if not html or "<dialog" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_dialog(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:autofocus|formmethod=["\'][^"\']*["\'])', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<dialog\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_dialog, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 
 
 
