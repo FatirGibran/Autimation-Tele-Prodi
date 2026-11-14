@@ -8967,6 +8967,62 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_pusch_throughput_card(
+        cls,
+        title: str = "Evaluasi Throughput Uplink 5G NR PUSCH & Link Adaptation",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card displaying 5G NR PUSCH uplink resource allocation,
+        MCS index, modulation order, TBS, peak data throughput, and spectral efficiency.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        prbs = int(d.get("allocated_prbs", 50))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        mcs = int(d.get("mcs_index", 16))
+        mod = str(d.get("modulation", "16QAM"))
+        layers = int(d.get("mimo_layers", 1))
+        tbs = int(d.get("tbs_bits", 15360))
+        tput = float(d.get("throughput_mbps", 30.72))
+        se = float(d.get("spectral_efficiency_bps_hz", 1.707))
+        status = d.get("status_category", "BALANCED_THROUGHPUT")
+        recom = d.get("recommendation", "")
+
+        badge_bg = "#ecfdf5" if se >= 2.0 else ("#fff7ed" if se >= 1.0 else "#fef2f2")
+        badge_color = "#059669" if se >= 2.0 else ("#ea580c" if se >= 1.0 else "#dc2626")
+
+        return f"""    <div class="tu-nr-pusch-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #2563eb; font-size: 13px; text-transform: uppercase;">5G NR PUSCH &bull; 3GPP TS 38.211 / 38.214</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Alokasi PRB: <strong>{prbs} PRB (SCS {scs} kHz)</strong> &bull; MCS: <strong>Index {mcs} ({mod})</strong> &bull; MIMO: <strong>{layers} Layer</strong>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Ukuran Blok (TBS)</span>
+          <strong style="color: #0f172a; font-size: 16px;">{tbs:,} bit</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Throughput Puncak</span>
+          <strong style="color: #2563eb; font-size: 16px;">{tput:.2f} Mbps</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Efisiensi Spektral</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{se:.3f} bps/Hz</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Kinerja Uplink: <strong>{mod} @ {scs} kHz SCS</strong> &bull; Rekomendasi: <em>{recom}</em>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -9021,6 +9077,8 @@ render_satellite_earth_station_antenna_pattern_card = EditorialComponents.render
 render_pkm_ai_card = EditorialComponents.render_pkm_ai_card
 render_5g_nr_pdcch_coreset_cce_svg = EditorialComponents.render_5g_nr_pdcch_coreset_cce_svg
 render_uwoc_optical_link_card = EditorialComponents.render_uwoc_optical_link_card
+render_5g_nr_pusch_throughput_card = EditorialComponents.render_5g_nr_pusch_throughput_card
+
 
 
 
