@@ -9022,6 +9022,61 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_faraday_rotation_card(
+        cls,
+        title: str = "Rotasi Faraday & Kemiringan Polarisasi Ionosfer Satelit (ITU-R P.531)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card displaying satellite ionospheric Faraday rotation angle,
+        slant TEC, geomagnetic magnetic field intensity, and polarization mismatch loss.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        freq = float(d.get("carrier_frequency_ghz", 1.5))
+        v_tec = float(d.get("vertical_tec_tecu", 50.0))
+        s_tec = float(d.get("slant_tec_tecu", 70.71))
+        elev = float(d.get("elevation_angle_deg", 45.0))
+        rot = float(d.get("faraday_rotation_deg", 44.5))
+        tilt = float(d.get("effective_tilt_deg", 44.5))
+        loss = float(d.get("polarization_mismatch_loss_db", 2.95))
+        status = d.get("status_category", "MODERATE_TILT")
+        recom = d.get("recommendation", "")
+
+        badge_bg = "#ecfdf5" if "NEGLIGIBLE" in status else ("#fff7ed" if "MODERATE" in status else "#fef2f2")
+        badge_color = "#059669" if "NEGLIGIBLE" in status else ("#ea580c" if "MODERATE" in status else "#dc2626")
+
+        return f"""    <div class="tu-sat-faraday-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #0284c7; font-size: 13px; text-transform: uppercase;">Satelit Ionosfer &bull; ITU-R P.531 Faraday Rotation</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #334155;">
+        Frekuensi: <strong>{freq:.2f} GHz</strong> &bull; Elevasi: <strong>{elev:.1f}&deg;</strong> &bull; Vertikal TEC: <strong>{v_tec:.1f} TECU</strong> (Slant: {s_tec:.1f})
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Sudut Rotasi Faraday</span>
+          <strong style="color: #0284c7; font-size: 16px;">{rot:.1f}&deg;</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Kemiringan Efektif</span>
+          <strong style="color: #0f172a; font-size: 16px;">{tilt:.1f}&deg;</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Rugi Polarisasi</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{loss:.2f} dB</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Dampak Polarisasi: <strong>{status}</strong> &bull; Panduan: <em>{recom}</em>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -9078,6 +9133,8 @@ render_pkm_ai_card = EditorialComponents.render_pkm_ai_card
 render_5g_nr_pdcch_coreset_cce_svg = EditorialComponents.render_5g_nr_pdcch_coreset_cce_svg
 render_uwoc_optical_link_card = EditorialComponents.render_uwoc_optical_link_card
 render_5g_nr_pusch_throughput_card = EditorialComponents.render_5g_nr_pusch_throughput_card
+render_satellite_faraday_rotation_card = EditorialComponents.render_satellite_faraday_rotation_card
+
 
 
 
