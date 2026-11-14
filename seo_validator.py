@@ -8622,6 +8622,58 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_flickering_blinking_content_safety(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits content for rapid blinking or flickering animations (> 3 flashes per second or duration < 0.33s)
+        that present photosensitive seizure triggers (WCAG 2.1 SC 2.3.1 / SC 2.2.2).
+        """
+        if not html_content:
+            return {
+                "total_elements": 0,
+                "flickering_elements": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        flickering_count = 0
+
+        blink_elements = soup.find_all("blink")
+        if blink_elements:
+            flickering_count += len(blink_elements)
+            issues.append(f"Ditemukan {len(blink_elements)} elemen legacy <blink> yang dilarang karena berkedip tak terkendali.")
+
+        for el in soup.find_all(style=True):
+            style = str(el["style"]).lower()
+            if "text-decoration" in style and "blink" in style:
+                flickering_count += 1
+                issues.append(f"<{el.name}>: Memiliki CSS 'text-decoration: blink' yang dilarang.")
+
+            anim_m = re.search(r'\banimation\s*:\s*([^;]+)', style)
+            if anim_m:
+                anim_val = anim_m.group(1).lower()
+                if "infinite" in anim_val:
+                    dur_m = re.search(r'(\d+(?:\.\d+)?)\s*(s|ms)\b', anim_val)
+                    if dur_m:
+                        num = float(dur_m.group(1))
+                        unit = dur_m.group(2)
+                        dur_sec = num if unit == "s" else num / 1000.0
+                        if 0 < dur_sec < 0.33:
+                            flickering_count += 1
+                            issues.append(f"<{el.name}>: Memiliki animasi berulang sangat cepat ({dur_sec:.2f}s < 0.33s / > 3Hz) berisiko memicu kejang fotosensitif.")
+
+        is_compliant = flickering_count == 0
+
+        return {
+            "total_elements": len(soup.find_all()),
+            "flickering_elements": flickering_count,
+            "is_compliant": is_compliant,
+            "issues": issues
+        }
+
+
 
 
 
