@@ -9076,6 +9076,66 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_k_card(
+        cls,
+        title: str = "Evaluasi Proposal Mahasiswa PKM Kewirausahaan (PKM-K)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card displaying student entrepreneurship leader, business title,
+        composite evaluation score, Belmawa national funding grant, and MBKM credit equivalency.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        leader = str(d.get("student_leader", "Mahasiswa Telkom Purwokerto"))
+        nim = str(d.get("nim", "-"))
+        b_title = str(d.get("business_title", "Techno-venture Telekomunikasi Cerdas"))
+        cat = str(d.get("business_category", "Teknologi Digital & IoT"))
+        composite = float(d.get("composite_score", 87.5))
+        grade = str(d.get("letter_grade", "A"))
+        status = str(d.get("funding_status", "Lolos Pendanaan Nasional PKM-K Belmawa"))
+        grant = int(d.get("grant_amount_idr", 7000000))
+        sks = int(d.get("converted_sks", 4))
+        is_ok = bool(d.get("is_funded", True))
+        has_turnitin = bool(d.get("has_turnitin_clearance", True))
+
+        badge_bg = "#ecfdf5" if is_ok else "#fef2f2"
+        badge_color = "#059669" if is_ok else "#dc2626"
+
+        return f"""    <div class="tu-pkm-k-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 16px 0; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ea580c; padding-bottom: 8px; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #ea580c; font-size: 13px; text-transform: uppercase;">Belmawa Kemendikbudristek &bull; PKM-K</span>
+        <span style="font-size: 11px; background: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-weight: 600;">{status}</span>
+      </div>
+      <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px;">{title}</h4>
+      <div style="margin-bottom: 10px; font-size: 13px; color: #334155;">
+        <strong>{leader}</strong> (NIM: {nim}) &bull; Kategori: <em>{cat}</em>
+      </div>
+      <div style="margin-bottom: 12px; font-size: 13px; color: #475569; font-style: italic;">
+        &ldquo;{b_title}&rdquo;
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Skor Komposit</span>
+          <strong style="color: #ea580c; font-size: 16px;">{composite:.2f} ({grade})</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Dana Hibah Usaha</span>
+          <strong style="color: #0f172a; font-size: 16px;">Rp {grant:,}</strong>
+        </div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <span style="color: #64748b; display: block; font-size: 11px;">Konversi MBKM</span>
+          <strong style="color: {badge_color}; font-size: 16px;">{sks} SKS</strong>
+        </div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+        Uji Similaritas: <strong>{'Lolos Turnitin (< 20%)' if has_turnitin else 'Penalti Similaritas Tinggi'}</strong> &bull; Status: <em>{status}</em>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -9134,6 +9194,8 @@ render_5g_nr_pdcch_coreset_cce_svg = EditorialComponents.render_5g_nr_pdcch_core
 render_uwoc_optical_link_card = EditorialComponents.render_uwoc_optical_link_card
 render_5g_nr_pusch_throughput_card = EditorialComponents.render_5g_nr_pusch_throughput_card
 render_satellite_faraday_rotation_card = EditorialComponents.render_satellite_faraday_rotation_card
+render_pkm_k_card = EditorialComponents.render_pkm_k_card
+
 
 
 
