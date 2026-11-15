@@ -2980,6 +2980,57 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_business_venture_funding_json_ld(
+        venture_name: str,
+        founder: str,
+        venture_category: str,
+        description: str,
+        grant_amount_idr: int,
+        published_date: str,
+        url: str,
+        converted_sks: int
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org/BusinessEvent and MonetaryGrant structured data for student techno-entrepreneurship ventures.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "BusinessEvent",
+            "name": venture_name.strip(),
+            "description": description.strip(),
+            "startDate": published_date.strip(),
+            "url": url.strip(),
+            "organizer": {
+                "@type": "CollegeOrUniversity",
+                "name": "Telkom University Purwokerto",
+                "department": "S1 Teknik Telekomunikasi"
+            },
+            "performer": {
+                "@type": "Person",
+                "name": founder.strip(),
+                "jobTitle": "Student Founder & Principal Innovator"
+            },
+            "about": {
+                "@type": "Thing",
+                "name": venture_category.strip()
+            },
+            "offers": {
+                "@type": "MonetaryGrant",
+                "name": "Belmawa PKM-K Techno-Entrepreneurship Seed Grant",
+                "amount": {
+                    "@type": "MonetaryAmount",
+                    "currency": "IDR",
+                    "value": int(grant_amount_idr)
+                },
+                "funder": {
+                    "@type": "GovernmentOrganization",
+                    "name": "Direktorat Pembelajaran dan Kemahasiswaan (Belmawa) Kemdikbudristek"
+                }
+            },
+            "educationalCredentialAwarded": f"{int(converted_sks)} SKS Kewirausahaan MBKM"
+        }
+
 
 
 
