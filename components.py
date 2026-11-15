@@ -9135,6 +9135,73 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_pusch_dmrs_grid_svg(
+        cls,
+        title: str = "Struktur Kisi Waktu-Frekuensi 5G NR PUSCH & Alokasi DMRS",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders a responsive inline SVG illustrating 5G NR PUSCH time-frequency slot resource grid,
+        showing DMRS Demodulation Reference Signal symbols, PUSCH payload REs, and SCS numerology under 3GPP TS 38.211.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        prbs = int(d.get("allocated_prbs", 50))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        mcs = int(d.get("mcs_index", 16))
+        mod = str(d.get("modulation", "16QAM"))
+        dmrs_syms = int(d.get("dmrs_symbols", 2))
+
+        return f"""    <div class="tu-nr-pusch-svg-container" style="margin: 20px 0; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+      <h5 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 14px; font-weight: 600;">{title}</h5>
+      <div style="width: 100%; overflow-x: auto;">
+        <svg viewBox="0 0 760 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg" style="display: block; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+          <!-- Grid Background & Guides -->
+          <line x1="40" y1="30" x2="720" y2="30" stroke="#334155" stroke-dasharray="4,4" />
+          <line x1="40" y1="110" x2="720" y2="110" stroke="#334155" stroke-dasharray="4,4" />
+
+          <!-- Early Data Symbols 0..1 -->
+          <rect x="50" y="40" width="90" height="55" rx="4" fill="#3b82f6" opacity="0.85" />
+          <text x="95" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Data Simbol 0-1</text>
+          <text x="95" y="82" fill="#dbeafe" font-size="9" text-anchor="middle">PUSCH Payload</text>
+
+          <!-- DMRS Primary Symbol 2 -->
+          <rect x="150" y="40" width="100" height="55" rx="4" fill="#10b981" opacity="0.95" />
+          <text x="200" y="65" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">DMRS Pos 0 (Sym 2)</text>
+          <text x="200" y="82" fill="#d1fae5" font-size="10" text-anchor="middle">Estimasi Kanal Uplink</text>
+
+          <!-- Middle Data Symbols 3..9 -->
+          <rect x="260" y="40" width="230" height="55" rx="4" fill="#3b82f6" opacity="0.85" />
+          <text x="375" y="65" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">PUSCH Data Simbol 3..9 ({mod})</text>
+          <text x="375" y="82" fill="#dbeafe" font-size="10" text-anchor="middle">Muatan Transmisi Uplink UE</text>
+
+          <!-- Additional DMRS Symbol 10 -->
+          <rect x="500" y="40" width="90" height="55" rx="4" fill="#059669" opacity="0.95" />
+          <text x="545" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">DMRS Pos 1 (Sym 10)</text>
+          <text x="545" y="82" fill="#a7f3d0" font-size="9" text-anchor="middle">Mitigasi Doppler</text>
+
+          <!-- Tail Data Symbols 11..13 -->
+          <rect x="600" y="40" width="110" height="55" rx="4" fill="#3b82f6" opacity="0.85" />
+          <text x="655" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Data Simbol 11-13</text>
+          <text x="655" y="82" fill="#dbeafe" font-size="9" text-anchor="middle">UCI HARQ-ACK</text>
+
+          <!-- Time Domain Bracket -->
+          <path d="M 50 125 L 710 125" stroke="#94a3b8" stroke-width="1.5" />
+          <line x1="50" y1="120" x2="50" y2="130" stroke="#94a3b8" stroke-width="1.5" />
+          <line x1="710" y1="120" x2="710" y2="130" stroke="#94a3b8" stroke-width="1.5" />
+          <text x="380" y="145" fill="#cbd5e1" font-size="11" text-anchor="middle">Durasi Slot: 14 Simbol OFDM &bull; Alokasi Bandwidth: {prbs} PRBs (SCS {scs} kHz)</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px; text-align: center;">
+        <div>Bandwidth: <strong style="color: #60a5fa;">{prbs} PRB</strong></div>
+        <div>Modulasi: <strong style="color: #34d399;">{mod} (MCS {mcs})</strong></div>
+        <div>DMRS: <strong style="color: #fbbf24;">{dmrs_syms} Simbol</strong></div>
+      </div>
+    </div>"""
+
+
 
 
 
@@ -9195,6 +9262,8 @@ render_uwoc_optical_link_card = EditorialComponents.render_uwoc_optical_link_car
 render_5g_nr_pusch_throughput_card = EditorialComponents.render_5g_nr_pusch_throughput_card
 render_satellite_faraday_rotation_card = EditorialComponents.render_satellite_faraday_rotation_card
 render_pkm_k_card = EditorialComponents.render_pkm_k_card
+render_5g_nr_pusch_dmrs_grid_svg = EditorialComponents.render_5g_nr_pusch_dmrs_grid_svg
+
 
 
 
