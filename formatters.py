@@ -2056,6 +2056,35 @@ class TelegramFormatter:
             f"🚀 *Selamat atas diterimanya artikel ilmiah dalam seleksi insentif publikasi bereputasi nasional!*"
         )
 
+    @staticmethod
+    def format_nr_pusch_throughput_telegram(
+        cell_id: str,
+        allocated_prbs: int,
+        numerology_mu: int,
+        mcs_index: int,
+        modulation: str,
+        tbs_bits: int,
+        throughput_mbps: float,
+        spectral_efficiency_bps_hz: float,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a 5G NR PUSCH uplink throughput and MCS link adaptation telemetry card for Telegram.
+        """
+        portal_link = f"\n🔗 **Portal NMS 5G:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"📡 **Telemetri 5G NR PUSCH Uplink & MCS Adaptation**\n\n"
+            f"🗼 **Cell ID:** `{cell_id.strip()}`\n"
+            f"📶 **Numerologi / PRB:** `μ={int(numerology_mu)}` (`{int(allocated_prbs)} PRBs`)\n"
+            f"📊 **MCS Index & Modulasi:** `MCS {int(mcs_index)}` (`{modulation.strip()}`)\n"
+            f"📦 **Transport Block Size (TBS):** `{int(tbs_bits):,} bits`\n"
+            f"🚀 **Uplink Throughput:** `{float(throughput_mbps):.2f} Mbps`\n"
+            f"📈 **Efisiensi Spektral:** `{float(spectral_efficiency_bps_hz):.2f} bps/Hz`\n"
+            f"🌟 **Kategori Status:** `{status.strip()}`{portal_link}\n\n"
+            f"📶 *Transmisi uplink 5G NR terpantau adaptif mengikuti kondisi channel radio.*"
+        )
+
 
 
 
