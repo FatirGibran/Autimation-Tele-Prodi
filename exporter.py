@@ -3031,6 +3031,35 @@ navigation: true
             "educationalCredentialAwarded": f"{int(converted_sks)} SKS Kewirausahaan MBKM"
         }
 
+    @staticmethod
+    def to_fumadocs_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial article to Fumadocs MDX documentation format with YAML frontmatter,
+        Callout component alerts, and structured documentation typography.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        frontmatter = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f"tags: [{tags_yaml}]",
+            'full: false',
+            "---",
+            "",
+            '<Callout type="info" title="Overview">',
+            f"{desc}",
+            "</Callout>",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(frontmatter)
+
 
 
 
