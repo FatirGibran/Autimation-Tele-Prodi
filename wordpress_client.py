@@ -1550,6 +1550,36 @@ class WordPressClient:
         except Exception:
             return []
 
+    def batch_update_post_status(self, post_status_map: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Updates the publication status for multiple WordPress posts in batch.
+        Each item in post_status_map should contain 'id' (or 'post_id') and 'status' (e.g. 'publish', 'draft', 'pending').
+        """
+        updated = []
+        failed = []
+
+        for item in post_status_map:
+            pid = item.get("id") or item.get("post_id")
+            new_status = item.get("status")
+            if not pid or not new_status:
+                continue
+
+            try:
+                endpoint = f"{self.api_url}/posts/{int(pid)}"
+                payload = {"status": str(new_status).strip()}
+                data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=data, headers=self._get_headers(), method="POST")
+                self._send_request(req)
+                updated.append(int(pid))
+            except Exception as e:
+                failed.append({"post_id": int(pid), "error": str(e)})
+
+        return {
+            "updated": updated,
+            "failed": failed,
+            "total": len(post_status_map)
+        }
+
 
 
 
