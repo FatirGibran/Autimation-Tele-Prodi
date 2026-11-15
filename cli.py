@@ -3909,33 +3909,31 @@ def cmd_pkmai(args):
 
 def cmd_uwoc(args):
     if args.action == "calc":
-        water_type = args.water or "Clear Ocean"
-        c_coeff = float(args.attenuation) if args.attenuation is not None else 0.151
-        wl = float(args.wavelength) if args.wavelength is not None else 532.0
+        water_type = args.water or "clear_ocean"
         dist = float(args.distance) if args.distance is not None else 20.0
-        tx_p = float(args.tx_power) if args.tx_power is not None else 200.0
+        wl = float(args.wavelength) if args.wavelength is not None else 532.0
+        tx_p = float(args.tx_power) if args.tx_power is not None else 20.0
 
         res = calculate_uwoc_oceanic_link_budget(
             water_type=water_type,
-            attenuation_coefficient_c=c_coeff,
-            wavelength_nm=wl,
             link_distance_m=dist,
-            tx_power_mw=tx_p
+            wavelength_nm=wl,
+            tx_power_dbm=tx_p
         )
         rec_id = storage.record_uwoc_link(
-            water_type=water_type,
-            attenuation_coeff_c=res["attenuation_coeff_c"],
+            water_type=res["water_type"],
+            attenuation_coeff_c=res["extinction_coefficient_per_m"],
             wavelength_nm=res["wavelength_nm"],
             link_distance_m=res["link_distance_m"],
-            tx_power_mw=res["tx_power_mw"],
-            received_optical_power_dbm=res["received_optical_power_dbm"],
-            snr_db=res["snr_db"],
-            ber=res["ber"],
-            link_status=res["link_status"],
+            tx_power_mw=round(10.0 ** (res["tx_power_dbm"] / 10.0), 2),
+            received_optical_power_dbm=res["received_power_dbm"],
+            snr_db=res["link_margin_db"],
+            ber=1e-6 if res["is_link_viable"] else 1e-2,
+            link_status=res["status_category"],
             is_link_viable=res["is_link_viable"],
             recommendation=res["recommendation"]
         )
-        print(f"Catatan Link Budget UWOC berhasil disimpan dengan ID: {rec_id} (Water: {water_type}, Jarak: {dist}m, Prx: {res['received_optical_power_dbm']} dBm, SNR: {res['snr_db']} dB, Status: {res['link_status']})")
+        print(f"Catatan Link Budget UWOC berhasil disimpan dengan ID: {rec_id} (Water: {res['water_type']}, Jarak: {dist}m, Prx: {res['received_power_dbm']} dBm, Margin: {res['link_margin_db']} dB, Status: {res['status_category']})")
     else:
         records = storage.list_uwoc_links(limit=args.limit or 50)
         if not records:

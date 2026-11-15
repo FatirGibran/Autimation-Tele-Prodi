@@ -3391,6 +3391,81 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Fauzan Fadhil", out)
 
+    def test_cmd_uwoc(self):
+        class ArgsCalc:
+            action = "calc"
+            water = "clear_ocean"
+            wavelength = 532.0
+            distance = 20.0
+            tx_power = 20.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_uwoc(ArgsCalc())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Link Budget UWOC berhasil disimpan", out)
+            self.assertIn("clear_ocean", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_uwoc(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("clear_ocean", out)
+
+    def test_cmd_nrpusch(self):
+        class ArgsCalc:
+            action = "calc"
+            cell = "CELL-TT-5G-PWT-01"
+            prb = 106
+            numerology = 1
+            mcs = 16
+            layers = 2
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrpusch(ArgsCalc())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Throughput NR PUSCH berhasil disimpan", out)
+            self.assertIn("CELL-TT-5G-PWT-01", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrpusch(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("CELL-TT-5G-PWT-01", out)
+
+    def test_cmd_pkmk(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Siti Nurhaliza"
+            nim = "1101210088"
+            title = "Smart LoRaWAN Aquaculture System Kit"
+            category = "Teknologi IoT Budidaya Perikanan"
+            commercial = 92.0
+            technical = 90.0
+            business_plan = 88.0
+            financial = 86.0
+            presentation = 88.0
+            no_turnitin = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmk(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Evaluasi PKM-K berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmk(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Siti Nurhaliza", out)
+
 
 
 if __name__ == "__main__":
