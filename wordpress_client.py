@@ -1524,6 +1524,32 @@ class WordPressClient:
             "total": len(post_media_map)
         }
 
+    def get_posts_by_date_range(
+        self,
+        after_date: str,
+        before_date: str,
+        page: int = 1,
+        per_page: int = 10,
+        status: str = "publish"
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves WordPress posts published within an ISO 8601 date range (after_date to before_date).
+        """
+        params = {
+            "after": after_date.strip(),
+            "before": before_date.strip(),
+            "page": max(1, int(page)),
+            "per_page": min(100, max(1, int(per_page))),
+            "status": status.strip()
+        }
+        query_string = urllib.parse.urlencode(params)
+        endpoint = f"{self.api_url}/posts?{query_string}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        try:
+            return self._send_request(req)
+        except Exception:
+            return []
+
 
 
 
