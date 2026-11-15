@@ -3310,6 +3310,104 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("CCE #0 (6 REGs)", html)
         self.assertIn("Aggregation Level 4", html)
 
+    def test_render_uwoc_optical_link_card(self):
+        html = EditorialComponents.render_uwoc_optical_link_card(
+            data={
+                "water_type": "clear_ocean",
+                "link_distance_m": 20.0,
+                "wavelength_nm": 532.0,
+                "extinction_coefficient_per_m": 0.151,
+                "received_power_dbm": -24.8,
+                "link_margin_db": 13.2,
+                "is_link_viable": True,
+                "status_category": "ROBUST_UWOC_LINK",
+                "recommendation": "Margin link tinggi."
+            }
+        )
+        self.assertIn("tu-uwoc-link-card", html)
+        self.assertIn("Clear Ocean", html)
+        self.assertIn("20.0 m", html)
+        self.assertIn("532 nm", html)
+        self.assertIn("+13.20 dB", html)
+
+    def test_render_5g_nr_pusch_throughput_card(self):
+        html = EditorialComponents.render_5g_nr_pusch_throughput_card(
+            data={
+                "allocated_prbs": 50,
+                "subcarrier_spacing_khz": 30,
+                "mcs_index": 16,
+                "modulation": "16QAM",
+                "mimo_layers": 1,
+                "tbs_bits": 15360,
+                "throughput_mbps": 30.72,
+                "spectral_efficiency_bps_hz": 1.707,
+                "status_category": "BALANCED_THROUGHPUT",
+                "recommendation": "Throughput PUSCH seimbang."
+            }
+        )
+        self.assertIn("tu-nr-pusch-card", html)
+        self.assertIn("50 PRB", html)
+        self.assertIn("Index 16 (16QAM)", html)
+        self.assertIn("30.72 Mbps", html)
+        self.assertIn("1.707 bps/Hz", html)
+
+    def test_render_satellite_faraday_rotation_card(self):
+        html = EditorialComponents.render_satellite_faraday_rotation_card(
+            data={
+                "carrier_frequency_ghz": 1.5,
+                "vertical_tec_tecu": 50.0,
+                "slant_tec_tecu": 70.71,
+                "elevation_angle_deg": 45.0,
+                "faraday_rotation_deg": 44.5,
+                "effective_tilt_deg": 44.5,
+                "polarization_mismatch_loss_db": 2.95,
+                "status_category": "MODERATE_TILT",
+                "recommendation": "Perputaran polarisasi terdeteksi."
+            }
+        )
+        self.assertIn("tu-sat-faraday-card", html)
+        self.assertIn("1.50 GHz", html)
+        self.assertIn("44.5&deg;", html)
+        self.assertIn("2.95 dB", html)
+
+    def test_render_pkm_k_card(self):
+        html = EditorialComponents.render_pkm_k_card(
+            data={
+                "student_leader": "Daffa Ramadhan",
+                "nim": "1101210034",
+                "business_title": "AgriSensing: Solusi IoT LoRaWAN Pemantau Presisi Pertanian",
+                "business_category": "Teknologi Digital & IoT",
+                "composite_score": 88.5,
+                "letter_grade": "A",
+                "funding_status": "Lolos Pendanaan Nasional PKM-K Belmawa",
+                "grant_amount_idr": 7000000,
+                "converted_sks": 4,
+                "is_funded": True,
+                "has_turnitin_clearance": True
+            }
+        )
+        self.assertIn("tu-pkm-k-card", html)
+        self.assertIn("Daffa Ramadhan", html)
+        self.assertIn("AgriSensing", html)
+        self.assertIn("7,000,000", html)
+        self.assertIn("4 SKS", html)
+
+    def test_render_5g_nr_pusch_dmrs_grid_svg(self):
+        html = EditorialComponents.render_5g_nr_pusch_dmrs_grid_svg(
+            data={
+                "allocated_prbs": 50,
+                "subcarrier_spacing_khz": 30,
+                "mcs_index": 16,
+                "modulation": "16QAM",
+                "dmrs_symbols": 2
+            }
+        )
+        self.assertIn("tu-nr-pusch-svg-container", html)
+        self.assertIn("<svg", html)
+        self.assertIn("DMRS Pos 0 (Sym 2)", html)
+        self.assertIn("50 PRB", html)
+
+
 
 
 if __name__ == "__main__":
