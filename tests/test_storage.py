@@ -3280,6 +3280,82 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["nim"], "1101210099")
         self.assertIsNone(self.storage.get_pkm_ai_proposal_by_id(99999))
 
+    def test_uwoc_link_storage(self):
+        rec_id = self.storage.record_uwoc_link(
+            water_type="Clear Ocean",
+            attenuation_coeff_c=0.151,
+            wavelength_nm=532.0,
+            link_distance_m=20.0,
+            tx_power_mw=250.0,
+            received_optical_power_dbm=-28.4,
+            snr_db=19.8,
+            ber=1e-7,
+            link_status="Viable UWOC Optical Link",
+            is_link_viable=True,
+            recommendation="Clear ocean link margin sufficient for transmission"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_uwoc_links()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["water_type"], "Clear Ocean")
+        self.assertAlmostEqual(items[0]["attenuation_coeff_c"], 0.151)
+
+        single = self.storage.get_uwoc_link_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["water_type"], "Clear Ocean")
+        self.assertIsNone(self.storage.get_uwoc_link_by_id(99999))
+
+    def test_nr_pusch_storage(self):
+        rec_id = self.storage.record_nr_pusch(
+            cell_id="CELL-TT-5G-PWT-01",
+            allocated_prbs=106,
+            numerology_mu=1,
+            mcs_index=16,
+            modulation="64QAM",
+            code_rate_x1024=658,
+            spectral_efficiency_bps_hz=3.85,
+            tbs_bits=38400,
+            throughput_mbps=76.8,
+            status_category="Optimal Uplink Transmission",
+            recommendation="Maintain PRB grant and rank 2 MIMO"
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_pusch()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cell_id"], "CELL-TT-5G-PWT-01")
+        self.assertEqual(items[0]["allocated_prbs"], 106)
+
+        single = self.storage.get_nr_pusch_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["mcs_index"], 16)
+        self.assertIsNone(self.storage.get_nr_pusch_by_id(99999))
+
+    def test_pkm_k_proposal_storage(self):
+        rec_id = self.storage.record_pkm_k_proposal(
+            student_leader="Siti Nurhaliza",
+            nim="1101210088",
+            business_title="Smart LoRaWAN Aquaculture Monitoring System Kit",
+            business_category="Teknologi Telekomunikasi Berbasis IoT",
+            composite_score=91.5,
+            letter_grade="A",
+            grade_point=4.0,
+            funding_status="Didanai Penuh Belmawa Kemdikbudristek",
+            grant_amount_idr=9000000,
+            converted_sks=5,
+            has_turnitin_clearance=True,
+            is_funded=True
+        )
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_k_proposals()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Siti Nurhaliza")
+        self.assertEqual(items[0]["grant_amount_idr"], 9000000)
+
+        single = self.storage.get_pkm_k_proposal_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["nim"], "1101210088")
+        self.assertIsNone(self.storage.get_pkm_k_proposal_by_id(99999))
+
 
 
 if __name__ == "__main__":
