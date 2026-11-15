@@ -1743,6 +1743,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_uwoc_water ON uwoc_link_records(water_type);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_pusch_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cell_id TEXT NOT NULL,
+                    allocated_prbs INTEGER NOT NULL,
+                    numerology_mu INTEGER NOT NULL,
+                    mcs_index INTEGER NOT NULL,
+                    modulation TEXT NOT NULL,
+                    code_rate_x1024 INTEGER NOT NULL,
+                    spectral_efficiency_bps_hz REAL NOT NULL,
+                    tbs_bits INTEGER NOT NULL,
+                    throughput_mbps REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    recommendation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_pusch_cell ON nr_pusch_records(cell_id);")
 
 
 
@@ -7864,6 +7882,61 @@ class StorageManager:
     record_uwoc_link = save_uwoc_link_record
     list_uwoc_links = list_uwoc_link_records
     get_uwoc_link_by_id = get_uwoc_link_record_by_id
+
+    def save_nr_pusch_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a 5G NR PUSCH uplink throughput and MCS link adaptation telemetry record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_pusch_records (
+                    cell_id, allocated_prbs, numerology_mu, mcs_index,
+                    modulation, code_rate_x1024, spectral_efficiency_bps_hz,
+                    tbs_bits, throughput_mbps, status_category, recommendation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("cell_id", "CELL-5G-01")).strip(),
+                int(d.get("allocated_prbs", 106)),
+                int(d.get("numerology_mu", 1)),
+                int(d.get("mcs_index", 16)),
+                str(d.get("modulation", "64QAM")).strip(),
+                int(d.get("code_rate_x1024", 658)),
+                float(d.get("spectral_efficiency_bps_hz", 3.85)),
+                int(d.get("tbs_bits", 38400)),
+                float(d.get("throughput_mbps", 76.8)),
+                str(d.get("status_category", "Optimal Uplink")).strip(),
+                str(d.get("recommendation", "High rank transmission maintained")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_pusch_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR PUSCH uplink records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_pusch_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_pusch_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single 5G NR PUSCH uplink record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_pusch_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_nr_pusch = save_nr_pusch_record
+    list_nr_pusch = list_nr_pusch_records
+    get_nr_pusch_by_id = get_nr_pusch_record_by_id
 
 
 
