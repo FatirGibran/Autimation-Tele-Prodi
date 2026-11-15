@@ -1761,6 +1761,25 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_pusch_cell ON nr_pusch_records(cell_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_k_proposal_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    business_title TEXT NOT NULL,
+                    business_category TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    grade_point REAL NOT NULL,
+                    funding_status TEXT NOT NULL,
+                    grant_amount_idr INTEGER NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    has_turnitin_clearance INTEGER NOT NULL DEFAULT 1,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_k_nim ON pkm_k_proposal_records(nim);")
 
 
 
@@ -7937,6 +7956,63 @@ class StorageManager:
     record_nr_pusch = save_nr_pusch_record
     list_nr_pusch = list_nr_pusch_records
     get_nr_pusch_by_id = get_nr_pusch_record_by_id
+
+    def save_pkm_k_proposal(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a Belmawa PKM-K (Kewirausahaan) techno-entrepreneurship evaluation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_k_proposal_records (
+                    student_leader, nim, business_title, business_category,
+                    composite_score, letter_grade, grade_point, funding_status,
+                    grant_amount_idr, converted_sks, has_turnitin_clearance,
+                    is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("student_leader", "Mahasiswa Telkom Purwokerto")).strip(),
+                str(d.get("nim", "")).strip(),
+                str(d.get("business_title", "Usaha Startup IoT")).strip(),
+                str(d.get("business_category", "Teknologi Telekomunikasi")).strip(),
+                float(d.get("composite_score", 0.0)),
+                str(d.get("letter_grade", "C")).strip(),
+                float(d.get("grade_point", 2.0)),
+                str(d.get("funding_status", "Belum Lolos Pendanaan")).strip(),
+                int(d.get("grant_amount_idr", 0)),
+                int(d.get("converted_sks", 2)),
+                1 if d.get("has_turnitin_clearance", True) else 0,
+                1 if d.get("is_funded", False) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_k_proposals(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent PKM-K proposal evaluation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_k_proposal_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_k_proposal_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single PKM-K proposal evaluation record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_k_proposal_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_pkm_k_proposal = save_pkm_k_proposal
+    list_pkm_k_proposals_alias = list_pkm_k_proposals
+    get_pkm_k_proposal_by_id_alias = get_pkm_k_proposal_by_id
 
 
 
