@@ -66,7 +66,10 @@ from parser import (
     parse_pkm_gft_proposal_evaluation,
     calculate_fso_optical_atmospheric_link_budget,
     calculate_5g_nr_pdcch_cce_capacity,
-    parse_pkm_ai_proposal_evaluation
+    parse_pkm_ai_proposal_evaluation,
+    calculate_uwoc_oceanic_link_budget,
+    calculate_5g_nr_pusch_throughput_and_spectral_efficiency,
+    parse_pkm_k_proposal_evaluation
 )
 
 from seo_validator import YoastSEOValidator
@@ -3904,6 +3907,138 @@ def cmd_pkmai(args):
             print(f"{r['id']:<4} | {r['student_author'][:16]:<18} | {r['nim']:<12} | {r['journal_scope'][:20]:<22} | {r['composite_score']:<6.2f} | {award_str} ({r['letter_grade']})")
 
 
+def cmd_uwoc(args):
+    if args.action == "calc":
+        water_type = args.water or "Clear Ocean"
+        c_coeff = float(args.attenuation) if args.attenuation is not None else 0.151
+        wl = float(args.wavelength) if args.wavelength is not None else 532.0
+        dist = float(args.distance) if args.distance is not None else 20.0
+        tx_p = float(args.tx_power) if args.tx_power is not None else 200.0
+
+        res = calculate_uwoc_oceanic_link_budget(
+            water_type=water_type,
+            attenuation_coefficient_c=c_coeff,
+            wavelength_nm=wl,
+            link_distance_m=dist,
+            tx_power_mw=tx_p
+        )
+        rec_id = storage.record_uwoc_link(
+            water_type=water_type,
+            attenuation_coeff_c=res["attenuation_coeff_c"],
+            wavelength_nm=res["wavelength_nm"],
+            link_distance_m=res["link_distance_m"],
+            tx_power_mw=res["tx_power_mw"],
+            received_optical_power_dbm=res["received_optical_power_dbm"],
+            snr_db=res["snr_db"],
+            ber=res["ber"],
+            link_status=res["link_status"],
+            is_link_viable=res["is_link_viable"],
+            recommendation=res["recommendation"]
+        )
+        print(f"Catatan Link Budget UWOC berhasil disimpan dengan ID: {rec_id} (Water: {water_type}, Jarak: {dist}m, Prx: {res['received_optical_power_dbm']} dBm, SNR: {res['snr_db']} dB, Status: {res['link_status']})")
+    else:
+        records = storage.list_uwoc_links(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan link budget UWOC yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'WATER TYPE':<16} | {'JARAK (m)':<10} | {'PRX (dBm)':<10} | {'SNR (dB)':<10} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['water_type']:<16} | {r['link_distance_m']:<10.1f} | {r['received_optical_power_dbm']:<10.2f} | {r['snr_db']:<10.2f} | {r['link_status']}")
+
+
+def cmd_nrpusch(args):
+    if args.action == "calc":
+        cell_id = args.cell or "CELL-5G-PWT-01"
+        prbs = int(args.prb) if args.prb is not None else 106
+        mu = int(args.numerology) if args.numerology is not None else 1
+        mcs = int(args.mcs) if args.mcs is not None else 16
+        layers = int(args.layers) if args.layers is not None else 2
+
+        res = calculate_5g_nr_pusch_throughput_and_spectral_efficiency(
+            allocated_prbs=prbs,
+            numerology_mu=mu,
+            mcs_index=mcs,
+            mimo_layers=layers
+        )
+        rec_id = storage.record_nr_pusch(
+            cell_id=cell_id,
+            allocated_prbs=prbs,
+            numerology_mu=mu,
+            mcs_index=mcs,
+            modulation=res["modulation"],
+            code_rate_x1024=int(round(res["code_rate"] * 1024)),
+            spectral_efficiency_bps_hz=res["spectral_efficiency_bps_hz"],
+            tbs_bits=res["tbs_bits"],
+            throughput_mbps=res["throughput_mbps"],
+            status_category=res["status_category"],
+            recommendation=res["recommendation"]
+        )
+        print(f"Catatan Throughput NR PUSCH berhasil disimpan dengan ID: {rec_id} (Cell: {cell_id}, PRB: {prbs}, MCS: {mcs} {res['modulation']}, Throughput: {res['throughput_mbps']} Mbps, Status: {res['status_category']})")
+    else:
+        records = storage.list_nr_pusch(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan throughput NR PUSCH yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CELL ID':<16} | {'PRB':<6} | {'MCS':<6} | {'SPEED (Mbps)':<14} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cell_id']:<16} | {r['allocated_prbs']:<6} | {r['mcs_index']:<6} | {r['throughput_mbps']:<14.2f} | {r['status_category']}")
+
+
+def cmd_pkmk(args):
+    if args.action == "add":
+        leader = args.leader or "Mahasiswa Telkom Purwokerto"
+        nim = args.nim or "1101210088"
+        title = args.title or "Smart LoRaWAN Aquaculture System Kit"
+        category = args.category or "Teknologi IoT Budidaya Perikanan"
+        comm_score = float(args.commercial) if args.commercial is not None else 88.0
+        tech_score = float(args.technical) if args.technical is not None else 90.0
+        bus_score = float(args.business_plan) if args.business_plan is not None else 85.0
+        fin_score = float(args.financial) if args.financial is not None else 85.0
+        pres_score = float(args.presentation) if args.presentation is not None else 85.0
+        has_turnitin = not args.no_turnitin
+
+        res = parse_pkm_k_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "business_title": title,
+            "business_category": category,
+            "commercial_viability_score": comm_score,
+            "technical_readiness_score": tech_score,
+            "business_plan_clarity_score": bus_score,
+            "financial_projection_score": fin_score,
+            "presentation_pitch_score": pres_score,
+            "has_turnitin_clearance": has_turnitin
+        })
+        rec_id = storage.record_pkm_k_proposal(
+            student_leader=leader,
+            nim=nim,
+            business_title=title,
+            business_category=category,
+            composite_score=res["composite_score"],
+            letter_grade=res["letter_grade"],
+            grade_point=res["grade_point"],
+            funding_status=res["funding_status"],
+            grant_amount_idr=res["grant_amount_idr"],
+            converted_sks=res["converted_sks"],
+            has_turnitin_clearance=res["has_turnitin_clearance"],
+            is_funded=res["is_funded"]
+        )
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_DIDANAI"
+        print(f"Catatan Evaluasi PKM-K berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Hibah: Rp {res['grant_amount_idr']:,}, SKS: {res['converted_sks']})")
+    else:
+        records = storage.list_pkm_k_proposals(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan proposal PKM-K yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'KATEGORI':<22} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            fund_str = "Didanai" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['business_category'][:20]:<22} | {r['composite_score']:<6.2f} | {fund_str} ({r['letter_grade']})")
+
+
 
 def main():
 
@@ -5219,6 +5354,44 @@ def main():
     pkmai_parser.add_argument("--no-turnitin", action="store_true", help="Tandai jika tidak lolos uji Turnitin")
     pkmai_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmai_parser.set_defaults(func=cmd_pkmai)
+
+    # UWOC Underwater Optical Wireless Communication command
+    uwoc_parser = subparsers.add_parser("uwoc", help="Kelola link budget komunikasi optik bawah air UWOC (list, calc)")
+    uwoc_parser.add_argument("--action", choices=["list", "calc"], default="list", help="Tindakan evaluasi link UWOC")
+    uwoc_parser.add_argument("--water", default="Clear Ocean", help="Tipe perairan (Pure Sea, Clear Ocean, Coastal Ocean, Turbid Harbor)")
+    uwoc_parser.add_argument("--attenuation", type=float, default=0.151, help="Koefisien atenuasi c(lambda) dalam m^-1")
+    uwoc_parser.add_argument("--wavelength", type=float, default=532.0, help="Panjang gelombang optik dalam nm")
+    uwoc_parser.add_argument("--distance", type=float, default=20.0, help="Jarak propagasi optik dalam meter")
+    uwoc_parser.add_argument("--tx-power", type=float, default=200.0, help="Daya pancar laser/LED dalam mW")
+    uwoc_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    uwoc_parser.set_defaults(func=cmd_uwoc)
+
+    # 5G NR PUSCH Throughput & MCS command
+    nrpusch_parser = subparsers.add_parser("nrpusch", help="Kelola throughput uplink dan adaptasi MCS 5G NR PUSCH (list, calc)")
+    nrpusch_parser.add_argument("--action", choices=["list", "calc"], default="list", help="Tindakan evaluasi PUSCH")
+    nrpusch_parser.add_argument("--cell", default="CELL-5G-PWT-01", help="Identitas sel 5G gNodeB")
+    nrpusch_parser.add_argument("--prb", type=int, default=106, help="Jumlah alokasi Physical Resource Block (PRB)")
+    nrpusch_parser.add_argument("--numerology", type=int, default=1, help="Numerologi 5G mu (0=15kHz, 1=30kHz, 2=60kHz)")
+    nrpusch_parser.add_argument("--mcs", type=int, default=16, help="Indeks MCS PUSCH (0-27)")
+    nrpusch_parser.add_argument("--layers", type=int, default=2, help="Jumlah layer transmisi MIMO uplink")
+    nrpusch_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrpusch_parser.set_defaults(func=cmd_nrpusch)
+
+    # PKM-K Techno-Entrepreneurship command
+    pkmk_parser = subparsers.add_parser("pkmk", help="Kelola evaluasi proposal Belmawa PKM Kewirausahaan (list, add)")
+    pkmk_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-K")
+    pkmk_parser.add_argument("--leader", default="Siti Nurhaliza", help="Nama mahasiswa ketua pengusul")
+    pkmk_parser.add_argument("--nim", default="1101210088", help="NIM ketua pengusul")
+    pkmk_parser.add_argument("--title", default="Smart LoRaWAN Aquaculture System Kit", help="Judul bisnis tekno-wirausaha")
+    pkmk_parser.add_argument("--category", default="Teknologi Telekomunikasi Berbasis IoT", help="Kategori komoditas bisnis")
+    pkmk_parser.add_argument("--commercial", type=float, default=90.0, help="Skor kelayakan komersial pasar (0-100)")
+    pkmk_parser.add_argument("--technical", type=float, default=90.0, help="Skor kesiapan teknis produk (0-100)")
+    pkmk_parser.add_argument("--business-plan", type=float, default=85.0, help="Skor kejelasan model bisnis (0-100)")
+    pkmk_parser.add_argument("--financial", type=float, default=85.0, help="Skor proyeksi finansial & cashflow (0-100)")
+    pkmk_parser.add_argument("--presentation", type=float, default=85.0, help="Skor presentasi pitch deck (0-100)")
+    pkmk_parser.add_argument("--no-turnitin", action="store_true", help="Tandai jika tidak lolos uji Turnitin")
+    pkmk_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmk_parser.set_defaults(func=cmd_pkmk)
 
     args = parser.parse_args()
 
