@@ -1725,6 +1725,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_ai_nim ON pkm_ai_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS uwoc_link_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    water_type TEXT NOT NULL,
+                    attenuation_coeff_c REAL NOT NULL,
+                    wavelength_nm REAL NOT NULL,
+                    link_distance_m REAL NOT NULL,
+                    tx_power_mw REAL NOT NULL,
+                    received_optical_power_dbm REAL NOT NULL,
+                    snr_db REAL NOT NULL,
+                    ber REAL NOT NULL,
+                    link_status TEXT NOT NULL,
+                    is_link_viable INTEGER NOT NULL DEFAULT 1,
+                    recommendation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_uwoc_water ON uwoc_link_records(water_type);")
 
 
 
@@ -7791,6 +7809,61 @@ class StorageManager:
     record_pkm_ai_proposal = save_pkm_ai_proposal
     list_pkm_ai_proposals_alias = list_pkm_ai_proposals
     get_pkm_ai_proposal_by_id_alias = get_pkm_ai_proposal_by_id
+
+    def save_uwoc_link_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves an underwater optical wireless communication (UWOC) link budget calculation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO uwoc_link_records (
+                    water_type, attenuation_coeff_c, wavelength_nm,
+                    link_distance_m, tx_power_mw, received_optical_power_dbm,
+                    snr_db, ber, link_status, is_link_viable, recommendation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("water_type", "Clear Ocean")).strip(),
+                float(d.get("attenuation_coeff_c", 0.15)),
+                float(d.get("wavelength_nm", 520.0)),
+                float(d.get("link_distance_m", 15.0)),
+                float(d.get("tx_power_mw", 100.0)),
+                float(d.get("received_optical_power_dbm", -25.0)),
+                float(d.get("snr_db", 18.0)),
+                float(d.get("ber", 1e-6)),
+                str(d.get("link_status", "Viable UWOC Optical Link")).strip(),
+                1 if d.get("is_link_viable", True) else 0,
+                str(d.get("recommendation", "Direct LOS link reliable")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_uwoc_link_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent UWOC oceanic link budget records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM uwoc_link_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_uwoc_link_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single UWOC oceanic link record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM uwoc_link_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_uwoc_link = save_uwoc_link_record
+    list_uwoc_links = list_uwoc_link_records
+    get_uwoc_link_by_id = get_uwoc_link_record_by_id
 
 
 
