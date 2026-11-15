@@ -1490,6 +1490,39 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn(":::", res)
         self.assertIn("<p>Dokumentasi Vocs MDX.</p>", res)
 
+    def test_generate_business_venture_funding_json_ld(self):
+        res = ArticleExporter.generate_business_venture_funding_json_ld(
+            venture_name="Smart LoRaWAN Aquaculture Kit",
+            founder="Siti Nurhaliza",
+            venture_category="Teknologi IoT Budidaya Perikanan",
+            description="Perangkat monitoring tambak udang berbasis LoRaWAN dan sensor multiparameter.",
+            grant_amount_idr=9000000,
+            published_date="2026-11-15",
+            url="https://simbelmawa.kemdikbud.go.id/k/88",
+            converted_sks=5
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "BusinessEvent")
+        self.assertEqual(res["name"], "Smart LoRaWAN Aquaculture Kit")
+        self.assertEqual(res["performer"]["name"], "Siti Nurhaliza")
+        self.assertEqual(res["organizer"]["department"], "S1 Teknik Telekomunikasi")
+        self.assertEqual(res["offers"]["amount"]["value"], 9000000)
+        self.assertIn("5 SKS Kewirausahaan MBKM", res["educationalCredentialAwarded"])
+
+    def test_to_fumadocs_mdx(self):
+        meta = {
+            "seo_title": "Panduan Arsitektur Fumadocs MDX",
+            "meta_description": "Dokumentasi modern telekomunikasi berbasis Fumadocs.",
+            "tags": ["fumadocs", "nextjs", "telecom"]
+        }
+        res = ArticleExporter.to_fumadocs_mdx(meta, "<p>Dokumentasi Fumadocs MDX.</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Arsitektur Fumadocs MDX"', res)
+        self.assertIn('full: false', res)
+        self.assertIn('<Callout type="info" title="Overview">', res)
+        self.assertIn("</Callout>", res)
+        self.assertIn("<p>Dokumentasi Fumadocs MDX.</p>", res)
+
 
 
 if __name__ == "__main__":
