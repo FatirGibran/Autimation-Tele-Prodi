@@ -2085,6 +2085,38 @@ class TelegramFormatter:
             f"📶 *Transmisi uplink 5G NR terpantau adaptif mengikuti kondisi channel radio.*"
         )
 
+    @staticmethod
+    def format_pkm_k_proposal_telegram(
+        student_leader: str,
+        nim: str,
+        business_title: str,
+        business_category: str,
+        composite_score: float,
+        letter_grade: str,
+        funding_status: str,
+        grant_amount_idr: int,
+        converted_sks: int,
+        has_turnitin_clearance: bool = True,
+        simbelmawa_url: str = ""
+    ) -> str:
+        """
+        Renders a Belmawa PKM Kewirausahaan (PKM-K) techno-entrepreneurship card for Telegram broadcast.
+        """
+        simbelmawa_link = f"\n🔗 **Portal Simbelmawa Kemdikbud:** {simbelmawa_url.strip()}" if simbelmawa_url else ""
+        turnitin_str = "Lolos Uji Similaritas (< 20%)" if has_turnitin_clearance else "Penalti Similaritas Tinggi"
+        return (
+            f"💼 **Pengumuman Pendanaan Belmawa PKM-K (Kewirausahaan)**\n\n"
+            f"💡 **Judul Usaha Tekno-Wirausaha:**\n_{business_title.strip()}_\n\n"
+            f"👤 **Ketua Pengusul:** {student_leader.strip()} (`NIM: {nim.strip()}`)\n"
+            f"🏢 **Komoditas/Kategori:** `{business_category.strip()}`\n"
+            f"📈 **Skor Kelayakan Usaha:** `{float(composite_score):.1f}` (`Grade: {letter_grade.strip()}`)\n"
+            f"🔍 **Uji Plagiarisme:** `{turnitin_str}`\n"
+            f"💰 **Dana Hibah Modal Usaha:** `Rp {grant_amount_idr:,}`\n"
+            f"🎓 **Ekuivalensi MBKM:** `{int(converted_sks)} SKS Kewirausahaan`\n"
+            f"🌟 **Status Pendanaan:** `{funding_status.strip()}`{simbelmawa_link}\n\n"
+            f"🚀 *Selamat atas keberhasilan menembus pendanaan bisnis mahasiswa berbasis teknologi telekomunikasi!*"
+        )
+
 
 
 
