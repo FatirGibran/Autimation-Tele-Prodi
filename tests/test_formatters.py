@@ -1445,6 +1445,54 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("Lolos Uji Similaritas (< 20%)", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/ai/99", msg)
 
+    def test_format_nr_pusch_throughput_telegram(self):
+        msg = TelegramFormatter.format_nr_pusch_throughput_telegram(
+            cell_id="CELL-TT-5G-PWT-01",
+            allocated_prbs=106,
+            numerology_mu=1,
+            mcs_index=16,
+            modulation="64QAM",
+            tbs_bits=38400,
+            throughput_mbps=76.8,
+            spectral_efficiency_bps_hz=3.85,
+            status="Optimal MIMO Uplink Transmission",
+            portal_url="https://nms.telkomuniversity.ac.id/5g/pusch"
+        )
+        self.assertIn("Telemetri 5G NR PUSCH Uplink", msg)
+        self.assertIn("CELL-TT-5G-PWT-01", msg)
+        self.assertIn("μ=1", msg)
+        self.assertIn("106 PRBs", msg)
+        self.assertIn("MCS 16", msg)
+        self.assertIn("64QAM", msg)
+        self.assertIn("38,400 bits", msg)
+        self.assertIn("76.80 Mbps", msg)
+        self.assertIn("3.85 bps/Hz", msg)
+        self.assertIn("https://nms.telkomuniversity.ac.id/5g/pusch", msg)
+
+    def test_format_pkm_k_proposal_telegram(self):
+        msg = TelegramFormatter.format_pkm_k_proposal_telegram(
+            student_leader="Siti Nurhaliza",
+            nim="1101210088",
+            business_title="Smart LoRaWAN Aquaculture Monitoring System Kit",
+            business_category="Teknologi Telekomunikasi Berbasis IoT",
+            composite_score=91.5,
+            letter_grade="A",
+            funding_status="Didanai Penuh Belmawa Kemdikbudristek",
+            grant_amount_idr=9000000,
+            converted_sks=5,
+            has_turnitin_clearance=True,
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/k/88"
+        )
+        self.assertIn("Pendanaan Belmawa PKM-K (Kewirausahaan)", msg)
+        self.assertIn("Siti Nurhaliza", msg)
+        self.assertIn("1101210088", msg)
+        self.assertIn("Smart LoRaWAN Aquaculture", msg)
+        self.assertIn("Teknologi Telekomunikasi Berbasis IoT", msg)
+        self.assertIn("91.5", msg)
+        self.assertIn("Rp 9,000,000", msg)
+        self.assertIn("5 SKS Kewirausahaan", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/k/88", msg)
+
 
 
 class TestCommandRateLimiter(unittest.TestCase):
