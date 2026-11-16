@@ -856,6 +856,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 MathML markup and CDATA script blocks.")
 
+        # 8av. Sanitize HTML5 portal navigation traps and activation listeners
+        if "<portal" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_portal_navigation_traps(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 portal navigation traps and activation listeners.")
+
         return cleaned, warnings
 
 
@@ -3343,6 +3350,31 @@ def sanitize_html5_math_markup_cdata(html: str) -> str:
         return f'<![CDATA[{clean_content}]]>'
 
     cleaned = re.sub(r'<!\[CDATA\[(.*?)\]\]>', clean_cdata, cleaned, flags=re.IGNORECASE | re.DOTALL)
+    return cleaned
+
+
+def sanitize_html5_portal_navigation_traps(html: str) -> str:
+    """
+    Sanitizes experimental HTML5 <portal> embedded elements by stripping activation event listeners
+    (onactivate, onmessage), neutralizing overlay opacity style traps, and enforcing strict sandboxing.
+    """
+    if not html or "<portal" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_portal_traps(m):
+        tag = m.group(0)
+        # Strip all inline event handlers (including onactivate)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Strip opacity / pointer-events / position:fixed transparent overlay tricks in style
+        tag = re.sub(r'\s+style=["\'][^"\']*opacity\s*:\s*0[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+style=["\'][^"\']*pointer-events\s*:\s*none[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Neutralize dangerous javascript: / data: src
+        tag = re.sub(r'\s+src=["\']\s*(?:javascript:|data:)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<portal\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_portal_traps, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
