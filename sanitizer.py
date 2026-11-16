@@ -849,6 +849,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 SVG foreignObject embedded elements.")
 
+        # 8au. Sanitize HTML5 MathML markup and CDATA script blocks
+        if "<math" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_math_markup_cdata(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 MathML markup and CDATA script blocks.")
+
         return cleaned, warnings
 
 
@@ -3296,6 +3303,46 @@ def sanitize_html5_svg_foreignobject(html: str) -> str:
         cleaned,
         flags=re.IGNORECASE | re.DOTALL
     )
+    return cleaned
+
+
+def sanitize_html5_math_markup_cdata(html: str) -> str:
+    """
+    Sanitizes MathML <math> markup by neutralizing scriptable attributes, stripping unescaped
+    HTML scripts inside <annotation-xml encoding="text/html"> blocks, and stripping malicious CDATA payloads.
+    """
+    if not html or "<math" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_math(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:href|xlink:href)=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<math\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_math, cleaned, flags=re.IGNORECASE)
+
+    # Sanitize annotation-xml blocks
+    def clean_annotation_xml(m):
+        open_tag = m.group(1)
+        inner = m.group(2)
+        close_tag = m.group(3)
+        inner = re.sub(r'<(?:script|iframe|object|embed|form)\b[^>]*>.*?</(?:script|iframe|object|embed|form)>', '', inner, flags=re.IGNORECASE | re.DOTALL)
+        inner = re.sub(r'<(?:script|iframe|object|embed|form)\b[^>]*>', '', inner, flags=re.IGNORECASE)
+        inner = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', inner, flags=re.IGNORECASE)
+        return open_tag + inner + close_tag
+
+    cleaned = re.sub(r'(<annotation-xml\b[^>]*>)(.*?)(</annotation-xml>)', clean_annotation_xml, cleaned, flags=re.IGNORECASE | re.DOTALL)
+
+    # Neutralize CDATA blocks containing script tags
+    def clean_cdata(m):
+        cdata_content = m.group(1)
+        clean_content = re.sub(r'<(?:script|iframe|object|embed)\b[^>]*>.*?</(?:script|iframe|object|embed)>', '', cdata_content, flags=re.IGNORECASE | re.DOTALL)
+        return f'<![CDATA[{clean_content}]]>'
+
+    cleaned = re.sub(r'<!\[CDATA\[(.*?)\]\]>', clean_cdata, cleaned, flags=re.IGNORECASE | re.DOTALL)
     return cleaned
 
 
