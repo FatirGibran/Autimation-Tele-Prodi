@@ -10088,6 +10088,83 @@ def calculate_optical_nonlinear_phase_shift_and_b_integral(
     }
 
 
+def parse_pkm_pm_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates Belmawa PKM Pengabdian Masyarakat (PKM-PM) student community empowerment proposals under
+    Kemendikbudristek guidelines, scoring partner problem urgency, technological solution appropriateness,
+    execution methodology, program sustainability, social impact, and MBKM credit equivalency.
+    """
+    student_leader = str(data.get("student_leader", "")).strip() or "Mahasiswa Telkom Purwokerto"
+    nim = str(data.get("nim", "")).strip()
+    community_partner = str(data.get("community_partner", "")).strip() or "Komunitas Mitra Pedesaan Banyumas"
+    proposal_title = str(data.get("proposal_title", "")).strip() or "Penerapan Teknologi Telekomunikasi untuk Pemberdayaan Mitra"
+    target_locality = str(data.get("target_locality", "")).strip() or "Kabupaten Banyumas"
+
+    s_prob = max(0.0, min(100.0, float(data.get("partner_problem_urgency_score", 0.0))))
+    s_sol = max(0.0, min(100.0, float(data.get("technology_solution_appropriateness_score", 0.0))))
+    s_meth = max(0.0, min(100.0, float(data.get("implementation_methodology_score", 0.0))))
+    s_sust = max(0.0, min(100.0, float(data.get("program_sustainability_score", 0.0))))
+    s_imp = max(0.0, min(100.0, float(data.get("social_economic_impact_score", 0.0))))
+    has_turnitin = bool(data.get("has_turnitin_clearance", True))
+
+    similarity_penalty = 0.0 if has_turnitin else 10.0
+
+    raw_composite = (0.25 * s_prob) + (0.25 * s_sol) + (0.20 * s_meth) + (0.15 * s_sust) + (0.15 * s_imp)
+    composite = round(max(0.0, raw_composite - similarity_penalty), 2)
+
+    if composite >= 85.0:
+        letter_grade = "A"
+        grade_point = 4.0
+    elif composite >= 75.0:
+        letter_grade = "AB"
+        grade_point = 3.5
+    elif composite >= 65.0:
+        letter_grade = "B"
+        grade_point = 3.0
+    elif composite >= 55.0:
+        letter_grade = "BC"
+        grade_point = 2.5
+    else:
+        letter_grade = "C"
+        grade_point = 2.0
+
+    is_funded = composite >= 80.0
+    if composite >= 85.0:
+        grant_amount_idr = 8500000
+        funding_status = "Lolos Pendanaan Nasional PKM-PM Belmawa Unggulan"
+        converted_sks = 5
+    elif is_funded:
+        grant_amount_idr = 7000000
+        funding_status = "Lolos Pendanaan Nasional PKM-PM Belmawa"
+        converted_sks = 4
+    else:
+        grant_amount_idr = 0
+        funding_status = "Belum Lolos Pendanaan Nasional"
+        converted_sks = 2
+
+    return {
+        "student_leader": student_leader,
+        "nim": nim,
+        "community_partner": community_partner,
+        "proposal_title": proposal_title,
+        "target_locality": target_locality,
+        "partner_problem_urgency_score": s_prob,
+        "technology_solution_appropriateness_score": s_sol,
+        "implementation_methodology_score": s_meth,
+        "program_sustainability_score": s_sust,
+        "social_economic_impact_score": s_imp,
+        "has_turnitin_clearance": has_turnitin,
+        "similarity_penalty": similarity_penalty,
+        "composite_score": composite,
+        "letter_grade": letter_grade,
+        "grade_point": grade_point,
+        "funding_status": funding_status,
+        "grant_amount_idr": grant_amount_idr,
+        "converted_sks": converted_sks,
+        "is_funded": is_funded
+    }
+
+
 
 
 
