@@ -2643,6 +2643,50 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertGreater(res_bad["flickering_elements"], 0)
 
+    def test_audit_heading_order_continuity(self):
+        html_ok = '<div><h1>Judul</h1><h2>Subjudul</h2><h3>Detail</h3></div>'
+        res_ok = YoastSEOValidator.audit_heading_order_continuity(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["skipped_heading_levels"], 0)
+
+        html_bad = '<div><h1>Judul</h1><h3>Detail Langsung</h3></div>'
+        res_bad = YoastSEOValidator.audit_heading_order_continuity(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["skipped_heading_levels"], 1)
+
+    def test_audit_autocomplete_valid_field_tokens(self):
+        html_ok = '<form><input type="text" name="fname" autocomplete="given-name"><input type="email" name="user_email" autocomplete="email"></form>'
+        res_ok = YoastSEOValidator.audit_autocomplete_valid_field_tokens(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["invalid_autocomplete_inputs"], 0)
+
+        html_bad = '<form><input type="text" name="cust_code" autocomplete="custom-bogus-token"></form>'
+        res_bad = YoastSEOValidator.audit_autocomplete_valid_field_tokens(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["invalid_autocomplete_inputs"], 1)
+
+    def test_audit_pointer_target_minimum_spacing(self):
+        html_ok = '<div><button style="width: 24px; height: 24px; margin: 8px;">OK</button></div>'
+        res_ok = YoastSEOValidator.audit_pointer_target_minimum_spacing(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["undersized_targets"], 0)
+
+        html_bad = '<div><button style="width: 18px; height: 18px; margin: 2px;">Tiny</button></div>'
+        res_bad = YoastSEOValidator.audit_pointer_target_minimum_spacing(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["undersized_targets"], 1)
+
+    def test_audit_status_messages_aria_live_announcement(self):
+        html_ok = '<div class="alert alert-success" role="status"><p>Tersimpan</p></div>'
+        res_ok = YoastSEOValidator.audit_status_messages_aria_live_announcement(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["unannounced_status_messages"], 0)
+
+        html_bad = '<div class="alert alert-danger"><p>Gagal Terhubung</p></div>'
+        res_bad = YoastSEOValidator.audit_status_messages_aria_live_announcement(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["unannounced_status_messages"], 1)
+
 
 
 if __name__ == "__main__":
