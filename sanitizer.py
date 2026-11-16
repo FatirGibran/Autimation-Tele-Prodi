@@ -842,6 +842,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 media track elements.")
 
+        # 8at. Sanitize HTML5 SVG foreignObject embedded elements
+        if "<foreignobject" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_svg_foreignobject(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 SVG foreignObject embedded elements.")
+
         return cleaned, warnings
 
 
@@ -3260,6 +3267,35 @@ def sanitize_html5_media_track_elements(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<track\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*/?>', fix_track, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_svg_foreignobject(html: str) -> str:
+    """
+    Sanitizes SVG <foreignObject> embedded document elements by stripping inline event handlers,
+    neutralizing nested executable script/iframe contexts, and stripping scriptable URI attributes.
+    """
+    if not html or "<foreignobject" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def fix_foreignobject(m):
+        tag = m.group(0)
+        # Strip inline event handlers
+        tag = re.sub(r'\s+on[a-z]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Strip scriptable attributes
+        tag = re.sub(r'\s+(?:href|xlink:href)=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<foreignObject\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_foreignobject, cleaned, flags=re.IGNORECASE)
+    # Strip dangerous executable content nested inside foreignObject
+    cleaned = re.sub(
+        r'(<foreignObject\b[^>]*>)(.*?)(</foreignObject>)',
+        lambda m: m.group(1) + re.sub(r'<(?:script|iframe|object|embed)\b[^>]*>.*?</(?:script|iframe|object|embed)>', '', m.group(2), flags=re.IGNORECASE | re.DOTALL) + m.group(3),
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL
+    )
     return cleaned
 
 
