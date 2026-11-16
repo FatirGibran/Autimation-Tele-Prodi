@@ -8762,6 +8762,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_pointer_target_minimum_spacing(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits interactive pointer targets for minimum 24x24 CSS pixel dimension or sufficient
+        adjacent target spacing per WCAG 2.1/2.2 SC 2.5.8 (Target Size Minimum).
+        """
+        if not html_content:
+            return {
+                "total_targets": 0,
+                "undersized_targets": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        targets = soup.find_all(["a", "button", "input"])
+        issues = []
+        undersized_count = 0
+
+        for t in targets:
+            if t.name == "input" and t.get("type", "").lower() == "hidden":
+                continue
+
+            style = str(t.get("style", "")).lower()
+            if not style:
+                continue
+
+            w_match = re.search(r'\b(?:min-)?width\s*:\s*(\d+(?:\.\d+)?)\s*px\b', style)
+            h_match = re.search(r'\b(?:min-)?height\s*:\s*(\d+(?:\.\d+)?)\s*px\b', style)
+            m_match = re.search(r'\bmargin\s*:\s*(\d+(?:\.\d+)?)\s*px\b', style)
+
+            if w_match or h_match:
+                w_val = float(w_match.group(1)) if w_match else 24.0
+                h_val = float(h_match.group(1)) if h_match else 24.0
+                m_val = float(m_match.group(1)) if m_match else 0.0
+
+                if (w_val < 24.0 or h_val < 24.0) and m_val < 8.0:
+                    undersized_count += 1
+                    issues.append(f"<{t.name}> ('{t.get_text().strip()[:30]}'): Ukuran target {w_val:.0f}x{h_val:.0f}px di bawah standar minimum 24x24px tanpa margin spacing memadai ({m_val:.0f}px < 8px) sesuai WCAG SC 2.5.8.")
+
+        return {
+            "total_targets": len(targets),
+            "undersized_targets": undersized_count,
+            "is_compliant": undersized_count == 0,
+            "issues": issues
+        }
+
 
 
 
