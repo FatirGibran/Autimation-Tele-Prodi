@@ -9877,6 +9877,86 @@ def parse_pkm_k_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_satellite_tropospheric_scintillation_itu_r_p618(
+    frequency_ghz: float = 14.25,
+    elevation_angle_deg: float = 28.5,
+    antenna_diameter_m: float = 2.4,
+    antenna_efficiency: float = 0.60,
+    refractivity_n_wet: float = 52.0,
+    time_percentage_p: float = 0.1
+) -> Dict[str, Any]:
+    """
+    Calculates satellite Earth-space tropospheric scintillation signal standard deviation,
+    aperture averaging factor, and scintillation fade depth under ITU-R P.618 recommendation.
+    """
+    freq_ghz = max(4.0, min(55.0, float(frequency_ghz)))
+    elev_deg = max(5.0, min(90.0, float(elevation_angle_deg)))
+    ant_diam = max(0.3, min(32.0, float(antenna_diameter_m)))
+    eta = max(0.4, min(0.85, float(antenna_efficiency)))
+    n_wet = max(10.0, min(100.0, float(refractivity_n_wet)))
+    p_pct = max(0.01, min(50.0, float(time_percentage_p)))
+
+    elev_rad = math.radians(elev_deg)
+    d_eff = ant_diam * math.sqrt(eta)
+    wavelength_m = 0.3 / freq_ghz
+
+    # Equivalent path height of turbulence layer h_L typically 1000 m
+    h_l = 1000.0
+    slant_path_l = (2.0 * h_l) / (math.sqrt(math.sin(elev_rad) ** 2 + 2.35e-4) + math.sin(elev_rad))
+
+    # Parameter x for aperture averaging factor
+    x = 0.0584 * (d_eff ** 2) / (wavelength_m * slant_path_l)
+    if x <= 0.0:
+        g_x = 1.0
+    else:
+        # ITU-R P.618 aperture averaging factor g(x)
+        term1 = (x ** 2 + 1.0) ** (11.0 / 12.0) * math.sin((11.0 / 6.0) * math.atan(1.0 / x))
+        term2 = 7.08 * (x ** (5.0 / 6.0))
+        diff = 3.86 * term1 - term2
+        g_x = math.sqrt(max(0.01, diff))
+
+    # Baseline standard deviation of signal amplitude sigma_ref (dB)
+    sigma_ref = 3.6e-3 + 1.0e-4 * n_wet
+
+    # Standard deviation of signal amplitude sigma (dB)
+    freq_factor = freq_ghz ** (7.0 / 12.0)
+    sin_elev_factor = math.sin(elev_rad) ** 1.2
+    sigma_db = round(sigma_ref * freq_factor * (g_x / sin_elev_factor), 3)
+
+    # Scintillation fade depth factor a(p) for p <= 50%
+    log_p = math.log10(p_pct)
+    a_p = -0.0615 * (log_p ** 3) + 0.1653 * (log_p ** 2) - 0.2512 * log_p + 1.0044
+    fade_depth_db = round(a_p * sigma_db, 2)
+    enhancement_db = round(math.sqrt(fade_depth_db), 2)
+
+    if fade_depth_db >= 3.0:
+        status_category = "SEVERE_TROPOSPHERIC_SCINTILLATION"
+        recommendation = "Redaman sintilasi tinggi pada frekuensi Ka/V-band; perlukan margin fading tambahan dan adaptasi modulasi ACM."
+    elif fade_depth_db >= 1.2:
+        status_category = "MODERATE_SCINTILLATION"
+        recommendation = "Sintilasi troposfer moderat; aperture averaging antena stasiun bumi efektif meredam fluktuasi cepat sinyal."
+    else:
+        status_category = "NEGLIGIBLE_SCINTILLATION"
+        recommendation = "Fluktuasi sinyal minimal; margin propagasi stasiun bumi mencukupi untuk transmisi broadband stabil."
+
+    return {
+        "frequency_ghz": freq_ghz,
+        "elevation_angle_deg": elev_deg,
+        "antenna_diameter_m": ant_diam,
+        "antenna_efficiency": eta,
+        "refractivity_n_wet": n_wet,
+        "time_percentage_p": p_pct,
+        "effective_diameter_m": round(d_eff, 2),
+        "slant_path_length_m": round(slant_path_l, 1),
+        "aperture_averaging_factor": round(g_x, 3),
+        "signal_standard_deviation_db": sigma_db,
+        "scintillation_fade_depth_db": fade_depth_db,
+        "signal_enhancement_db": enhancement_db,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
