@@ -9201,6 +9201,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_tropospheric_scintillation_card(
+        cls,
+        title: str = "Telemetri Sintilasi Troposfer Satelit Bumi (ITU-R P.618)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for satellite tropospheric scintillation fade depth,
+        aperture averaging factor, signal standard deviation, and ITU-R P.618 fading mitigation.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        freq = float(d.get("frequency_ghz", 14.25))
+        elev = float(d.get("elevation_angle_deg", 28.5))
+        diam = float(d.get("antenna_diameter_m", 2.4))
+        g_x = float(d.get("aperture_averaging_factor", 0.72))
+        sigma = float(d.get("signal_standard_deviation_db", 0.45))
+        fade = float(d.get("scintillation_fade_depth_db", 1.85))
+        status = str(d.get("status_category", "MODERATE_SCINTILLATION")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-troposcint-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #0284c7; background: #f0f9ff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #0369a1; font-size: 16px;">🛰️ {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Frekuensi: <strong>{freq:.2f} GHz</strong></div>
+        <div>Elevasi Antena: <strong>{elev:.1f}&deg;</strong></div>
+        <div>Diameter Antena: <strong>{diam:.2f} m</strong></div>
+        <div>Averaging Factor g(x): <strong>{g_x:.3f}</strong></div>
+        <div>Std Dev &sigma;: <strong>{sigma:.3f} dB</strong></div>
+        <div>Fade Depth As: <strong style="color: #b91c1c;">{fade:.2f} dB</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #0284c7;">
+        Status: <strong>{status}</strong> &bull; Mitigasi: <em>Adaptasi modulasi kodifikasi ACM & aperture averaging stasiun bumi</em>
+      </div>
+    </div>"""
+
 
 
 
