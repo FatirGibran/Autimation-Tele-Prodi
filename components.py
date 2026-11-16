@@ -9309,6 +9309,44 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_pkm_pm_community_card(
+        cls,
+        title: str = "Evaluasi Proposal Belmawa PKM Pengabdian Masyarakat (PKM-PM)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor card for student Belmawa PKM-PM community empowerment proposals,
+        displaying student leader, partner organization, rural locality, composite score, grant amount, and MBKM credits.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        leader = str(d.get("student_leader", "Mahasiswa Telkom Purwokerto"))
+        nim = str(d.get("nim", "1101210045"))
+        partner = str(d.get("community_partner", "Kelompok Tani Desa Karangmangu"))
+        prop_title = str(d.get("proposal_title", "Pemberdayaan Teknologi IoT Irigasi Desa"))
+        score = float(d.get("composite_score", 88.5))
+        grade = str(d.get("letter_grade", "A"))
+        grant = int(d.get("grant_amount_idr", 8500000))
+        sks = int(d.get("converted_sks", 5))
+        status = str(d.get("funding_status", "Lolos Pendanaan Nasional PKM-PM Belmawa Unggulan"))
+
+        return f"""    <div class="tu-editorial-card tu-pkmpm-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #10b981; background: #ecfdf5; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #047857; font-size: 16px;">🤝 {title}</h4>
+      <div style="font-size: 14px; margin-bottom: 8px;">Judul Kegiatan: <strong>{prop_title}</strong></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Ketua Pengusul: <strong>{leader}</strong> ({nim})</div>
+        <div>Mitra Sasaran: <strong>{partner}</strong></div>
+        <div>Skor Evaluasi: <strong style="color: #047857;">{score:.1f} ({grade})</strong></div>
+        <div>Dana Hibah Belmawa: <strong>Rp {grant:,}</strong></div>
+        <div>Rekognisi MBKM: <strong style="color: #047857;">{sks} SKS</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #047857;">
+        Status Pendanaan: <strong>{status}</strong> &bull; Ekuivalensi: <em>Program Kuliah Kerja Nyata (KKN) Tematik / Pengabdian Masyarakat</em>
+      </div>
+    </div>"""
+
 
 
 
