@@ -8707,6 +8707,61 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_autocomplete_valid_field_tokens(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits form input elements for valid WCAG 2.1 Section 7 autocomplete purpose tokens (WCAG 2.1 SC 1.3.5).
+        """
+        if not html_content:
+            return {
+                "total_inputs": 0,
+                "invalid_autocomplete_inputs": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        valid_tokens = {
+            "on", "off", "name", "honorific-prefix", "given-name", "additional-name",
+            "family-name", "honorific-suffix", "nickname", "email", "username",
+            "new-password", "current-password", "one-time-code", "organization-title",
+            "organization", "street-address", "address-line1", "address-line2",
+            "address-level1", "address-level2", "address-level3", "address-level4",
+            "country", "country-name", "postal-code", "cc-name", "cc-given-name",
+            "cc-additional-name", "cc-family-name", "cc-number", "cc-exp",
+            "cc-exp-month", "cc-exp-year", "cc-csc", "cc-type", "transaction-currency",
+            "transaction-amount", "language", "bday", "bday-day", "bday-month",
+            "bday-year", "sex", "url", "photo", "tel", "tel-country-code",
+            "tel-national", "tel-area-code", "tel-local", "tel-extension", "impp"
+        }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        inputs = soup.find_all("input")
+        issues = []
+        invalid_count = 0
+
+        for inp in inputs:
+            itype = str(inp.get("type", "text")).strip().lower()
+            if itype in ("hidden", "submit", "reset", "button", "checkbox", "radio", "file"):
+                continue
+
+            auto = inp.get("autocomplete")
+            if auto is not None:
+                tokens = [t.strip().lower() for t in str(auto).split() if t.strip()]
+                for t in tokens:
+                    if t.startswith("section-") or t in ("shipping", "billing", "home", "work", "mobile", "fax", "pager"):
+                        continue
+                    if t not in valid_tokens:
+                        invalid_count += 1
+                        issues.append(f"<input type='{itype}' name='{inp.get('name', '')}'>: Token autocomplete '{t}' tidak valid sesuai WCAG 2.1 SC 1.3.5.")
+                        break
+
+        return {
+            "total_inputs": len(inputs),
+            "invalid_autocomplete_inputs": invalid_count,
+            "is_compliant": invalid_count == 0,
+            "issues": issues
+        }
+
 
 
 
