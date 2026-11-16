@@ -10026,6 +10026,68 @@ def calculate_5g_nr_csi_rs_resource_and_overhead(
     }
 
 
+def calculate_optical_nonlinear_phase_shift_and_b_integral(
+    launch_power_mw: float = 3.0,
+    span_count: int = 8,
+    span_length_km: float = 80.0,
+    attenuation_db_per_km: float = 0.20,
+    nonlinear_refractive_index_n2: float = 2.6e-20,
+    effective_area_um2: float = 80.0,
+    wavelength_nm: float = 1550.0
+) -> Dict[str, Any]:
+    """
+    Calculates optical fiber Kerr nonlinearity Self-Phase Modulation (SPM) phase shift,
+    effective fiber length, and accumulated B-integral across multi-span amplified DWDM links.
+    """
+    p_tx_mw = max(0.1, min(100.0, float(launch_power_mw)))
+    spans = max(1, min(50, int(span_count)))
+    l_span = max(10.0, min(160.0, float(span_length_km)))
+    alpha_db = max(0.15, min(0.40, float(attenuation_db_per_km)))
+    n2 = float(nonlinear_refractive_index_n2)
+    a_eff = max(50.0, min(150.0, float(effective_area_um2)))
+    wlen = max(1520.0, min(1620.0, float(wavelength_nm)))
+
+    alpha_np = alpha_db / 4.343
+    l_eff_km = (1.0 - math.exp(-alpha_np * l_span)) / alpha_np
+
+    wlen_m = wlen * 1e-9
+    a_eff_m2 = a_eff * 1e-12
+    gamma = (2.0 * math.pi * n2) / (wlen_m * a_eff_m2) * 1e3
+
+    p_tx_w = p_tx_mw * 1e-3
+    phi_nl_span_rad = gamma * p_tx_w * l_eff_km
+    phi_nl_span_deg = math.degrees(phi_nl_span_rad)
+
+    b_integral_rad = round(spans * phi_nl_span_rad, 3)
+
+    if b_integral_rad >= 2.0:
+        status_category = "CRITICAL_NONLINEAR_DISTORTION"
+        recommendation = "B-integral melampaui batas 2.0 rad; distorsi fase SPM/XPM signifikan; turunkan daya luncur laser atau aktifkan Digital Backpropagation (DBP)."
+    elif b_integral_rad >= 1.0:
+        status_category = "MODERATE_NONLINEAR_PENALTY"
+        recommendation = "Penalti nonlinier termonitor moderat; pastikan chromatic dispersion uncompensated post-filtering bekerja optimal."
+    else:
+        status_category = "LINEAR_PROPAGATION_REGIME"
+        recommendation = "Rezim propagasi linear terjaga; akumulasi B-integral sangat rendah, integritas konstelasi QAM terjamin."
+
+    return {
+        "launch_power_mw": p_tx_mw,
+        "span_count": spans,
+        "span_length_km": l_span,
+        "total_distance_km": round(spans * l_span, 1),
+        "attenuation_db_per_km": alpha_db,
+        "effective_area_um2": a_eff,
+        "wavelength_nm": wlen,
+        "nonlinear_coefficient_gamma": round(gamma, 3),
+        "effective_length_km": round(l_eff_km, 2),
+        "phase_shift_per_span_rad": round(phi_nl_span_rad, 4),
+        "phase_shift_per_span_deg": round(phi_nl_span_deg, 2),
+        "accumulated_b_integral_rad": b_integral_rad,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
