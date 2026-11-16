@@ -8809,6 +8809,43 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_status_messages_aria_live_announcement(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits dynamic status messages and alert containers to verify programmatic announcement
+        via role="status", role="alert", or aria-live attributes (WCAG 2.1 SC 4.1.3).
+        """
+        if not html_content:
+            return {
+                "total_status_containers": 0,
+                "unannounced_status_messages": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        status_pattern = re.compile(r'\b(?:alert|status-message|notification-banner|toast-notice|live-status)\b', re.IGNORECASE)
+        containers = soup.find_all(lambda tag: tag.has_attr("class") and any(status_pattern.search(c) for c in tag.get("class", [])))
+        issues = []
+        unannounced_count = 0
+
+        for c in containers:
+            role = str(c.get("role", "")).strip().lower()
+            aria_live = str(c.get("aria-live", "")).strip().lower()
+
+            has_valid_announcer = (role in ("status", "alert", "log")) or (aria_live in ("polite", "assertive"))
+            if not has_valid_announcer:
+                unannounced_count += 1
+                cls_str = " ".join(c.get("class", []))
+                issues.append(f"<{c.name} class='{cls_str}'>: Pesan status tidak memiliki atribut 'role=\"status\"' atau 'aria-live=\"polite\"' sesuai WCAG SC 4.1.3.")
+
+        return {
+            "total_status_containers": len(containers),
+            "unannounced_status_messages": unannounced_count,
+            "is_compliant": unannounced_count == 0,
+            "issues": issues
+        }
+
 
 
 
