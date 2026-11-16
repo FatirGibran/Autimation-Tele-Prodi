@@ -844,24 +844,18 @@ class HTMLSanitizer:
 
         # 8at. Sanitize HTML5 SVG foreignObject embedded elements
         if "<foreignobject" in cleaned.lower():
-            old_val = cleaned
             cleaned = sanitize_html5_svg_foreignobject(cleaned)
-            if cleaned != old_val:
-                warnings.append("Sanitized HTML5 SVG foreignObject embedded elements.")
+            warnings.append("Sanitized HTML5 SVG foreignObject embedded elements.")
 
         # 8au. Sanitize HTML5 MathML markup and CDATA script blocks
         if "<math" in cleaned.lower():
-            old_val = cleaned
             cleaned = sanitize_html5_math_markup_cdata(cleaned)
-            if cleaned != old_val:
-                warnings.append("Sanitized HTML5 MathML markup and CDATA script blocks.")
+            warnings.append("Sanitized HTML5 MathML markup and CDATA script blocks.")
 
         # 8av. Sanitize HTML5 portal navigation traps and activation listeners
         if "<portal" in cleaned.lower():
-            old_val = cleaned
             cleaned = sanitize_html5_portal_navigation_traps(cleaned)
-            if cleaned != old_val:
-                warnings.append("Sanitized HTML5 portal navigation traps and activation listeners.")
+            warnings.append("Sanitized HTML5 portal navigation traps and activation listeners.")
 
         return cleaned, warnings
 

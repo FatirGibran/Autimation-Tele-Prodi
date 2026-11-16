@@ -75,7 +75,10 @@ from sanitizer import (
     sanitize_html5_applet_legacy_elements,
     sanitize_html5_dialog_element_autofocus_trap,
     sanitize_html5_shadow_dom_template_elements,
-    sanitize_html5_media_track_elements
+    sanitize_html5_media_track_elements,
+    sanitize_html5_svg_foreignobject,
+    sanitize_html5_math_markup_cdata,
+    sanitize_html5_portal_navigation_traps
 )
 
 
@@ -1564,6 +1567,40 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertTrue(any("dialog" in w.lower() for w in warnings))
         self.assertTrue(any("shadow dom" in w.lower() for w in warnings))
         self.assertTrue(any("media track" in w.lower() for w in warnings))
+
+    def test_sanitize_html5_svg_foreignobject(self):
+        raw = '<svg><foreignObject width="100" height="100" onload="hack()" xlink:href="javascript:bad()"><script>evil()</script><p>Clean Text</p></foreignObject></svg>'
+        cleaned = sanitize_html5_svg_foreignobject(raw)
+        self.assertNotIn("onload=", cleaned)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertIn("<foreignObject", cleaned)
+        self.assertIn("Clean Text", cleaned)
+
+    def test_sanitize_html5_math_markup_cdata(self):
+        raw = '<math xmlns="http://www.w3.org/1998/Math/MathML" onclick="run()"><annotation-xml encoding="text/html"><script>exploit()</script><p>Equation Text</p></annotation-xml><![CDATA[<script>cdata_xss()</script>]]></math>'
+        cleaned = sanitize_html5_math_markup_cdata(raw)
+        self.assertNotIn("onclick=", cleaned)
+        self.assertNotIn("<script>", cleaned)
+        self.assertIn("<math", cleaned)
+        self.assertIn("Equation Text", cleaned)
+
+    def test_sanitize_html5_portal_navigation_traps(self):
+        raw = '<portal src="javascript:evil()" onactivate="trap()" style="opacity:0; pointer-events:none"></portal>'
+        cleaned = sanitize_html5_portal_navigation_traps(raw)
+        self.assertNotIn("javascript:", cleaned)
+        self.assertNotIn("onactivate=", cleaned)
+        self.assertNotIn("opacity:0", cleaned)
+        self.assertIn("<portal", cleaned)
+
+    def test_sanitize_html_with_foreignobject_math_portal_elements(self):
+        html = '<div class="tu-editorial-container"><foreignObject width="100" height="100"><iframe src="http://evil.com"></iframe><p>Inner</p></foreignObject><math><annotation-xml><iframe src="http://evil.com"></iframe><p>Equation</p></annotation-xml></math><portal src="data:text/html;base64,PHNjcmlwdD4="></portal></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn("<iframe", clean)
+        self.assertNotIn("data:text/html", clean)
+        self.assertTrue(any("foreignobject" in w.lower() for w in warnings))
+        self.assertTrue(any("mathml" in w.lower() for w in warnings))
+        self.assertTrue(any("portal" in w.lower() for w in warnings))
 
 
 
