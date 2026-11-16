@@ -9273,6 +9273,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_nonlinear_phase_shift_card(
+        cls,
+        title: str = "Telemetri Akumulasi Distorsi Nonlinier Serat Optik (SPM/XPM)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for optical fiber Kerr nonlinearity SPM phase shift,
+        effective length, accumulated B-integral across amplified DWDM spans, and distortion mitigations.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        power = float(d.get("launch_power_mw", 3.0))
+        spans = int(d.get("span_count", 8))
+        dist = float(d.get("total_distance_km", 640.0))
+        l_eff = float(d.get("effective_length_km", 21.3))
+        phi_deg = float(d.get("phase_shift_per_span_deg", 9.4))
+        b_int = float(d.get("accumulated_b_integral_rad", 1.31))
+        status = str(d.get("status_category", "MODERATE_NONLINEAR_PENALTY")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-nonlinear-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #f59e0b; background: #fffbeb; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #d97706; font-size: 16px;">⚡ {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Daya Luncur Tx: <strong>{power:.1f} mW</strong></div>
+        <div>Jumlah Span: <strong>{spans} Spans ({dist:.0f} km)</strong></div>
+        <div>Panjang Efektif Leff: <strong>{l_eff:.2f} km</strong></div>
+        <div>Pergeseran Fase: <strong>{phi_deg:.1f}&deg; / span</strong></div>
+        <div>B-Integral Total: <strong style="color: #b45309;">{b_int:.3f} rad</strong></div>
+        <div>Rezim Transmisi: <strong>{status}</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #b45309;">
+        Rekomendasi NMS: <em>Optimasi kontrol daya per-kanal EDFA & pemerataan dispersi kromatik residual</em>
+      </div>
+    </div>"""
+
 
 
 
