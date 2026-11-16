@@ -3085,6 +3085,85 @@ Status: Granted
         self.assertFalse(res_unfunded["is_funded"])
         self.assertEqual(res_unfunded["grant_amount_idr"], 0)
 
+    def test_calculate_satellite_tropospheric_scintillation_itu_r_p618(self):
+        from parser import calculate_satellite_tropospheric_scintillation_itu_r_p618
+        res = calculate_satellite_tropospheric_scintillation_itu_r_p618(
+            frequency_ghz=14.25,
+            elevation_angle_deg=28.5,
+            antenna_diameter_m=2.4,
+            antenna_efficiency=0.60,
+            refractivity_n_wet=52.0,
+            time_percentage_p=0.1
+        )
+        self.assertAlmostEqual(res["frequency_ghz"], 14.25)
+        self.assertGreater(res["signal_standard_deviation_db"], 0.0)
+        self.assertGreater(res["scintillation_fade_depth_db"], 0.0)
+        self.assertIn("status_category", res)
+        self.assertIn("recommendation", res)
+
+    def test_calculate_5g_nr_csi_rs_resource_and_overhead(self):
+        from parser import calculate_5g_nr_csi_rs_resource_and_overhead
+        res = calculate_5g_nr_csi_rs_resource_and_overhead(
+            allocated_prbs=106,
+            antenna_ports=32,
+            cdm_type="cdm8-FD2-TD4",
+            density=1.0,
+            periodicity_slots=20,
+            mimo_layers=4
+        )
+        self.assertEqual(res["antenna_ports"], 32)
+        self.assertEqual(res["cdm_group_size"], 8)
+        self.assertEqual(res["cdm_groups_count"], 4)
+        self.assertGreater(res["instantaneous_overhead_pct"], 0.0)
+        self.assertGreater(res["average_overhead_pct"], 0.0)
+        self.assertIn("HIGH_ORDER_MASSIVE_MIMO_CSI", res["status_category"])
+
+    def test_calculate_optical_nonlinear_phase_shift_and_b_integral(self):
+        from parser import calculate_optical_nonlinear_phase_shift_and_b_integral
+        res = calculate_optical_nonlinear_phase_shift_and_b_integral(
+            launch_power_mw=3.0,
+            span_count=8,
+            span_length_km=80.0,
+            attenuation_db_per_km=0.20
+        )
+        self.assertEqual(res["span_count"], 8)
+        self.assertAlmostEqual(res["total_distance_km"], 640.0)
+        self.assertGreater(res["accumulated_b_integral_rad"], 0.0)
+        self.assertGreater(res["effective_length_km"], 0.0)
+        self.assertIn("status_category", res)
+
+    def test_parse_pkm_pm_proposal_evaluation(self):
+        from parser import parse_pkm_pm_proposal_evaluation
+        res_funded = parse_pkm_pm_proposal_evaluation({
+            "student_leader": "Anisa Putri",
+            "nim": "1101210045",
+            "community_partner": "Kelompok Tani Desa Karangmangu",
+            "proposal_title": "Penerapan Smart Water Monitoring Berbasis LoRaWAN untuk Irigasi Desa",
+            "target_locality": "Banyumas",
+            "partner_problem_urgency_score": 90.0,
+            "technology_solution_appropriateness_score": 88.0,
+            "implementation_methodology_score": 86.0,
+            "program_sustainability_score": 85.0,
+            "social_economic_impact_score": 90.0,
+            "has_turnitin_clearance": True
+        })
+        self.assertEqual(res_funded["letter_grade"], "A")
+        self.assertEqual(res_funded["grant_amount_idr"], 8500000)
+        self.assertEqual(res_funded["converted_sks"], 5)
+        self.assertTrue(res_funded["is_funded"])
+
+        res_unfunded = parse_pkm_pm_proposal_evaluation({
+            "partner_problem_urgency_score": 55.0,
+            "technology_solution_appropriateness_score": 55.0,
+            "implementation_methodology_score": 55.0,
+            "program_sustainability_score": 55.0,
+            "social_economic_impact_score": 55.0,
+            "has_turnitin_clearance": False
+        })
+        self.assertEqual(res_unfunded["similarity_penalty"], 10.0)
+        self.assertFalse(res_unfunded["is_funded"])
+        self.assertEqual(res_unfunded["grant_amount_idr"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
