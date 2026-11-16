@@ -9237,6 +9237,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_csi_rs_telemetry_card(
+        cls,
+        title: str = "Telemetri 5G NR CSI-RS Resource & Port Multiplexing (3GPP TS 38.211)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for 5G NR CSI-RS port allocation, CDM multiplexing type,
+        resource element overhead, and spatial beam tracking precision.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        prbs = int(d.get("allocated_prbs", 106))
+        ports = int(d.get("antenna_ports", 32))
+        cdm = str(d.get("cdm_type", "cdm8-FD2-TD4"))
+        overhead_inst = float(d.get("instantaneous_overhead_pct", 19.05))
+        overhead_avg = float(d.get("average_overhead_pct", 0.95))
+        period = int(d.get("periodicity_slots", 20))
+        status = str(d.get("status_category", "HIGH_ORDER_MASSIVE_MIMO_CSI")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-csi-rs-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #8b5cf6; background: #faf5ff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #7c3aed; font-size: 16px;">📶 {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Bandwidth: <strong>{prbs} PRB</strong></div>
+        <div>Antenna Ports: <strong style="color: #6d28d9;">{ports} Ports</strong></div>
+        <div>CDM Scheme: <strong>{cdm}</strong></div>
+        <div>Periodisitas: <strong>{period} Slots</strong></div>
+        <div>Overhead Instan: <strong>{overhead_inst:.2f}%</strong></div>
+        <div>Rata-rata Overhead: <strong style="color: #059669;">{overhead_avg:.3f}%</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #6d28d9;">
+        Kategori: <strong>{status}</strong> &bull; Estimasi Kanal: <em>3D Beamforming & Channel State Feedback Akurat</em>
+      </div>
+    </div>"""
+
 
 
 
