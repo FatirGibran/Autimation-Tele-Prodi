@@ -9957,6 +9957,75 @@ def calculate_satellite_tropospheric_scintillation_itu_r_p618(
     }
 
 
+def calculate_5g_nr_csi_rs_resource_and_overhead(
+    allocated_prbs: int = 106,
+    antenna_ports: int = 32,
+    cdm_type: str = "cdm8-FD2-TD4",
+    density: float = 1.0,
+    periodicity_slots: int = 20,
+    mimo_layers: int = 4
+) -> Dict[str, Any]:
+    """
+    Calculates 5G NR CSI-RS (Channel State Information Reference Signal) resource elements,
+    Code Division Multiplexing (CDM) overhead, and spatial channel estimation capability (3GPP TS 38.211 / TS 38.214).
+    """
+    prbs = max(1, min(273, int(allocated_prbs)))
+    ports = int(antenna_ports)
+    if ports not in (1, 2, 4, 8, 12, 16, 24, 32):
+        ports = 32
+    cdm = str(cdm_type).strip()
+    if cdm not in ("noCDM", "fd-CDM2", "cdm4-FD2-TD2", "cdm8-FD2-TD4"):
+        cdm = "cdm8-FD2-TD4"
+    dens = float(density)
+    period = max(1, min(640, int(periodicity_slots)))
+    layers = max(1, min(8, int(mimo_layers)))
+
+    res_per_prb_slot = int(round(dens * ports))
+    total_csi_rs_res_per_slot = res_per_prb_slot * prbs
+
+    total_slot_res_per_prb = 168
+    instantaneous_overhead_pct = round((res_per_prb_slot / total_slot_res_per_prb) * 100.0, 2)
+    average_overhead_pct = round(instantaneous_overhead_pct / period, 3)
+
+    if cdm == "cdm8-FD2-TD4":
+        cdm_group_size = 8
+    elif cdm == "cdm4-FD2-TD2":
+        cdm_group_size = 4
+    elif cdm == "fd-CDM2":
+        cdm_group_size = 2
+    else:
+        cdm_group_size = 1
+
+    cdm_groups_count = max(1, ports // cdm_group_size)
+
+    if ports >= 16:
+        status_category = "HIGH_ORDER_MASSIVE_MIMO_CSI"
+        recommendation = "Konfigurasi CSI-RS resolusi tinggi 3D beamforming; optimal untuk multi-user MIMO dan beam sweeping presisi."
+    elif ports >= 4:
+        status_category = "MID_DENSITY_CSI"
+        recommendation = "CSI-RS seimbang antara akurasi channel state feedback dan efisiensi throughput data PDSCH."
+    else:
+        status_category = "LIGHTWEIGHT_CSI"
+        recommendation = "Overhead CSI-RS minimal; cocok untuk single-stream atau transmisi polarisasi ganda dasar."
+
+    return {
+        "allocated_prbs": prbs,
+        "antenna_ports": ports,
+        "cdm_type": cdm,
+        "cdm_group_size": cdm_group_size,
+        "cdm_groups_count": cdm_groups_count,
+        "density": dens,
+        "periodicity_slots": period,
+        "mimo_layers": layers,
+        "res_per_prb_slot": res_per_prb_slot,
+        "total_csi_rs_res_per_slot": total_csi_rs_res_per_slot,
+        "instantaneous_overhead_pct": instantaneous_overhead_pct,
+        "average_overhead_pct": average_overhead_pct,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
