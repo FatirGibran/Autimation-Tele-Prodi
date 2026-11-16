@@ -8673,6 +8673,40 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_heading_order_continuity(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits semantic heading hierarchy continuity (h1-h6) to ensure no heading levels are skipped
+        (e.g., h1 followed directly by h3 without h2, or h2 followed by h4) for screen reader accessibility (WCAG 2.1 SC 1.3.1).
+        """
+        if not html_content:
+            return {
+                "total_headings": 0,
+                "skipped_heading_levels": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        headings = soup.find_all(re.compile(r"^h[1-6]$"))
+        issues = []
+        skipped_count = 0
+        last_level = 0
+
+        for h in headings:
+            current_level = int(h.name[1])
+            if last_level > 0 and current_level > last_level + 1:
+                skipped_count += 1
+                issues.append(f"<{h.name}> ('{h.get_text().strip()[:40]}'): Melompati hierarki heading dari <h{last_level}> langsung ke <h{current_level}>.")
+            last_level = current_level
+
+        return {
+            "total_headings": len(headings),
+            "skipped_heading_levels": skipped_count,
+            "is_compliant": skipped_count == 0,
+            "issues": issues
+        }
+
 
 
 
