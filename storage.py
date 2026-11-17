@@ -1780,6 +1780,23 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_k_nim ON pkm_k_proposal_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS satellite_scintillation_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    frequency_ghz REAL NOT NULL,
+                    elevation_angle_deg REAL NOT NULL,
+                    antenna_diameter_m REAL NOT NULL,
+                    antenna_efficiency REAL NOT NULL,
+                    refractivity_n_wet REAL NOT NULL,
+                    aperture_averaging_factor REAL NOT NULL,
+                    signal_standard_deviation_db REAL NOT NULL,
+                    scintillation_fade_depth_db REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    recommendation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_scint_freq ON satellite_scintillation_records(frequency_ghz);")
 
 
 
@@ -8013,6 +8030,61 @@ class StorageManager:
     record_pkm_k_proposal = save_pkm_k_proposal
     list_pkm_k_proposals_alias = list_pkm_k_proposals
     get_pkm_k_proposal_by_id_alias = get_pkm_k_proposal_by_id
+
+    def save_satellite_scintillation_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a satellite tropospheric scintillation fade depth calculation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO satellite_scintillation_records (
+                    frequency_ghz, elevation_angle_deg, antenna_diameter_m,
+                    antenna_efficiency, refractivity_n_wet, aperture_averaging_factor,
+                    signal_standard_deviation_db, scintillation_fade_depth_db,
+                    status_category, recommendation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(d.get("frequency_ghz", 14.25)),
+                float(d.get("elevation_angle_deg", 28.5)),
+                float(d.get("antenna_diameter_m", 2.4)),
+                float(d.get("antenna_efficiency", 0.60)),
+                float(d.get("refractivity_n_wet", 52.0)),
+                float(d.get("aperture_averaging_factor", 0.72)),
+                float(d.get("signal_standard_deviation_db", 0.45)),
+                float(d.get("scintillation_fade_depth_db", 1.85)),
+                str(d.get("status_category", "MODERATE_SCINTILLATION")).strip(),
+                str(d.get("recommendation", "Aperture averaging effective")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_satellite_scintillation_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent satellite tropospheric scintillation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_scintillation_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_satellite_scintillation_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single satellite tropospheric scintillation record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_scintillation_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_satellite_scintillation = save_satellite_scintillation_record
+    list_satellite_scintillation = list_satellite_scintillation_records
+    get_satellite_scintillation_by_id = get_satellite_scintillation_record_by_id
 
 
 
