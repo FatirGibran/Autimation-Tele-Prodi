@@ -3060,6 +3060,64 @@ navigation: true
         ]
         return "\n".join(frontmatter)
 
+    @staticmethod
+    def generate_community_service_grant_json_ld(
+        headline: str,
+        leader: str,
+        partner: str,
+        target_locality: str,
+        description: str,
+        grant_amount_idr: int,
+        published_date: str = "2026-11-17",
+        url: str = "https://telecom.ittelkom-pwt.ac.id/pkm-pm",
+        converted_sks: int = 4
+    ) -> Dict[str, Any]:
+        """
+        Generates Schema.org SocialEvent and MonetaryGrant structured data for student PKM-PM
+        community empowerment outreach programs.
+        """
+        return {
+            "@context": "https://schema.org",
+            "@type": "SocialEvent",
+            "name": headline.strip(),
+            "description": description.strip(),
+            "url": url.strip(),
+            "startDate": published_date.strip(),
+            "location": {
+                "@type": "Place",
+                "name": partner.strip(),
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": target_locality.strip(),
+                    "addressCountry": "ID"
+                }
+            },
+            "organizer": {
+                "@type": "Person",
+                "name": leader.strip(),
+                "jobTitle": "Student Project Leader & Community Facilitator"
+            },
+            "funder": {
+                "@type": "GovernmentOrganization",
+                "name": "Direktorat Pembelajaran dan Kemahasiswaan (Belmawa) Kemendikbudristek",
+                "url": "https://simbelmawa.kemdikbud.go.id/"
+            },
+            "offers": {
+                "@type": "MonetaryGrant",
+                "name": "Belmawa PKM-PM Community Empowerment Grant",
+                "amount": {
+                    "@type": "MonetaryAmount",
+                    "currency": "IDR",
+                    "value": int(grant_amount_idr)
+                },
+                "funder": {
+                    "@type": "GovernmentOrganization",
+                    "name": "Direktorat Pembelajaran dan Kemahasiswaan (Belmawa) Kemendikbudristek"
+                }
+            },
+            "educationalCredentialAwarded": f"{int(converted_sks)} SKS Pengabdian Masyarakat MBKM"
+        }
+
 
 
 
