@@ -1580,6 +1580,20 @@ class WordPressClient:
             "total": len(post_status_map)
         }
 
+    def get_revisions_by_post_id(
+        self,
+        post_id: int,
+        page: int = 1,
+        per_page: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves paginated historical revisions for a WordPress post by post ID.
+        """
+        endpoint = f"{self.api_url}/posts/{int(post_id)}/revisions?page={max(1, int(page))}&per_page={max(1, min(100, int(per_page)))}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        res = self._send_request(req)
+        return res if isinstance(res, list) else []
+
 
 
 
