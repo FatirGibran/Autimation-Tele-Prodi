@@ -69,7 +69,9 @@ from parser import (
     parse_pkm_ai_proposal_evaluation,
     calculate_uwoc_oceanic_link_budget,
     calculate_5g_nr_pusch_throughput_and_spectral_efficiency,
-    parse_pkm_k_proposal_evaluation
+    parse_pkm_k_proposal_evaluation,
+    calculate_satellite_tropospheric_scintillation_itu_r_p618,
+    calculate_5g_nr_csi_rs_resource_and_overhead
 )
 
 from seo_validator import YoastSEOValidator
@@ -4037,6 +4039,145 @@ def cmd_pkmk(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['business_category'][:20]:<22} | {r['composite_score']:<6.2f} | {fund_str} ({r['letter_grade']})")
 
 
+def cmd_troposcint(args):
+    if args.action == "add":
+        freq = float(args.freq) if args.freq is not None else 14.25
+        elevation = float(args.elevation) if args.elevation is not None else 28.5
+        diameter = float(args.diameter) if args.diameter is not None else 2.4
+        eff = float(args.efficiency) if args.efficiency is not None else 0.60
+        refract = float(args.refractivity) if args.refractivity is not None else 52.0
+        outage = float(args.outage) if args.outage is not None else 0.01
+
+        res = calculate_satellite_tropospheric_scintillation_itu_r_p618(
+            frequency_ghz=freq,
+            elevation_angle_deg=elevation,
+            antenna_diameter_m=diameter,
+            antenna_efficiency=eff,
+            refractivity_n_wet=refract,
+            time_percentage_p=outage
+        )
+        rec_id = storage.save_satellite_scintillation_record({
+            "frequency_ghz": res["frequency_ghz"],
+            "elevation_angle_deg": res["elevation_angle_deg"],
+            "antenna_diameter_m": res["antenna_diameter_m"],
+            "antenna_efficiency": res["antenna_efficiency"],
+            "refractivity_n_wet": res["refractivity_n_wet"],
+            "aperture_averaging_factor": res["aperture_averaging_factor"],
+            "signal_standard_deviation_db": res["signal_standard_deviation_db"],
+            "scintillation_fade_depth_db": res["scintillation_fade_depth_db"],
+            "status_category": res["status_category"],
+            "recommendation": res["recommendation"]
+        })
+        print(f"Catatan Scintillation Satelit berhasil disimpan dengan ID: {rec_id} (Fade Depth: {res['scintillation_fade_depth_db']} dB, Status: {res['status_category']})")
+    else:
+        records = storage.list_satellite_scintillation_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan scintillation satelit yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'FREQ (GHz)':<12} | {'ELEV (deg)':<12} | {'FADE (dB)':<12} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['frequency_ghz']:<12.2f} | {r['elevation_angle_deg']:<12.2f} | {r['scintillation_fade_depth_db']:<12.2f} | {r['status_category']}")
+
+
+def cmd_nrcsirs(args):
+    if args.action == "add":
+        cell_id = args.cell_id or "CELL-5G-CSI-01"
+        prb = int(args.prb) if args.prb is not None else 106
+        ports = int(args.ports) if args.ports is not None else 32
+        cdm = args.cdm or "cdm8-FD2-TD4"
+        periodicity = int(args.periodicity) if args.periodicity is not None else 20
+        layers = int(args.layers) if args.layers is not None else 4
+
+        res = calculate_5g_nr_csi_rs_resource_and_overhead(
+            cell_id=cell_id,
+            allocated_prbs=prb,
+            antenna_ports=ports,
+            cdm_type=cdm,
+            periodicity_slots=periodicity,
+            mimo_layers=layers
+        )
+        rec_id = storage.save_nr_csi_rs_record({
+            "cell_id": res["cell_id"],
+            "allocated_prbs": res["allocated_prbs"],
+            "antenna_ports": res["antenna_ports"],
+            "cdm_type": res["cdm_type"],
+            "periodicity_slots": res["periodicity_slots"],
+            "mimo_layers": res["mimo_layers"],
+            "res_per_prb_slot": res["res_per_prb_slot"],
+            "instantaneous_overhead_pct": res["instantaneous_overhead_pct"],
+            "average_overhead_pct": res["average_overhead_pct"],
+            "status_category": res["status_category"],
+            "recommendation": res["recommendation"]
+        })
+        print(f"Catatan CSI-RS 5G NR berhasil disimpan dengan ID: {rec_id} (Port: {res['antenna_ports']}, Avg Overhead: {res['average_overhead_pct']}%, Status: {res['status_category']})")
+    else:
+        records = storage.list_nr_csi_rs_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan CSI-RS 5G NR yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CELL ID':<16} | {'PORTS':<6} | {'CDM':<14} | {'AVG OVH (%)':<12} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cell_id']:<16} | {r['antenna_ports']:<6} | {r['cdm_type']:<14} | {r['average_overhead_pct']:<12.2f} | {r['status_category']}")
+
+
+def cmd_pkmcommunity(args):
+    if args.action == "add":
+        leader = args.leader or "Citra Kirana"
+        nim = args.nim or "20101150"
+        title = args.title or "Pemberdayaan UMKM Gula Kelapa Berbasis IoT"
+        partner = args.partner or "Kelompok Tani Desa Kedungwringin"
+        locality = args.locality or "Banyumas, Jawa Tengah"
+        urgency = float(args.urgency) if args.urgency is not None else 88.0
+        solution = float(args.solution) if args.solution is not None else 90.0
+        methodology = float(args.methodology) if args.methodology is not None else 85.0
+        sustainability = float(args.sustainability) if args.sustainability is not None else 85.0
+        impact = float(args.impact) if args.impact is not None else 90.0
+        has_turnitin = not args.no_turnitin
+
+        res = parse_pkm_pm_proposal_evaluation({
+            "student_leader": leader,
+            "nim": nim,
+            "community_partner": partner,
+            "proposal_title": title,
+            "target_locality": locality,
+            "partner_problem_urgency_score": urgency,
+            "technology_solution_appropriateness_score": solution,
+            "implementation_methodology_score": methodology,
+            "program_sustainability_score": sustainability,
+            "social_economic_impact_score": impact,
+            "has_turnitin_clearance": has_turnitin
+        })
+        rec_id = storage.save_pkm_pm_community_record({
+            "student_leader": res["student_leader"],
+            "nim": res["nim"],
+            "community_partner": res["community_partner"],
+            "proposal_title": res["proposal_title"],
+            "target_locality": res["target_locality"],
+            "composite_score": res["composite_score"],
+            "letter_grade": res["letter_grade"],
+            "grade_point": res["grade_point"],
+            "funding_status": res["funding_status"],
+            "grant_amount_idr": res["grant_amount_idr"],
+            "converted_sks": res["converted_sks"],
+            "has_turnitin_clearance": res["has_turnitin_clearance"],
+            "is_funded": res["is_funded"]
+        })
+        status_label = "DIDANAI" if res["is_funded"] else "TIDAK_DIDANAI"
+        print(f"Catatan PKM-PM Komunitas berhasil disimpan dengan ID: {rec_id} (Skor: {res['composite_score']}, Status: {status_label}, Hibah: Rp {res['grant_amount_idr']:,}, SKS: {res['converted_sks']})")
+    else:
+        records = storage.list_pkm_pm_community_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan PKM-PM Komunitas yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'KETUA':<18} | {'NIM':<12} | {'MITRA':<22} | {'SKOR':<6} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            fund_str = "Didanai" if r.get("is_funded") else "Tidak"
+            print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['community_partner'][:20]:<22} | {r['composite_score']:<6.2f} | {fund_str} ({r['letter_grade']})")
+
+
 
 def main():
 
@@ -5390,6 +5531,47 @@ def main():
     pkmk_parser.add_argument("--no-turnitin", action="store_true", help="Tandai jika tidak lolos uji Turnitin")
     pkmk_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmk_parser.set_defaults(func=cmd_pkmk)
+
+    # Satellite Tropospheric Scintillation ITU-R P.618 command
+    troposcint_parser = subparsers.add_parser("troposcint", help="Perhitungan atenuasi tropospheric scintillation satelit ITU-R P.618")
+    troposcint_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi scintillation satelit")
+    troposcint_parser.add_argument("--freq", type=float, default=14.25, help="Frekuensi sinyal satelit (GHz)")
+    troposcint_parser.add_argument("--elevation", type=float, default=28.5, help="Sudut elevasi antena bumi (derajat)")
+    troposcint_parser.add_argument("--diameter", type=float, default=2.4, help="Diameter reflektor antena (meter)")
+    troposcint_parser.add_argument("--efficiency", type=float, default=0.60, help="Efisiensi bukaan antena (0.0-1.0)")
+    troposcint_parser.add_argument("--refractivity", type=float, default=52.0, help="Refraktivitas uap air basah troposfer N_wet (ppm)")
+    troposcint_parser.add_argument("--outage", type=float, default=0.01, help="Persentase waktu outage p (0.01-50%%)")
+    troposcint_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    troposcint_parser.set_defaults(func=cmd_troposcint)
+
+    # 5G NR CSI-RS Resource & Overhead command
+    nrcsirs_parser = subparsers.add_parser("nrcsirs", help="Analisis resource overhead dan alokasi antena port 5G NR CSI-RS")
+    nrcsirs_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi CSI-RS 5G")
+    nrcsirs_parser.add_argument("--cell-id", default="CELL-5G-CSI-01", help="Identitas sel gNodeB 5G")
+    nrcsirs_parser.add_argument("--prb", type=int, default=106, help="Alokasi resource blocks bandwidth")
+    nrcsirs_parser.add_argument("--ports", type=int, default=32, help="Jumlah antena port CSI-RS")
+    nrcsirs_parser.add_argument("--cdm", default="cdm8-FD2-TD4", help="Skema Code Division Multiplexing CSI-RS")
+    nrcsirs_parser.add_argument("--periodicity", type=int, default=20, help="Periodisitas transmisi CSI-RS dalam slot")
+    nrcsirs_parser.add_argument("--layers", type=int, default=4, help="Jumlah MIMO spatial layers")
+    nrcsirs_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrcsirs_parser.set_defaults(func=cmd_nrcsirs)
+
+    # PKM-PM Community Empowerment command
+    pkmcomm_parser = subparsers.add_parser("pkmcommunity", help="Evaluasi proposal mahasiswa PKM Pengabdian Masyarakat (PKM-PM)")
+    pkmcomm_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi PKM-PM Komunitas")
+    pkmcomm_parser.add_argument("--leader", default="Citra Kirana", help="Nama mahasiswa ketua pelaksana")
+    pkmcomm_parser.add_argument("--nim", default="20101150", help="NIM ketua pelaksana")
+    pkmcomm_parser.add_argument("--title", default="Pemberdayaan UMKM Gula Kelapa Berbasis IoT", help="Judul proposal pengabdian")
+    pkmcomm_parser.add_argument("--partner", default="Kelompok Tani Desa Kedungwringin", help="Nama komunitas mitra sasaran")
+    pkmcomm_parser.add_argument("--locality", default="Banyumas, Jawa Tengah", help="Wilayah domisili mitra")
+    pkmcomm_parser.add_argument("--urgency", type=float, default=88.0, help="Skor urgensi permasalahan mitra (0-100)")
+    pkmcomm_parser.add_argument("--solution", type=float, default=90.0, help="Skor ketepatan solusi teknologi (0-100)")
+    pkmcomm_parser.add_argument("--methodology", type=float, default=85.0, help="Skor metodologi pelaksanaan program (0-100)")
+    pkmcomm_parser.add_argument("--sustainability", type=float, default=85.0, help="Skor keberlanjutan program (0-100)")
+    pkmcomm_parser.add_argument("--impact", type=float, default=90.0, help="Skor dampak sosial ekonomi mitra (0-100)")
+    pkmcomm_parser.add_argument("--no-turnitin", action="store_true", help="Tandai jika tidak lolos uji Turnitin")
+    pkmcomm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    pkmcomm_parser.set_defaults(func=cmd_pkmcommunity)
 
     args = parser.parse_args()
 
