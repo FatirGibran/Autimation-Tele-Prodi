@@ -3407,6 +3407,91 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("DMRS Pos 0 (Sym 2)", html)
         self.assertIn("50 PRB", html)
 
+    def test_render_satellite_tropospheric_scintillation_card(self):
+        html = EditorialComponents.render_satellite_tropospheric_scintillation_card(
+            data={
+                "frequency_ghz": 14.25,
+                "elevation_angle_deg": 28.5,
+                "antenna_diameter_m": 2.4,
+                "aperture_averaging_factor": 0.72,
+                "signal_standard_deviation_db": 0.45,
+                "scintillation_fade_depth_db": 1.85,
+                "status_category": "MODERATE_SCINTILLATION"
+            }
+        )
+        self.assertIn("tu-troposcint-card", html)
+        self.assertIn("14.25 GHz", html)
+        self.assertIn("28.5&deg;", html)
+        self.assertIn("1.85 dB", html)
+
+    def test_render_5g_nr_csi_rs_telemetry_card(self):
+        html = EditorialComponents.render_5g_nr_csi_rs_telemetry_card(
+            data={
+                "allocated_prbs": 106,
+                "antenna_ports": 32,
+                "cdm_type": "cdm8-FD2-TD4",
+                "instantaneous_overhead_pct": 19.05,
+                "average_overhead_pct": 0.95,
+                "periodicity_slots": 20,
+                "status_category": "HIGH_ORDER_MASSIVE_MIMO_CSI"
+            }
+        )
+        self.assertIn("tu-csi-rs-card", html)
+        self.assertIn("32 Ports", html)
+        self.assertIn("cdm8-FD2-TD4", html)
+        self.assertIn("19.05%", html)
+
+    def test_render_optical_nonlinear_phase_shift_card(self):
+        html = EditorialComponents.render_optical_nonlinear_phase_shift_card(
+            data={
+                "launch_power_mw": 3.0,
+                "span_count": 8,
+                "total_distance_km": 640.0,
+                "effective_length_km": 21.3,
+                "phase_shift_per_span_deg": 9.4,
+                "accumulated_b_integral_rad": 1.31,
+                "status_category": "MODERATE_NONLINEAR_PENALTY"
+            }
+        )
+        self.assertIn("tu-nonlinear-card", html)
+        self.assertIn("3.0 mW", html)
+        self.assertIn("640 km", html)
+        self.assertIn("1.310 rad", html)
+
+    def test_render_pkm_pm_community_card(self):
+        html = EditorialComponents.render_pkm_pm_community_card(
+            data={
+                "student_leader": "Anisa Putri",
+                "nim": "1101210045",
+                "community_partner": "Kelompok Tani Desa Karangmangu",
+                "proposal_title": "Penerapan Smart Water Monitoring Berbasis LoRaWAN untuk Irigasi Desa",
+                "composite_score": 88.5,
+                "letter_grade": "A",
+                "grant_amount_idr": 8500000,
+                "converted_sks": 5,
+                "funding_status": "Lolos Pendanaan Nasional PKM-PM Belmawa Unggulan"
+            }
+        )
+        self.assertIn("tu-pkmpm-card", html)
+        self.assertIn("Anisa Putri", html)
+        self.assertIn("Desa Karangmangu", html)
+        self.assertIn("8,500,000", html)
+        self.assertIn("5 SKS", html)
+
+    def test_render_5g_nr_csi_rs_resource_grid_svg(self):
+        html = EditorialComponents.render_5g_nr_csi_rs_resource_grid_svg(
+            data={
+                "antenna_ports": 32,
+                "cdm_type": "cdm8-FD2-TD4",
+                "periodicity_slots": 20,
+                "allocated_prbs": 106
+            }
+        )
+        self.assertIn("tu-nr-csirs-svg-container", html)
+        self.assertIn("<svg", html)
+        self.assertIn("32 Ports", html)
+        self.assertIn("cdm8-FD2-TD4", html)
+
 
 
 
