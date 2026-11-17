@@ -1797,6 +1797,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_scint_freq ON satellite_scintillation_records(frequency_ghz);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_csi_rs_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cell_id TEXT NOT NULL,
+                    allocated_prbs INTEGER NOT NULL,
+                    antenna_ports INTEGER NOT NULL,
+                    cdm_type TEXT NOT NULL,
+                    periodicity_slots INTEGER NOT NULL,
+                    mimo_layers INTEGER NOT NULL,
+                    res_per_prb_slot INTEGER NOT NULL,
+                    instantaneous_overhead_pct REAL NOT NULL,
+                    average_overhead_pct REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    recommendation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_csirs_cell ON nr_csi_rs_records(cell_id);")
 
 
 
@@ -8085,6 +8103,62 @@ class StorageManager:
     record_satellite_scintillation = save_satellite_scintillation_record
     list_satellite_scintillation = list_satellite_scintillation_records
     get_satellite_scintillation_by_id = get_satellite_scintillation_record_by_id
+
+    def save_nr_csi_rs_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a 5G NR CSI-RS antenna port and resource element allocation telemetry record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_csi_rs_records (
+                    cell_id, allocated_prbs, antenna_ports, cdm_type,
+                    periodicity_slots, mimo_layers, res_per_prb_slot,
+                    instantaneous_overhead_pct, average_overhead_pct,
+                    status_category, recommendation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("cell_id", "CELL-5G-CSI-01")).strip(),
+                int(d.get("allocated_prbs", 106)),
+                int(d.get("antenna_ports", 32)),
+                str(d.get("cdm_type", "cdm8-FD2-TD4")).strip(),
+                int(d.get("periodicity_slots", 20)),
+                int(d.get("mimo_layers", 4)),
+                int(d.get("res_per_prb_slot", 32)),
+                float(d.get("instantaneous_overhead_pct", 19.05)),
+                float(d.get("average_overhead_pct", 0.95)),
+                str(d.get("status_category", "HIGH_ORDER_MASSIVE_MIMO_CSI")).strip(),
+                str(d.get("recommendation", "Accurate 3D beamforming feedback maintained")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_csi_rs_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR CSI-RS telemetry records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_csi_rs_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_csi_rs_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single 5G NR CSI-RS telemetry record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_csi_rs_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    record_nr_csi_rs = save_nr_csi_rs_record
+    list_nr_csi_rs = list_nr_csi_rs_records
+    get_nr_csi_rs_by_id = get_nr_csi_rs_record_by_id
 
 
 
