@@ -1493,6 +1493,52 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("5 SKS Kewirausahaan", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/k/88", msg)
 
+    def test_format_nr_csi_rs_telemetry_telegram(self):
+        msg = TelegramFormatter.format_nr_csi_rs_telemetry_telegram(
+            cell_id="CELL-TT-5G-PWT-02",
+            allocated_prbs=106,
+            antenna_ports=32,
+            cdm_type="cdm8-FD2-TD4",
+            instantaneous_overhead_pct=19.05,
+            average_overhead_pct=0.95,
+            periodicity_slots=20,
+            status="3D Beamforming Optimal",
+            portal_url="https://nms.telkomuniversity.ac.id/5g/csirs"
+        )
+        self.assertIn("Telemetri 5G NR CSI-RS", msg)
+        self.assertIn("CELL-TT-5G-PWT-02", msg)
+        self.assertIn("106 PRBs", msg)
+        self.assertIn("32 Ports", msg)
+        self.assertIn("cdm8-FD2-TD4", msg)
+        self.assertIn("19.05%", msg)
+        self.assertIn("0.950%", msg)
+        self.assertIn("https://nms.telkomuniversity.ac.id/5g/csirs", msg)
+
+    def test_format_pkm_pm_proposal_telegram(self):
+        msg = TelegramFormatter.format_pkm_pm_proposal_telegram(
+            student_leader="Anisa Putri",
+            nim="1101210045",
+            proposal_title="Penerapan Smart Water Monitoring Berbasis LoRaWAN",
+            community_partner="Kelompok Tani Desa Karangmangu",
+            target_locality="Kabupaten Banyumas",
+            composite_score=89.5,
+            letter_grade="A",
+            funding_status="Lolos Pendanaan Nasional PKM-PM Belmawa Unggulan",
+            grant_amount_idr=8500000,
+            converted_sks=5,
+            has_turnitin_clearance=True,
+            simbelmawa_url="https://simbelmawa.kemdikbud.go.id/pm/45"
+        )
+        self.assertIn("Pendanaan Belmawa PKM-PM (Pengabdian Masyarakat)", msg)
+        self.assertIn("Anisa Putri", msg)
+        self.assertIn("1101210045", msg)
+        self.assertIn("Smart Water Monitoring", msg)
+        self.assertIn("Desa Karangmangu", msg)
+        self.assertIn("89.5", msg)
+        self.assertIn("Rp 8,500,000", msg)
+        self.assertIn("5 SKS KKN / Pengabdian", msg)
+        self.assertIn("https://simbelmawa.kemdikbud.go.id/pm/45", msg)
+
 
 
 class TestCommandRateLimiter(unittest.TestCase):
