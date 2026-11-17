@@ -1594,6 +1594,48 @@ class WordPressClient:
         res = self._send_request(req)
         return res if isinstance(res, list) else []
 
+    def compare_post_revisions(
+        self,
+        post_id: int,
+        from_revision_id: int,
+        to_revision_id: int
+    ) -> Dict[str, Any]:
+        """
+        Compares two historical revisions of a WordPress post and returns the structural difference.
+        """
+        from_endpoint = f"{self.api_url}/posts/{int(post_id)}/revisions/{int(from_revision_id)}"
+        to_endpoint = f"{self.api_url}/posts/{int(post_id)}/revisions/{int(to_revision_id)}"
+
+        req_from = urllib.request.Request(from_endpoint, headers=self._get_headers(), method="GET")
+        req_to = urllib.request.Request(to_endpoint, headers=self._get_headers(), method="GET")
+
+        rev_from = self._send_request(req_from)
+        rev_to = self._send_request(req_to)
+
+        title_from = rev_from.get("title", {}).get("rendered", "") if isinstance(rev_from.get("title"), dict) else str(rev_from.get("title", ""))
+        title_to = rev_to.get("title", {}).get("rendered", "") if isinstance(rev_to.get("title"), dict) else str(rev_to.get("title", ""))
+
+        content_from = rev_from.get("content", {}).get("rendered", "") if isinstance(rev_from.get("content"), dict) else str(rev_from.get("content", ""))
+        content_to = rev_to.get("content", {}).get("rendered", "") if isinstance(rev_to.get("content"), dict) else str(rev_to.get("content", ""))
+
+        words_from = len(content_from.split())
+        words_to = len(content_to.split())
+
+        return {
+            "post_id": int(post_id),
+            "from_revision_id": int(from_revision_id),
+            "to_revision_id": int(to_revision_id),
+            "title_changed": title_from != title_to,
+            "title_from": title_from,
+            "title_to": title_to,
+            "words_from": words_from,
+            "words_to": words_to,
+            "word_count_delta": words_to - words_from,
+            "content_changed": content_from != content_to
+        }
+
+    diff_post_revisions = compare_post_revisions
+
 
 
 
