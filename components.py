@@ -9347,6 +9347,71 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_csi_rs_resource_grid_svg(
+        cls,
+        title: str = "Struktur Alokasi Sumber Daya 5G NR CSI-RS & Pola CDM",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders a responsive inline SVG diagram illustrating 5G NR CSI-RS time-frequency resource mapping,
+        CSI-RS CDM-4/CDM-8 antenna port multiplexing, and PDSCH data RE distribution (3GPP TS 38.211).
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        ports = int(d.get("antenna_ports", 32))
+        cdm = str(d.get("cdm_type", "cdm8-FD2-TD4"))
+        period = int(d.get("periodicity_slots", 20))
+        prbs = int(d.get("allocated_prbs", 106))
+
+        return f"""    <div class="tu-nr-csirs-svg-container" style="margin: 20px 0; padding: 16px; background: #1e1b4b; border-radius: 8px; border: 1px solid #4338ca;">
+      <h5 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 14px; font-weight: 600;">{title}</h5>
+      <div style="width: 100%; overflow-x: auto;">
+        <svg viewBox="0 0 760 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg" style="display: block; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+          <!-- Grid Guidelines -->
+          <line x1="40" y1="30" x2="720" y2="30" stroke="#312e81" stroke-dasharray="4,4" />
+          <line x1="40" y1="110" x2="720" y2="110" stroke="#312e81" stroke-dasharray="4,4" />
+
+          <!-- Early PDSCH Data Symbols 0..3 -->
+          <rect x="50" y="40" width="160" height="55" rx="4" fill="#3b82f6" opacity="0.85" />
+          <text x="130" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">PDSCH Data Simbol 0-3</text>
+          <text x="130" y="82" fill="#dbeafe" font-size="9" text-anchor="middle">Muatan Downlink Normal</text>
+
+          <!-- CSI-RS CDM Cluster (Symbols 4..7) -->
+          <rect x="220" y="40" width="170" height="55" rx="4" fill="#8b5cf6" opacity="0.95" />
+          <text x="305" y="65" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">CSI-RS Cluster ({ports} Ports)</text>
+          <text x="305" y="82" fill="#ede9fe" font-size="10" text-anchor="middle">Pola {cdm}</text>
+
+          <!-- Mid PDSCH Data Symbols 8..9 -->
+          <rect x="400" y="40" width="90" height="55" rx="4" fill="#3b82f6" opacity="0.85" />
+          <text x="445" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">PDSCH Data</text>
+          <text x="445" y="82" fill="#dbeafe" font-size="9" text-anchor="middle">Simbol 8-9</text>
+
+          <!-- CSI-RS Port Expansion (Symbol 10..11) -->
+          <rect x="500" y="40" width="100" height="55" rx="4" fill="#7c3aed" opacity="0.95" />
+          <text x="550" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">CSI-RS Sub-group</text>
+          <text x="550" y="82" fill="#ede9fe" font-size="9" text-anchor="middle">Port 16..31 Tracking</text>
+
+          <!-- Final Symbols 12..13 -->
+          <rect x="610" y="40" width="100" height="55" rx="4" fill="#3b82f6" opacity="0.85" />
+          <text x="660" y="65" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">PDSCH Simbol 12-13</text>
+          <text x="660" y="82" fill="#dbeafe" font-size="9" text-anchor="middle">PDSCH Data Tail</text>
+
+          <!-- Dimension Labels -->
+          <path d="M 50 125 L 710 125" stroke="#a5b4fc" stroke-width="1.5" />
+          <line x1="50" y1="120" x2="50" y2="130" stroke="#a5b4fc" stroke-width="1.5" />
+          <line x1="710" y1="120" x2="710" y2="130" stroke="#a5b4fc" stroke-width="1.5" />
+          <text x="380" y="145" fill="#c7d2fe" font-size="11" text-anchor="middle">Slot CSI-RS: 14 Simbol &bull; Bandwidth: {prbs} PRB &bull; Periodisitas: {period} Slots</text>
+        </svg>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; color: #c7d2fe; border-top: 1px solid #4338ca; padding-top: 10px; text-align: center;">
+        <div>Ports: <strong style="color: #a78bfa;">{ports} Antena</strong></div>
+        <div>Multiplexing: <strong style="color: #818cf8;">{cdm}</strong></div>
+        <div>Periodisitas: <strong style="color: #38bdf8;">{period} Slots</strong></div>
+      </div>
+    </div>"""
+
 
 
 
