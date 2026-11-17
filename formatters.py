@@ -2117,6 +2117,33 @@ class TelegramFormatter:
             f"🚀 *Selamat atas keberhasilan menembus pendanaan bisnis mahasiswa berbasis teknologi telekomunikasi!*"
         )
 
+    @staticmethod
+    def format_nr_csi_rs_telemetry_telegram(
+        cell_id: str,
+        allocated_prbs: int,
+        antenna_ports: int,
+        cdm_type: str,
+        instantaneous_overhead_pct: float,
+        average_overhead_pct: float,
+        periodicity_slots: int,
+        status: str,
+        portal_url: str = ""
+    ) -> str:
+        """
+        Renders a 5G NR CSI-RS antenna port and CDM multiplexing telemetry card for Telegram broadcast.
+        """
+        portal_link = f"\n🔗 **Portal NMS 5G:** {portal_url.strip()}" if portal_url else ""
+        return (
+            f"📡 **Telemetri 5G NR CSI-RS & Port Multiplexing**\n\n"
+            f"🗼 **Cell ID:** `{cell_id.strip()}`\n"
+            f"📶 **Bandwidth:** `{int(allocated_prbs)} PRBs`\n"
+            f"📡 **Antenna Ports:** `{int(antenna_ports)} Ports` (`CDM: {cdm_type.strip()}`)\n"
+            f"⏱️ **Periodisitas:** `{int(periodicity_slots)} Slots`\n"
+            f"📊 **Overhead CSI-RS:** `{float(instantaneous_overhead_pct):.2f}%` (Avg: `{float(average_overhead_pct):.3f}%`)\n"
+            f"🌟 **Status Estimasi:** `{status.strip()}`{portal_link}\n\n"
+            f"📶 *Estimasi kondisi kanal downlink 5G NR terpantau adaptif untuk beamforming optimal.*"
+        )
+
 
 
 
