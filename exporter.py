@@ -3118,6 +3118,37 @@ navigation: true
             "educationalCredentialAwarded": f"{int(converted_sks)} SKS Pengabdian Masyarakat MBKM"
         }
 
+    @staticmethod
+    def to_typedoc_markdown(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial technical article to TypeDoc compatible Markdown with frontmatter YAML,
+        package module badge, and structured heading metadata.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+        module_name = metadata.get("module", "telecom-prodi-purwokerto").strip()
+
+        doc = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f'module: "{module_name}"',
+            f"tags: [{tags_yaml}]",
+            "category: TypeDoc-API",
+            "---",
+            "",
+            f"**Package:** `{module_name}`",
+            "",
+            f"> {desc}",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(doc)
+
 
 
 
