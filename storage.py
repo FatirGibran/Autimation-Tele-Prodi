@@ -1815,6 +1815,26 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_nr_csirs_cell ON nr_csi_rs_records(cell_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS pkm_pm_community_empowerment_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_leader TEXT NOT NULL,
+                    nim TEXT NOT NULL,
+                    community_partner TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    target_locality TEXT NOT NULL,
+                    composite_score REAL NOT NULL,
+                    letter_grade TEXT NOT NULL,
+                    grade_point REAL NOT NULL,
+                    funding_status TEXT NOT NULL,
+                    grant_amount_idr INTEGER NOT NULL,
+                    converted_sks INTEGER NOT NULL,
+                    has_turnitin_clearance INTEGER NOT NULL DEFAULT 1,
+                    is_funded INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_pm_emp_nim ON pkm_pm_community_empowerment_records(nim);")
 
 
 
@@ -8159,6 +8179,66 @@ class StorageManager:
     record_nr_csi_rs = save_nr_csi_rs_record
     list_nr_csi_rs = list_nr_csi_rs_records
     get_nr_csi_rs_by_id = get_nr_csi_rs_record_by_id
+
+    def save_pkm_pm_community_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a student PKM Pengabdian Masyarakat (PKM-PM) community empowerment proposal record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO pkm_pm_community_empowerment_records (
+                    student_leader, nim, community_partner, proposal_title,
+                    target_locality, composite_score, letter_grade, grade_point,
+                    funding_status, grant_amount_idr, converted_sks,
+                    has_turnitin_clearance, is_funded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("student_leader", "Citra Kirana")).strip(),
+                str(d.get("nim", "20101150")).strip(),
+                str(d.get("community_partner", "Kelompok Tani Desa Kedungwringin")).strip(),
+                str(d.get("proposal_title", "Pemberdayaan UMKM Gula Kelapa")).strip(),
+                str(d.get("target_locality", "Banyumas, Jawa Tengah")).strip(),
+                float(d.get("composite_score", 88.5)),
+                str(d.get("letter_grade", "A")).strip(),
+                float(d.get("grade_point", 4.0)),
+                str(d.get("funding_status", "DIDANAI_DIKTI")).strip(),
+                int(d.get("grant_amount_idr", 9000000)),
+                int(d.get("converted_sks", 4)),
+                1 if d.get("has_turnitin_clearance", True) else 0,
+                1 if d.get("is_funded", True) else 0
+            ))
+            return cursor.lastrowid
+
+    def list_pkm_pm_community_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent PKM-PM community empowerment proposal records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_pm_community_empowerment_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_pkm_pm_community_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single PKM-PM community empowerment proposal record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM pkm_pm_community_empowerment_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    save_pkm_pm_proposal = save_pkm_pm_community_record
+    record_pkm_pm_community = save_pkm_pm_community_record
+    list_pkm_pm_community = list_pkm_pm_community_records
+    get_pkm_pm_community_by_id = get_pkm_pm_community_record_by_id
+    get_pkm_pm_proposal_by_id_alias = get_pkm_pm_community_record_by_id
 
 
 
