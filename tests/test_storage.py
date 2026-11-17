@@ -3356,6 +3356,82 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["nim"], "1101210088")
         self.assertIsNone(self.storage.get_pkm_k_proposal_by_id(99999))
 
+    def test_satellite_scintillation_storage(self):
+        rec_id = self.storage.save_satellite_scintillation_record({
+            "frequency_ghz": 14.25,
+            "elevation_angle_deg": 28.5,
+            "antenna_diameter_m": 2.4,
+            "antenna_efficiency": 0.60,
+            "refractivity_n_wet": 52.0,
+            "aperture_averaging_factor": 0.72,
+            "signal_standard_deviation_db": 0.45,
+            "scintillation_fade_depth_db": 1.85,
+            "status_category": "MODERATE_SCINTILLATION",
+            "recommendation": "Aperture averaging effective"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_satellite_scintillation_records()
+        self.assertEqual(len(items), 1)
+        self.assertAlmostEqual(items[0]["frequency_ghz"], 14.25)
+        self.assertEqual(items[0]["status_category"], "MODERATE_SCINTILLATION")
+
+        single = self.storage.get_satellite_scintillation_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertAlmostEqual(single["scintillation_fade_depth_db"], 1.85)
+        self.assertIsNone(self.storage.get_satellite_scintillation_record_by_id(99999))
+
+    def test_nr_csi_rs_storage(self):
+        rec_id = self.storage.save_nr_csi_rs_record({
+            "cell_id": "CELL-5G-CSI-01",
+            "allocated_prbs": 106,
+            "antenna_ports": 32,
+            "cdm_type": "cdm8-FD2-TD4",
+            "periodicity_slots": 20,
+            "mimo_layers": 4,
+            "res_per_prb_slot": 32,
+            "instantaneous_overhead_pct": 19.05,
+            "average_overhead_pct": 0.95,
+            "status_category": "HIGH_ORDER_MASSIVE_MIMO_CSI",
+            "recommendation": "Accurate 3D beamforming feedback maintained"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_csi_rs_records()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cell_id"], "CELL-5G-CSI-01")
+        self.assertEqual(items[0]["antenna_ports"], 32)
+
+        single = self.storage.get_nr_csi_rs_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["cdm_type"], "cdm8-FD2-TD4")
+        self.assertIsNone(self.storage.get_nr_csi_rs_record_by_id(99999))
+
+    def test_pkm_pm_community_storage(self):
+        rec_id = self.storage.save_pkm_pm_community_record({
+            "student_leader": "Citra Kirana",
+            "nim": "20101150",
+            "community_partner": "Kelompok Tani Desa Kedungwringin",
+            "proposal_title": "Pemberdayaan UMKM Gula Kelapa Berbasis IoT",
+            "target_locality": "Banyumas, Jawa Tengah",
+            "composite_score": 88.5,
+            "letter_grade": "A",
+            "grade_point": 4.0,
+            "funding_status": "DIDANAI_DIKTI",
+            "grant_amount_idr": 9000000,
+            "converted_sks": 4,
+            "has_turnitin_clearance": True,
+            "is_funded": True
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_pkm_pm_community_records()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["student_leader"], "Citra Kirana")
+        self.assertEqual(items[0]["nim"], "20101150")
+
+        single = self.storage.get_pkm_pm_community_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["community_partner"], "Kelompok Tani Desa Kedungwringin")
+        self.assertIsNone(self.storage.get_pkm_pm_community_record_by_id(99999))
+
 
 
 if __name__ == "__main__":
