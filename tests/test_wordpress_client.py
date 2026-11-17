@@ -1264,6 +1264,43 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(res["total"], 2)
         self.assertEqual(mock_urlopen.call_count, 2)
 
+    @patch("urllib.request.urlopen")
+    def test_get_revisions_by_post_id(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'[{"id": 401, "title": {"rendered": "Draft A"}}, {"id": 402, "title": {"rendered": "Draft B"}}]'
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        revs = self.client.get_revisions_by_post_id(post_id=88, page=2, per_page=15)
+        self.assertEqual(len(revs), 2)
+        self.assertEqual(revs[0]["id"], 401)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("/posts/88/revisions", req.full_url)
+        self.assertIn("page=2", req.full_url)
+        self.assertIn("per_page=15", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_compare_post_revisions(self, mock_urlopen):
+        mock_rev1 = MagicMock()
+        mock_rev1.read.return_value = b'{"id": 401, "title": {"rendered": "Judul Lama"}, "content": {"rendered": "Satu dua tiga"}}'
+        mock_rev2 = MagicMock()
+        mock_rev2.read.return_value = b'{"id": 402, "title": {"rendered": "Judul Baru"}, "content": {"rendered": "Satu dua tiga empat lima"}}'
+
+        mock_urlopen.side_effect = [
+            MagicMock(__enter__=MagicMock(return_value=mock_rev1)),
+            MagicMock(__enter__=MagicMock(return_value=mock_rev2))
+        ]
+
+        diff = self.client.compare_post_revisions(post_id=88, from_revision_id=401, to_revision_id=402)
+        self.assertEqual(diff["post_id"], 88)
+        self.assertTrue(diff["title_changed"])
+        self.assertEqual(diff["title_from"], "Judul Lama")
+        self.assertEqual(diff["title_to"], "Judul Baru")
+        self.assertEqual(diff["words_from"], 3)
+        self.assertEqual(diff["words_to"], 5)
+        self.assertEqual(diff["word_count_delta"], 2)
+        self.assertTrue(diff["content_changed"])
+
 
 
 if __name__ == "__main__":
