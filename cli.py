@@ -4090,7 +4090,6 @@ def cmd_nrcsirs(args):
         layers = int(args.layers) if args.layers is not None else 4
 
         res = calculate_5g_nr_csi_rs_resource_and_overhead(
-            cell_id=cell_id,
             allocated_prbs=prb,
             antenna_ports=ports,
             cdm_type=cdm,
@@ -4098,7 +4097,7 @@ def cmd_nrcsirs(args):
             mimo_layers=layers
         )
         rec_id = storage.save_nr_csi_rs_record({
-            "cell_id": res["cell_id"],
+            "cell_id": cell_id,
             "allocated_prbs": res["allocated_prbs"],
             "antenna_ports": res["antenna_ports"],
             "cdm_type": res["cdm_type"],

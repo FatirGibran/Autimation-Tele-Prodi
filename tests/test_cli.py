@@ -3466,6 +3466,83 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Siti Nurhaliza", out)
 
+    def test_cmd_troposcint(self):
+        class ArgsAdd:
+            action = "add"
+            freq = 14.25
+            elevation = 28.5
+            diameter = 2.4
+            efficiency = 0.60
+            refractivity = 52.0
+            outage = 0.01
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_troposcint(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Scintillation Satelit berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_troposcint(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("14.25", out)
+
+    def test_cmd_nrcsirs(self):
+        class ArgsAdd:
+            action = "add"
+            cell_id = "CELL-5G-CSI-TEST"
+            prb = 106
+            ports = 32
+            cdm = "cdm8-FD2-TD4"
+            periodicity = 20
+            layers = 4
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrcsirs(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan CSI-RS 5G NR berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrcsirs(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("CELL-5G-CSI-TEST", out)
+
+    def test_cmd_pkmcommunity(self):
+        class ArgsAdd:
+            action = "add"
+            leader = "Citra Kirana"
+            nim = "20101150"
+            title = "Pemberdayaan UMKM Gula Kelapa Berbasis IoT"
+            partner = "Kelompok Tani Desa Kedungwringin"
+            locality = "Banyumas, Jawa Tengah"
+            urgency = 88.0
+            solution = 90.0
+            methodology = 85.0
+            sustainability = 85.0
+            impact = 90.0
+            no_turnitin = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmcommunity(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan PKM-PM Komunitas berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_pkmcommunity(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("Citra Kirana", out)
+
 
 
 if __name__ == "__main__":
