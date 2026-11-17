@@ -1523,6 +1523,41 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("</Callout>", res)
         self.assertIn("<p>Dokumentasi Fumadocs MDX.</p>", res)
 
+    def test_generate_community_service_grant_json_ld(self):
+        res = ArticleExporter.generate_community_service_grant_json_ld(
+            headline="Pemberdayaan UMKM Gula Kelapa Banyumas",
+            leader="Citra Kirana",
+            partner="Kelompok Tani Desa Kedungwringin",
+            target_locality="Banyumas, Jawa Tengah",
+            description="Program pengabdian masyarakat telekomunikasi berbasis monitoring IoT.",
+            grant_amount_idr=9000000,
+            published_date="2026-11-17",
+            url="https://telecom.ittelkom-pwt.ac.id/pkm-pm/101",
+            converted_sks=4
+        )
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "SocialEvent")
+        self.assertEqual(res["name"], "Pemberdayaan UMKM Gula Kelapa Banyumas")
+        self.assertEqual(res["organizer"]["name"], "Citra Kirana")
+        self.assertEqual(res["location"]["name"], "Kelompok Tani Desa Kedungwringin")
+        self.assertEqual(res["offers"]["amount"]["value"], 9000000)
+        self.assertIn("4 SKS Pengabdian Masyarakat MBKM", res["educationalCredentialAwarded"])
+
+    def test_to_typedoc_markdown(self):
+        meta = {
+            "seo_title": "Spesifikasi API Antena 5G",
+            "meta_description": "Dokumentasi API modul antena 5G NR Beamforming.",
+            "tags": ["typedoc", "api", "5gnr"],
+            "module": "@telecom/5g-antenna"
+        }
+        res = ArticleExporter.to_typedoc_markdown(meta, "<h2>Modul Referensi Antena</h2>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Spesifikasi API Antena 5G"', res)
+        self.assertIn('module: "@telecom/5g-antenna"', res)
+        self.assertIn("category: TypeDoc-API", res)
+        self.assertIn("**Package:** `@telecom/5g-antenna`", res)
+        self.assertIn("<h2>Modul Referensi Antena</h2>", res)
+
 
 
 if __name__ == "__main__":
