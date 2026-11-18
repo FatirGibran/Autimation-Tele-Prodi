@@ -2177,6 +2177,38 @@ class TelegramFormatter:
             f"🚀 *Selamat atas keberhasilan menembus pendanaan pengabdian masyarakat berbasis inovasi telekomunikasi!*"
         )
 
+    @staticmethod
+    def format_satellite_g_over_t_telegram_card(data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """
+        Renders a satellite earth station G/T figure of merit telemetry card for Telegram broadcast.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        station_id = str(d.get("station_id", "STN-ES-01")).strip()
+        diameter = float(d.get("antenna_diameter_m", 7.3))
+        freq = float(d.get("frequency_ghz", 4.0))
+        gain = float(d.get("gain_dbi", 47.79))
+        tsys = float(d.get("system_noise_temp_k", 75.0))
+        gt = float(d.get("g_over_t_dbk", 29.04))
+        status = str(d.get("status_category", "STANDARD_GEO_GATEWAY_COMPLIANT")).replace("_", " ")
+        portal_url = str(d.get("portal_url", "")).strip()
+        portal_link = f"\n🔗 **NMS Stasiun Bumi:** {portal_url}" if portal_url else ""
+
+        return (
+            f"🛰️ **Telemetri Figure of Merit G/T Stasiun Bumi (ITU-R S.733)**\n\n"
+            f"📡 **Stasiun Bumi ID:** `{station_id}`\n"
+            f"🎯 **Diameter Reflektor:** `{diameter:.2f} m`\n"
+            f"📶 **Frekuensi Downlink:** `{freq:.2f} GHz`\n"
+            f"⚡ **Gain Antena:** `{gain:.2f} dBi`\n"
+            f"🌡️ **Suhu Derau Sistem (Tsys):** `{tsys:.2f} K`\n"
+            f"📈 **Figure of Merit (G/T):** `{gt:.2f} dB/K`\n"
+            f"🌟 **Kategori Kelayakan:** `{status}`{portal_link}\n\n"
+            f"📡 *Kualitas penerimaan downlink satelit diverifikasi sesuai rekomendasi ITU-R S.733.*"
+        )
+
+
+format_satellite_g_over_t_telegram_card = TelegramFormatter.format_satellite_g_over_t_telegram_card
+
 
 
 
