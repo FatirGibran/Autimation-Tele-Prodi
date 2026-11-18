@@ -9575,6 +9575,57 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_redcap_bwp_coexistence_svg(
+        cls,
+        title: str = "Koeksistensi Spektrum 5G NR Rel-17 RedCap BWP dalam Carrier eMBB 100 MHz",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders a responsive inline SVG illustrating 5G NR Rel-17 RedCap 20 MHz BWP coexistence
+        within a wideband 100 MHz eMBB carrier, detailing initial BWP, SSB/CORESET#0, and multiplexed PDSCH.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        carrier_bw = float(d.get("carrier_bandwidth_mhz", 100.0))
+        redcap_bw = float(d.get("channel_bandwidth_mhz", 20.0))
+        prbs = int(d.get("allocated_prbs", 51))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+
+        return f"""    <div class="tu-nr-redcap-svg-container" style="margin: 20px 0; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+      <h5 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 14px; font-weight: 600;">📡 {title}</h5>
+      <div style="width: 100%; overflow-x: auto;">
+        <svg viewBox="0 0 760 180" width="100%" height="180" xmlns="http://www.w3.org/2000/svg" style="display: block; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+          <!-- Wideband eMBB Carrier 100 MHz -->
+          <rect x="30" y="30" width="700" height="110" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+          <text x="45" y="52" fill="#94a3b8" font-size="12" font-weight="bold">Carrier eMBB Lebar ({carrier_bw:.0f} MHz / 273 PRB @ {scs} kHz)</text>
+
+          <!-- Standard eMBB Traffic Left -->
+          <rect x="40" y="65" width="200" height="65" rx="4" fill="#3b82f6" opacity="0.35" stroke="#60a5fa" stroke-dasharray="3,3" />
+          <text x="140" y="102" fill="#93c5fd" font-size="11" text-anchor="middle">eMBB Traffic (MIMO 4x4)</text>
+
+          <!-- 20 MHz RedCap BWP Region -->
+          <rect x="250" y="65" width="260" height="65" rx="4" fill="#6d28d9" opacity="0.85" stroke="#a78bfa" stroke-width="2" />
+          <text x="380" y="88" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">RedCap Initial / Active BWP ({redcap_bw:.0f} MHz)</text>
+          <text x="380" y="105" fill="#e9d5ff" font-size="10" text-anchor="middle">{prbs} PRB ({scs} kHz SCS) &bull; 1R / 2R RX Capability</text>
+          <rect x="260" y="112" width="70" height="14" rx="2" fill="#f59e0b" />
+          <text x="295" y="123" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">SSB / CD-SSB</text>
+          <rect x="335" y="112" width="80" height="14" rx="2" fill="#10b981" />
+          <text x="375" y="123" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">CORESET#0</text>
+          <rect x="420" y="112" width="80" height="14" rx="2" fill="#ec4899" />
+          <text x="460" y="123" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">RedCap PDSCH</text>
+
+          <!-- Standard eMBB Traffic Right -->
+          <rect x="520" y="65" width="200" height="65" rx="4" fill="#3b82f6" opacity="0.35" stroke="#60a5fa" stroke-dasharray="3,3" />
+          <text x="620" y="102" fill="#93c5fd" font-size="11" text-anchor="middle">eMBB Traffic (MIMO 4x4)</text>
+
+          <!-- Frequency Axis Legend -->
+          <text x="380" y="162" fill="#64748b" font-size="11" text-anchor="middle">&larr; Koeksistensi Dinamis Tanpa Fragmentasi Spektrum (3GPP Rel-17 TS 38.306) &rarr;</text>
+        </svg>
+      </div>
+    </div>"""
+
 
 
 
@@ -9641,6 +9692,7 @@ render_satellite_earth_station_g_over_t_telemetry_card = EditorialComponents.ren
 render_atmospheric_gaseous_attenuation_itu_r_p676_card = EditorialComponents.render_atmospheric_gaseous_attenuation_itu_r_p676_card
 render_5g_nr_rel17_redcap_ue_telemetry_card = EditorialComponents.render_5g_nr_rel17_redcap_ue_telemetry_card
 render_fiber_raman_amplifier_fra_gain_card = EditorialComponents.render_fiber_raman_amplifier_fra_gain_card
+render_5g_nr_redcap_bwp_coexistence_svg = EditorialComponents.render_5g_nr_redcap_bwp_coexistence_svg
 
 
 
