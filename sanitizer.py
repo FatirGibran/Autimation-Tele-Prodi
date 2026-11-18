@@ -864,6 +864,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 autonomous custom elements and is attribute.")
 
+        # 8ax. Sanitize HTML5 anchor and area ping tracking attributes
+        if "ping=" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_anchor_ping_attribute(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 anchor and area ping tracking attributes.")
+
         return cleaned, warnings
 
 
@@ -3405,6 +3412,25 @@ def sanitize_html5_custom_elements_and_is_attribute(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<[a-z][a-z0-9]*-[a-z0-9_-]*(?:\s+[^>]*?)?>', clean_custom_tag, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_anchor_ping_attribute(html: str) -> str:
+    """
+    Sanitizes HTML5 <a> and <area> hyperlink elements by stripping the 'ping' attribute,
+    preventing unauthorized background tracking requests and URL telemetry exfiltration.
+    """
+    if not html or "ping=" not in html.lower():
+        return html
+
+    cleaned = html
+
+    def clean_anchor_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+ping=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<(?:a|area)\b[^>]*?>', clean_anchor_tag, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
