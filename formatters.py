@@ -2206,8 +2206,42 @@ class TelegramFormatter:
             f"📡 *Kualitas penerimaan downlink satelit diverifikasi sesuai rekomendasi ITU-R S.733.*"
         )
 
+    @staticmethod
+    def format_5g_nr_rel17_redcap_ue_telegram_card(data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """
+        Renders a 3GPP Rel-17 RedCap (Reduced Capability) terminal telemetry card for Telegram broadcast.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        device_id = str(d.get("device_id", "REDCAP-UE-01")).strip()
+        band = str(d.get("frequency_band", "FR1-n78")).strip()
+        bw = float(d.get("channel_bandwidth_mhz", 20.0))
+        prbs = int(d.get("allocated_prbs", 51))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        rx = int(d.get("num_rx_antennas", 1))
+        mod_dl = str(d.get("modulation_order_dl", "64QAM")).strip()
+        dl_rate = float(d.get("peak_downlink_throughput_mbps", 112.56))
+        ul_rate = float(d.get("peak_uplink_throughput_mbps", 56.28))
+        savings = float(d.get("complexity_savings_percent", 65.0))
+        status = str(d.get("status_category", "HIGH_THROUGHPUT_REDCAP_SURVEILLANCE")).replace("_", " ")
+        portal_url = str(d.get("portal_url", "")).strip()
+        portal_link = f"\n🔗 **NMS IoT RedCap:** {portal_url}" if portal_url else ""
+
+        return (
+            f"📱 **Telemetri Terminal 5G NR Rel-17 RedCap (3GPP TS 38.306)**\n\n"
+            f"🆔 **Device ID:** `{device_id}`\n"
+            f"📶 **Band Frekuensi:** `{band}` ({bw:.1f} MHz, {prbs} PRB @ {scs} kHz)\n"
+            f"📡 **Antena MIMO:** `{rx}R1T` (`DL Mod: {mod_dl}`)\n"
+            f"⚡ **Throughput DL Puncak:** `{dl_rate:.2f} Mbps`\n"
+            f"📤 **Throughput UL Puncak:** `{ul_rate:.2f} Mbps`\n"
+            f"📉 **Reduksi Kompleksitas BOM:** `~{savings:.1f}%`\n"
+            f"🌟 **Profil Aplikasi:** `{status}`{portal_link}\n\n"
+            f"📱 *Optimal untuk sensor industri, kamera pengawas pintar, dan perangkat wearable.*"
+        )
+
 
 format_satellite_g_over_t_telegram_card = TelegramFormatter.format_satellite_g_over_t_telegram_card
+format_5g_nr_rel17_redcap_ue_telegram_card = TelegramFormatter.format_5g_nr_rel17_redcap_ue_telegram_card
 
 
 
