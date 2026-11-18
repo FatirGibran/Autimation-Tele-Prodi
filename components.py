@@ -9412,6 +9412,44 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_earth_station_g_over_t_telemetry_card(
+        cls,
+        title: str = "Telemetri Figure of Merit G/T Stasiun Bumi Satelit (ITU-R S.733)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for satellite earth station G/T figure of merit,
+        antenna gain, feed noise, LNA noise temperature, and ITU-R S.733 reception quality.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        diam = float(d.get("antenna_diameter_m", 3.0))
+        freq = float(d.get("frequency_ghz", 12.0))
+        gain = float(d.get("gain_dbi", 49.33))
+        l_feed = float(d.get("feed_loss_db", 0.5))
+        t_ant = float(d.get("antenna_noise_temp_k", 50.0))
+        t_sys = float(d.get("system_noise_temp_k", 137.66))
+        g_over_t = float(d.get("g_over_t_dbk", 27.45))
+        status = str(d.get("status_category", "STANDARD_COMMERCIAL_VSAT_STATION")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-satgt-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #0284c7; background: #f0f9ff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #0369a1; font-size: 16px;">🛰️ {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Diameter Antena: <strong>{diam:.2f} m</strong></div>
+        <div>Frekuensi Downlink: <strong>{freq:.2f} GHz</strong></div>
+        <div>Penguatan Antena: <strong>{gain:.2f} dBi</strong></div>
+        <div>Rugi Saluran Feed: <strong>{l_feed:.2f} dB</strong></div>
+        <div>Derau Antena Ta: <strong>{t_ant:.1f} K</strong></div>
+        <div>Derau Sistem Tsys: <strong>{t_sys:.2f} K</strong></div>
+        <div>Figure of Merit G/T: <strong style="color: #0369a1;">{g_over_t:.2f} dB/K</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #0284c7;">
+        Kategori: <strong>{status}</strong> &bull; Standar: <em>ITU-R S.733 Earth Station Reception Quality</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9474,6 +9512,7 @@ render_5g_nr_pusch_throughput_card = EditorialComponents.render_5g_nr_pusch_thro
 render_satellite_faraday_rotation_card = EditorialComponents.render_satellite_faraday_rotation_card
 render_pkm_k_card = EditorialComponents.render_pkm_k_card
 render_5g_nr_pusch_dmrs_grid_svg = EditorialComponents.render_5g_nr_pusch_dmrs_grid_svg
+render_satellite_earth_station_g_over_t_telemetry_card = EditorialComponents.render_satellite_earth_station_g_over_t_telemetry_card
 
 
 
