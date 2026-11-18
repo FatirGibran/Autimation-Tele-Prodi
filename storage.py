@@ -1864,6 +1864,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_redcap_band ON nr_redcap_ue_records(frequency_band);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS fiber_raman_amplifier_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fiber_length_km REAL NOT NULL,
+                    pump_power_mw REAL NOT NULL,
+                    pump_wavelength_nm REAL NOT NULL,
+                    effective_length_km REAL NOT NULL,
+                    on_off_gain_db REAL NOT NULL,
+                    passive_loss_db REAL NOT NULL,
+                    net_gain_db REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_raman_length ON fiber_raman_amplifier_records(fiber_length_km);")
 
 
 
@@ -8370,6 +8385,58 @@ class StorageManager:
     save_redcap_record = save_nr_redcap_ue_record
     list_redcap_records = list_nr_redcap_ue_records
     get_redcap_record_by_id = get_nr_redcap_ue_record_by_id
+
+    def save_fiber_raman_amplifier_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a distributed fiber Raman amplifier (FRA/DRA) telemetry and gain record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO fiber_raman_amplifier_records (
+                    fiber_length_km, pump_power_mw, pump_wavelength_nm,
+                    effective_length_km, on_off_gain_db, passive_loss_db,
+                    net_gain_db, status_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(d.get("fiber_length_km", 80.0)),
+                float(d.get("pump_power_mw", 500.0)),
+                float(d.get("pump_wavelength_nm", 1450.0)),
+                float(d.get("effective_length_km", 17.37)),
+                float(d.get("on_off_gain_db", 14.15)),
+                float(d.get("passive_loss_db", 16.0)),
+                float(d.get("net_gain_db", -1.85)),
+                str(d.get("status_category", "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_fiber_raman_amplifier_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent fiber Raman amplifier records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM fiber_raman_amplifier_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_fiber_raman_amplifier_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single fiber Raman amplifier record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM fiber_raman_amplifier_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    save_raman_record = save_fiber_raman_amplifier_record
+    list_raman_records = list_fiber_raman_amplifier_records
+    get_raman_record_by_id = get_fiber_raman_amplifier_record_by_id
 
 
 
