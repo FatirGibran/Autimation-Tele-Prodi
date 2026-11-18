@@ -3192,6 +3192,38 @@ navigation: true
             "isAccessibleForFree": True
         }
 
+    @staticmethod
+    def to_docusaurus_v3_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial technical article to Docusaurus v3 MDX format with sidebar position,
+        frontmatter YAML, and documentation admonitions.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        desc = metadata.get("meta_description", "").strip()
+        sidebar_position = int(metadata.get("sidebar_position", 1))
+        sidebar_label = metadata.get("sidebar_label", title).strip()
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        doc = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f"sidebar_position: {sidebar_position}",
+            f'sidebar_label: "{sidebar_label}"',
+            f"tags: [{tags_yaml}]",
+            "---",
+            "",
+            ":::info Ringkasan Teknis",
+            desc,
+            ":::",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(doc)
+
 
 
 
