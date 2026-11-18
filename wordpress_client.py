@@ -1636,6 +1636,23 @@ class WordPressClient:
 
     diff_post_revisions = compare_post_revisions
 
+    def get_media_by_mime_type(
+        self,
+        mime_type: str = "image/png",
+        page: int = 1,
+        per_page: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Queries WordPress REST API media endpoint filtered by exact MIME type with pagination.
+        """
+        clean_mime = urllib.parse.quote(mime_type.strip().lower())
+        p = max(1, int(page))
+        pp = max(1, min(100, int(per_page)))
+        endpoint = f"{self.api_url}/media?mime_type={clean_mime}&page={p}&per_page={pp}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        return results if isinstance(results, list) else []
+
 
 
 
