@@ -3432,6 +3432,71 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["community_partner"], "Kelompok Tani Desa Kedungwringin")
         self.assertIsNone(self.storage.get_pkm_pm_community_record_by_id(99999))
 
+    def test_satellite_earth_station_gt_storage(self):
+        rec_id = self.storage.save_satellite_earth_station_gt_record({
+            "antenna_diameter_m": 7.3,
+            "frequency_ghz": 4.0,
+            "gain_dbi": 47.79,
+            "system_noise_temp_k": 75.0,
+            "g_over_t_dbk": 29.04,
+            "status_category": "STANDARD_GEO_GATEWAY_COMPLIANT",
+            "recommendation": "High quality gateway receiver"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_satellite_earth_station_gt_records()
+        self.assertEqual(len(items), 1)
+        self.assertAlmostEqual(items[0]["antenna_diameter_m"], 7.3)
+        self.assertAlmostEqual(items[0]["g_over_t_dbk"], 29.04)
+
+        single = self.storage.get_satellite_earth_station_gt_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status_category"], "STANDARD_GEO_GATEWAY_COMPLIANT")
+        self.assertIsNone(self.storage.get_satellite_earth_station_gt_record_by_id(99999))
+
+    def test_nr_redcap_ue_storage(self):
+        rec_id = self.storage.save_nr_redcap_ue_record({
+            "frequency_band": "FR1-n78",
+            "channel_bandwidth_mhz": 20.0,
+            "allocated_prbs": 51,
+            "num_rx_antennas": 1,
+            "peak_downlink_throughput_mbps": 112.56,
+            "peak_uplink_throughput_mbps": 56.28,
+            "complexity_savings_percent": 65.0,
+            "status_category": "HIGH_THROUGHPUT_REDCAP_SURVEILLANCE"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_redcap_ue_records()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["frequency_band"], "FR1-n78")
+        self.assertAlmostEqual(items[0]["peak_downlink_throughput_mbps"], 112.56)
+
+        single = self.storage.get_nr_redcap_ue_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertAlmostEqual(single["complexity_savings_percent"], 65.0)
+        self.assertIsNone(self.storage.get_nr_redcap_ue_record_by_id(99999))
+
+    def test_fiber_raman_amplifier_storage(self):
+        rec_id = self.storage.save_fiber_raman_amplifier_record({
+            "fiber_length_km": 80.0,
+            "pump_power_mw": 500.0,
+            "pump_wavelength_nm": 1450.0,
+            "effective_length_km": 17.37,
+            "on_off_gain_db": 14.15,
+            "passive_loss_db": 16.0,
+            "net_gain_db": -1.85,
+            "status_category": "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_fiber_raman_amplifier_records()
+        self.assertEqual(len(items), 1)
+        self.assertAlmostEqual(items[0]["fiber_length_km"], 80.0)
+        self.assertAlmostEqual(items[0]["on_off_gain_db"], 14.15)
+
+        single = self.storage.get_fiber_raman_amplifier_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status_category"], "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION")
+        self.assertIsNone(self.storage.get_fiber_raman_amplifier_record_by_id(99999))
+
 
 
 if __name__ == "__main__":
