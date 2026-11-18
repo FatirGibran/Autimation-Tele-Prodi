@@ -857,6 +857,13 @@ class HTMLSanitizer:
             cleaned = sanitize_html5_portal_navigation_traps(cleaned)
             warnings.append("Sanitized HTML5 portal navigation traps and activation listeners.")
 
+        # 8aw. Sanitize HTML5 autonomous custom elements and is attribute
+        if "-" in cleaned or " is=" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_custom_elements_and_is_attribute(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 autonomous custom elements and is attribute.")
+
         return cleaned, warnings
 
 
@@ -3369,6 +3376,35 @@ def sanitize_html5_portal_navigation_traps(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<portal\b(?:[^>"\'\']|"[^"]*"|\'[^\']*\')*>', fix_portal_traps, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_custom_elements_and_is_attribute(html: str) -> str:
+    """
+    Sanitizes HTML5 autonomous custom elements (tag names containing hyphens) and customized
+    built-in elements using the 'is' attribute, stripping the 'is' attribute, neutralizing
+    inline event handlers, and scrubbing scriptable attributes.
+    """
+    if not html:
+        return html
+
+    cleaned = html
+
+    # 1. Strip 'is' attribute from any HTML tag to prevent customized built-in element hijack
+    cleaned = re.sub(r'(\s+)is=["\'][^"\']*["\']', '', cleaned, flags=re.IGNORECASE)
+
+    # 2. Find and sanitize any autonomous custom element tags (e.g. <telecom-widget ...>)
+    def clean_custom_tag(m):
+        tag = m.group(0)
+        # Strip all inline on* event handlers
+        tag = re.sub(r'\s+on[a-z0-9_-]+=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Strip dangerous javascript: / data: in attributes
+        tag = re.sub(r'\s+[a-z0-9_-]+=["\']\s*(?:javascript:|data:text/html)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Strip shadowrootmode or template attachment attributes
+        tag = re.sub(r'\s+shadowrootmode=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<[a-z][a-z0-9]*-[a-z0-9_-]*(?:\s+[^>]*?)?>', clean_custom_tag, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
