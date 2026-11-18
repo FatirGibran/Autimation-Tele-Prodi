@@ -10466,6 +10466,87 @@ def calculate_5g_nr_rel17_redcap_ue_capacity(
     }
 
 
+def calculate_fiber_raman_amplifier_gain(
+    fiber_length_km: float = 80.0,
+    pump_power_mw: float = 500.0,
+    pump_wavelength_nm: float = 1450.0,
+    signal_wavelength_nm: float = 1550.0,
+    raman_gain_coeff_m_w: float = 0.7e-13,
+    effective_area_um2: float = 80.0,
+    attenuation_pump_db_km: float = 0.25,
+    attenuation_signal_db_km: float = 0.20,
+    polarization_factor: float = 0.5
+) -> Dict[str, Any]:
+    """
+    Calculates Distributed Fiber Raman Amplifier (FRA/DRA) on-off gain, effective interaction length,
+    and net span gain pursuant to ITU-T G.665 standards.
+    """
+    l_km = max(1.0, float(fiber_length_km))
+    p_pump_mw = max(10.0, float(pump_power_mw))
+    p_pump_w = p_pump_mw * 1e-3
+    lambda_p = max(1200.0, min(1650.0, float(pump_wavelength_nm)))
+    lambda_s = max(1300.0, min(1700.0, float(signal_wavelength_nm)))
+    g_r = max(1e-14, float(raman_gain_coeff_m_w))
+    a_eff_um2 = max(20.0, float(effective_area_um2))
+    a_eff_m2 = a_eff_um2 * 1e-12
+    alpha_p_db = max(0.1, float(attenuation_pump_db_km))
+    alpha_s_db = max(0.1, float(attenuation_signal_db_km))
+    pol_factor = max(0.1, min(1.0, float(polarization_factor)))
+
+    # Attenuation in Np/m
+    alpha_p_lin = (alpha_p_db * math.log(10.0)) / (10.0 * 1000.0)
+    l_m = l_km * 1000.0
+
+    # Effective interaction length for pump (m and km)
+    l_eff_m = (1.0 - math.exp(-alpha_p_lin * l_m)) / alpha_p_lin
+    l_eff_km = round(l_eff_m / 1000.0, 2)
+
+    # Gain coefficient normalized by effective area
+    g_r_over_aeff = g_r / a_eff_m2
+
+    # On-Off Raman gain in dB
+    # G_on_off_db = 10 * log10(e) * (pol_factor * (g_R / A_eff) * P_pump * L_eff)
+    gain_exponent = pol_factor * g_r_over_aeff * p_pump_w * l_eff_m
+    on_off_gain_db = round(4.342944819 * gain_exponent, 2)
+
+    # Passive fiber loss across span (dB)
+    passive_loss_db = round(alpha_s_db * l_km, 2)
+
+    # Net gain (dB): positive indicates complete span loss compensation
+    net_gain_db = round(on_off_gain_db - passive_loss_db, 2)
+
+    if net_gain_db >= 0.0:
+        status_category = "TRANSPARENT_LOSSLESS_SPAN"
+        recommendation = "Full span loss transparency achieved; monitor pump power to prevent ASE buildup"
+    elif on_off_gain_db >= 12.0:
+        status_category = "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION"
+        recommendation = "High distributed Raman gain effectively boosts OSNR before lumped EDFA stage"
+    elif on_off_gain_db >= 6.0:
+        status_category = "MODERATE_GAIN_EXTENSION_SPAN"
+        recommendation = "Solid OSNR improvement; suitable for long-haul DWDM reach extension"
+    else:
+        status_category = "LOW_RAMAN_GAIN_ASSISTED"
+        recommendation = "Modest Raman gain; consider increasing pump laser power or optimizing pump wavelength"
+
+    return {
+        "fiber_length_km": l_km,
+        "pump_power_mw": p_pump_mw,
+        "pump_wavelength_nm": lambda_p,
+        "signal_wavelength_nm": lambda_s,
+        "raman_gain_coeff_m_w": g_r,
+        "effective_area_um2": a_eff_um2,
+        "attenuation_pump_db_km": alpha_p_db,
+        "attenuation_signal_db_km": alpha_s_db,
+        "polarization_factor": pol_factor,
+        "effective_length_km": l_eff_km,
+        "on_off_gain_db": on_off_gain_db,
+        "passive_loss_db": passive_loss_db,
+        "net_gain_db": net_gain_db,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
