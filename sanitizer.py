@@ -878,6 +878,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 SVG animation elements and event handlers.")
 
+        # 8az. Sanitize HTML5 popover and invoker attributes
+        if "popover" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_popover_and_invoker_attributes(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 popover and invoker attributes.")
+
         return cleaned, warnings
 
 
@@ -3460,6 +3467,41 @@ def sanitize_html5_svg_animation_elements(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<(?:animate|animateMotion|animateTransform|set)\b[^>]*?>', clean_anim_tag, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_popover_and_invoker_attributes(html: str) -> str:
+    """
+    Sanitizes modern HTML5 popover attributes (popover, popovertarget, popovertargetaction)
+    by stripping dangerous toggle event listeners (onbeforetoggle, ontoggle), validating
+    allowed popovertargetaction modes (toggle, show, hide), and validating target element IDs.
+    """
+    if not html or "popover" not in html.lower():
+        return html
+
+    cleaned = html
+
+    # 1. Strip onbeforetoggle and ontoggle event handlers from any element
+    cleaned = re.sub(r'\s+on(?:before)?toggle=["\'][^"\']*["\']', '', cleaned, flags=re.IGNORECASE)
+
+    # 2. Validate popover attribute values and popovertarget IDs
+    def clean_popover_tag(m):
+        tag = m.group(0)
+        # Validate popovertargetaction
+        act_m = re.search(r'\bpopovertargetaction=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if act_m:
+            action = act_m.group(1).strip().lower()
+            if action not in ["toggle", "show", "hide"]:
+                tag = re.sub(r'\s+popovertargetaction=["\'][^"\']*["\']', ' popovertargetaction="toggle"', tag, flags=re.IGNORECASE)
+        # Validate popovertarget ID (must be valid alphanumeric CSS ID)
+        tgt_m = re.search(r'\bpopovertarget=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if tgt_m:
+            target_id = tgt_m.group(1).strip()
+            if not re.match(r'^[a-zA-Z0-9_-]+$', target_id):
+                tag = re.sub(r'\s+popovertarget=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<[a-z0-9_-]+(?:\s+[^>]*?)?>', clean_popover_tag, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
