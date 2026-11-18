@@ -9450,6 +9450,48 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_atmospheric_gaseous_attenuation_itu_r_p676_card(
+        cls,
+        title: str = "Telemetri Redaman Gas Atmosfer Bumi-Satelit (ITU-R P.676)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for satellite slant path atmospheric attenuation
+        due to oxygen and water vapor molecular absorption under ITU-R P.676 recommendations.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        freq = float(d.get("frequency_ghz", 28.0))
+        elev = float(d.get("elevation_angle_deg", 35.0))
+        press = float(d.get("surface_pressure_hpa", 1013.25))
+        temp = float(d.get("surface_temperature_c", 25.0))
+        rho = float(d.get("water_vapor_density_g_m3", 7.5))
+        gamma_o = float(d.get("oxygen_specific_attenuation_db_per_km", 0.021))
+        gamma_w = float(d.get("water_vapor_specific_attenuation_db_per_km", 0.062))
+        a_zenith = float(d.get("zenith_attenuation_db", 0.274))
+        a_slant = float(d.get("slant_path_attenuation_db", 0.48))
+        status = str(d.get("status_category", "MINIMAL_GASEOUS_LOSS")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-gaseous-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #059669; background: #ecfdf5; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #047857; font-size: 16px;">☁️ {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Frekuensi Carrier: <strong>{freq:.2f} GHz</strong></div>
+        <div>Sudut Elevasi: <strong>{elev:.1f}&deg;</strong></div>
+        <div>Tekanan Udara: <strong>{press:.1f} hPa</strong></div>
+        <div>Suhu Permukaan: <strong>{temp:.1f}&deg;C</strong></div>
+        <div>Uap Air &rho;: <strong>{rho:.1f} g/m&sup3;</strong></div>
+        <div>Atenuasi Oksigen &gamma;o: <strong>{gamma_o:.4f} dB/km</strong></div>
+        <div>Atenuasi Uap Air &gamma;w: <strong>{gamma_w:.4f} dB/km</strong></div>
+        <div>Redaman Zenith Az: <strong>{a_zenith:.3f} dB</strong></div>
+        <div>Redaman Slant Path: <strong style="color: #047857;">{a_slant:.2f} dB</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #059669;">
+        Kategori Absorpsi: <strong>{status}</strong> &bull; Standar: <em>ITU-R P.676 Atmospheric Gas Absorption</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9513,6 +9555,7 @@ render_satellite_faraday_rotation_card = EditorialComponents.render_satellite_fa
 render_pkm_k_card = EditorialComponents.render_pkm_k_card
 render_5g_nr_pusch_dmrs_grid_svg = EditorialComponents.render_5g_nr_pusch_dmrs_grid_svg
 render_satellite_earth_station_g_over_t_telemetry_card = EditorialComponents.render_satellite_earth_station_g_over_t_telemetry_card
+render_atmospheric_gaseous_attenuation_itu_r_p676_card = EditorialComponents.render_atmospheric_gaseous_attenuation_itu_r_p676_card
 
 
 
