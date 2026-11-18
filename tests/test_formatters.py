@@ -1539,6 +1539,84 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("5 SKS KKN / Pengabdian", msg)
         self.assertIn("https://simbelmawa.kemdikbud.go.id/pm/45", msg)
 
+    def test_format_satellite_g_over_t_telegram_card(self):
+        msg = TelegramFormatter.format_satellite_g_over_t_telegram_card(
+            data={
+                "station_id": "ES-PURWOKERTO-01",
+                "antenna_diameter_m": 7.3,
+                "frequency_ghz": 4.0,
+                "gain_dbi": 47.79,
+                "system_noise_temp_k": 75.0,
+                "g_over_t_dbk": 29.04,
+                "status_category": "STANDARD_GEO_GATEWAY_COMPLIANT",
+                "portal_url": "https://telemetry.telkomuniversity.ac.id/es/01"
+            }
+        )
+        self.assertIn("Telemetri Figure of Merit G/T Stasiun Bumi", msg)
+        self.assertIn("ES-PURWOKERTO-01", msg)
+        self.assertIn("7.30 m", msg)
+        self.assertIn("4.00 GHz", msg)
+        self.assertIn("47.79 dBi", msg)
+        self.assertIn("75.00 K", msg)
+        self.assertIn("29.04 dB/K", msg)
+        self.assertIn("STANDARD GEO GATEWAY COMPLIANT", msg)
+        self.assertIn("https://telemetry.telkomuniversity.ac.id/es/01", msg)
+
+    def test_format_5g_nr_rel17_redcap_ue_telegram_card(self):
+        msg = TelegramFormatter.format_5g_nr_rel17_redcap_ue_telegram_card(
+            data={
+                "device_id": "REDCAP-CAM-4K-01",
+                "frequency_band": "FR1-n78",
+                "channel_bandwidth_mhz": 20.0,
+                "allocated_prbs": 51,
+                "subcarrier_spacing_khz": 30,
+                "num_rx_antennas": 1,
+                "modulation_order_dl": "64QAM",
+                "peak_downlink_throughput_mbps": 112.56,
+                "peak_uplink_throughput_mbps": 56.28,
+                "complexity_savings_percent": 65.0,
+                "status_category": "HIGH_THROUGHPUT_REDCAP_SURVEILLANCE",
+                "portal_url": "https://redcap.telkomuniversity.ac.id/ue/01"
+            }
+        )
+        self.assertIn("Telemetri Terminal 5G NR Rel-17 RedCap", msg)
+        self.assertIn("REDCAP-CAM-4K-01", msg)
+        self.assertIn("FR1-n78", msg)
+        self.assertIn("20.0 MHz", msg)
+        self.assertIn("51 PRB", msg)
+        self.assertIn("1R1T", msg)
+        self.assertIn("112.56 Mbps", msg)
+        self.assertIn("56.28 Mbps", msg)
+        self.assertIn("65.0%", msg)
+        self.assertIn("HIGH THROUGHPUT REDCAP SURVEILLANCE", msg)
+
+    def test_format_fiber_raman_amplifier_telegram_card(self):
+        msg = TelegramFormatter.format_fiber_raman_amplifier_telegram_card(
+            data={
+                "span_id": "SPAN-PWT-SBY-01",
+                "fiber_length_km": 80.0,
+                "pump_power_mw": 500.0,
+                "pump_wavelength_nm": 1450.0,
+                "signal_wavelength_nm": 1550.0,
+                "effective_length_km": 17.37,
+                "on_off_gain_db": 14.15,
+                "passive_loss_db": 16.0,
+                "net_gain_db": -1.85,
+                "status_category": "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION",
+                "portal_url": "https://dwdm.telkomuniversity.ac.id/span/01"
+            }
+        )
+        self.assertIn("Telemetri Penguat Raman Terdistribusi", msg)
+        self.assertIn("SPAN-PWT-SBY-01", msg)
+        self.assertIn("80.0 km", msg)
+        self.assertIn("17.37 km", msg)
+        self.assertIn("500.0 mW", msg)
+        self.assertIn("1450.0 nm", msg)
+        self.assertIn("14.15 dB", msg)
+        self.assertIn("16.00 dB", msg)
+        self.assertIn("-1.85 dB", msg)
+        self.assertIn("HIGH GAIN DISTRIBUTED AMPLIFICATION", msg)
+
 
 
 class TestCommandRateLimiter(unittest.TestCase):
