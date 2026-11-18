@@ -8984,6 +8984,54 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_error_prevention_commitments(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits legal, financial, and irreversible data submission forms to verify confirmation
+        mechanisms (checkbox confirmation, review step, or confirmation dialogue) pursuant to
+        WCAG 2.1 SC 3.3.4 Error Prevention (Legal, Financial, Data).
+        """
+        if not html_content:
+            return {
+                "critical_forms_count": 0,
+                "unconfirmed_forms_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        critical_pattern = re.compile(r'\b(?:hibah|grant|keuangan|payment|delete|hapus|transaksi|checkout)\b', re.IGNORECASE)
+        forms = soup.find_all("form")
+        critical_forms = []
+
+        for f in forms:
+            action = f.get("action", "")
+            f_class = " ".join(f.get("class", []))
+            f_id = f.get("id", "")
+            f_text = f.get_text()
+            if critical_pattern.search(action) or critical_pattern.search(f_class) or critical_pattern.search(f_id) or critical_pattern.search(f_text):
+                critical_forms.append(f)
+
+        unconfirmed_count = 0
+        for f in critical_forms:
+            # Check for confirmation checkbox, review step indicator, or confirm modal/attribute
+            has_confirm_box = f.find("input", attrs={"type": "checkbox", "name": re.compile(r'(?:confirm|setuju|terms|agree|verify)', re.IGNORECASE)}) is not None
+            has_data_confirm = any(btn.has_attr("data-confirm") or "confirm(" in str(btn.get("onclick", "")).lower() for btn in f.find_all(["button", "input"]))
+            has_review_step = f.find(attrs={"class": re.compile(r'(?:review-step|summary-confirmation)', re.IGNORECASE)}) is not None
+
+            if not (has_confirm_box or has_data_confirm or has_review_step):
+                unconfirmed_count += 1
+                fid = f.get("id") or f.get("action") or "form"
+                issues.append(f"<form id='{fid}'>: Formulir transaksi/data krusial tidak memiliki mekanisme konfirmasi pengguna (checkbox persetujuan, dialog konfirmasi, atau tahap review) melanggar WCAG SC 3.3.4.")
+
+        return {
+            "critical_forms_count": len(critical_forms),
+            "unconfirmed_forms_count": unconfirmed_count,
+            "is_compliant": unconfirmed_count == 0,
+            "issues": issues
+        }
+
 
 
 
