@@ -8890,6 +8890,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_focus_visible_outline_indicators(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits interactive controls and styling to ensure keyboard focus indicators remain visible
+        and are not suppressed by outline:none / outline:0 without an alternative indicator (WCAG 2.1 SC 2.4.7).
+        """
+        if not html_content:
+            return {
+                "total_interactive_elements": 0,
+                "suppressed_focus_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        interactive_tags = ["a", "button", "input", "select", "textarea"]
+        elements = soup.find_all(interactive_tags)
+        issues = []
+        suppressed_count = 0
+
+        outline_kill_pattern = re.compile(r'\boutline\s*:\s*(?:none|0|transparent)\b', re.IGNORECASE)
+        alt_indicator_pattern = re.compile(r'\b(?:box-shadow|border-color|outline-color|background-color)\b', re.IGNORECASE)
+
+        # 1. Audit inline styles on interactive elements
+        for el in elements:
+            if el.has_attr("style"):
+                style = el["style"]
+                if outline_kill_pattern.search(style) and not alt_indicator_pattern.search(style):
+                    suppressed_count += 1
+                    issues.append(f"<{el.name}> '{el.get_text().strip()[:25]}' menonaktifkan outline fokus tanpa pengganti indikator visual fokus (WCAG SC 2.4.7).")
+
+        # 2. Audit embedded <style> blocks for global :focus outline removal
+        for style_tag in soup.find_all("style"):
+            content = style_tag.get_text()
+            focus_rules = re.findall(r'([^{]+:focus[^{]*)\{([^}]+)\}', content, re.IGNORECASE)
+            for selector, rule_body in focus_rules:
+                if outline_kill_pattern.search(rule_body) and not alt_indicator_pattern.search(rule_body):
+                    suppressed_count += 1
+                    issues.append(f"CSS selector '{selector.strip()}' menghapus outline fokus keyboard ('outline: none/0') tanpa indikator fokus visual pengganti.")
+
+        return {
+            "total_interactive_elements": len(elements),
+            "suppressed_focus_count": suppressed_count,
+            "is_compliant": suppressed_count == 0,
+            "issues": issues
+        }
+
 
 
 
