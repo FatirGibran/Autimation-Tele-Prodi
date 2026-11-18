@@ -3164,6 +3164,74 @@ Status: Granted
         self.assertFalse(res_unfunded["is_funded"])
         self.assertEqual(res_unfunded["grant_amount_idr"], 0)
 
+    def test_calculate_satellite_g_over_t_figure_of_merit(self):
+        from parser import calculate_satellite_g_over_t_figure_of_merit
+        res = calculate_satellite_g_over_t_figure_of_merit(
+            antenna_diameter_m=3.0,
+            frequency_ghz=12.0,
+            antenna_efficiency=0.65,
+            antenna_noise_temp_k=50.0,
+            feed_loss_db=0.5,
+            lna_noise_figure_db=0.8,
+            physical_temp_k=290.0
+        )
+        self.assertGreater(res["gain_dbi"], 40.0)
+        self.assertGreater(res["system_noise_temp_k"], 50.0)
+        self.assertGreater(res["g_over_t_dbk"], 20.0)
+        self.assertIn("status_category", res)
+        self.assertIn("recommendation", res)
+
+    def test_calculate_atmospheric_gaseous_attenuation_itu_r_p676(self):
+        from parser import calculate_atmospheric_gaseous_attenuation_itu_r_p676
+        res = calculate_atmospheric_gaseous_attenuation_itu_r_p676(
+            frequency_ghz=28.0,
+            elevation_angle_deg=35.0,
+            surface_pressure_hpa=1013.25,
+            surface_temperature_c=25.0,
+            water_vapor_density_g_m3=7.5
+        )
+        self.assertGreater(res["total_specific_attenuation_db_per_km"], 0.0)
+        self.assertGreater(res["zenith_attenuation_db"], 0.0)
+        self.assertGreater(res["slant_path_attenuation_db"], 0.0)
+        self.assertIn("status_category", res)
+
+    def test_calculate_5g_nr_rel17_redcap_ue_capacity(self):
+        from parser import calculate_5g_nr_rel17_redcap_ue_capacity
+        res = calculate_5g_nr_rel17_redcap_ue_capacity(
+            frequency_band="FR1-n78",
+            channel_bandwidth_mhz=20.0,
+            subcarrier_spacing_khz=30,
+            num_rx_antennas=1,
+            num_tx_antennas=1,
+            modulation_order_dl="64QAM",
+            half_duplex_enabled=False
+        )
+        self.assertEqual(res["allocated_prbs"], 51)
+        self.assertEqual(res["numerology_mu"], 1)
+        self.assertGreater(res["peak_downlink_throughput_mbps"], 40.0)
+        self.assertGreater(res["peak_uplink_throughput_mbps"], 20.0)
+        self.assertGreaterEqual(res["complexity_savings_percent"], 60.0)
+        self.assertIn("status_category", res)
+
+    def test_calculate_fiber_raman_amplifier_gain(self):
+        from parser import calculate_fiber_raman_amplifier_gain
+        res = calculate_fiber_raman_amplifier_gain(
+            fiber_length_km=80.0,
+            pump_power_mw=500.0,
+            pump_wavelength_nm=1450.0,
+            signal_wavelength_nm=1550.0,
+            raman_gain_coeff_m_w=0.7e-13,
+            effective_area_um2=80.0,
+            attenuation_pump_db_km=0.25,
+            attenuation_signal_db_km=0.20,
+            polarization_factor=0.5
+        )
+        self.assertGreater(res["effective_length_km"], 10.0)
+        self.assertGreater(res["on_off_gain_db"], 0.0)
+        self.assertAlmostEqual(res["passive_loss_db"], 16.0)
+        self.assertIn("net_gain_db", res)
+        self.assertIn("status_category", res)
+
 
 if __name__ == "__main__":
     unittest.main()
