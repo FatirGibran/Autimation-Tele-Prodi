@@ -1849,6 +1849,21 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_gt_freq ON satellite_earth_station_gt_records(frequency_ghz);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_redcap_ue_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    frequency_band TEXT NOT NULL,
+                    channel_bandwidth_mhz REAL NOT NULL,
+                    allocated_prbs INTEGER NOT NULL,
+                    num_rx_antennas INTEGER NOT NULL,
+                    peak_downlink_throughput_mbps REAL NOT NULL,
+                    peak_uplink_throughput_mbps REAL NOT NULL,
+                    complexity_savings_percent REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_redcap_band ON nr_redcap_ue_records(frequency_band);")
 
 
 
@@ -8303,6 +8318,58 @@ class StorageManager:
     save_satellite_gt_record = save_satellite_earth_station_gt_record
     list_satellite_gt_records = list_satellite_earth_station_gt_records
     get_satellite_gt_record_by_id = get_satellite_earth_station_gt_record_by_id
+
+    def save_nr_redcap_ue_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a 3GPP Rel-17 RedCap UE capacity and BOM savings calculation record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_redcap_ue_records (
+                    frequency_band, channel_bandwidth_mhz, allocated_prbs,
+                    num_rx_antennas, peak_downlink_throughput_mbps,
+                    peak_uplink_throughput_mbps, complexity_savings_percent, status_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("frequency_band", "FR1-n78")).strip(),
+                float(d.get("channel_bandwidth_mhz", 20.0)),
+                int(d.get("allocated_prbs", 51)),
+                int(d.get("num_rx_antennas", 1)),
+                float(d.get("peak_downlink_throughput_mbps", 112.56)),
+                float(d.get("peak_uplink_throughput_mbps", 56.28)),
+                float(d.get("complexity_savings_percent", 65.0)),
+                str(d.get("status_category", "HIGH_THROUGHPUT_REDCAP_SURVEILLANCE")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_redcap_ue_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR Rel-17 RedCap UE records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_redcap_ue_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_redcap_ue_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single 5G NR Rel-17 RedCap UE record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_redcap_ue_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    save_redcap_record = save_nr_redcap_ue_record
+    list_redcap_records = list_nr_redcap_ue_records
+    get_redcap_record_by_id = get_nr_redcap_ue_record_by_id
 
 
 
