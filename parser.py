@@ -10370,6 +10370,102 @@ def calculate_atmospheric_gaseous_attenuation_itu_r_p676(
     }
 
 
+def calculate_5g_nr_rel17_redcap_ue_capacity(
+    frequency_band: str = "FR1-n78",
+    channel_bandwidth_mhz: float = 20.0,
+    subcarrier_spacing_khz: int = 30,
+    num_rx_antennas: int = 1,
+    num_tx_antennas: int = 1,
+    modulation_order_dl: str = "64QAM",
+    half_duplex_enabled: bool = False
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP Rel-17 RedCap (Reduced Capability / NR-Light) UE peak data rates,
+    PRB allocations, and terminal complexity reduction pursuant to 3GPP TS 38.306 and TS 38.101-1.
+    """
+    band = str(frequency_band).strip().upper()
+    bw = max(5.0, min(100.0, float(channel_bandwidth_mhz)))
+    scs = int(subcarrier_spacing_khz) if int(subcarrier_spacing_khz) in [15, 30, 60] else 30
+    rx_ants = max(1, min(2, int(num_rx_antennas)))
+    tx_ants = max(1, min(2, int(num_tx_antennas)))
+    mod_dl = str(modulation_order_dl).strip().upper()
+    hd_fdd = bool(half_duplex_enabled)
+
+    # 3GPP RedCap restricts maximum UE bandwidth in FR1 to 20 MHz (max 100 MHz in FR2)
+    is_fr2 = "FR2" in band or bw > 20.0
+    effective_bw = min(bw, 100.0 if is_fr2 else 20.0)
+
+    # Resource Block allocation per 3GPP TS 38.101-1
+    if scs == 30:
+        mu = 1
+        prb_map = {5.0: 11, 10.0: 24, 15.0: 38, 20.0: 51, 40.0: 106, 50.0: 133, 100.0: 273}
+    elif scs == 15:
+        mu = 0
+        prb_map = {5.0: 25, 10.0: 52, 15.0: 79, 20.0: 106}
+    else:
+        mu = 2
+        prb_map = {10.0: 11, 20.0: 24, 40.0: 51, 50.0: 66, 100.0: 132}
+
+    n_prb = prb_map.get(effective_bw, int(effective_bw * 2.55))
+
+    # Modulation order bits Q_m
+    qm_dl = 8 if mod_dl == "256QAM" else (6 if mod_dl == "64QAM" else 4)
+    qm_ul = 6  # 64QAM for UL standard
+
+    # 3GPP TS 38.306 formula parameters
+    r_max = 948.0 / 1024.0
+    # Symbol rate per second = 14 * 2^mu * 1000
+    sym_per_sec = 14.0 * (2.0 ** mu) * 1000.0
+
+    # Overheads
+    oh_dl = 0.22 if hd_fdd else 0.14
+    oh_ul = 0.16 if hd_fdd else 0.08
+
+    # Peak Throughputs in Mbps
+    peak_dl_mbps = round(1e-6 * rx_ants * qm_dl * r_max * (n_prb * 12.0 * sym_per_sec) * (1.0 - oh_dl), 2)
+    peak_ul_mbps = round(1e-6 * tx_ants * qm_ul * r_max * (n_prb * 12.0 * sym_per_sec) * (1.0 - oh_ul), 2)
+
+    # Complexity reduction estimate compared to legacy 4Rx 100MHz eMBB UE (%)
+    # 1/2 Rx antennas, max 20 MHz baseband buffer, optional HD-FDD
+    base_reduction = 55.0
+    if rx_ants == 1:
+        base_reduction += 10.0
+    if hd_fdd:
+        base_reduction += 5.0
+    complexity_savings_pct = min(75.0, base_reduction)
+
+    if peak_dl_mbps >= 100.0:
+        status_category = "HIGH_THROUGHPUT_REDCAP_SURVEILLANCE"
+        recommendation = "Ideal for industrial wireless video surveillance, AR glasses, and high-rate smart wearables"
+    elif peak_dl_mbps >= 40.0:
+        status_category = "STANDARD_INDUSTRIAL_WIRELESS_SENSOR"
+        recommendation = "Well suited for smart factory automated guided vehicles (AGVs) and telemetry gateways"
+    elif peak_dl_mbps >= 10.0:
+        status_category = "SMART_GRID_UTILITY_TERMINAL"
+        recommendation = "Optimal for electrical smart meters, environmental sensor networks, and pipeline telemetry"
+    else:
+        status_category = "COMPACT_LOW_RATE_ACTUATOR"
+        recommendation = "Sufficient for lightweight SCADA monitors; evaluate 2Rx configuration for higher throughput"
+
+    return {
+        "frequency_band": band,
+        "channel_bandwidth_mhz": bw,
+        "effective_bandwidth_mhz": effective_bw,
+        "subcarrier_spacing_khz": scs,
+        "numerology_mu": mu,
+        "allocated_prbs": n_prb,
+        "num_rx_antennas": rx_ants,
+        "num_tx_antennas": tx_ants,
+        "modulation_order_dl": mod_dl,
+        "half_duplex_enabled": hd_fdd,
+        "peak_downlink_throughput_mbps": peak_dl_mbps,
+        "peak_uplink_throughput_mbps": peak_ul_mbps,
+        "complexity_savings_percent": complexity_savings_pct,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
