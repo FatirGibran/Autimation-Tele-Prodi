@@ -2687,6 +2687,51 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertEqual(res_bad["unannounced_status_messages"], 1)
 
+    def test_audit_content_reflow_320px_viewport(self):
+        html_ok = '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><div style="width: 100%; max-width: 600px;">Text</div></body></html>'
+        res_ok = YoastSEOValidator.audit_content_reflow_320px_viewport(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["fixed_width_overflow_elements"], 0)
+
+        html_bad = '<html><head><meta name="viewport" content="width=device-width, user-scalable=no"></head><body><div style="width: 500px;">Fixed</div></body></html>'
+        res_bad = YoastSEOValidator.audit_content_reflow_320px_viewport(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertFalse(res_bad["has_scalable_viewport"])
+        self.assertEqual(res_bad["fixed_width_overflow_elements"], 1)
+
+    def test_audit_focus_visible_outline_indicators(self):
+        html_ok = '<div><button style="outline: 2px solid blue;">Submit</button><a href="/hub" style="box-shadow: 0 0 0 2px blue; outline: none;">Link</a></div>'
+        res_ok = YoastSEOValidator.audit_focus_visible_outline_indicators(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["suppressed_focus_count"], 0)
+
+        html_bad = '<div><button style="outline: none;">Aksi</button><style>button:focus { outline: 0; }</style></div>'
+        res_bad = YoastSEOValidator.audit_focus_visible_outline_indicators(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertGreaterEqual(res_bad["suppressed_focus_count"], 1)
+
+    def test_audit_pointer_gestures_single_pointer_alternative(self):
+        html_ok = '<div class="carousel-view"><button aria-label="Previous">‹</button><button aria-label="Next">›</button></div>'
+        res_ok = YoastSEOValidator.audit_pointer_gestures_single_pointer_alternative(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["missing_single_pointer_alternatives"], 0)
+
+        html_bad = '<div class="carousel-view"><div class="slide">Slide 1</div></div>'
+        res_bad = YoastSEOValidator.audit_pointer_gestures_single_pointer_alternative(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["missing_single_pointer_alternatives"], 1)
+
+    def test_audit_error_prevention_commitments(self):
+        html_ok = '<form action="/submit-hibah" method="POST"><p>Hibah Belmawa</p><input type="checkbox" name="confirm_terms"><button type="submit">Kirim</button></form>'
+        res_ok = YoastSEOValidator.audit_error_prevention_commitments(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["unconfirmed_forms_count"], 0)
+
+        html_bad = '<form action="/delete-database" method="POST"><p>Hapus semua data</p><button type="submit">Hapus</button></form>'
+        res_bad = YoastSEOValidator.audit_error_prevention_commitments(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["unconfirmed_forms_count"], 1)
+
 
 
 if __name__ == "__main__":
