@@ -8846,6 +8846,50 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_content_reflow_320px_viewport(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits web content reflow compliance at 320 CSS pixels viewport width (WCAG 2.1 SC 1.4.10)
+        verifying responsive viewport settings, zoom scalability, and absence of hardcoded fixed-width
+        overflow traps.
+        """
+        if not html_content:
+            return {
+                "has_scalable_viewport": True,
+                "fixed_width_overflow_elements": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        scalable = True
+        overflow_elements = 0
+
+        vp = soup.find("meta", attrs={"name": re.compile(r'^viewport$', re.IGNORECASE)})
+        if vp and vp.has_attr("content"):
+            c_text = vp["content"].lower()
+            if "user-scalable=no" in c_text or "user-scalable=0" in c_text or "maximum-scale=1.0" in c_text or "maximum-scale=1" in c_text:
+                scalable = False
+                issues.append("Tag meta viewport membatasi perbesaran pengguna ('user-scalable=no' atau 'maximum-scale=1.0') melanggar WCAG SC 1.4.10.")
+
+        width_pattern = re.compile(r'(?:min-width|width)\s*:\s*([0-9]+)\s*px', re.IGNORECASE)
+        for el in soup.find_all(attrs={"style": True}):
+            style = el["style"]
+            match = width_pattern.search(style)
+            if match:
+                px_val = int(match.group(1))
+                if px_val > 320 and "max-width" not in style.lower():
+                    overflow_elements += 1
+                    issues.append(f"<{el.name}> memiliki lebar tetap {px_val}px tanpa 'max-width: 100%' yang memicu horizontal scrolling pada layar 320 CSS pixels.")
+
+        return {
+            "has_scalable_viewport": scalable,
+            "fixed_width_overflow_elements": overflow_elements,
+            "is_compliant": scalable and overflow_elements == 0,
+            "issues": issues
+        }
+
 
 
 
