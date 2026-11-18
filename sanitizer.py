@@ -871,6 +871,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 anchor and area ping tracking attributes.")
 
+        # 8ay. Sanitize HTML5 SVG animation elements and event handlers
+        if re.search(r'<(?:animate|animateMotion|animateTransform|set)\b', cleaned, re.IGNORECASE):
+            old_val = cleaned
+            cleaned = sanitize_html5_svg_animation_elements(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 SVG animation elements and event handlers.")
+
         return cleaned, warnings
 
 
@@ -3431,6 +3438,28 @@ def sanitize_html5_anchor_ping_attribute(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<(?:a|area)\b[^>]*?>', clean_anchor_tag, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_svg_animation_elements(html: str) -> str:
+    """
+    Sanitizes SVG <animate>, <animateMotion>, <animateTransform>, and <set> elements
+    by stripping animation event listeners (onbegin, onend, onrepeat), neutralizing
+    attributeName targets (href, xlink:href, on*), and stripping scriptable URI values.
+    """
+    if not html or not re.search(r'<(?:animate|animateMotion|animateTransform|set)\b', html, re.IGNORECASE):
+        return html
+
+    cleaned = html
+
+    def clean_anim_tag(m):
+        tag = m.group(0)
+        tag = re.sub(r'\s+on(?:begin|end|repeat|[a-z]+)=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+attributeName=["\']\s*(?:href|xlink:href|on[a-z]+)[^"\']*["\']', ' attributeName="opacity"', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+(?:to|from|values)=["\']\s*(?:javascript:|data:)[^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<(?:animate|animateMotion|animateTransform|set)\b[^>]*?>', clean_anim_tag, cleaned, flags=re.IGNORECASE)
     return cleaned
 
 
