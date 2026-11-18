@@ -1558,6 +1558,43 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn("**Package:** `@telecom/5g-antenna`", res)
         self.assertIn("<h2>Modul Referensi Antena</h2>", res)
 
+    def test_generate_tech_article_scholarly_json_ld(self):
+        meta = {
+            "seo_title": "Analisis Penguat Raman Terdistribusi pada Sistem DWDM",
+            "meta_description": "Kajian penguatan sinyal optik terdistribusi ITU-T G.665.",
+            "author": "Dr. Eng. Ir. Budi Raharjo, M.T.",
+            "orcid": "https://orcid.org/0000-0002-1825-0097",
+            "doi": "10.1109/TELKOM.2026.1001",
+            "url": "https://bif-pwt.telkomuniversity.ac.id/riset/dwdm-raman",
+            "tags": ["dwdm", "raman", "optik"]
+        }
+        res = ArticleExporter.generate_tech_article_scholarly_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertIn("TechArticle", res["@type"])
+        self.assertIn("ScholarlyArticle", res["@type"])
+        self.assertEqual(res["headline"], "Analisis Penguat Raman Terdistribusi pada Sistem DWDM")
+        self.assertEqual(res["identifier"]["value"], "10.1109/TELKOM.2026.1001")
+        self.assertEqual(res["author"]["name"], "Dr. Eng. Ir. Budi Raharjo, M.T.")
+        self.assertEqual(res["author"]["sameAs"], "https://orcid.org/0000-0002-1825-0097")
+        self.assertTrue(res["isAccessibleForFree"])
+
+    def test_to_docusaurus_v3_mdx(self):
+        meta = {
+            "seo_title": "Panduan Implementasi 5G RedCap",
+            "meta_description": "Dokumentasi arsitektur dan coexistence 5G NR Rel-17 RedCap.",
+            "sidebar_position": 2,
+            "sidebar_label": "5G NR RedCap",
+            "tags": ["docusaurus", "redcap", "5g"]
+        }
+        res = ArticleExporter.to_docusaurus_v3_mdx(meta, "<p>Konten panduan RedCap</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Implementasi 5G RedCap"', res)
+        self.assertIn("sidebar_position: 2", res)
+        self.assertIn('sidebar_label: "5G NR RedCap"', res)
+        self.assertIn(":::info Ringkasan Teknis", res)
+        self.assertIn(":::", res)
+        self.assertIn("<p>Konten panduan RedCap</p>", res)
+
 
 
 if __name__ == "__main__":
