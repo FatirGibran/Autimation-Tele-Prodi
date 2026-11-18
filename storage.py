@@ -1835,6 +1835,20 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_pkm_pm_emp_nim ON pkm_pm_community_empowerment_records(nim);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS satellite_earth_station_gt_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    antenna_diameter_m REAL NOT NULL,
+                    frequency_ghz REAL NOT NULL,
+                    gain_dbi REAL NOT NULL,
+                    system_noise_temp_k REAL NOT NULL,
+                    g_over_t_dbk REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    recommendation TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_gt_freq ON satellite_earth_station_gt_records(frequency_ghz);")
 
 
 
@@ -8239,6 +8253,56 @@ class StorageManager:
     list_pkm_pm_community = list_pkm_pm_community_records
     get_pkm_pm_community_by_id = get_pkm_pm_community_record_by_id
     get_pkm_pm_proposal_by_id_alias = get_pkm_pm_community_record_by_id
+
+    def save_satellite_earth_station_gt_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a satellite earth station G/T figure of merit calculation record under ITU-R S.733.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO satellite_earth_station_gt_records (
+                    antenna_diameter_m, frequency_ghz, gain_dbi,
+                    system_noise_temp_k, g_over_t_dbk, status_category, recommendation
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                float(d.get("antenna_diameter_m", 7.3)),
+                float(d.get("frequency_ghz", 4.0)),
+                float(d.get("gain_dbi", 47.79)),
+                float(d.get("system_noise_temp_k", 75.0)),
+                float(d.get("g_over_t_dbk", 29.04)),
+                str(d.get("status_category", "STANDARD_GEO_GATEWAY_COMPLIANT")).strip(),
+                str(d.get("recommendation", "High quality gateway receiver")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_satellite_earth_station_gt_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent satellite earth station G/T calculation records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_earth_station_gt_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_satellite_earth_station_gt_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single satellite earth station G/T calculation record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_earth_station_gt_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    save_satellite_gt_record = save_satellite_earth_station_gt_record
+    list_satellite_gt_records = list_satellite_earth_station_gt_records
+    get_satellite_gt_record_by_id = get_satellite_earth_station_gt_record_by_id
 
 
 
