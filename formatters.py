@@ -2239,9 +2239,43 @@ class TelegramFormatter:
             f"📱 *Optimal untuk sensor industri, kamera pengawas pintar, dan perangkat wearable.*"
         )
 
+    @staticmethod
+    def format_fiber_raman_amplifier_telegram_card(data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """
+        Renders a distributed fiber Raman amplifier (FRA/DRA) telemetry card for Telegram broadcast.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        span_id = str(d.get("span_id", "FIBER-SPAN-01")).strip()
+        l_km = float(d.get("fiber_length_km", 80.0))
+        p_mw = float(d.get("pump_power_mw", 500.0))
+        lambda_p = float(d.get("pump_wavelength_nm", 1450.0))
+        lambda_s = float(d.get("signal_wavelength_nm", 1550.0))
+        l_eff = float(d.get("effective_length_km", 17.37))
+        gain_on_off = float(d.get("on_off_gain_db", 14.15))
+        loss = float(d.get("passive_loss_db", 16.0))
+        net_gain = float(d.get("net_gain_db", -1.85))
+        status = str(d.get("status_category", "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION")).replace("_", " ")
+        portal_url = str(d.get("portal_url", "")).strip()
+        portal_link = f"\n🔗 **NMS Jaringan Optik:** {portal_url}" if portal_url else ""
+
+        return (
+            f"⚡ **Telemetri Penguat Raman Terdistribusi (ITU-T G.665 FRA)**\n\n"
+            f"🌐 **Span ID:** `{span_id}`\n"
+            f"📏 **Panjang Serat:** `{l_km:.1f} km` (L_eff: `{l_eff:.2f} km`)\n"
+            f"💡 **Pompa Laser:** `{p_mw:.1f} mW` (@ `{lambda_p:.1f} nm`)\n"
+            f"📡 **Panjang Gelombang Sinyal:** `{lambda_s:.1f} nm`\n"
+            f"📈 **Raman On-Off Gain:** `{gain_on_off:.2f} dB`\n"
+            f"📉 **Redaman Pasif Serat:** `{loss:.2f} dB`\n"
+            f"🎯 **Net Span Gain:** `{net_gain:.2f} dB`\n"
+            f"🌟 **Kategori Penguatan:** `{status}`{portal_link}\n\n"
+            f"⚡ *Distributed Raman Amplification meningkatkan OSNR dan memperpanjang jangkauan transmisi DWDM.*"
+        )
+
 
 format_satellite_g_over_t_telegram_card = TelegramFormatter.format_satellite_g_over_t_telegram_card
 format_5g_nr_rel17_redcap_ue_telegram_card = TelegramFormatter.format_5g_nr_rel17_redcap_ue_telegram_card
+format_fiber_raman_amplifier_telegram_card = TelegramFormatter.format_fiber_raman_amplifier_telegram_card
 
 
 
