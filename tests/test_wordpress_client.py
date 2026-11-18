@@ -1301,6 +1301,48 @@ class TestWordPressClient(unittest.TestCase):
         self.assertEqual(diff["word_count_delta"], 2)
         self.assertTrue(diff["content_changed"])
 
+    @patch("urllib.request.urlopen")
+    def test_get_media_by_mime_type(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps([
+            {"id": 201, "mime_type": "image/png", "source_url": "https://example.com/fig1.png"}
+        ]).encode("utf-8")
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        items = self.client.get_media_by_mime_type(mime_type="image/png", page=2, per_page=15)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["id"], 201)
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("mime_type=image/png", req.full_url)
+        self.assertIn("page=2", req.full_url)
+        self.assertIn("per_page=15", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_post_by_slug(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps([
+            {"id": 55, "slug": "5g-nr-redcap-editorial", "title": {"rendered": "5G RedCap"}}
+        ]).encode("utf-8")
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        post = self.client.get_post_by_slug("5g-nr-redcap-editorial")
+        self.assertIsNotNone(post)
+        self.assertEqual(post["id"], 55)
+        self.assertEqual(post["slug"], "5g-nr-redcap-editorial")
+        req = mock_urlopen.call_args[0][0]
+        self.assertEqual(req.get_method(), "GET")
+        self.assertIn("slug=5g-nr-redcap-editorial", req.full_url)
+
+    @patch("urllib.request.urlopen")
+    def test_get_post_by_slug_not_found(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'[]'
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        post = self.client.get_post_by_slug("non-existent-article")
+        self.assertIsNone(post)
+
 
 
 if __name__ == "__main__":
