@@ -9535,6 +9535,46 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_fiber_raman_amplifier_fra_gain_card(
+        cls,
+        title: str = "Penguat Raman Terdistribusi (ITU-T G.665 FRA / DRA)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for Distributed Fiber Raman Amplifier (FRA)
+        gain profile, effective interaction length, and net span loss compensation.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        l_km = float(d.get("fiber_length_km", 80.0))
+        p_mw = float(d.get("pump_power_mw", 500.0))
+        lambda_p = float(d.get("pump_wavelength_nm", 1450.0))
+        lambda_s = float(d.get("signal_wavelength_nm", 1550.0))
+        l_eff = float(d.get("effective_length_km", 17.37))
+        gain_on_off = float(d.get("on_off_gain_db", 14.15))
+        loss = float(d.get("passive_loss_db", 16.0))
+        net_gain = float(d.get("net_gain_db", -1.85))
+        status = str(d.get("status_category", "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-fra-gain-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #0891b2; background: #ecfeff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #0e7490; font-size: 16px;">⚡ {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Panjang Serat: <strong>{l_km:.1f} km</strong></div>
+        <div>Daya Pompa Laser: <strong>{p_mw:.1f} mW</strong></div>
+        <div>Panjang Gelombang Pompa: <strong>{lambda_p:.1f} nm</strong></div>
+        <div>Panjang Gelombang Sinyal: <strong>{lambda_s:.1f} nm</strong></div>
+        <div>Panjang Efektif Interaksi: <strong>{l_eff:.2f} km</strong></div>
+        <div>Raman On-Off Gain: <strong style="color: #0891b2;">{gain_on_off:.2f} dB</strong></div>
+        <div>Redaman Pasif Span: <strong>{loss:.2f} dB</strong></div>
+        <div>Net Gain Span: <strong style="color: {'#059669' if net_gain >= 0 else '#dc2626'};">{net_gain:.2f} dB</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #0891b2;">
+        Kategori Penguatan: <strong>{status}</strong> &bull; Standar: <em>ITU-T G.665 Optical Raman Amplifiers</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9600,6 +9640,7 @@ render_5g_nr_pusch_dmrs_grid_svg = EditorialComponents.render_5g_nr_pusch_dmrs_g
 render_satellite_earth_station_g_over_t_telemetry_card = EditorialComponents.render_satellite_earth_station_g_over_t_telemetry_card
 render_atmospheric_gaseous_attenuation_itu_r_p676_card = EditorialComponents.render_atmospheric_gaseous_attenuation_itu_r_p676_card
 render_5g_nr_rel17_redcap_ue_telemetry_card = EditorialComponents.render_5g_nr_rel17_redcap_ue_telemetry_card
+render_fiber_raman_amplifier_fra_gain_card = EditorialComponents.render_fiber_raman_amplifier_fra_gain_card
 
 
 
