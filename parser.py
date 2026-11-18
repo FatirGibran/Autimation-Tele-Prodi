@@ -10235,6 +10235,72 @@ def parse_pkm_pm_proposal_evaluation(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def calculate_satellite_g_over_t_figure_of_merit(
+    antenna_diameter_m: float = 3.0,
+    frequency_ghz: float = 12.0,
+    antenna_efficiency: float = 0.65,
+    antenna_noise_temp_k: float = 50.0,
+    feed_loss_db: float = 0.5,
+    lna_noise_figure_db: float = 0.8,
+    physical_temp_k: float = 290.0
+) -> Dict[str, Any]:
+    """
+    Calculates Satellite Earth Station Receiver Figure of Merit (G/T) and total system noise
+    temperature pursuant to ITU-R S.733 recommendations.
+    """
+    dia = max(0.3, float(antenna_diameter_m))
+    freq = max(1.0, float(frequency_ghz))
+    eff = max(0.3, min(0.9, float(antenna_efficiency)))
+    t_ant = max(10.0, float(antenna_noise_temp_k))
+    l_feed_db = max(0.0, float(feed_loss_db))
+    nf_lna_db = max(0.1, float(lna_noise_figure_db))
+    t_0 = max(200.0, float(physical_temp_k))
+
+    wavelength = 0.299792458 / freq
+    gain_linear = eff * ((math.pi * dia / wavelength) ** 2)
+    gain_dbi = round(10.0 * math.log10(gain_linear), 2)
+
+    l_feed_lin = 10.0 ** (l_feed_db / 10.0)
+    t_feed = t_0 * (1.0 - (1.0 / l_feed_lin))
+    f_lna = 10.0 ** (nf_lna_db / 10.0)
+    t_lna = t_0 * (f_lna - 1.0)
+
+    t_sys = round((t_ant / l_feed_lin) + t_feed + t_lna, 2)
+    t_sys_dbk = round(10.0 * math.log10(t_sys), 2)
+
+    g_over_t = round(gain_dbi - l_feed_db - t_sys_dbk, 2)
+
+    if g_over_t >= 30.0:
+        status_category = "EXCELLENT_HIGH_CAPACITY_GATEWAY"
+        recommendation = "Optimal for telecommunications gateway hub and high-throughput DVB-S2X carrier tracking"
+    elif g_over_t >= 22.0:
+        status_category = "STANDARD_COMMERCIAL_VSAT_STATION"
+        recommendation = "Compliant with standard commercial enterprise VSAT Ku-band downlink specifications"
+    elif g_over_t >= 15.0:
+        status_category = "COMPACT_TERMINAL_MARGINAL"
+        recommendation = "Feasible for lightweight consumer broadband terminal, recommend feed loss tuning"
+    else:
+        status_category = "SUB_STANDARD_HIGH_NOISE_TERMINAL"
+        recommendation = "High noise temperature degrades link margin; inspect LNA noise figure and antenna alignment"
+
+    return {
+        "antenna_diameter_m": dia,
+        "frequency_ghz": freq,
+        "antenna_efficiency": eff,
+        "gain_dbi": gain_dbi,
+        "feed_loss_db": l_feed_db,
+        "lna_noise_figure_db": nf_lna_db,
+        "antenna_noise_temp_k": t_ant,
+        "feed_noise_temp_k": round(t_feed, 2),
+        "lna_noise_temp_k": round(t_lna, 2),
+        "system_noise_temp_k": t_sys,
+        "system_noise_temp_dbk": t_sys_dbk,
+        "g_over_t_dbk": g_over_t,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
