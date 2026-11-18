@@ -78,7 +78,11 @@ from sanitizer import (
     sanitize_html5_media_track_elements,
     sanitize_html5_svg_foreignobject,
     sanitize_html5_math_markup_cdata,
-    sanitize_html5_portal_navigation_traps
+    sanitize_html5_portal_navigation_traps,
+    sanitize_html5_custom_elements_and_is_attribute,
+    sanitize_html5_anchor_ping_attribute,
+    sanitize_html5_svg_animation_elements,
+    sanitize_html5_popover_and_invoker_attributes
 )
 
 
@@ -1601,6 +1605,52 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertTrue(any("foreignobject" in w.lower() for w in warnings))
         self.assertTrue(any("mathml" in w.lower() for w in warnings))
         self.assertTrue(any("portal" in w.lower() for w in warnings))
+
+    def test_sanitize_html5_custom_elements_and_is_attribute(self):
+        raw = '<div is="custom-trap"><telecom-card onclick="exploit()" data-payload="javascript:alert(1)" shadowrootmode="open"><p>Safe text</p></telecom-card></div>'
+        cleaned = sanitize_html5_custom_elements_and_is_attribute(raw)
+        self.assertNotIn('is="custom-trap"', cleaned)
+        self.assertNotIn('onclick=', cleaned)
+        self.assertNotIn('javascript:', cleaned)
+        self.assertNotIn('shadowrootmode=', cleaned)
+        self.assertIn('<telecom-card', cleaned)
+        self.assertIn('Safe text', cleaned)
+
+    def test_sanitize_html5_anchor_ping_attribute(self):
+        raw = '<p><a href="https://telecom.ac.id" ping="https://tracker.evil.com/log">Portal Telekomunikasi</a></p>'
+        cleaned = sanitize_html5_anchor_ping_attribute(raw)
+        self.assertNotIn('ping=', cleaned)
+        self.assertNotIn('tracker.evil.com', cleaned)
+        self.assertIn('href="https://telecom.ac.id"', cleaned)
+
+    def test_sanitize_html5_svg_animation_elements(self):
+        raw = '<svg><animate attributeName="href" values="javascript:bad()" onbegin="hack()"></animate><set attributeName="xlink:href" to="javascript:exploit()" onend="bad()"></set></svg>'
+        cleaned = sanitize_html5_svg_animation_elements(raw)
+        self.assertNotIn('attributeName="href"', cleaned)
+        self.assertNotIn('attributeName="xlink:href"', cleaned)
+        self.assertNotIn('onbegin=', cleaned)
+        self.assertNotIn('onend=', cleaned)
+        self.assertNotIn('javascript:', cleaned)
+
+    def test_sanitize_html5_popover_and_invoker_attributes(self):
+        raw = '<button popovertarget="modal-123;alert(1)" popovertargetaction="malicious" ontoggle="steal()">Toggle</button><div id="modal-123" popover onbeforetoggle="hack()">Panel</div>'
+        cleaned = sanitize_html5_popover_and_invoker_attributes(raw)
+        self.assertNotIn('ontoggle=', cleaned)
+        self.assertNotIn('onbeforetoggle=', cleaned)
+        self.assertNotIn('alert(1)', cleaned)
+        self.assertNotIn('popovertargetaction="malicious"', cleaned)
+        self.assertIn('popover', cleaned)
+
+    def test_sanitize_html_with_custom_elements_ping_svg_popover(self):
+        html = '<div class="tu-editorial-container"><a href="https://telecom.ac.id" ping="http://evil.com">Link</a><telecom-node onclick="bad()"></telecom-node><div is="custom-box"></div><button popovertarget="nav-menu" popovertargetaction="invalid">Menu</button></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('ping=', clean)
+        self.assertNotIn('onclick=', clean)
+        self.assertNotIn('is="custom-box"', clean)
+        self.assertIn('popovertargetaction="toggle"', clean)
+        self.assertTrue(any("custom elements" in w.lower() for w in warnings))
+        self.assertTrue(any("ping" in w.lower() for w in warnings))
+        self.assertTrue(any("popover" in w.lower() for w in warnings))
 
 
 
