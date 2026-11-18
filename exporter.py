@@ -3149,6 +3149,49 @@ navigation: true
         ]
         return "\n".join(doc)
 
+    @staticmethod
+    def generate_tech_article_scholarly_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org TechArticle and ScholarlyArticle metadata with IEEE-compatible ORCID identifier and DOI fields.
+        """
+        headline = metadata.get("seo_title", metadata.get("topic", "")).strip()
+        abstract = metadata.get("meta_description", "").strip()
+        author_name = metadata.get("author", "Tim Editorial S1 Teknik Telekomunikasi").strip()
+        orcid = metadata.get("orcid", "https://orcid.org/0000-0002-1825-0097").strip()
+        doi = metadata.get("doi", "10.1109/TELKOM.2026.1001").strip()
+        url = metadata.get("url", "https://bif-pwt.telkomuniversity.ac.id/riset").strip()
+        keywords = metadata.get("keywords", metadata.get("tags", []))
+        if isinstance(keywords, str):
+            keywords = [k.strip() for k in keywords.split(",") if k.strip()]
+        publisher_name = metadata.get("publisher", "Telkom University Purwokerto").strip()
+
+        return {
+            "@context": "https://schema.org",
+            "@type": ["TechArticle", "ScholarlyArticle"],
+            "headline": headline,
+            "description": abstract,
+            "identifier": {
+                "@type": "PropertyValue",
+                "propertyID": "DOI",
+                "value": doi
+            },
+            "sameAs": f"https://doi.org/{doi}" if not doi.startswith("http") else doi,
+            "author": {
+                "@type": "Person",
+                "name": author_name,
+                "sameAs": orcid
+            },
+            "publisher": {
+                "@type": "EducationalOrganization",
+                "name": publisher_name,
+                "url": "https://bif-pwt.telkomuniversity.ac.id"
+            },
+            "keywords": keywords,
+            "url": url,
+            "inLanguage": "id-ID",
+            "isAccessibleForFree": True
+        }
+
 
 
 
