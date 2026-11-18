@@ -8937,6 +8937,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_pointer_gestures_single_pointer_alternative(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits web components using multipoint or path-based gestures (such as swiping, pinch-to-zoom,
+        or drag-panning) to verify single-pointer button alternatives (zoom buttons, prev/next controls)
+        are provided pursuant to WCAG 2.1 SC 2.5.1 Pointer Gestures.
+        """
+        if not html_content:
+            return {
+                "gesture_containers_count": 0,
+                "missing_single_pointer_alternatives": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        gesture_pattern = re.compile(r'\b(?:carousel|slider|swipe-view|pinch-zoom|map-canvas|pan-zoom)\b', re.IGNORECASE)
+        gesture_containers = soup.find_all(lambda tag: tag.has_attr("class") and any(gesture_pattern.search(c) for c in tag.get("class", [])))
+        missing_count = 0
+
+        for container in gesture_containers:
+            # Check if container or its children/adjacent controls contain single-pointer buttons
+            buttons = container.find_all(["button", "a"])
+            has_single_pointer_ctrl = any(
+                b.has_attr("aria-label") or b.get_text().strip() in ("+", "-", "‹", "›", "«", "»", "Prev", "Next", "Zoom In", "Zoom Out")
+                for b in buttons
+            )
+            # Also check if adjacent sibling has controls
+            if not has_single_pointer_ctrl:
+                parent = container.parent
+                if parent:
+                    parent_buttons = parent.find_all(["button", "a"])
+                    has_single_pointer_ctrl = len(parent_buttons) > 0
+
+            if not has_single_pointer_ctrl:
+                missing_count += 1
+                cls_name = " ".join(container.get("class", []))
+                issues.append(f"<{container.name} class='{cls_name}'>: Komponen gesture multipoint/path-based tidak memiliki tombol kontrol single-pointer alternatif (WCAG SC 2.5.1).")
+
+        return {
+            "gesture_containers_count": len(gesture_containers),
+            "missing_single_pointer_alternatives": missing_count,
+            "is_compliant": missing_count == 0,
+            "issues": issues
+        }
+
 
 
 
