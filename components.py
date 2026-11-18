@@ -9492,6 +9492,49 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_rel17_redcap_ue_telemetry_card(
+        cls,
+        title: str = "Spesifikasi Terminal 5G NR Rel-17 RedCap (3GPP TS 38.306)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for 3GPP Rel-17 RedCap (Reduced Capability / NR-Light)
+        UE parameters, peak DL/UL data rates, and terminal bill-of-materials complexity reduction.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        band = str(d.get("frequency_band", "FR1-n78"))
+        bw = float(d.get("channel_bandwidth_mhz", 20.0))
+        prbs = int(d.get("allocated_prbs", 51))
+        scs = int(d.get("subcarrier_spacing_khz", 30))
+        rx = int(d.get("num_rx_antennas", 1))
+        mod_dl = str(d.get("modulation_order_dl", "64QAM"))
+        hd = "Ya (HD-FDD)" if d.get("half_duplex_enabled") else "Tidak (Full Duplex)"
+        dl_rate = float(d.get("peak_downlink_throughput_mbps", 112.56))
+        ul_rate = float(d.get("peak_uplink_throughput_mbps", 56.28))
+        savings = float(d.get("complexity_savings_percent", 65.0))
+        status = str(d.get("status_category", "HIGH_THROUGHPUT_REDCAP_SURVEILLANCE")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-redcap-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #7c3aed; background: #faf5ff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #6d28d9; font-size: 16px;">📱 {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Band Frekuensi: <strong>{band}</strong></div>
+        <div>Bandwidth UE RedCap: <strong>{bw:.1f} MHz</strong></div>
+        <div>Alokasi PRBs: <strong>{prbs} PRB ({scs} kHz)</strong></div>
+        <div>Antena Rx / Tx: <strong>{rx}R1T</strong></div>
+        <div>Modulasi Downlink: <strong>{mod_dl}</strong></div>
+        <div>Mode Half-Duplex: <strong>{hd}</strong></div>
+        <div>Throughput DL Puncak: <strong style="color: #6d28d9;">{dl_rate:.2f} Mbps</strong></div>
+        <div>Throughput UL Puncak: <strong style="color: #7c3aed;">{ul_rate:.2f} Mbps</strong></div>
+        <div>Reduksi Kompleksitas BOM: <strong style="color: #047857;">&plusmn;{savings:.1f}%</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #7c3aed;">
+        Profil Aplikasi: <strong>{status}</strong> &bull; Standar: <em>3GPP Release 17 Reduced Capability</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9556,6 +9599,7 @@ render_pkm_k_card = EditorialComponents.render_pkm_k_card
 render_5g_nr_pusch_dmrs_grid_svg = EditorialComponents.render_5g_nr_pusch_dmrs_grid_svg
 render_satellite_earth_station_g_over_t_telemetry_card = EditorialComponents.render_satellite_earth_station_g_over_t_telemetry_card
 render_atmospheric_gaseous_attenuation_itu_r_p676_card = EditorialComponents.render_atmospheric_gaseous_attenuation_itu_r_p676_card
+render_5g_nr_rel17_redcap_ue_telemetry_card = EditorialComponents.render_5g_nr_rel17_redcap_ue_telemetry_card
 
 
 
