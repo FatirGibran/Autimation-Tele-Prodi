@@ -71,7 +71,10 @@ from parser import (
     calculate_5g_nr_pusch_throughput_and_spectral_efficiency,
     parse_pkm_k_proposal_evaluation,
     calculate_satellite_tropospheric_scintillation_itu_r_p618,
-    calculate_5g_nr_csi_rs_resource_and_overhead
+    calculate_5g_nr_csi_rs_resource_and_overhead,
+    calculate_satellite_g_over_t_figure_of_merit,
+    calculate_5g_nr_rel17_redcap_ue_capacity,
+    calculate_fiber_raman_amplifier_gain
 )
 
 from seo_validator import YoastSEOValidator
@@ -4177,6 +4180,121 @@ def cmd_pkmcommunity(args):
             print(f"{r['id']:<4} | {r['student_leader'][:16]:<18} | {r['nim']:<12} | {r['community_partner'][:20]:<22} | {r['composite_score']:<6.2f} | {fund_str} ({r['letter_grade']})")
 
 
+def cmd_satgt(args):
+    if args.action == "add":
+        diam = float(args.diameter) if args.diameter is not None else 7.3
+        freq = float(args.freq) if args.freq is not None else 4.0
+        eff = float(args.efficiency) if args.efficiency is not None else 0.65
+        t_ant = float(args.t_ant) if args.t_ant is not None else 50.0
+        t_lna = float(args.t_lna) if args.t_lna is not None else 35.0
+        loss = float(args.loss) if args.loss is not None else 0.5
+
+        res = calculate_satellite_g_over_t_figure_of_merit(
+            antenna_diameter_m=diam,
+            frequency_ghz=freq,
+            aperture_efficiency=eff,
+            t_antenna_k=t_ant,
+            t_lna_k=t_lna,
+            feed_loss_db=loss
+        )
+        rec_id = storage.save_satellite_earth_station_gt_record({
+            "antenna_diameter_m": res["antenna_diameter_m"],
+            "frequency_ghz": res["frequency_ghz"],
+            "gain_dbi": res["gain_dbi"],
+            "system_noise_temp_k": res["system_noise_temp_k"],
+            "g_over_t_dbk": res["g_over_t_dbk"],
+            "status_category": res["status_category"],
+            "recommendation": res["recommendation"]
+        })
+        print(f"Catatan G/T Stasiun Bumi Satelit berhasil disimpan dengan ID: {rec_id} (G/T: {res['g_over_t_dbk']} dB/K, Gain: {res['gain_dbi']} dBi, Status: {res['status_category']})")
+    else:
+        records = storage.list_satellite_earth_station_gt_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan G/T stasiun bumi yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'DIAMETER (m)':<14} | {'FREQ (GHz)':<12} | {'GAIN (dBi)':<12} | {'G/T (dB/K)':<12} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['antenna_diameter_m']:<14.2f} | {r['frequency_ghz']:<12.2f} | {r['gain_dbi']:<12.2f} | {r['g_over_t_dbk']:<12.2f} | {r['status_category']}")
+
+
+def cmd_nrredcap(args):
+    if args.action == "add":
+        band = args.band or "FR1-n78"
+        bw = float(args.bw) if args.bw is not None else 20.0
+        prbs = int(args.prb) if args.prb is not None else 51
+        scs = int(args.scs) if args.scs is not None else 30
+        rx = int(args.rx) if args.rx is not None else 1
+        mod = args.mod or "64QAM"
+        hd = not args.full_duplex
+
+        res = calculate_5g_nr_rel17_redcap_ue_capacity(
+            frequency_band=band,
+            channel_bandwidth_mhz=bw,
+            allocated_prbs=prbs,
+            subcarrier_spacing_khz=scs,
+            num_rx_antennas=rx,
+            modulation_order_dl=mod,
+            half_duplex_enabled=hd
+        )
+        rec_id = storage.save_nr_redcap_ue_record({
+            "frequency_band": res["frequency_band"],
+            "channel_bandwidth_mhz": res["channel_bandwidth_mhz"],
+            "allocated_prbs": res["allocated_prbs"],
+            "num_rx_antennas": res["num_rx_antennas"],
+            "peak_downlink_throughput_mbps": res["peak_downlink_throughput_mbps"],
+            "peak_uplink_throughput_mbps": res["peak_uplink_throughput_mbps"],
+            "complexity_savings_percent": res["complexity_savings_percent"],
+            "status_category": res["status_category"]
+        })
+        print(f"Catatan 5G NR Rel-17 RedCap UE berhasil disimpan dengan ID: {rec_id} (DL: {res['peak_downlink_throughput_mbps']} Mbps, UL: {res['peak_uplink_throughput_mbps']} Mbps, Hemat BOM: {res['complexity_savings_percent']}%, Status: {res['status_category']})")
+    else:
+        records = storage.list_nr_redcap_ue_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan 5G NR RedCap UE yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'BAND':<10} | {'BW (MHz)':<10} | {'DL (Mbps)':<12} | {'UL (Mbps)':<12} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['frequency_band']:<10} | {r['channel_bandwidth_mhz']:<10.1f} | {r['peak_downlink_throughput_mbps']:<12.2f} | {r['peak_uplink_throughput_mbps']:<12.2f} | {r['status_category']}")
+
+
+def cmd_fra(args):
+    if args.action == "add":
+        length = float(args.length) if args.length is not None else 80.0
+        pump = float(args.pump_power) if args.pump_power is not None else 500.0
+        lp = float(args.pump_wave) if args.pump_wave is not None else 1450.0
+        ls = float(args.signal_wave) if args.signal_wave is not None else 1550.0
+        area = float(args.aeff) if args.aeff is not None else 80.0
+
+        res = calculate_fiber_raman_amplifier_gain(
+            fiber_length_km=length,
+            pump_power_mw=pump,
+            pump_wavelength_nm=lp,
+            signal_wavelength_nm=ls,
+            effective_area_um2=area
+        )
+        rec_id = storage.save_fiber_raman_amplifier_record({
+            "fiber_length_km": res["fiber_length_km"],
+            "pump_power_mw": res["pump_power_mw"],
+            "pump_wavelength_nm": res["pump_wavelength_nm"],
+            "effective_length_km": res["effective_length_km"],
+            "on_off_gain_db": res["on_off_gain_db"],
+            "passive_loss_db": res["passive_loss_db"],
+            "net_gain_db": res["net_gain_db"],
+            "status_category": res["status_category"]
+        })
+        print(f"Catatan Penguat Raman Terdistribusi FRA berhasil disimpan dengan ID: {rec_id} (Gain: {res['on_off_gain_db']} dB, Net: {res['net_gain_db']} dB, L_eff: {res['effective_length_km']} km, Status: {res['status_category']})")
+    else:
+        records = storage.list_fiber_raman_amplifier_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan penguat Raman yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'LENGTH (km)':<12} | {'PUMP (mW)':<10} | {'GAIN (dB)':<12} | {'NET (dB)':<10} | {'STATUS'}")
+        print("-" * 75)
+        for r in records:
+            print(f"{r['id']:<4} | {r['fiber_length_km']:<12.1f} | {r['pump_power_mw']:<10.1f} | {r['on_off_gain_db']:<12.2f} | {r['net_gain_db']:<10.2f} | {r['status_category']}")
+
 
 def main():
 
@@ -5571,6 +5689,42 @@ def main():
     pkmcomm_parser.add_argument("--no-turnitin", action="store_true", help="Tandai jika tidak lolos uji Turnitin")
     pkmcomm_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     pkmcomm_parser.set_defaults(func=cmd_pkmcommunity)
+
+    # Satellite G/T Figure of Merit command
+    satgt_parser = subparsers.add_parser("satgt", help="Evaluasi figure of merit G/T stasiun bumi satelit ITU-R S.733")
+    satgt_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi G/T stasiun bumi")
+    satgt_parser.add_argument("--diameter", type=float, default=7.3, help="Diameter antena parabola stasiun bumi (meter)")
+    satgt_parser.add_argument("--freq", type=float, default=4.0, help="Frekuensi downlink carrier (GHz)")
+    satgt_parser.add_argument("--efficiency", type=float, default=0.65, help="Efisiensi apertur antena (0-1)")
+    satgt_parser.add_argument("--t-ant", type=float, default=50.0, help="Suhu derau antena Ta (Kelvin)")
+    satgt_parser.add_argument("--t-lna", type=float, default=35.0, help="Suhu derau LNA/LNB (Kelvin)")
+    satgt_parser.add_argument("--loss", type=float, default=0.5, help="Rugi-rugi saluran transmisi feed (dB)")
+    satgt_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    satgt_parser.set_defaults(func=cmd_satgt)
+
+    # 5G NR Rel-17 RedCap UE command
+    nrredcap_parser = subparsers.add_parser("nrredcap", help="Kalkulasi kapasitas throughput dan penghematan BOM 5G NR Rel-17 RedCap")
+    nrredcap_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi terminal RedCap")
+    nrredcap_parser.add_argument("--band", default="FR1-n78", help="Band frekuensi 5G NR RedCap")
+    nrredcap_parser.add_argument("--bw", type=float, default=20.0, help="Bandwidth UE maksimum (MHz)")
+    nrredcap_parser.add_argument("--prb", type=int, default=51, help="Alokasi resource blocks RedCap")
+    nrredcap_parser.add_argument("--scs", type=int, default=30, help="Subcarrier Spacing (kHz)")
+    nrredcap_parser.add_argument("--rx", type=int, default=1, help="Jumlah antena penerima UE (1 atau 2)")
+    nrredcap_parser.add_argument("--mod", default="64QAM", help="Modulasi downlink tertinggi")
+    nrredcap_parser.add_argument("--full-duplex", action="store_true", help="Aktifkan full-duplex FDD")
+    nrredcap_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrredcap_parser.set_defaults(func=cmd_nrredcap)
+
+    # Fiber Raman Amplifier (FRA) command
+    fra_parser = subparsers.add_parser("fra", help="Kalkulasi gain on-off dan panjang interaksi penguat Raman terdistribusi FRA ITU-T G.665")
+    fra_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi penguat Raman")
+    fra_parser.add_argument("--length", type=float, default=80.0, help="Panjang span serat optik (km)")
+    fra_parser.add_argument("--pump-power", type=float, default=500.0, help="Daya pompa laser Raman (mW)")
+    fra_parser.add_argument("--pump-wave", type=float, default=1450.0, help="Panjang gelombang pompa (nm)")
+    fra_parser.add_argument("--signal-wave", type=float, default=1550.0, help="Panjang gelombang sinyal (nm)")
+    fra_parser.add_argument("--aeff", type=float, default=80.0, help="Luas area efektif serat A_eff (um^2)")
+    fra_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    fra_parser.set_defaults(func=cmd_fra)
 
     args = parser.parse_args()
 
