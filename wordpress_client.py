@@ -1653,6 +1653,20 @@ class WordPressClient:
         results = self._send_request(req)
         return results if isinstance(results, list) else []
 
+    def get_post_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a published or draft WordPress post matching the given slug, or None if not found.
+        """
+        clean_slug = urllib.parse.quote(slug.strip().lower())
+        endpoint = f"{self.api_url}/posts?slug={clean_slug}"
+        req = urllib.request.Request(endpoint, headers=self._get_headers(), method="GET")
+        results = self._send_request(req)
+        if isinstance(results, list) and len(results) > 0:
+            return results[0]
+        return None
+
+    find_post_by_slug = get_post_by_slug
+
 
 
 
