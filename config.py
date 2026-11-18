@@ -31,6 +31,7 @@ class TelegramConfig:
 
 @dataclass(frozen=True)
 class AppConfig:
+    version: str = "6.2.0"
     base_dir: Path = Path(__file__).parent.resolve()
     db_path: Path = field(default_factory=lambda: Path(__file__).parent.resolve() / "editorial.db")
     prompts_dir: Path = field(default_factory=lambda: Path(__file__).parent.resolve() / "prompts")
@@ -41,3 +42,4 @@ class AppConfig:
     telegram: TelegramConfig = field(default_factory=TelegramConfig)
 
 settings = AppConfig()
+VERSION = settings.version
