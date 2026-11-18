@@ -3492,6 +3492,96 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("32 Ports", html)
         self.assertIn("cdm8-FD2-TD4", html)
 
+    def test_render_satellite_earth_station_g_over_t_telemetry_card(self):
+        html = EditorialComponents.render_satellite_earth_station_g_over_t_telemetry_card(
+            data={
+                "antenna_diameter_m": 7.3,
+                "frequency_ghz": 4.0,
+                "gain_dbi": 47.79,
+                "system_noise_temp_k": 75.0,
+                "g_over_t_dbk": 29.04,
+                "status_category": "STANDARD_GEO_GATEWAY_COMPLIANT"
+            }
+        )
+        self.assertIn("tu-satgt-card", html)
+        self.assertIn("47.79 dBi", html)
+        self.assertIn("29.04 dB/K", html)
+        self.assertIn("ITU-R S.733", html)
+
+    def test_render_atmospheric_gaseous_attenuation_itu_r_p676_card(self):
+        html = EditorialComponents.render_atmospheric_gaseous_attenuation_itu_r_p676_card(
+            data={
+                "frequency_ghz": 22.235,
+                "elevation_angle_deg": 30.0,
+                "specific_attenuation_water_vapor_db_km": 0.18,
+                "specific_attenuation_oxygen_db_km": 0.05,
+                "specific_attenuation_total_db_km": 0.23,
+                "zenith_attenuation_db": 0.46,
+                "slant_path_attenuation_db": 0.92,
+                "status_category": "MODERATE_WATER_VAPOR_ABSORPTION"
+            }
+        )
+        self.assertIn("tu-gaseous-card", html)
+        self.assertIn("22.23 GHz", html)
+        self.assertIn("0.92 dB", html)
+        self.assertIn("ITU-R P.676", html)
+
+    def test_render_5g_nr_rel17_redcap_ue_telemetry_card(self):
+        html = EditorialComponents.render_5g_nr_rel17_redcap_ue_telemetry_card(
+            data={
+                "frequency_band": "FR1-n78",
+                "channel_bandwidth_mhz": 20.0,
+                "allocated_prbs": 51,
+                "subcarrier_spacing_khz": 30,
+                "num_rx_antennas": 1,
+                "peak_downlink_throughput_mbps": 112.56,
+                "peak_uplink_throughput_mbps": 56.28,
+                "complexity_savings_percent": 65.0,
+                "status_category": "HIGH_THROUGHPUT_REDCAP_SURVEILLANCE"
+            }
+        )
+        self.assertIn("tu-redcap-card", html)
+        self.assertIn("FR1-n78", html)
+        self.assertIn("112.56 Mbps", html)
+        self.assertIn("65.0%", html)
+        self.assertIn("3GPP Release 17", html)
+
+    def test_render_fiber_raman_amplifier_fra_gain_card(self):
+        html = EditorialComponents.render_fiber_raman_amplifier_fra_gain_card(
+            data={
+                "fiber_length_km": 80.0,
+                "pump_power_mw": 500.0,
+                "pump_wavelength_nm": 1450.0,
+                "signal_wavelength_nm": 1550.0,
+                "effective_length_km": 17.37,
+                "on_off_gain_db": 14.15,
+                "passive_loss_db": 16.0,
+                "net_gain_db": -1.85,
+                "status_category": "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION"
+            }
+        )
+        self.assertIn("tu-fra-gain-card", html)
+        self.assertIn("80.0 km", html)
+        self.assertIn("500.0 mW", html)
+        self.assertIn("14.15 dB", html)
+        self.assertIn("ITU-T G.665", html)
+
+    def test_render_5g_nr_redcap_bwp_coexistence_svg(self):
+        html = EditorialComponents.render_5g_nr_redcap_bwp_coexistence_svg(
+            data={
+                "carrier_bandwidth_mhz": 100.0,
+                "channel_bandwidth_mhz": 20.0,
+                "allocated_prbs": 51,
+                "subcarrier_spacing_khz": 30
+            }
+        )
+        self.assertIn("tu-nr-redcap-svg-container", html)
+        self.assertIn("<svg", html)
+        self.assertIn("100 MHz", html)
+        self.assertIn("20 MHz", html)
+        self.assertIn("SSB / CD-SSB", html)
+        self.assertIn("CORESET#0", html)
+
 
 
 
