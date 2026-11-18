@@ -10301,6 +10301,75 @@ def calculate_satellite_g_over_t_figure_of_merit(
     }
 
 
+def calculate_atmospheric_gaseous_attenuation_itu_r_p676(
+    frequency_ghz: float = 28.0,
+    elevation_angle_deg: float = 35.0,
+    surface_pressure_hpa: float = 1013.25,
+    surface_temperature_c: float = 25.0,
+    water_vapor_density_g_m3: float = 7.5
+) -> Dict[str, Any]:
+    """
+    Calculates atmospheric gaseous absorption attenuation along Earth-space satellite slant paths
+    due to oxygen and water vapor pursuant to ITU-R P.676 recommendations.
+    """
+    freq = max(1.0, min(100.0, float(frequency_ghz)))
+    elev = max(5.0, min(90.0, float(elevation_angle_deg)))
+    press = max(700.0, min(1100.0, float(surface_pressure_hpa)))
+    temp_c = float(surface_temperature_c)
+    rho = max(0.1, min(50.0, float(water_vapor_density_g_m3)))
+
+    temp_k = temp_c + 273.15
+    r_p = press / 1013.25
+    r_t = 288.15 / temp_k
+
+    gamma_o_term = (7.27 * r_t) / (freq**2 + 0.351 * (r_p**2) * (r_t**2))
+    gamma_o_term += 7.5 / ((freq - 57.0)**2 + 2.44 * (r_p**2) * (r_t**5))
+    gamma_o = round(gamma_o_term * (freq**2) * (r_p**2) * 1e-3, 4)
+
+    gamma_w_term = 0.050 + 0.0021 * rho + (3.6 / ((freq - 22.235)**2 + 8.5)) + (10.6 / ((freq - 183.31)**2 + 9.0))
+    gamma_w = round(gamma_w_term * (freq**2) * rho * 1e-4, 4)
+
+    gamma_total = round(gamma_o + gamma_w, 4)
+
+    h_o = 6.0
+    h_w = 1.6 + 0.107 * rho
+
+    a_zenith = round((gamma_o * h_o) + (gamma_w * h_w), 3)
+
+    sin_elev = math.sin(math.radians(elev))
+    a_slant = round(a_zenith / sin_elev, 2)
+
+    if a_slant <= 0.5:
+        status_category = "MINIMAL_GASEOUS_LOSS"
+        recommendation = "Negligible atmospheric molecular absorption, optimal for high availability link"
+    elif a_slant <= 2.0:
+        status_category = "MODERATE_GASEOUS_ATTENUATION"
+        recommendation = "Standard molecular attenuation, accommodate within basic RF link margin"
+    elif a_slant <= 5.0:
+        status_category = "SIGNIFICANT_ABSORPTION_LOSS"
+        recommendation = "Substantial water vapor / oxygen resonance line loss; increase uplink/downlink EIRP margin"
+    else:
+        status_category = "SEVERE_GASEOUS_FADING_MARGIN_CRITICAL"
+        recommendation = "Extreme gaseous absorption near absorption peak; evaluate site diversity or lower carrier frequency"
+
+    return {
+        "frequency_ghz": freq,
+        "elevation_angle_deg": elev,
+        "surface_pressure_hpa": press,
+        "surface_temperature_c": temp_c,
+        "water_vapor_density_g_m3": rho,
+        "oxygen_specific_attenuation_db_per_km": gamma_o,
+        "water_vapor_specific_attenuation_db_per_km": gamma_w,
+        "total_specific_attenuation_db_per_km": gamma_total,
+        "oxygen_scale_height_km": h_o,
+        "water_vapor_scale_height_km": round(h_w, 2),
+        "zenith_attenuation_db": a_zenith,
+        "slant_path_attenuation_db": a_slant,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
