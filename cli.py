@@ -4192,9 +4192,8 @@ def cmd_satgt(args):
         res = calculate_satellite_g_over_t_figure_of_merit(
             antenna_diameter_m=diam,
             frequency_ghz=freq,
-            aperture_efficiency=eff,
-            t_antenna_k=t_ant,
-            t_lna_k=t_lna,
+            antenna_efficiency=eff,
+            antenna_noise_temp_k=t_ant,
             feed_loss_db=loss
         )
         rec_id = storage.save_satellite_earth_station_gt_record({
@@ -4231,7 +4230,6 @@ def cmd_nrredcap(args):
         res = calculate_5g_nr_rel17_redcap_ue_capacity(
             frequency_band=band,
             channel_bandwidth_mhz=bw,
-            allocated_prbs=prbs,
             subcarrier_spacing_khz=scs,
             num_rx_antennas=rx,
             modulation_order_dl=mod,

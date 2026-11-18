@@ -3543,6 +3543,81 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("Citra Kirana", out)
 
+    def test_cmd_satgt(self):
+        class ArgsAdd:
+            action = "add"
+            diameter = 7.3
+            freq = 4.0
+            efficiency = 0.65
+            t_ant = 50.0
+            t_lna = 35.0
+            loss = 0.5
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_satgt(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan G/T Stasiun Bumi Satelit berhasil disimpan", out)
+            self.assertIn("26.04", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_satgt(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("7.30", out)
+
+    def test_cmd_nrredcap(self):
+        class ArgsAdd:
+            action = "add"
+            band = "FR1-n78"
+            bw = 20.0
+            prb = 51
+            scs = 30
+            rx = 1
+            mod = "64QAM"
+            full_duplex = False
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrredcap(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan 5G NR Rel-17 RedCap UE berhasil disimpan", out)
+            self.assertIn("74.24", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrredcap(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("FR1-N78", out)
+
+    def test_cmd_fra(self):
+        class ArgsAdd:
+            action = "add"
+            length = 80.0
+            pump_power = 500.0
+            pump_wave = 1450.0
+            signal_wave = 1550.0
+            aeff = 80.0
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fra(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Penguat Raman Terdistribusi FRA berhasil disimpan", out)
+            self.assertIn("16.34", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_fra(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("80.0", out)
+
 
 
 if __name__ == "__main__":
