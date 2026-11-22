@@ -9784,6 +9784,58 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_ntn_satellite_link_architecture_svg(
+        cls,
+        title: str = "Arsitektur Link Satelit 5G NR Rel-17 NTN (Service Link & Feeder Link)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders a responsive inline SVG illustrating 3GPP Rel-17 Non-Terrestrial Network (NTN)
+        architecture, including LEO spaceborne payload, Feeder Link, Service Link, and Terrestrial 5GC.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        alt = float(d.get("orbit_altitude_km", 600.0))
+        elev = float(d.get("elevation_angle_deg", 30.0))
+        slant = float(d.get("slant_range_km", 1073.8))
+        ta = float(d.get("common_ta_ms", 7.16))
+
+        return f"""    <div class="tu-nr-ntn-svg-container" style="margin: 20px 0; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+      <h5 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 14px; font-weight: 600;">🛰️ {title}</h5>
+      <div style="width: 100%; overflow-x: auto;">
+        <svg viewBox="0 0 760 220" width="100%" height="220" xmlns="http://www.w3.org/2000/svg" style="display: block; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+          <!-- Satellite Space Segment -->
+          <circle cx="380" cy="45" r="22" fill="#3b82f6" stroke="#93c5fd" stroke-width="2" />
+          <line x1="340" y1="45" x2="358" y2="45" stroke="#60a5fa" stroke-width="4" />
+          <line x1="402" y1="45" x2="420" y2="45" stroke="#60a5fa" stroke-width="4" />
+          <rect x="325" y="35" width="15" height="20" fill="#2563eb" rx="2" />
+          <rect x="420" y="35" width="15" height="20" fill="#2563eb" rx="2" />
+          <text x="380" y="20" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">LEO Satellite ({alt:.0f} km Altitude)</text>
+          <text x="380" y="49" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">gNB</text>
+
+          <!-- Feeder Link (Satellite to NTN Gateway) -->
+          <line x1="365" y1="65" x2="160" y2="160" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="6,4" />
+          <text x="235" y="105" fill="#fbbf24" font-size="11" font-weight="bold" transform="rotate(-25 235 105)">Feeder Link (Ka-Band)</text>
+
+          <!-- Service Link (Satellite to NR UE) -->
+          <line x1="395" y1="65" x2="600" y2="160" stroke="#10b981" stroke-width="2.5" stroke-dasharray="6,4" />
+          <text x="515" y="105" fill="#34d399" font-size="11" font-weight="bold" transform="rotate(25 515 105)">Service Link (S-Band / FR1)</text>
+
+          <!-- NTN Gateway & Terrestrial Core -->
+          <rect x="80" y="160" width="160" height="46" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+          <text x="160" y="180" fill="#fef3c7" font-size="11" font-weight="bold" text-anchor="middle">NTN Gateway (Ground Station)</text>
+          <text x="160" y="196" fill="#94a3b8" font-size="10" text-anchor="middle">Koneksi Terestrial 5GC (UPF/AMF)</text>
+
+          <!-- User Equipment Handheld / VSAT -->
+          <rect x="520" y="160" width="160" height="46" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+          <text x="600" y="180" fill="#d1fae5" font-size="11" font-weight="bold" text-anchor="middle">5G NR NTN User Equipment</text>
+          <text x="600" y="196" fill="#94a3b8" font-size="10" text-anchor="middle">Elevasi {elev:.0f}&deg; &bull; Slant {slant:.0f} km &bull; TA {ta:.2f}ms</text>
+        </svg>
+      </div>
+    </div>"""
+
 
 
 
@@ -9855,6 +9907,7 @@ render_satellite_link_cn0_density_card = EditorialComponents.render_satellite_li
 render_optical_second_order_pmd_telemetry_card = EditorialComponents.render_optical_second_order_pmd_telemetry_card
 render_5g_nr_rel17_ntn_delay_doppler_card = EditorialComponents.render_5g_nr_rel17_ntn_delay_doppler_card
 render_optical_micro_ring_resonator_card = EditorialComponents.render_optical_micro_ring_resonator_card
+render_5g_nr_ntn_satellite_link_architecture_svg = EditorialComponents.render_5g_nr_ntn_satellite_link_architecture_svg
 
 
 
