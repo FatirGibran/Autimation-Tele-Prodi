@@ -10659,6 +10659,67 @@ def calculate_optical_second_order_pmd_depolarization(
     }
 
 
+def calculate_5g_nr_rel17_ntn_delay_and_doppler(
+    orbit_altitude_km: float = 600.0,
+    elevation_angle_deg: float = 40.0,
+    carrier_frequency_ghz: float = 2.0,
+    satellite_velocity_km_s: float = 7.56
+) -> Dict[str, Any]:
+    """
+    Calculates 3GPP Rel-17 NTN (Non-Terrestrial Networks) satellite propagation delay,
+    Service Link RTT, Common Timing Advance (TA), and Doppler shift pursuant to 3GPP TR 38.821 / TS 38.300.
+    """
+    h_km = max(200.0, float(orbit_altitude_km))
+    theta_deg = max(5.0, min(90.0, float(elevation_angle_deg)))
+    theta_rad = math.radians(theta_deg)
+    fc_ghz = max(0.5, float(carrier_frequency_ghz))
+    v_km_s = max(0.0, float(satellite_velocity_km_s))
+
+    r_earth = 6378.137
+    c_km_s = 299792.458
+
+    term1 = (r_earth * math.sin(theta_rad)) ** 2
+    term2 = 2.0 * r_earth * h_km + (h_km ** 2)
+    slant_range_km = round(math.sqrt(term1 + term2) - r_earth * math.sin(theta_rad), 2)
+
+    one_way_delay_ms = round((slant_range_km / c_km_s) * 1000.0, 3)
+    service_link_rtt_ms = round(one_way_delay_ms * 2.0, 3)
+
+    fc_hz = fc_ghz * 1e9
+    max_doppler_hz = (v_km_s / c_km_s) * fc_hz * math.cos(theta_rad)
+    max_doppler_khz = round(max_doppler_hz / 1e3, 2)
+    doppler_rate_hz_s = round(((v_km_s ** 2) / (c_km_s * (r_earth + h_km))) * fc_hz, 2)
+
+    is_leo = h_km < 2000.0
+    if is_leo:
+        orbit_type = "LEO_NON_TERRESTRIAL_NETWORK"
+        status_category = "HIGH_DOPPLER_LOW_LATENCY_NTN"
+        recommendation = "Requires pre-compensation of satellite Doppler shift at UE/gNB and autonomous Timing Advance"
+    elif h_km < 35000.0:
+        orbit_type = "MEO_NON_TERRESTRIAL_NETWORK"
+        status_category = "MODERATE_DELAY_MEDIUM_DOPPLER_NTN"
+        recommendation = "Balanced latency and constellation coverage; HARQ disabling or multiple HARQ processes recommended"
+    else:
+        orbit_type = "GEO_NON_TERRESTRIAL_NETWORK"
+        status_category = "HIGH_PROPAGATION_DELAY_ZERO_DOPPLER"
+        recommendation = "Zero Doppler shift but high propagation latency (~250ms RTT); requires enhanced HARQ buffering and extended timers"
+
+    return {
+        "orbit_altitude_km": h_km,
+        "elevation_angle_deg": theta_deg,
+        "carrier_frequency_ghz": fc_ghz,
+        "satellite_velocity_km_s": v_km_s,
+        "slant_range_km": slant_range_km,
+        "one_way_delay_ms": one_way_delay_ms,
+        "service_link_rtt_ms": service_link_rtt_ms,
+        "max_doppler_khz": max_doppler_khz,
+        "doppler_rate_hz_s": doppler_rate_hz_s,
+        "orbit_type": orbit_type,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
