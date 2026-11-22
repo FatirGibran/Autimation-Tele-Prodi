@@ -906,6 +906,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized executable CSS behavior and expression in styles.")
 
+        # 8bd. Sanitize canvas tainted rasterization and fallback markup
+        if "<canvas" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_canvas_tainted_data_and_rasterization(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized canvas tainted rasterization and fallback markup.")
+
         return cleaned, warnings
 
 
@@ -3609,6 +3616,36 @@ def sanitize_html5_css_behavior_and_expression_in_styles(html: str) -> str:
         return full_match
 
     cleaned = re.sub(r'\bstyle=["\']([^"\']*)["\']', clean_style, html, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_canvas_tainted_data_and_rasterization(html: str) -> str:
+    """
+    Sanitizes HTML5 canvas elements and their fallback markup by stripping dangerous
+    data URIs (e.g. data:image/svg+xml with embedded scripts), nested object/embed tags,
+    and tainted rasterization vectors inside fallback content.
+    """
+    if not html or "<canvas" not in html.lower():
+        return html
+
+    def clean_canvas_block(m):
+        open_tag = m.group(1)
+        body = m.group(2)
+        close_tag = m.group(3)
+
+        body = re.sub(
+            r'\bsrc=["\']\s*data:(?:image/svg\+xml|text/html|application/xhtml\+xml)[^"\']*["\']',
+            'src=""',
+            body,
+            flags=re.IGNORECASE
+        )
+        body = re.sub(r'<(?:object|embed|iframe|applet)\b[^>]*>.*?</(?:object|embed|iframe|applet)>', '', body, flags=re.DOTALL | re.IGNORECASE)
+        body = re.sub(r'<(?:object|embed|iframe|applet)\b[^>]*>', '', body, flags=re.IGNORECASE)
+        body = re.sub(r'\bhref=["\']\s*javascript:[^"\']*["\']', 'href="#"', body, flags=re.IGNORECASE)
+
+        return f"{open_tag}{body}{close_tag}"
+
+    cleaned = re.sub(r'(<canvas\b[^>]*>)(.*?)(</canvas>)', clean_canvas_block, html, flags=re.DOTALL | re.IGNORECASE)
     return cleaned
 
 
