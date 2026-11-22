@@ -10547,6 +10547,61 @@ def calculate_fiber_raman_amplifier_gain(
     }
 
 
+def calculate_satellite_link_cn0_density(
+    eirp_dbw: float = 60.0,
+    frequency_ghz: float = 14.0,
+    slant_range_km: float = 38000.0,
+    atmospheric_loss_db: float = 1.5,
+    g_over_t_dbk: float = 30.0,
+    carrier_bandwidth_mhz: float = 36.0
+) -> Dict[str, Any]:
+    """
+    Calculates Satellite Link Budget Carrier-to-Noise Density (C/N0) and Carrier-to-Noise Ratio (CNR)
+    pursuant to ITU-R S.524 and ITU-R S.1061 recommendations.
+    """
+    eirp = float(eirp_dbw)
+    freq = max(0.5, float(frequency_ghz))
+    dist = max(100.0, float(slant_range_km))
+    l_atm = max(0.0, float(atmospheric_loss_db))
+    gt = float(g_over_t_dbk)
+    bw_mhz = max(0.1, float(carrier_bandwidth_mhz))
+
+    fspl_db = round(92.45 + 20.0 * math.log10(freq) + 20.0 * math.log10(dist), 2)
+    k_boltzmann_dbw = -228.60
+    cn0_db_hz = round(eirp - fspl_db - l_atm + gt - k_boltzmann_dbw, 2)
+
+    bw_hz = bw_mhz * 1e6
+    bw_db_hz = 10.0 * math.log10(bw_hz)
+    cnr_db = round(cn0_db_hz - bw_db_hz, 2)
+
+    if cnr_db >= 15.0:
+        status_category = "EXCELLENT_HIGH_ORDER_MODULATION"
+        recommendation = "Clear link margin allows 16APSK/32APSK transmission with robust forward error correction"
+    elif cnr_db >= 10.0:
+        status_category = "NOMINAL_STANDARD_TRANSPONDER_LINK"
+        recommendation = "Nominal carrier quality; supports QPSK/8PSK modulation under DVB-S2X standards"
+    elif cnr_db >= 6.0:
+        status_category = "MARGINAL_LINK_THRESHOLD"
+        recommendation = "Marginal link budget; recommend adaptive coding and modulation (ACM) to mitigate rain fade"
+    else:
+        status_category = "CRITICAL_LINK_OUTAGE_RISK"
+        recommendation = "High link outage probability; consider increasing uplink EIRP or upgrading receiving aperture"
+
+    return {
+        "eirp_dbw": eirp,
+        "frequency_ghz": freq,
+        "slant_range_km": dist,
+        "atmospheric_loss_db": l_atm,
+        "g_over_t_dbk": gt,
+        "carrier_bandwidth_mhz": bw_mhz,
+        "free_space_path_loss_db": fspl_db,
+        "carrier_to_noise_density_db_hz": cn0_db_hz,
+        "carrier_to_noise_ratio_db": cnr_db,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
