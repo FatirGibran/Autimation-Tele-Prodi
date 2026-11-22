@@ -9068,6 +9068,47 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_content_on_hover_or_focus_wcag_2_1_sc_1_4_13(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits popup content, tooltips, and submenus triggered on hover or keyboard focus to verify
+        they provide dismissible, hoverable, and persistent mechanisms pursuant to WCAG 2.1 SC 1.4.13.
+        """
+        if not html_content:
+            return {
+                "hover_triggers_count": 0,
+                "undismissible_triggers_count": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        hover_triggers = []
+        elements = soup.find_all(True)
+
+        for el in elements:
+            has_tooltip_class = any("tooltip" in c.lower() or "popover" in c.lower() or "flyout" in c.lower() for c in el.get("class", []))
+            has_data_tooltip = el.has_attr("data-tooltip") or el.has_attr("title")
+
+            if (has_tooltip_class or has_data_tooltip) and el.name not in ["head", "title", "meta", "link"]:
+                hover_triggers.append(el)
+
+        undismissible_count = 0
+        for el in hover_triggers:
+            title_attr = el.get("title", "").strip()
+            if title_attr and not el.has_attr("aria-describedby") and not el.has_attr("data-dismissible"):
+                undismissible_count += 1
+                tag_desc = el.name + (f" id='{el['id']}'" if el.has_attr("id") else "")
+                issues.append(f"<{tag_desc}>: Tooltip berbasis 'title' standar browser tidak dapat ditutup (dismissible) dengan tombol Escape tanpa memindahkan pointer (WCAG 2.1 SC 1.4.13).")
+
+        return {
+            "hover_triggers_count": len(hover_triggers),
+            "undismissible_triggers_count": undismissible_count,
+            "is_compliant": undismissible_count == 0,
+            "issues": issues
+        }
+
 
 
 
