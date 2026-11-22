@@ -885,6 +885,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 popover and invoker attributes.")
 
+        # 8ba. Sanitize HTML5 inert attribute interaction traps
+        if "inert" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_inert_attribute_trap(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 inert attribute interaction traps.")
+
         return cleaned, warnings
 
 
@@ -3502,6 +3509,22 @@ def sanitize_html5_popover_and_invoker_attributes(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<[a-z0-9_-]+(?:\s+[^>]*?)?>', clean_popover_tag, cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_inert_attribute_trap(html: str) -> str:
+    """
+    Sanitizes HTML5 inert attributes to prevent accessibility and interaction traps on core content wrappers.
+    Strips inert attributes placed on body, main, article, section, or container elements that lock UI interaction.
+    """
+    if not html:
+        return ""
+    cleaned = re.sub(
+        r'(<(?:body|main|article|section|header|footer|div)\b[^>]*?)\s+inert\b(?:=["\'][^"\']*["\'])?',
+        r'\1',
+        html,
+        flags=re.IGNORECASE
+    )
     return cleaned
 
 
