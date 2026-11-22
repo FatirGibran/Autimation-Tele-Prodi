@@ -9664,6 +9664,42 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_second_order_pmd_telemetry_card(
+        cls,
+        title: str = "Dispersi Polarisasi Orde Kedua (ITU-T G.650.2 SOPMD & Depolarisasi)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for optical fiber Second-Order PMD (SOPMD),
+        depolarization rate, polarization chromatic dispersion (PCD), and pulse broadening.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        dgd = float(d.get("mean_dgd_ps", 3.0))
+        sopmd = float(d.get("sopmd_ps2", 4.5))
+        depol = float(d.get("depolarization_sopmd_ps2", 3.67))
+        pcd = float(d.get("pcd_sopmd_ps2", 2.60))
+        bitrate = float(d.get("bitrate_gbps", 100.0))
+        broadening = float(d.get("pulse_broadening_ratio", 1.05))
+        status = str(d.get("status_category", "LOW_IMPACT_TRANSMISSION")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-sopmd-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #7c3aed; background: #faf5ff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #6d28d9; font-size: 16px;">🔬 {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Rerata DGD (Orde 1): <strong>{dgd:.2f} ps</strong></div>
+        <div>Total SOPMD (Orde 2): <strong style="color: #7c3aed;">{sopmd:.2f} ps²</strong></div>
+        <div>Laju Depolarisasi: <strong>{depol:.2f} ps²</strong></div>
+        <div>Komponen PCD: <strong>{pcd:.2f} ps²</strong></div>
+        <div>Laju Data Sinyal: <strong>{bitrate:.1f} Gbps</strong></div>
+        <div>Rasio Pelebaran Pulsa: <strong style="color: {'#059669' if broadening < 1.1 else '#dc2626'};">{broadening:.4f}</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #6d28d9;">
+        Kondisi Transmisi: <strong>{status}</strong> &bull; Standar: <em>ITU-T G.650.2 Second-Order PMD</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9732,6 +9768,7 @@ render_5g_nr_rel17_redcap_ue_telemetry_card = EditorialComponents.render_5g_nr_r
 render_fiber_raman_amplifier_fra_gain_card = EditorialComponents.render_fiber_raman_amplifier_fra_gain_card
 render_5g_nr_redcap_bwp_coexistence_svg = EditorialComponents.render_5g_nr_redcap_bwp_coexistence_svg
 render_satellite_link_cn0_density_card = EditorialComponents.render_satellite_link_cn0_density_card
+render_optical_second_order_pmd_telemetry_card = EditorialComponents.render_optical_second_order_pmd_telemetry_card
 
 
 
