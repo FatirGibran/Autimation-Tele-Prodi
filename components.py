@@ -9626,6 +9626,44 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_satellite_link_cn0_density_card(
+        cls,
+        title: str = "Kepadatan Carrier-to-Noise Satelit (ITU-R S.524 / S.1061 C/N₀)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for satellite link budget C/N0 carrier-to-noise density,
+        FSPL, G/T figure of merit, and carrier-to-noise ratio margin.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        eirp = float(d.get("eirp_dbw", 55.0))
+        fspl = float(d.get("fspl_db", 205.5))
+        loss = float(d.get("additional_loss_db", 1.8))
+        gt = float(d.get("g_over_t_db_k", 25.0))
+        bw_hz = float(d.get("bandwidth_hz", 36e6))
+        cn0 = float(d.get("carrier_to_noise_density_dbhz", 101.3))
+        cnr = float(d.get("carrier_to_noise_ratio_db", 25.7))
+        status = str(d.get("status_category", "HIGH_CAPACITY_LINK")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-sat-cn0-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #2563eb; background: #eff6ff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #1e40af; font-size: 16px;">🛰️ {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>EIRP Satelit: <strong>{eirp:.1f} dBW</strong></div>
+        <div>Redaman FSPL: <strong>{fspl:.2f} dB</strong></div>
+        <div>Rugi Tambahan: <strong>{loss:.2f} dB</strong></div>
+        <div>Figure of Merit G/T: <strong>{gt:.2f} dB/K</strong></div>
+        <div>Bandwidth Sinyal: <strong>{bw_hz / 1e6:.2f} MHz</strong></div>
+        <div>Carrier-to-Noise C/N₀: <strong style="color: #2563eb;">{cn0:.2f} dB-Hz</strong></div>
+        <div>Carrier-to-Noise Ratio (CNR): <strong style="color: {'#059669' if cnr >= 10.0 else '#dc2626'};">{cnr:.2f} dB</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #1d4ed8;">
+        Kategori Kanal: <strong>{status}</strong> &bull; Standar: <em>ITU-R S.524 / S.1061 Satellite Link Density</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9693,6 +9731,7 @@ render_atmospheric_gaseous_attenuation_itu_r_p676_card = EditorialComponents.ren
 render_5g_nr_rel17_redcap_ue_telemetry_card = EditorialComponents.render_5g_nr_rel17_redcap_ue_telemetry_card
 render_fiber_raman_amplifier_fra_gain_card = EditorialComponents.render_fiber_raman_amplifier_fra_gain_card
 render_5g_nr_redcap_bwp_coexistence_svg = EditorialComponents.render_5g_nr_redcap_bwp_coexistence_svg
+render_satellite_link_cn0_density_card = EditorialComponents.render_satellite_link_cn0_density_card
 
 
 
