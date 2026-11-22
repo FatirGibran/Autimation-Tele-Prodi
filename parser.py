@@ -10720,6 +10720,72 @@ def calculate_5g_nr_rel17_ntn_delay_and_doppler(
     }
 
 
+def calculate_optical_micro_ring_resonator_filter(
+    ring_radius_um: float = 20.0,
+    effective_index: float = 2.45,
+    group_index: float = 4.2,
+    power_coupling_kappa2: float = 0.1,
+    operating_wavelength_nm: float = 1550.0,
+    propagation_loss_db_cm: float = 2.0
+) -> Dict[str, Any]:
+    """
+    Calculates Silicon Photonic Micro-Ring Resonator (MRR) spectral filter parameters:
+    Perimeter, Free Spectral Range (FSR), Full Width at Half Maximum (FWHM), Quality Factor (Q), and Finesse.
+    """
+    radius = max(2.0, float(ring_radius_um))
+    n_eff = max(1.0, float(effective_index))
+    n_g = max(1.0, float(group_index))
+    kappa2 = max(0.001, min(0.999, float(power_coupling_kappa2)))
+    lambda_nm = max(800.0, min(2000.0, float(operating_wavelength_nm)))
+    loss_db_cm = max(0.01, float(propagation_loss_db_cm))
+
+    perimeter_um = round(2.0 * math.pi * radius, 2)
+    perimeter_cm = perimeter_um * 1e-4
+
+    fsr_nm = round((lambda_nm ** 2) / (n_g * perimeter_um * 1000.0), 3)
+
+    r = math.sqrt(1.0 - kappa2)
+    alpha_cm = loss_db_cm * math.log(10.0) / 10.0
+    a = math.exp(-alpha_cm * perimeter_cm / 2.0)
+
+    resonance_order = int(round((n_eff * perimeter_um * 1000.0) / lambda_nm))
+
+    factor = (1.0 - r * a) / math.sqrt(r * a)
+    fwhm_nm = round((fsr_nm / math.pi) * factor, 4)
+
+    q_factor = round(lambda_nm / max(1e-5, fwhm_nm), 1)
+    finesse = round(fsr_nm / max(1e-5, fwhm_nm), 2)
+
+    coupling_delta = round(r - a, 4)
+    if abs(coupling_delta) < 0.02:
+        coupling_regime = "CRITICAL_COUPLING"
+        recommendation = "Near-complete extinction ratio (> 30 dB); ideal for high-selectivity DWDM optical add-drop filters"
+    elif r > a:
+        coupling_regime = "UNDER_COUPLED"
+        recommendation = "Under-coupled regime; narrow linewidth suitable for ultra-high Q optical sensing"
+    else:
+        coupling_regime = "OVER_COUPLED"
+        recommendation = "Over-coupled regime; broad transmission bandwidth suitable for high-speed electro-optic modulation"
+
+    return {
+        "ring_radius_um": radius,
+        "effective_index": n_eff,
+        "group_index": n_g,
+        "power_coupling_kappa2": kappa2,
+        "operating_wavelength_nm": lambda_nm,
+        "propagation_loss_db_cm": loss_db_cm,
+        "perimeter_um": perimeter_um,
+        "free_spectral_range_nm": fsr_nm,
+        "resonance_order_m": resonance_order,
+        "round_trip_field_transmission_a": round(a, 4),
+        "fwhm_linewidth_nm": fwhm_nm,
+        "quality_factor_q": q_factor,
+        "finesse": finesse,
+        "coupling_regime": coupling_regime,
+        "recommendation": recommendation
+    }
+
+
 
 
 
