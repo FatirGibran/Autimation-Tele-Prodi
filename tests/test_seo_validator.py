@@ -2732,6 +2732,50 @@ class TestYoastSEOValidator(unittest.TestCase):
         self.assertFalse(res_bad["is_compliant"])
         self.assertEqual(res_bad["unconfirmed_forms_count"], 1)
 
+    def test_audit_text_spacing_adaptation(self):
+        html_ok = '<div style="line-height: 1.6; letter-spacing: 0.12em;"><p>Teks dapat direnggangkan</p></div>'
+        res_ok = YoastSEOValidator.audit_text_spacing_adaptation_wcag_2_1_sc_1_4_12(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["spacing_restriction_issues"], 0)
+
+        html_bad = '<p style="line-height: 1.2 !important; letter-spacing: -1px;">Teks terkunci</p>'
+        res_bad = YoastSEOValidator.audit_text_spacing_adaptation_wcag_2_1_sc_1_4_12(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertGreaterEqual(res_bad["spacing_restriction_issues"], 1)
+
+    def test_audit_content_on_hover_or_focus(self):
+        html_ok = '<button aria-describedby="tip1" data-dismissible="true">Bantuan</button><div id="tip1" role="tooltip">Petunjuk</div>'
+        res_ok = YoastSEOValidator.audit_content_on_hover_or_focus_wcag_2_1_sc_1_4_13(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["undismissible_triggers_count"], 0)
+
+        html_bad = '<a href="/doc" title="Informasi tooltip bawaan yang tidak bisa di-escape">Dokumentasi</a>'
+        res_bad = YoastSEOValidator.audit_content_on_hover_or_focus_wcag_2_1_sc_1_4_13(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["undismissible_triggers_count"], 1)
+
+    def test_audit_character_key_shortcuts(self):
+        html_ok = '<button data-shortcut="Ctrl+S">Simpan</button><a href="/home">Beranda</a>'
+        res_ok = YoastSEOValidator.audit_character_key_shortcuts_wcag_2_1_sc_2_1_4(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["single_character_violations"], 0)
+
+        html_bad = '<button accesskey="s">Simpan Cepat</button><div data-shortcut="k">Pencarian</div>'
+        res_bad = YoastSEOValidator.audit_character_key_shortcuts_wcag_2_1_sc_2_1_4(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["single_character_violations"], 2)
+
+    def test_audit_dragging_movements_alternative(self):
+        html_ok = '<div class="sortable-item" draggable="true"><button class="btn-step-up">Naik</button><button class="btn-step-down">Turun</button></div>'
+        res_ok = YoastSEOValidator.audit_dragging_movements_alternative_wcag_2_2_sc_2_5_7(html_ok)
+        self.assertTrue(res_ok["is_compliant"])
+        self.assertEqual(res_ok["missing_single_pointer_alternative"], 0)
+
+        html_bad = '<div class="sortable-item" draggable="true">Item tanpa tombol aksi alternatif</div>'
+        res_bad = YoastSEOValidator.audit_dragging_movements_alternative_wcag_2_2_sc_2_5_7(html_bad)
+        self.assertFalse(res_bad["is_compliant"])
+        self.assertEqual(res_bad["missing_single_pointer_alternative"], 1)
+
 
 
 if __name__ == "__main__":

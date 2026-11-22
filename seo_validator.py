@@ -9131,7 +9131,8 @@ class YoastSEOValidator:
 
         violations = 0
         for el in shortcut_elements:
-            ak = el.get("accesskey", "").strip()
+            ak_val = el.get("accesskey")
+            ak = (" ".join(ak_val) if isinstance(ak_val, list) else str(ak_val or "")).strip()
             if len(ak) == 1 and ak.isalnum():
                 violations += 1
                 tag_name = el.name + (f" id='{el['id']}'" if el.has_attr("id") else "")
