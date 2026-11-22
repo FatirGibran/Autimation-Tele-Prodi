@@ -9700,6 +9700,48 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_5g_nr_rel17_ntn_delay_doppler_card(
+        cls,
+        title: str = "Propagasi NTN Rel-17 Delay & Pergeseran Doppler (3GPP TR 38.821)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for 3GPP Rel-17 Non-Terrestrial Networks (NTN)
+        propagation delay, round trip time (RTT), Common TA, and Doppler shift metrics.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        alt = float(d.get("orbit_altitude_km", 600.0))
+        elev = float(d.get("elevation_angle_deg", 30.0))
+        fc = float(d.get("carrier_frequency_ghz", 2.0))
+        slant = float(d.get("slant_range_km", 1073.8))
+        owd = float(d.get("one_way_delay_ms", 3.58))
+        rtt = float(d.get("rtt_delay_ms", 7.16))
+        ta = float(d.get("common_ta_ms", 7.16))
+        doppler = float(d.get("max_doppler_shift_khz", 48.0))
+        rate = float(d.get("doppler_rate_hz_s", 540.0))
+        status = str(d.get("status_category", "LOW_EARTH_ORBIT_NTN_FAST_DOPPLER")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-nr-ntn-delay-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #059669; background: #ecfdf5; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #047857; font-size: 16px;">🛰️ {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Ketinggian Orbit: <strong>{alt:.1f} km</strong></div>
+        <div>Sudut Elevasi: <strong>{elev:.1f}&deg;</strong></div>
+        <div>Frekuensi Carrier: <strong>{fc:.2f} GHz</strong></div>
+        <div>Slant Range Jarak: <strong>{slant:.2f} km</strong></div>
+        <div>One-Way Delay: <strong>{owd:.2f} ms</strong></div>
+        <div>RTT Delay: <strong style="color: #059669;">{rtt:.2f} ms</strong></div>
+        <div>Common Timing Advance: <strong>{ta:.2f} ms</strong></div>
+        <div>Maks Doppler Shift: <strong style="color: #d97706;">&plusmn;{doppler:.2f} kHz</strong></div>
+        <div>Laju Perubahan Doppler: <strong>{rate:.1f} Hz/s</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #047857;">
+        Tipe Segmen NTN: <strong>{status}</strong> &bull; Standar: <em>3GPP Rel-17 TR 38.821 / TS 38.300</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9769,6 +9811,7 @@ render_fiber_raman_amplifier_fra_gain_card = EditorialComponents.render_fiber_ra
 render_5g_nr_redcap_bwp_coexistence_svg = EditorialComponents.render_5g_nr_redcap_bwp_coexistence_svg
 render_satellite_link_cn0_density_card = EditorialComponents.render_satellite_link_cn0_density_card
 render_optical_second_order_pmd_telemetry_card = EditorialComponents.render_optical_second_order_pmd_telemetry_card
+render_5g_nr_rel17_ntn_delay_doppler_card = EditorialComponents.render_5g_nr_rel17_ntn_delay_doppler_card
 
 
 
