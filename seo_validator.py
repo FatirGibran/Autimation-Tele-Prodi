@@ -9032,6 +9032,42 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_text_spacing_adaptation_wcag_2_1_sc_1_4_12(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits inline styling to ensure text spacing adaptations (line-height >= 1.5,
+        letter-spacing >= 0.12em, word-spacing >= 0.16em) are not blocked by fixed restrictive
+        or !important styles pursuant to WCAG 2.1 SC 1.4.12 Text Spacing.
+        """
+        if not html_content:
+            return {
+                "elements_checked": 0,
+                "spacing_restriction_issues": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        elements_with_style = soup.find_all(attrs={"style": True})
+
+        for el in elements_with_style:
+            style = el.get("style", "").lower()
+            if "line-height" in style and "!important" in style:
+                issues.append(f"<{el.name}>: Ditemukan override 'line-height' dengan '!important' yang memblokir adaptasi keterbacaan teks (WCAG 2.1 SC 1.4.12).")
+            if "letter-spacing" in style:
+                if re.search(r'letter-spacing\s*:\s*-\s*[0-9]', style) or "!important" in style:
+                    issues.append(f"<{el.name}>: Restriksi 'letter-spacing' membatasi perenggangan huruf pengguna (WCAG 2.1 SC 1.4.12).")
+            if "word-spacing" in style and ("!important" in style or re.search(r'word-spacing\s*:\s*-\s*[0-9]', style)):
+                issues.append(f"<{el.name}>: Restriksi 'word-spacing' membatasi pemisahan kata (WCAG 2.1 SC 1.4.12).")
+
+        return {
+            "elements_checked": len(elements_with_style),
+            "spacing_restriction_issues": len(issues),
+            "is_compliant": len(issues) == 0,
+            "issues": issues
+        }
+
 
 
 
