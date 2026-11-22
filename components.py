@@ -9742,6 +9742,48 @@ class EditorialComponents:
       </div>
     </div>"""
 
+    @classmethod
+    def render_optical_micro_ring_resonator_card(
+        cls,
+        title: str = "Filter Micro-Ring Resonator Silikon Fotonik (MRR Filter FSR & Q-Factor)",
+        data: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> str:
+        """
+        Renders an Elementor telemetry card for Silicon Photonic Micro-Ring Resonator (MRR)
+        filters, detailing Free Spectral Range (FSR), FWHM linewidth, Finesse, and Quality Factor (Q).
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        r_um = float(d.get("ring_radius_um", 10.0))
+        lambda_res = float(d.get("resonance_wavelength_nm", 1550.0))
+        ng = float(d.get("group_index", 4.0))
+        r_coeff = float(d.get("self_coupling_coefficient", 0.95))
+        fsr_nm = float(d.get("free_spectral_range_nm", 9.56))
+        fsr_ghz = float(d.get("free_spectral_range_ghz", 1193.0))
+        fwhm_nm = float(d.get("fwhm_bandwidth_nm", 0.15))
+        fwhm_ghz = float(d.get("fwhm_bandwidth_ghz", 18.7))
+        finesse = float(d.get("finesse", 63.7))
+        q_factor = float(d.get("quality_factor", 10333.0))
+        status = str(d.get("status_category", "HIGH_FINESSE_WDM_CHANNEL_SELECTOR")).replace("_", " ")
+
+        return f"""    <div class="tu-editorial-card tu-mrr-filter-card" style="margin: 20px 0; padding: 18px; border-left: 4px solid #0284c7; background: #f0f9ff; border-radius: 6px;">
+      <h4 style="margin: 0 0 10px 0; color: #0369a1; font-size: 16px;">💡 {title}</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 13px;">
+        <div>Radius Ring: <strong>{r_um:.1f} &mu;m</strong></div>
+        <div>Panjang Gelombang Resonansi: <strong>{lambda_res:.1f} nm</strong></div>
+        <div>Group Index n<sub>g</sub>: <strong>{ng:.2f}</strong></div>
+        <div>Koefisien Kopling r: <strong>{r_coeff:.3f}</strong></div>
+        <div>Free Spectral Range (FSR): <strong style="color: #0284c7;">{fsr_nm:.2f} nm ({fsr_ghz:.1f} GHz)</strong></div>
+        <div>Lebar Pita 3dB (FWHM): <strong>{fwhm_nm:.3f} nm ({fwhm_ghz:.1f} GHz)</strong></div>
+        <div>Finesse (&Fnof;): <strong style="color: #0284c7;">{finesse:.1f}</strong></div>
+        <div>Faktor Kualitas (Q): <strong style="color: #059669;">{q_factor:,.0f}</strong></div>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #0369a1;">
+        Kategori Resonator: <strong>{status}</strong> &bull; Karakteristik: <em>Silicon Photonic Integrated Filter</em>
+      </div>
+    </div>"""
+
 
 
 
@@ -9812,6 +9854,7 @@ render_5g_nr_redcap_bwp_coexistence_svg = EditorialComponents.render_5g_nr_redca
 render_satellite_link_cn0_density_card = EditorialComponents.render_satellite_link_cn0_density_card
 render_optical_second_order_pmd_telemetry_card = EditorialComponents.render_optical_second_order_pmd_telemetry_card
 render_5g_nr_rel17_ntn_delay_doppler_card = EditorialComponents.render_5g_nr_rel17_ntn_delay_doppler_card
+render_optical_micro_ring_resonator_card = EditorialComponents.render_optical_micro_ring_resonator_card
 
 
 
