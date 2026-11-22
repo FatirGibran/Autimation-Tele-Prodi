@@ -3232,6 +3232,66 @@ Status: Granted
         self.assertIn("net_gain_db", res)
         self.assertIn("status_category", res)
 
+    def test_calculate_satellite_link_cn0_density(self):
+        from parser import calculate_satellite_link_cn0_density
+        res = calculate_satellite_link_cn0_density(
+            eirp_dbw=60.0,
+            frequency_ghz=14.0,
+            slant_range_km=38000.0,
+            atmospheric_loss_db=1.5,
+            g_over_t_dbk=30.0,
+            carrier_bandwidth_mhz=36.0
+        )
+        self.assertAlmostEqual(res["free_space_path_loss_db"], 206.94, delta=1.0)
+        self.assertGreater(res["carrier_to_noise_density_db_hz"], 80.0)
+        self.assertGreater(res["carrier_to_noise_ratio_db"], 10.0)
+        self.assertIn("EXCELLENT_HIGH_ORDER_MODULATION", res["status_category"])
+
+    def test_calculate_optical_second_order_pmd_depolarization(self):
+        from parser import calculate_optical_second_order_pmd_depolarization
+        res = calculate_optical_second_order_pmd_depolarization(
+            first_order_dgd_ps=10.0,
+            fiber_length_km=100.0,
+            pmd_coefficient_ps_sqrt_km=0.1,
+            symbol_rate_gbaud=32.0
+        )
+        self.assertEqual(res["first_order_dgd_ps"], 10.0)
+        self.assertGreater(res["sopmd_total_ps2"], 50.0)
+        self.assertAlmostEqual(res["symbol_period_ps"], 31.25)
+        self.assertIn("status_category", res)
+        self.assertIn("recommendation", res)
+
+    def test_calculate_5g_nr_rel17_ntn_delay_and_doppler(self):
+        from parser import calculate_5g_nr_rel17_ntn_delay_and_doppler
+        res = calculate_5g_nr_rel17_ntn_delay_and_doppler(
+            orbit_altitude_km=600.0,
+            elevation_angle_deg=40.0,
+            carrier_frequency_ghz=2.0,
+            satellite_velocity_km_s=7.56
+        )
+        self.assertGreater(res["slant_range_km"], 600.0)
+        self.assertGreater(res["one_way_delay_ms"], 2.0)
+        self.assertGreater(res["service_link_rtt_ms"], 4.0)
+        self.assertGreater(res["max_doppler_khz"], 10.0)
+        self.assertEqual(res["orbit_type"], "LEO_NON_TERRESTRIAL_NETWORK")
+        self.assertEqual(res["status_category"], "HIGH_DOPPLER_LOW_LATENCY_NTN")
+
+    def test_calculate_optical_micro_ring_resonator_filter(self):
+        from parser import calculate_optical_micro_ring_resonator_filter
+        res = calculate_optical_micro_ring_resonator_filter(
+            ring_radius_um=20.0,
+            effective_index=2.45,
+            group_index=4.2,
+            power_coupling_kappa2=0.1,
+            operating_wavelength_nm=1550.0,
+            propagation_loss_db_cm=2.0
+        )
+        self.assertAlmostEqual(res["perimeter_um"], 125.66, delta=0.5)
+        self.assertGreater(res["free_spectral_range_nm"], 4.0)
+        self.assertGreater(res["quality_factor_q"], 1000.0)
+        self.assertGreater(res["finesse"], 10.0)
+        self.assertIn("coupling_regime", res)
+
 
 if __name__ == "__main__":
     unittest.main()
