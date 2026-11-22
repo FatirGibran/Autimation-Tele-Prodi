@@ -9109,6 +9109,49 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_character_key_shortcuts_wcag_2_1_sc_2_1_4(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits single character keyboard shortcuts (accesskey or data-shortcut) to ensure
+        they do not assign bare printable characters (e.g. accesskey="s" or data-key="k")
+        without modifier key mechanisms pursuant to WCAG 2.1 SC 2.1.4 Character Key Shortcuts.
+        """
+        if not html_content:
+            return {
+                "shortcuts_count": 0,
+                "single_character_violations": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        shortcut_elements = soup.find_all(attrs={"accesskey": True})
+        custom_key_elements = soup.find_all(attrs={"data-shortcut": True})
+
+        violations = 0
+        for el in shortcut_elements:
+            ak = el.get("accesskey", "").strip()
+            if len(ak) == 1 and ak.isalnum():
+                violations += 1
+                tag_name = el.name + (f" id='{el['id']}'" if el.has_attr("id") else "")
+                issues.append(f"<{tag_name}>: Tombol pintas accesskey='{ak}' menggunakan karakter tunggal langsung tanpa mekanisme modifier atau opsi nonaktif, melanggar WCAG 2.1 SC 2.1.4.")
+
+        for el in custom_key_elements:
+            shortcut = el.get("data-shortcut", "").strip()
+            if len(shortcut) == 1 and shortcut.isalnum():
+                violations += 1
+                tag_name = el.name + (f" id='{el['id']}'" if el.has_attr("id") else "")
+                issues.append(f"<{tag_name}>: Pintasan kustom data-shortcut='{shortcut}' memicu fungsi melalui karakter tunggal langsung (WCAG 2.1 SC 2.1.4).")
+
+        total_checked = len(shortcut_elements) + len(custom_key_elements)
+        return {
+            "shortcuts_count": total_checked,
+            "single_character_violations": violations,
+            "is_compliant": violations == 0,
+            "issues": issues
+        }
+
 
 
 
