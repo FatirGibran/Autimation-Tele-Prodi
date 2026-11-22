@@ -3603,7 +3603,7 @@ def sanitize_html5_css_behavior_and_expression_in_styles(html: str) -> str:
             declarations = [d.strip() for d in style_content.split(';') if d.strip()]
             safe_declarations = []
             for decl in declarations:
-                if re.search(r'\b(?:behavior|-moz-binding)\s*:', decl, re.IGNORECASE):
+                if re.search(r'(?:\bbehavior|-moz-binding)\s*:', decl, re.IGNORECASE):
                     continue
                 if re.search(r'\bexpression\s*\(', decl, re.IGNORECASE):
                     continue

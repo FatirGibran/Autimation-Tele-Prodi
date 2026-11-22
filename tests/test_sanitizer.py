@@ -1652,6 +1652,57 @@ class TestHTMLSanitizer(unittest.TestCase):
         self.assertTrue(any("ping" in w.lower() for w in warnings))
         self.assertTrue(any("popover" in w.lower() for w in warnings))
 
+    def test_sanitize_html5_inert_attribute_trap(self):
+        from sanitizer import sanitize_html5_inert_attribute_trap
+        raw = '<main class="content" inert><article inert="inert"><p>Paragraf riset telekomunikasi</p></article></main>'
+        cleaned = sanitize_html5_inert_attribute_trap(raw)
+        self.assertNotIn('inert', cleaned)
+        self.assertIn('<main class="content">', cleaned)
+        self.assertIn('<article>', cleaned)
+        self.assertIn('Paragraf riset telekomunikasi', cleaned)
+
+    def test_sanitize_html5_formaction_and_formmethod_hijacking(self):
+        from sanitizer import sanitize_html5_formaction_and_formmethod_hijacking
+        raw = '<form><button formaction="javascript:alert(1)" formmethod="exploit" formtarget="javascript:hack()">Submit</button><input type="submit" formaction="data:text/html;base64,PHNjcmlwdD4=" /></form>'
+        cleaned = sanitize_html5_formaction_and_formmethod_hijacking(raw)
+        self.assertNotIn('javascript:', cleaned)
+        self.assertNotIn('data:', cleaned)
+        self.assertNotIn('formmethod="exploit"', cleaned)
+        self.assertIn('formmethod="post"', cleaned)
+
+    def test_sanitize_html5_css_behavior_and_expression_in_styles(self):
+        from sanitizer import sanitize_html5_css_behavior_and_expression_in_styles
+        raw = '<div style="color: red; behavior: url(xss.htc); width: expression(alert(1)); -moz-binding: url(hack.xml); font-size: 14px;">Konten aman</div>'
+        cleaned = sanitize_html5_css_behavior_and_expression_in_styles(raw)
+        self.assertNotIn('behavior:', cleaned)
+        self.assertNotIn('expression(', cleaned)
+        self.assertNotIn('-moz-binding:', cleaned)
+        self.assertIn('color: red', cleaned)
+        self.assertIn('font-size: 14px', cleaned)
+
+    def test_sanitize_html5_canvas_tainted_data_and_rasterization(self):
+        from sanitizer import sanitize_html5_canvas_tainted_data_and_rasterization
+        raw = '<canvas width="300" height="150"><img src="data:image/svg+xml;utf8,<svg onload=alert(1)>" /><object data="malicious.swf"></object><a href="javascript:steal()">Fallback</a></canvas>'
+        cleaned = sanitize_html5_canvas_tainted_data_and_rasterization(raw)
+        self.assertNotIn('data:image/svg+xml', cleaned)
+        self.assertNotIn('<object', cleaned)
+        self.assertNotIn('javascript:', cleaned)
+        self.assertIn('href="#"', cleaned)
+        self.assertIn('Fallback', cleaned)
+
+    def test_sanitize_html_with_inert_form_css_canvas_pipeline(self):
+        html = '<div inert><button formaction="javascript:hack()">Kirim</button><span style="behavior: url(bad.htc); color: blue;">Teks</span><canvas><img src="data:image/svg+xml;base64,PHN2Zz4=" /></canvas></div>'
+        clean, warnings = HTMLSanitizer.sanitize(html)
+        self.assertNotIn('inert', clean)
+        self.assertNotIn('javascript:hack()', clean)
+        self.assertNotIn('behavior:', clean)
+        self.assertNotIn('data:image/svg+xml', clean)
+        self.assertIn('color: blue', clean)
+        self.assertTrue(any("inert" in w.lower() for w in warnings))
+        self.assertTrue(any("formaction" in w.lower() for w in warnings))
+        self.assertTrue(any("behavior" in w.lower() or "css" in w.lower() for w in warnings))
+        self.assertTrue(any("canvas" in w.lower() for w in warnings))
+
 
 
 if __name__ == "__main__":
