@@ -892,6 +892,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 inert attribute interaction traps.")
 
+        # 8bb. Sanitize HTML5 formaction and formmethod hijacking
+        if "formaction" in cleaned.lower() or "formmethod" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_formaction_and_formmethod_hijacking(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized HTML5 formaction and formmethod hijacking.")
+
         return cleaned, warnings
 
 
@@ -3525,6 +3532,40 @@ def sanitize_html5_inert_attribute_trap(html: str) -> str:
         html,
         flags=re.IGNORECASE
     )
+    return cleaned
+
+
+def sanitize_html5_formaction_and_formmethod_hijacking(html: str) -> str:
+    """
+    Sanitizes HTML5 button and input form override attributes (formaction, formmethod, formtarget)
+    to prevent form hijacking, javascript URI execution, and CSRF bypass.
+    """
+    if not html:
+        return ""
+
+    def clean_form_overrides(m):
+        tag = m.group(0)
+        # Check formaction
+        fa_m = re.search(r'\bformaction=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if fa_m:
+            url = fa_m.group(1).strip()
+            if url.lower().startswith(("javascript:", "data:", "vbscript:")) or re.search(r'[<>"\'`]', url):
+                tag = re.sub(r'\s+formaction=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        # Check formmethod
+        fm_m = re.search(r'\bformmethod=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if fm_m:
+            method = fm_m.group(1).strip().lower()
+            if method not in {"get", "post", "dialog"}:
+                tag = re.sub(r'\s+formmethod=["\'][^"\']*["\']', ' formmethod="post"', tag, flags=re.IGNORECASE)
+        # Check formtarget
+        ft_m = re.search(r'\bformtarget=["\']([^"\']*)["\']', tag, re.IGNORECASE)
+        if ft_m:
+            tgt = ft_m.group(1).strip().lower()
+            if tgt.startswith(("javascript:", "data:")) or re.search(r'[<>"\'`]', tgt):
+                tag = re.sub(r'\s+formtarget=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        return tag
+
+    cleaned = re.sub(r'<(?:button|input)\b[^>]*?>', clean_form_overrides, html, flags=re.IGNORECASE)
     return cleaned
 
 
