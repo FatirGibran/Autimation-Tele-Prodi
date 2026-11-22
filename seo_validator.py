@@ -9152,6 +9152,53 @@ class YoastSEOValidator:
             "issues": issues
         }
 
+    @classmethod
+    def audit_dragging_movements_alternative_wcag_2_2_sc_2_5_7(cls, html_content: str) -> Dict[str, Any]:
+        """
+        Audits draggable elements, reorderable items, and custom range sliders to ensure a single-pointer
+        alternative (e.g. step buttons, keyboard arrows, or direct entry) is provided pursuant to
+        WCAG 2.2 SC 2.5.7 Dragging Movements.
+        """
+        if not html_content:
+            return {
+                "draggable_elements_count": 0,
+                "missing_single_pointer_alternative": 0,
+                "is_compliant": True,
+                "issues": []
+            }
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        issues = []
+        drag_elements = []
+        elements = soup.find_all(True)
+
+        for el in elements:
+            is_draggable = str(el.get("draggable", "")).lower() == "true"
+            is_custom_slider = el.get("role") == "slider" and el.name != "input"
+            has_drag_class = any("draggable" in c.lower() or "drag-handle" in c.lower() or "sortable-item" in c.lower() for c in el.get("class", []))
+
+            if is_draggable or is_custom_slider or has_drag_class:
+                drag_elements.append(el)
+
+        missing_alt_count = 0
+        for el in drag_elements:
+            parent = el.parent or el
+            has_alt_btn = parent.find(["button", "a"], attrs={"class": re.compile(r'(?:up|down|move|increment|decrement|step|btn-action)', re.IGNORECASE)}) is not None
+            has_input_alt = parent.find("input", attrs={"type": re.compile(r'(?:number|text)', re.IGNORECASE)}) is not None
+            has_data_alt = el.has_attr("data-single-pointer-alt")
+
+            if not (has_alt_btn or has_input_alt or has_data_alt):
+                missing_alt_count += 1
+                tag_name = el.name + (f" id='{el['id']}'" if el.has_attr("id") else "")
+                issues.append(f"<{tag_name}>: Elemen seret (dragging) tidak menyediakan alternatif aksi pointer tunggal sederhana (tombol pindah naik/turun atau input nilai langsung) melanggar WCAG 2.2 SC 2.5.7.")
+
+        return {
+            "draggable_elements_count": len(drag_elements),
+            "missing_single_pointer_alternative": missing_alt_count,
+            "is_compliant": missing_alt_count == 0,
+            "issues": issues
+        }
+
 
 
 
