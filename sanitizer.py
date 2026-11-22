@@ -899,6 +899,13 @@ class HTMLSanitizer:
             if cleaned != old_val:
                 warnings.append("Sanitized HTML5 formaction and formmethod hijacking.")
 
+        # 8bc. Sanitize executable CSS behavior and expression in styles
+        if "behavior" in cleaned.lower() or "expression" in cleaned.lower() or "-moz-binding" in cleaned.lower():
+            old_val = cleaned
+            cleaned = sanitize_html5_css_behavior_and_expression_in_styles(cleaned)
+            if cleaned != old_val:
+                warnings.append("Sanitized executable CSS behavior and expression in styles.")
+
         return cleaned, warnings
 
 
@@ -3566,6 +3573,42 @@ def sanitize_html5_formaction_and_formmethod_hijacking(html: str) -> str:
         return tag
 
     cleaned = re.sub(r'<(?:button|input)\b[^>]*?>', clean_form_overrides, html, flags=re.IGNORECASE)
+    return cleaned
+
+
+def sanitize_html5_css_behavior_and_expression_in_styles(html: str) -> str:
+    """
+    Sanitizes inline style attributes by stripping executable CSS properties such as
+    behavior, -moz-binding, expression(), and scriptable URL schemes.
+    """
+    if not html:
+        return ""
+
+    def clean_style(m):
+        full_match = m.group(0)
+        style_content = m.group(1)
+        has_behavior = bool(re.search(r'\bbehavior\s*:', style_content, re.IGNORECASE))
+        has_moz_binding = bool(re.search(r'-moz-binding\s*:', style_content, re.IGNORECASE))
+        has_expression = bool(re.search(r'\bexpression\s*\(', style_content, re.IGNORECASE))
+        has_script_url = bool(re.search(r'url\s*\(\s*["\']?\s*(?:javascript|vbscript|data):', style_content, re.IGNORECASE))
+
+        if has_behavior or has_moz_binding or has_expression or has_script_url:
+            declarations = [d.strip() for d in style_content.split(';') if d.strip()]
+            safe_declarations = []
+            for decl in declarations:
+                if re.search(r'\b(?:behavior|-moz-binding)\s*:', decl, re.IGNORECASE):
+                    continue
+                if re.search(r'\bexpression\s*\(', decl, re.IGNORECASE):
+                    continue
+                if re.search(r'url\s*\(\s*["\']?\s*(?:javascript|vbscript|data):', decl, re.IGNORECASE):
+                    continue
+                safe_declarations.append(decl)
+            if safe_declarations:
+                return f'style="{"; ".join(safe_declarations)}"'
+            return ''
+        return full_match
+
+    cleaned = re.sub(r'\bstyle=["\']([^"\']*)["\']', clean_style, html, flags=re.IGNORECASE)
     return cleaned
 
 
