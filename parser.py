@@ -10602,6 +10602,63 @@ def calculate_satellite_link_cn0_density(
     }
 
 
+def calculate_optical_second_order_pmd_depolarization(
+    first_order_dgd_ps: float = 10.0,
+    fiber_length_km: float = 100.0,
+    pmd_coefficient_ps_sqrt_km: float = 0.1,
+    symbol_rate_gbaud: float = 32.0
+) -> Dict[str, Any]:
+    """
+    Calculates Second-Order Polarization Mode Dispersion (SOPMD), Polarization-Dependent
+    Chromatic Dispersion (PCD), and PSP rotation rate pursuant to ITU-T G.650.2.
+    """
+    dgd = max(0.1, float(first_order_dgd_ps))
+    length = max(1.0, float(fiber_length_km))
+    coeff = max(0.01, float(pmd_coefficient_ps_sqrt_km))
+    baud = max(1.0, float(symbol_rate_gbaud))
+
+    expected_mean_dgd_ps = round(coeff * math.sqrt(length), 2)
+    sopmd_mean_ps2 = round((1.0 / math.sqrt(3.0)) * (expected_mean_dgd_ps ** 2), 2)
+
+    pcd_ps2 = round((dgd ** 2) / 3.0, 2)
+    psp_rotation_ps2 = round((2.0 / 3.0) * (dgd ** 2), 2)
+    sopmd_total_ps2 = round(math.sqrt(pcd_ps2 ** 2 + psp_rotation_ps2 ** 2), 2)
+
+    symbol_period_ps = round(1000.0 / baud, 2)
+    dgd_ratio = round(dgd / symbol_period_ps, 3)
+    osnr_penalty_db = round(0.5 * (sopmd_total_ps2 / (symbol_period_ps ** 2)) * 10.0, 2)
+
+    if osnr_penalty_db < 0.5:
+        status_category = "NEGLIGIBLE_PMD_DEGRADATION"
+        recommendation = "Standard coherent DSP equalizer easily compensates both first-order DGD and SOPMD"
+    elif osnr_penalty_db < 1.5:
+        status_category = "MODERATE_SOPMD_TRACKING_REQUIRED"
+        recommendation = "Adaptive MIMO 2x2 butterfly FIR filters required for continuous SOP tracking"
+    elif osnr_penalty_db < 3.0:
+        status_category = "HIGH_POLARIZATION_DEPOLARIZATION"
+        recommendation = "Significant signal distortion; consider optical PMD compensator or shorter amplifier spans"
+    else:
+        status_category = "SEVERE_POLARIZATION_OUTAGE"
+        recommendation = "PMD induced outage imminent; fiber replacement with low-PMD G.652.D/G.655 required"
+
+    return {
+        "first_order_dgd_ps": dgd,
+        "fiber_length_km": length,
+        "pmd_coefficient_ps_sqrt_km": coeff,
+        "symbol_rate_gbaud": baud,
+        "symbol_period_ps": symbol_period_ps,
+        "expected_mean_dgd_ps": expected_mean_dgd_ps,
+        "sopmd_mean_ps2": sopmd_mean_ps2,
+        "pcd_component_ps2": pcd_ps2,
+        "psp_rotation_component_ps2": psp_rotation_ps2,
+        "sopmd_total_ps2": sopmd_total_ps2,
+        "dgd_to_symbol_ratio": dgd_ratio,
+        "osnr_penalty_db": osnr_penalty_db,
+        "status_category": status_category,
+        "recommendation": recommendation
+    }
+
+
 
 
 
