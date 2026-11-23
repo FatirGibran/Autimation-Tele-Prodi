@@ -1667,6 +1667,38 @@ class WordPressClient:
 
     find_post_by_slug = get_post_by_slug
 
+    def get_posts_by_category_slug(
+        self,
+        category_slug: str,
+        page: int = 1,
+        per_page: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves published WordPress posts assigned to the category identified by slug.
+        """
+        clean_slug = urllib.parse.quote(category_slug.strip().lower())
+        cat_req = urllib.request.Request(
+            f"{self.api_url}/categories?slug={clean_slug}",
+            headers=self._get_headers(),
+            method="GET"
+        )
+        cat_results = self._send_request(cat_req)
+        if not isinstance(cat_results, list) or len(cat_results) == 0:
+            return []
+        cat_id = cat_results[0].get("id")
+        if not cat_id:
+            return []
+
+        p = max(1, int(page))
+        pp = max(1, min(100, int(per_page)))
+        posts_req = urllib.request.Request(
+            f"{self.api_url}/posts?categories={cat_id}&page={p}&per_page={pp}",
+            headers=self._get_headers(),
+            method="GET"
+        )
+        results = self._send_request(posts_req)
+        return results if isinstance(results, list) else []
+
 
 
 
