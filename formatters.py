@@ -2335,12 +2335,44 @@ class TelegramFormatter:
             f"🛰️ *Kompensasi Common TA dan Doppler pre-compensation menjamin sinkronisasi frame radio pada non-terrestrial networks.*"
         )
 
+    @classmethod
+    def format_optical_micro_ring_resonator_telegram_card(cls, data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        d = dict(data or {})
+        d.update(kwargs)
+        device_id = str(d.get("device_id", "MRR-WDM-1550"))
+        r_um = float(d.get("ring_radius_um", 10.0))
+        lambda_res = float(d.get("resonance_wavelength_nm", 1550.0))
+        ng = float(d.get("group_index", 4.0))
+        fsr_nm = float(d.get("free_spectral_range_nm", 9.56))
+        fsr_ghz = float(d.get("free_spectral_range_ghz", 1193.0))
+        fwhm_nm = float(d.get("fwhm_bandwidth_nm", 0.15))
+        fwhm_ghz = float(d.get("fwhm_bandwidth_ghz", 18.7))
+        finesse = float(d.get("finesse", 63.7))
+        q_factor = float(d.get("quality_factor", 10333.0))
+        status = str(d.get("status_category", "HIGH_FINESSE_WDM_CHANNEL_SELECTOR")).replace("_", " ")
+        portal_url = str(d.get("portal_url", "")).strip()
+        portal_link = f"\n🔗 **PIC Lab Registry:** {portal_url}" if portal_url else ""
+
+        return (
+            f"💡 **Telemetri Micro-Ring Resonator Silikon Fotonik (MRR Filter)**\n\n"
+            f"🌐 **Device ID:** `{device_id}`\n"
+            f"📏 **Radius Ring:** `{r_um:.1f} µm` (n_g: `{ng:.2f}`)\n"
+            f"📡 **Resonance Wavelength:** `{lambda_res:.1f} nm`\n"
+            f"📊 **Free Spectral Range (FSR):** `{fsr_nm:.2f} nm` (`{fsr_ghz:.1f} GHz`)\n"
+            f"📉 **Lebar Pita 3dB (FWHM):** `{fwhm_nm:.3f} nm` (`{fwhm_ghz:.1f} GHz`)\n"
+            f"🎯 **Finesse (F):** `{finesse:.1f}`\n"
+            f"⚡ **Quality Factor (Q):** `{q_factor:,.0f}`\n"
+            f"🌟 **Kategori Resonator:** `{status}`{portal_link}\n\n"
+            f"💡 *Resonator cincin mikro silikon fotonik memberikan selektivitas kanal WDM ultra-kompak pada photonic integrated circuits.*"
+        )
+
 
 format_satellite_g_over_t_telegram_card = TelegramFormatter.format_satellite_g_over_t_telegram_card
 format_5g_nr_rel17_redcap_ue_telegram_card = TelegramFormatter.format_5g_nr_rel17_redcap_ue_telegram_card
 format_fiber_raman_amplifier_telegram_card = TelegramFormatter.format_fiber_raman_amplifier_telegram_card
 format_satellite_link_cn0_telegram_card = TelegramFormatter.format_satellite_link_cn0_telegram_card
 format_5g_nr_rel17_ntn_delay_telegram_card = TelegramFormatter.format_5g_nr_rel17_ntn_delay_telegram_card
+format_optical_micro_ring_resonator_telegram_card = TelegramFormatter.format_optical_micro_ring_resonator_telegram_card
 
 
 
