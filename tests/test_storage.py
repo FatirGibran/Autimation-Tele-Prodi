@@ -3497,6 +3497,79 @@ class TestStorageManager(unittest.TestCase):
         self.assertEqual(single["status_category"], "HIGH_GAIN_DISTRIBUTED_AMPLIFICATION")
         self.assertIsNone(self.storage.get_fiber_raman_amplifier_record_by_id(99999))
 
+    def test_satellite_link_cn0_storage(self):
+        rec_id = self.storage.save_satellite_link_cn0_record({
+            "link_id": "SAT-TELKOM-4-01",
+            "eirp_dbw": 55.0,
+            "fspl_db": 205.5,
+            "additional_loss_db": 1.8,
+            "g_over_t_db_k": 25.0,
+            "bandwidth_hz": 36e6,
+            "carrier_to_noise_density_dbhz": 101.3,
+            "carrier_to_noise_ratio_db": 25.7,
+            "status_category": "EXCELLENT_HIGH_ORDER_MODULATION"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_satellite_link_cn0_records()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["link_id"], "SAT-TELKOM-4-01")
+        self.assertAlmostEqual(items[0]["carrier_to_noise_density_dbhz"], 101.3)
+
+        single = self.storage.get_satellite_link_cn0_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status_category"], "EXCELLENT_HIGH_ORDER_MODULATION")
+        self.assertIsNone(self.storage.get_satellite_link_cn0_record_by_id(99999))
+
+    def test_nr_ntn_delay_doppler_storage(self):
+        rec_id = self.storage.save_nr_ntn_delay_doppler_record({
+            "cell_id": "NTN-LEO-SAT-01",
+            "orbit_altitude_km": 600.0,
+            "elevation_angle_deg": 30.0,
+            "carrier_frequency_ghz": 2.0,
+            "slant_range_km": 1073.8,
+            "one_way_delay_ms": 3.58,
+            "rtt_delay_ms": 7.16,
+            "common_ta_ms": 7.16,
+            "max_doppler_shift_khz": 48.0,
+            "doppler_rate_hz_s": 540.0,
+            "status_category": "LOW_EARTH_ORBIT_NTN_FAST_DOPPLER"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_nr_ntn_delay_doppler_records()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["cell_id"], "NTN-LEO-SAT-01")
+        self.assertAlmostEqual(items[0]["rtt_delay_ms"], 7.16)
+
+        single = self.storage.get_nr_ntn_delay_doppler_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status_category"], "LOW_EARTH_ORBIT_NTN_FAST_DOPPLER")
+        self.assertIsNone(self.storage.get_nr_ntn_delay_doppler_record_by_id(99999))
+
+    def test_optical_micro_ring_resonator_storage(self):
+        rec_id = self.storage.save_optical_micro_ring_resonator_record({
+            "device_id": "MRR-SOI-1550",
+            "ring_radius_um": 10.0,
+            "resonance_wavelength_nm": 1550.0,
+            "group_index": 4.0,
+            "free_spectral_range_nm": 9.56,
+            "free_spectral_range_ghz": 1193.0,
+            "fwhm_bandwidth_nm": 0.15,
+            "fwhm_bandwidth_ghz": 18.7,
+            "finesse": 63.7,
+            "quality_factor": 10333.0,
+            "status_category": "HIGH_FINESSE_WDM_CHANNEL_SELECTOR"
+        })
+        self.assertGreater(rec_id, 0)
+        items = self.storage.list_optical_micro_ring_resonator_records()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["device_id"], "MRR-SOI-1550")
+        self.assertAlmostEqual(items[0]["free_spectral_range_nm"], 9.56)
+
+        single = self.storage.get_optical_micro_ring_resonator_record_by_id(rec_id)
+        self.assertIsNotNone(single)
+        self.assertEqual(single["status_category"], "HIGH_FINESSE_WDM_CHANNEL_SELECTOR")
+        self.assertIsNone(self.storage.get_optical_micro_ring_resonator_record_by_id(99999))
+
 
 
 if __name__ == "__main__":
