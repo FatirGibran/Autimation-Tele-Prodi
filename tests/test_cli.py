@@ -3618,6 +3618,75 @@ class TestCLI(unittest.TestCase):
             out = fake_out.getvalue()
             self.assertIn("80.0", out)
 
+    def test_cmd_satcn0(self):
+        class ArgsAdd:
+            action = "add"
+            eirp = 60.0
+            freq = 14.0
+            dist = 38000.0
+            loss = 1.5
+            gt = 30.0
+            bw_mhz = 36.0
+            link_id = "SAT-CLI-TEST"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_satcn0(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Link Budget C/N0 Satelit berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_satcn0(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("SAT-CLI-TEST", out)
+
+    def test_cmd_nrntn(self):
+        class ArgsAdd:
+            action = "add"
+            alt = 600.0
+            elev = 30.0
+            fc = 2.0
+            cell_id = "NTN-CLI-TEST"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrntn(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Propagasi 5G NR Rel-17 NTN berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_nrntn(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("NTN-CLI-TEST", out)
+
+    def test_cmd_mrr(self):
+        class ArgsAdd:
+            action = "add"
+            radius = 10.0
+            wave = 1550.0
+            ng = 4.0
+            device_id = "MRR-CLI-TEST"
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mrr(ArgsAdd())
+            out = fake_out.getvalue()
+            self.assertIn("Catatan Filter Micro-Ring Resonator MRR berhasil disimpan", out)
+
+        class ArgsList:
+            action = "list"
+            limit = 10
+
+        with patch("sys.stdout", new=io.StringIO()) as fake_out:
+            cli.cmd_mrr(ArgsList())
+            out = fake_out.getvalue()
+            self.assertIn("MRR-CLI-TEST", out)
+
 
 
 if __name__ == "__main__":

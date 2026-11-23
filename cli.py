@@ -4299,32 +4299,34 @@ def cmd_fra(args):
 
 def cmd_satcn0(args):
     if args.action == "add":
-        eirp = float(args.eirp) if args.eirp is not None else 55.0
-        fspl = float(args.fspl) if args.fspl is not None else 205.5
-        loss = float(args.loss) if args.loss is not None else 1.8
-        gt = float(args.gt) if args.gt is not None else 25.0
-        bw = float(args.bw) if args.bw is not None else 36e6
+        eirp = float(args.eirp) if args.eirp is not None else 60.0
+        freq = float(getattr(args, "freq", 14.0))
+        dist = float(getattr(args, "dist", 38000.0))
+        loss = float(args.loss) if args.loss is not None else 1.5
+        gt = float(args.gt) if args.gt is not None else 30.0
+        bw_mhz = float(getattr(args, "bw_mhz", 36.0))
         link_id = str(args.link_id or "SAT-DL-01").strip()
 
         res = calculate_satellite_link_cn0_density(
             eirp_dbw=eirp,
-            fspl_db=fspl,
-            additional_loss_db=loss,
-            g_over_t_db_k=gt,
-            bandwidth_hz=bw
+            frequency_ghz=freq,
+            slant_range_km=dist,
+            atmospheric_loss_db=loss,
+            g_over_t_dbk=gt,
+            carrier_bandwidth_mhz=bw_mhz
         )
         rec_id = storage.save_satellite_link_cn0_record({
             "link_id": link_id,
             "eirp_dbw": res["eirp_dbw"],
-            "fspl_db": res["fspl_db"],
-            "additional_loss_db": res["additional_loss_db"],
-            "g_over_t_db_k": res["g_over_t_db_k"],
-            "bandwidth_hz": res["bandwidth_hz"],
-            "carrier_to_noise_density_dbhz": res["carrier_to_noise_density_dbhz"],
+            "fspl_db": res["free_space_path_loss_db"],
+            "additional_loss_db": res["atmospheric_loss_db"],
+            "g_over_t_db_k": res["g_over_t_dbk"],
+            "bandwidth_hz": res["carrier_bandwidth_mhz"] * 1e6,
+            "carrier_to_noise_density_dbhz": res["carrier_to_noise_density_db_hz"],
             "carrier_to_noise_ratio_db": res["carrier_to_noise_ratio_db"],
             "status_category": res["status_category"]
         })
-        print(f"Catatan Link Budget C/N0 Satelit berhasil disimpan dengan ID: {rec_id} (C/N0: {res['carrier_to_noise_density_dbhz']:.2f} dB-Hz, CNR: {res['carrier_to_noise_ratio_db']:.2f} dB, Status: {res['status_category']})")
+        print(f"Catatan Link Budget C/N0 Satelit berhasil disimpan dengan ID: {rec_id} (C/N0: {res['carrier_to_noise_density_db_hz']:.2f} dB-Hz, CNR: {res['carrier_to_noise_ratio_db']:.2f} dB, Status: {res['status_category']})")
     else:
         records = storage.list_satellite_link_cn0_records(limit=args.limit or 50)
         if not records:
@@ -4355,13 +4357,13 @@ def cmd_nrntn(args):
             "carrier_frequency_ghz": res["carrier_frequency_ghz"],
             "slant_range_km": res["slant_range_km"],
             "one_way_delay_ms": res["one_way_delay_ms"],
-            "rtt_delay_ms": res["rtt_delay_ms"],
-            "common_ta_ms": res["common_ta_ms"],
-            "max_doppler_shift_khz": res["max_doppler_shift_khz"],
+            "rtt_delay_ms": res["service_link_rtt_ms"],
+            "common_ta_ms": res["service_link_rtt_ms"],
+            "max_doppler_shift_khz": res["max_doppler_khz"],
             "doppler_rate_hz_s": res["doppler_rate_hz_s"],
             "status_category": res["status_category"]
         })
-        print(f"Catatan Propagasi 5G NR Rel-17 NTN berhasil disimpan dengan ID: {rec_id} (RTT: {res['rtt_delay_ms']:.2f} ms, Doppler: ±{res['max_doppler_shift_khz']:.2f} kHz, Status: {res['status_category']})")
+        print(f"Catatan Propagasi 5G NR Rel-17 NTN berhasil disimpan dengan ID: {rec_id} (RTT: {res['service_link_rtt_ms']:.2f} ms, Doppler: ±{res['max_doppler_khz']:.2f} kHz, Status: {res['status_category']})")
     else:
         records = storage.list_nr_ntn_delay_doppler_records(limit=args.limit or 50)
         if not records:
@@ -4378,29 +4380,29 @@ def cmd_mrr(args):
         radius = float(args.radius) if args.radius is not None else 10.0
         wave = float(args.wave) if args.wave is not None else 1550.0
         ng = float(args.ng) if args.ng is not None else 4.0
-        r_coeff = float(args.r_coeff) if args.r_coeff is not None else 0.95
         device_id = str(args.device_id or "MRR-WDM-1550").strip()
 
         res = calculate_optical_micro_ring_resonator_filter(
             ring_radius_um=radius,
-            resonance_wavelength_nm=wave,
+            effective_index=2.45,
             group_index=ng,
-            self_coupling_coefficient=r_coeff
+            power_coupling_kappa2=0.1,
+            operating_wavelength_nm=wave
         )
         rec_id = storage.save_optical_micro_ring_resonator_record({
             "device_id": device_id,
             "ring_radius_um": res["ring_radius_um"],
-            "resonance_wavelength_nm": res["resonance_wavelength_nm"],
+            "resonance_wavelength_nm": res["operating_wavelength_nm"],
             "group_index": res["group_index"],
             "free_spectral_range_nm": res["free_spectral_range_nm"],
-            "free_spectral_range_ghz": res["free_spectral_range_ghz"],
-            "fwhm_bandwidth_nm": res["fwhm_bandwidth_nm"],
-            "fwhm_bandwidth_ghz": res["fwhm_bandwidth_ghz"],
+            "free_spectral_range_ghz": 300000.0 / res["free_spectral_range_nm"] if res["free_spectral_range_nm"] > 0 else 0.0,
+            "fwhm_bandwidth_nm": res["fwhm_linewidth_nm"],
+            "fwhm_bandwidth_ghz": 0.0,
             "finesse": res["finesse"],
-            "quality_factor": res["quality_factor"],
-            "status_category": res["status_category"]
+            "quality_factor": res["quality_factor_q"],
+            "status_category": res["coupling_regime"]
         })
-        print(f"Catatan Filter Micro-Ring Resonator MRR berhasil disimpan dengan ID: {rec_id} (FSR: {res['free_spectral_range_nm']:.2f} nm, Q: {res['quality_factor']:.0f}, Status: {res['status_category']})")
+        print(f"Catatan Filter Micro-Ring Resonator MRR berhasil disimpan dengan ID: {rec_id} (FSR: {res['free_spectral_range_nm']:.3f} nm, Q: {res['quality_factor_q']:.0f}, Status: {res['coupling_regime']})")
     else:
         records = storage.list_optical_micro_ring_resonator_records(limit=args.limit or 50)
         if not records:
