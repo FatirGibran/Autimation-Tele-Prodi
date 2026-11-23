@@ -3224,6 +3224,57 @@ navigation: true
         ]
         return "\n".join(doc)
 
+    @staticmethod
+    def generate_telecom_dataset_json_ld(metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates Schema.org Dataset and TechnicalSpecification JSON-LD metadata for
+        telecommunication measurement datasets and engineering models.
+        """
+        name = metadata.get("name", metadata.get("seo_title", metadata.get("topic", "Dataset Telemetri Telekomunikasi"))).strip()
+        desc = metadata.get("description", metadata.get("meta_description", "Dataset telemetri dan simulasi rekayasa sistem telekomunikasi Telkom University Purwokerto.")).strip()
+        url = metadata.get("url", "https://bif-pwt.telkomuniversity.ac.id/datasets/telecom").strip()
+        license_url = metadata.get("license", "https://creativecommons.org/licenses/by/4.0/").strip()
+        keywords = metadata.get("keywords", metadata.get("tags", ["telecommunication", "5G NR", "optical network", "satellite link"]))
+        if isinstance(keywords, str):
+            keywords = [k.strip() for k in keywords.split(",") if k.strip()]
+        date_published = metadata.get("date_published", metadata.get("publish_date", "2026-11-23")).strip()
+        variable_measured = metadata.get("variable_measured", [
+            "Carrier-to-Noise Density (C/N0)",
+            "Second-Order Polarization Mode Dispersion (SOPMD)",
+            "Non-Terrestrial Network Delay and Doppler",
+            "Micro-Ring Resonator Free Spectral Range (FSR)"
+        ])
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            "name": name,
+            "description": desc,
+            "url": url,
+            "license": license_url,
+            "keywords": keywords,
+            "datePublished": date_published,
+            "creator": {
+                "@type": "EducationalOrganization",
+                "name": "S1 Teknik Telekomunikasi Telkom University Purwokerto",
+                "url": "https://bif-pwt.telkomuniversity.ac.id"
+            },
+            "variableMeasured": variable_measured,
+            "distribution": [
+                {
+                    "@type": "DataDownload",
+                    "encodingFormat": "application/json",
+                    "contentUrl": f"{url}/data.json"
+                },
+                {
+                    "@type": "DataDownload",
+                    "encodingFormat": "text/csv",
+                    "contentUrl": f"{url}/data.csv"
+                }
+            ],
+            "isAccessibleForFree": True
+        }
+
 
 
 
