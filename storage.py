@@ -1879,6 +1879,22 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_raman_length ON fiber_raman_amplifier_records(fiber_length_km);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS satellite_link_cn0_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_id TEXT NOT NULL,
+                    eirp_dbw REAL NOT NULL,
+                    fspl_db REAL NOT NULL,
+                    additional_loss_db REAL NOT NULL,
+                    g_over_t_db_k REAL NOT NULL,
+                    bandwidth_hz REAL NOT NULL,
+                    carrier_to_noise_density_dbhz REAL NOT NULL,
+                    carrier_to_noise_ratio_db REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_cn0_link ON satellite_link_cn0_records(link_id);")
 
 
 
@@ -8437,6 +8453,59 @@ class StorageManager:
     save_raman_record = save_fiber_raman_amplifier_record
     list_raman_records = list_fiber_raman_amplifier_records
     get_raman_record_by_id = get_fiber_raman_amplifier_record_by_id
+
+    def save_satellite_link_cn0_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a satellite link budget carrier-to-noise density (C/N0) telemetry record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO satellite_link_cn0_records (
+                    link_id, eirp_dbw, fspl_db, additional_loss_db,
+                    g_over_t_db_k, bandwidth_hz, carrier_to_noise_density_dbhz,
+                    carrier_to_noise_ratio_db, status_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("link_id", "SAT-DL-01")).strip(),
+                float(d.get("eirp_dbw", 55.0)),
+                float(d.get("fspl_db", 205.5)),
+                float(d.get("additional_loss_db", 1.8)),
+                float(d.get("g_over_t_db_k", 25.0)),
+                float(d.get("bandwidth_hz", 36e6)),
+                float(d.get("carrier_to_noise_density_dbhz", 101.3)),
+                float(d.get("carrier_to_noise_ratio_db", 25.7)),
+                str(d.get("status_category", "HIGH_CAPACITY_LINK")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_satellite_link_cn0_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent satellite link C/N0 records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_link_cn0_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_satellite_link_cn0_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single satellite link C/N0 record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM satellite_link_cn0_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    save_sat_cn0_record = save_satellite_link_cn0_record
+    list_sat_cn0_records = list_satellite_link_cn0_records
+    get_sat_cn0_record_by_id = get_satellite_link_cn0_record_by_id
 
 
 
