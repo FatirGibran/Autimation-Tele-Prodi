@@ -1895,6 +1895,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_sat_cn0_link ON satellite_link_cn0_records(link_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS nr_ntn_delay_doppler_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cell_id TEXT NOT NULL,
+                    orbit_altitude_km REAL NOT NULL,
+                    elevation_angle_deg REAL NOT NULL,
+                    carrier_frequency_ghz REAL NOT NULL,
+                    slant_range_km REAL NOT NULL,
+                    one_way_delay_ms REAL NOT NULL,
+                    rtt_delay_ms REAL NOT NULL,
+                    common_ta_ms REAL NOT NULL,
+                    max_doppler_shift_khz REAL NOT NULL,
+                    doppler_rate_hz_s REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ntn_delay_cell ON nr_ntn_delay_doppler_records(cell_id);")
 
 
 
@@ -8506,6 +8524,62 @@ class StorageManager:
     save_sat_cn0_record = save_satellite_link_cn0_record
     list_sat_cn0_records = list_satellite_link_cn0_records
     get_sat_cn0_record_by_id = get_satellite_link_cn0_record_by_id
+
+    def save_nr_ntn_delay_doppler_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves a 3GPP Rel-17 NTN propagation delay, RTT, Common TA, and Doppler shift record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO nr_ntn_delay_doppler_records (
+                    cell_id, orbit_altitude_km, elevation_angle_deg,
+                    carrier_frequency_ghz, slant_range_km, one_way_delay_ms,
+                    rtt_delay_ms, common_ta_ms, max_doppler_shift_khz,
+                    doppler_rate_hz_s, status_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("cell_id", "NTN-LEO-600")).strip(),
+                float(d.get("orbit_altitude_km", 600.0)),
+                float(d.get("elevation_angle_deg", 30.0)),
+                float(d.get("carrier_frequency_ghz", 2.0)),
+                float(d.get("slant_range_km", 1073.8)),
+                float(d.get("one_way_delay_ms", 3.58)),
+                float(d.get("rtt_delay_ms", 7.16)),
+                float(d.get("common_ta_ms", 7.16)),
+                float(d.get("max_doppler_shift_khz", 48.0)),
+                float(d.get("doppler_rate_hz_s", 540.0)),
+                str(d.get("status_category", "LOW_EARTH_ORBIT_NTN_FAST_DOPPLER")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_nr_ntn_delay_doppler_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent 5G NR NTN delay records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_ntn_delay_doppler_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_nr_ntn_delay_doppler_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single 5G NR NTN delay record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM nr_ntn_delay_doppler_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    save_ntn_record = save_nr_ntn_delay_doppler_record
+    list_ntn_records = list_nr_ntn_delay_doppler_records
+    get_ntn_record_by_id = get_nr_ntn_delay_doppler_record_by_id
 
 
 
