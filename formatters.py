@@ -2272,10 +2272,41 @@ class TelegramFormatter:
             f"⚡ *Distributed Raman Amplification meningkatkan OSNR dan memperpanjang jangkauan transmisi DWDM.*"
         )
 
+    @classmethod
+    def format_satellite_link_cn0_telegram_card(cls, data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        d = dict(data or {})
+        d.update(kwargs)
+        link_id = str(d.get("link_id", "SAT-DL-01"))
+        eirp = float(d.get("eirp_dbw", 55.0))
+        fspl = float(d.get("fspl_db", 205.5))
+        loss = float(d.get("additional_loss_db", 1.8))
+        gt = float(d.get("g_over_t_db_k", 25.0))
+        bw_hz = float(d.get("bandwidth_hz", 36e6))
+        cn0 = float(d.get("carrier_to_noise_density_dbhz", 101.3))
+        cnr = float(d.get("carrier_to_noise_ratio_db", 25.7))
+        status = str(d.get("status_category", "HIGH_CAPACITY_LINK")).replace("_", " ")
+        portal_url = str(d.get("portal_url", "")).strip()
+        portal_link = f"\n🔗 **NOC Satelit:** {portal_url}" if portal_url else ""
+
+        return (
+            f"🛰️ **Telemetri Link Budget C/N₀ Satelit (ITU-R S.524 / S.1061)**\n\n"
+            f"🌐 **Link ID:** `{link_id}`\n"
+            f"📡 **EIRP Satelit:** `{eirp:.1f} dBW`\n"
+            f"📉 **Redaman FSPL:** `{fspl:.2f} dB`\n"
+            f"🌪️ **Rugi Tambahan:** `{loss:.2f} dB`\n"
+            f"📶 **G/T Figure of Merit:** `{gt:.2f} dB/K`\n"
+            f"📊 **Bandwidth Sinyal:** `{bw_hz / 1e6:.2f} MHz`\n"
+            f"⚡ **Carrier-to-Noise Density C/N₀:** `{cn0:.2f} dB-Hz`\n"
+            f"🎯 **Carrier-to-Noise Ratio (CNR):** `{cnr:.2f} dB`\n"
+            f"🌟 **Kategori Kanal:** `{status}`{portal_link}\n\n"
+            f"🛰️ *Kepadatan rasio pembawa terhadap derau menentukan modulasi maksimum dan efisiensi spektral link satelit.*"
+        )
+
 
 format_satellite_g_over_t_telegram_card = TelegramFormatter.format_satellite_g_over_t_telegram_card
 format_5g_nr_rel17_redcap_ue_telegram_card = TelegramFormatter.format_5g_nr_rel17_redcap_ue_telegram_card
 format_fiber_raman_amplifier_telegram_card = TelegramFormatter.format_fiber_raman_amplifier_telegram_card
+format_satellite_link_cn0_telegram_card = TelegramFormatter.format_satellite_link_cn0_telegram_card
 
 
 
