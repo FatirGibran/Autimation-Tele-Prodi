@@ -74,7 +74,10 @@ from parser import (
     calculate_5g_nr_csi_rs_resource_and_overhead,
     calculate_satellite_g_over_t_figure_of_merit,
     calculate_5g_nr_rel17_redcap_ue_capacity,
-    calculate_fiber_raman_amplifier_gain
+    calculate_fiber_raman_amplifier_gain,
+    calculate_satellite_link_cn0_density,
+    calculate_5g_nr_rel17_ntn_delay_and_doppler,
+    calculate_optical_micro_ring_resonator_filter
 )
 
 from seo_validator import YoastSEOValidator
@@ -4294,6 +4297,121 @@ def cmd_fra(args):
             print(f"{r['id']:<4} | {r['fiber_length_km']:<12.1f} | {r['pump_power_mw']:<10.1f} | {r['on_off_gain_db']:<12.2f} | {r['net_gain_db']:<10.2f} | {r['status_category']}")
 
 
+def cmd_satcn0(args):
+    if args.action == "add":
+        eirp = float(args.eirp) if args.eirp is not None else 55.0
+        fspl = float(args.fspl) if args.fspl is not None else 205.5
+        loss = float(args.loss) if args.loss is not None else 1.8
+        gt = float(args.gt) if args.gt is not None else 25.0
+        bw = float(args.bw) if args.bw is not None else 36e6
+        link_id = str(args.link_id or "SAT-DL-01").strip()
+
+        res = calculate_satellite_link_cn0_density(
+            eirp_dbw=eirp,
+            fspl_db=fspl,
+            additional_loss_db=loss,
+            g_over_t_db_k=gt,
+            bandwidth_hz=bw
+        )
+        rec_id = storage.save_satellite_link_cn0_record({
+            "link_id": link_id,
+            "eirp_dbw": res["eirp_dbw"],
+            "fspl_db": res["fspl_db"],
+            "additional_loss_db": res["additional_loss_db"],
+            "g_over_t_db_k": res["g_over_t_db_k"],
+            "bandwidth_hz": res["bandwidth_hz"],
+            "carrier_to_noise_density_dbhz": res["carrier_to_noise_density_dbhz"],
+            "carrier_to_noise_ratio_db": res["carrier_to_noise_ratio_db"],
+            "status_category": res["status_category"]
+        })
+        print(f"Catatan Link Budget C/N0 Satelit berhasil disimpan dengan ID: {rec_id} (C/N0: {res['carrier_to_noise_density_dbhz']:.2f} dB-Hz, CNR: {res['carrier_to_noise_ratio_db']:.2f} dB, Status: {res['status_category']})")
+    else:
+        records = storage.list_satellite_link_cn0_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan link satelit C/N0 yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'LINK ID':<15} | {'EIRP (dBW)':<12} | {'C/N0 (dB-Hz)':<14} | {'CNR (dB)':<10} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['link_id']:<15} | {r['eirp_dbw']:<12.1f} | {r['carrier_to_noise_density_dbhz']:<14.2f} | {r['carrier_to_noise_ratio_db']:<10.2f} | {r['status_category']}")
+
+
+def cmd_nrntn(args):
+    if args.action == "add":
+        alt = float(args.alt) if args.alt is not None else 600.0
+        elev = float(args.elev) if args.elev is not None else 30.0
+        fc = float(args.fc) if args.fc is not None else 2.0
+        cell_id = str(args.cell_id or "NTN-LEO-600").strip()
+
+        res = calculate_5g_nr_rel17_ntn_delay_and_doppler(
+            orbit_altitude_km=alt,
+            elevation_angle_deg=elev,
+            carrier_frequency_ghz=fc
+        )
+        rec_id = storage.save_nr_ntn_delay_doppler_record({
+            "cell_id": cell_id,
+            "orbit_altitude_km": res["orbit_altitude_km"],
+            "elevation_angle_deg": res["elevation_angle_deg"],
+            "carrier_frequency_ghz": res["carrier_frequency_ghz"],
+            "slant_range_km": res["slant_range_km"],
+            "one_way_delay_ms": res["one_way_delay_ms"],
+            "rtt_delay_ms": res["rtt_delay_ms"],
+            "common_ta_ms": res["common_ta_ms"],
+            "max_doppler_shift_khz": res["max_doppler_shift_khz"],
+            "doppler_rate_hz_s": res["doppler_rate_hz_s"],
+            "status_category": res["status_category"]
+        })
+        print(f"Catatan Propagasi 5G NR Rel-17 NTN berhasil disimpan dengan ID: {rec_id} (RTT: {res['rtt_delay_ms']:.2f} ms, Doppler: ±{res['max_doppler_shift_khz']:.2f} kHz, Status: {res['status_category']})")
+    else:
+        records = storage.list_nr_ntn_delay_doppler_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan propagasi NTN yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'CELL ID':<15} | {'ALT (km)':<10} | {'RTT (ms)':<10} | {'DOPPLER (kHz)':<14} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['cell_id']:<15} | {r['orbit_altitude_km']:<10.1f} | {r['rtt_delay_ms']:<10.2f} | {r['max_doppler_shift_khz']:<14.2f} | {r['status_category']}")
+
+
+def cmd_mrr(args):
+    if args.action == "add":
+        radius = float(args.radius) if args.radius is not None else 10.0
+        wave = float(args.wave) if args.wave is not None else 1550.0
+        ng = float(args.ng) if args.ng is not None else 4.0
+        r_coeff = float(args.r_coeff) if args.r_coeff is not None else 0.95
+        device_id = str(args.device_id or "MRR-WDM-1550").strip()
+
+        res = calculate_optical_micro_ring_resonator_filter(
+            ring_radius_um=radius,
+            resonance_wavelength_nm=wave,
+            group_index=ng,
+            self_coupling_coefficient=r_coeff
+        )
+        rec_id = storage.save_optical_micro_ring_resonator_record({
+            "device_id": device_id,
+            "ring_radius_um": res["ring_radius_um"],
+            "resonance_wavelength_nm": res["resonance_wavelength_nm"],
+            "group_index": res["group_index"],
+            "free_spectral_range_nm": res["free_spectral_range_nm"],
+            "free_spectral_range_ghz": res["free_spectral_range_ghz"],
+            "fwhm_bandwidth_nm": res["fwhm_bandwidth_nm"],
+            "fwhm_bandwidth_ghz": res["fwhm_bandwidth_ghz"],
+            "finesse": res["finesse"],
+            "quality_factor": res["quality_factor"],
+            "status_category": res["status_category"]
+        })
+        print(f"Catatan Filter Micro-Ring Resonator MRR berhasil disimpan dengan ID: {rec_id} (FSR: {res['free_spectral_range_nm']:.2f} nm, Q: {res['quality_factor']:.0f}, Status: {res['status_category']})")
+    else:
+        records = storage.list_optical_micro_ring_resonator_records(limit=args.limit or 50)
+        if not records:
+            print("Tidak ada catatan resonator cincin mikro optik yang ditemukan.")
+            return
+        print(f"{'ID':<4} | {'DEVICE ID':<15} | {'RADIUS (um)':<12} | {'FSR (nm)':<10} | {'Q-FACTOR':<10} | {'STATUS'}")
+        print("-" * 80)
+        for r in records:
+            print(f"{r['id']:<4} | {r['device_id']:<15} | {r['ring_radius_um']:<12.1f} | {r['free_spectral_range_nm']:<10.2f} | {r['quality_factor']:<10.0f} | {r['status_category']}")
+
+
 def main():
 
 
@@ -5723,6 +5841,39 @@ def main():
     fra_parser.add_argument("--aeff", type=float, default=80.0, help="Luas area efektif serat A_eff (um^2)")
     fra_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
     fra_parser.set_defaults(func=cmd_fra)
+
+    # Satellite Link Carrier-to-Noise Density C/N0 command
+    satcn0_parser = subparsers.add_parser("satcn0", help="Kalkulasi carrier-to-noise density C/N0 dan CNR link satelit ITU-R S.524")
+    satcn0_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi link satelit C/N0")
+    satcn0_parser.add_argument("--eirp", type=float, default=55.0, help="EIRP satelit (dBW)")
+    satcn0_parser.add_argument("--fspl", type=float, default=205.5, help="Redaman Free Space Path Loss (dB)")
+    satcn0_parser.add_argument("--loss", type=float, default=1.8, help="Redaman tambahan atmosfer/antena (dB)")
+    satcn0_parser.add_argument("--gt", type=float, default=25.0, help="Figure of merit stasiun bumi G/T (dB/K)")
+    satcn0_parser.add_argument("--bw", type=float, default=36e6, help="Bandwidth sinyal transponder (Hz)")
+    satcn0_parser.add_argument("--link-id", default="SAT-DL-01", help="Pengenal link satelit")
+    satcn0_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    satcn0_parser.set_defaults(func=cmd_satcn0)
+
+    # 5G NR Rel-17 NTN Delay and Doppler command
+    nrntn_parser = subparsers.add_parser("nrntn", help="Kalkulasi delay propagasi RTT, Common TA, dan Doppler 5G NTN 3GPP TR 38.821")
+    nrntn_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi propagasi NTN")
+    nrntn_parser.add_argument("--alt", type=float, default=600.0, help="Ketinggian orbit satelit LEO (km)")
+    nrntn_parser.add_argument("--elev", type=float, default=30.0, help="Sudut elevasi stasiun bumi (derajat)")
+    nrntn_parser.add_argument("--fc", type=float, default=2.0, help="Frekuensi pembawa RF carrier (GHz)")
+    nrntn_parser.add_argument("--cell-id", default="NTN-LEO-600", help="Pengenal sel gNodeB satelit NTN")
+    nrntn_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    nrntn_parser.set_defaults(func=cmd_nrntn)
+
+    # Optical Micro-Ring Resonator (MRR) Filter command
+    mrr_parser = subparsers.add_parser("mrr", help="Kalkulasi Free Spectral Range FSR, FWHM, dan Q-Factor filter ring silikon fotonik")
+    mrr_parser.add_argument("--action", choices=["list", "add"], default="list", help="Tindakan evaluasi filter micro-ring")
+    mrr_parser.add_argument("--radius", type=float, default=10.0, help="Radius cincin resonator (um)")
+    mrr_parser.add_argument("--wave", type=float, default=1550.0, help="Panjang gelombang resonansi (nm)")
+    mrr_parser.add_argument("--ng", type=float, default=4.0, help="Group index pandu gelombang silikon")
+    mrr_parser.add_argument("--r-coeff", type=float, default=0.95, help="Koefisien transmisi self-coupling r")
+    mrr_parser.add_argument("--device-id", default="MRR-WDM-1550", help="Pengenal chip resonator cincin mikro")
+    mrr_parser.add_argument("--limit", type=int, default=50, help="Batas jumlah rekaman ditampilkan")
+    mrr_parser.set_defaults(func=cmd_mrr)
 
     args = parser.parse_args()
 
