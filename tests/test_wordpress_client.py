@@ -1343,6 +1343,55 @@ class TestWordPressClient(unittest.TestCase):
         post = self.client.get_post_by_slug("non-existent-article")
         self.assertIsNone(post)
 
+    @patch("urllib.request.urlopen")
+    def test_get_posts_by_category_slug(self, mock_urlopen):
+        def fake_urlopen(req, *args, **kwargs):
+            mock_resp = MagicMock()
+            if "categories?slug=telekomunikasi" in req.full_url:
+                mock_resp.read.return_value = json.dumps([{"id": 12, "slug": "telekomunikasi"}]).encode("utf-8")
+            elif "posts?categories=12" in req.full_url:
+                mock_resp.read.return_value = json.dumps([
+                    {"id": 101, "title": {"rendered": "Sat Link C/N0"}},
+                    {"id": 102, "title": {"rendered": "5G NTN Delay"}}
+                ]).encode("utf-8")
+            else:
+                mock_resp.read.return_value = b'[]'
+            mock_cm = MagicMock()
+            mock_cm.__enter__.return_value = mock_resp
+            return mock_cm
+
+        mock_urlopen.side_effect = fake_urlopen
+        posts = self.client.get_posts_by_category_slug("telekomunikasi", page=1, per_page=10)
+        self.assertEqual(len(posts), 2)
+        self.assertEqual(posts[0]["id"], 101)
+
+        posts_empty = self.client.get_posts_by_category_slug("non-existent-cat")
+        self.assertEqual(posts_empty, [])
+
+    @patch("urllib.request.urlopen")
+    def test_get_posts_by_tag_slug(self, mock_urlopen):
+        def fake_urlopen(req, *args, **kwargs):
+            mock_resp = MagicMock()
+            if "tags?slug=itu-r" in req.full_url:
+                mock_resp.read.return_value = json.dumps([{"id": 42, "slug": "itu-r"}]).encode("utf-8")
+            elif "posts?tags=42" in req.full_url:
+                mock_resp.read.return_value = json.dumps([
+                    {"id": 201, "title": {"rendered": "ITU-R Propagation"}}
+                ]).encode("utf-8")
+            else:
+                mock_resp.read.return_value = b'[]'
+            mock_cm = MagicMock()
+            mock_cm.__enter__.return_value = mock_resp
+            return mock_cm
+
+        mock_urlopen.side_effect = fake_urlopen
+        posts = self.client.get_posts_by_tag_slug("itu-r", page=1, per_page=5)
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts[0]["id"], 201)
+
+        posts_empty = self.client.get_posts_by_tag_slug("non-existent-tag")
+        self.assertEqual(posts_empty, [])
+
 
 
 if __name__ == "__main__":
