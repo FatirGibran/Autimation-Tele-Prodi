@@ -3275,6 +3275,38 @@ navigation: true
             "isAccessibleForFree": True
         }
 
+    @staticmethod
+    def to_rspress_mdx(metadata: Dict[str, Any], html_content: str) -> str:
+        """
+        Exports editorial technical documentation to Rspress MDX format
+        with Rsbuild overview configuration, custom sidebar tags, and callouts.
+        """
+        title = metadata.get("seo_title", metadata.get("topic", "")).replace('"', '\\"')
+        desc = metadata.get("meta_description", "").replace('"', '\\"')
+        order = int(metadata.get("order", metadata.get("sidebar_position", 1)))
+        tags = metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        tags_yaml = ", ".join(f'"{t}"' for t in tags)
+
+        doc = [
+            "---",
+            f'title: "{title}"',
+            f'description: "{desc}"',
+            f"order: {order}",
+            "sidebar: true",
+            "overview: true",
+            f"tags: [{tags_yaml}]",
+            "---",
+            "",
+            ":::tip Catatan Rekayasa Telekomunikasi",
+            desc,
+            ":::",
+            "",
+            html_content.strip()
+        ]
+        return "\n".join(doc)
+
 
 
 
