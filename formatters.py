@@ -2302,11 +2302,45 @@ class TelegramFormatter:
             f"🛰️ *Kepadatan rasio pembawa terhadap derau menentukan modulasi maksimum dan efisiensi spektral link satelit.*"
         )
 
+    @classmethod
+    def format_5g_nr_rel17_ntn_delay_telegram_card(cls, data: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        d = dict(data or {})
+        d.update(kwargs)
+        cell_id = str(d.get("cell_id", "NTN-LEO-600"))
+        alt = float(d.get("orbit_altitude_km", 600.0))
+        elev = float(d.get("elevation_angle_deg", 30.0))
+        fc = float(d.get("carrier_frequency_ghz", 2.0))
+        slant = float(d.get("slant_range_km", 1073.8))
+        owd = float(d.get("one_way_delay_ms", 3.58))
+        rtt = float(d.get("rtt_delay_ms", 7.16))
+        ta = float(d.get("common_ta_ms", 7.16))
+        doppler = float(d.get("max_doppler_shift_khz", 48.0))
+        rate = float(d.get("doppler_rate_hz_s", 540.0))
+        status = str(d.get("status_category", "LOW_EARTH_ORBIT_NTN_FAST_DOPPLER")).replace("_", " ")
+        portal_url = str(d.get("portal_url", "")).strip()
+        portal_link = f"\n🔗 **RAN Dashboard:** {portal_url}" if portal_url else ""
+
+        return (
+            f"🛰️ **Telemetri Propagasi 5G NR Rel-17 NTN (3GPP TR 38.821)**\n\n"
+            f"🌐 **Cell ID:** `{cell_id}`\n"
+            f"🚀 **Orbit Satelit:** `{alt:.1f} km` (Elevasi: `{elev:.1f}°`)\n"
+            f"📡 **Carrier Frequency:** `{fc:.2f} GHz`\n"
+            f"📏 **Slant Range:** `{slant:.2f} km`\n"
+            f"⏱️ **One-Way Delay:** `{owd:.2f} ms`\n"
+            f"🔄 **Round Trip Time (RTT):** `{rtt:.2f} ms`\n"
+            f"⏱️ **Common Timing Advance:** `{ta:.2f} ms`\n"
+            f"⚡ **Maksimum Doppler Shift:** `±{doppler:.2f} kHz`\n"
+            f"📈 **Doppler Rate:** `{rate:.1f} Hz/s`\n"
+            f"🌟 **Kategori Segmen:** `{status}`{portal_link}\n\n"
+            f"🛰️ *Kompensasi Common TA dan Doppler pre-compensation menjamin sinkronisasi frame radio pada non-terrestrial networks.*"
+        )
+
 
 format_satellite_g_over_t_telegram_card = TelegramFormatter.format_satellite_g_over_t_telegram_card
 format_5g_nr_rel17_redcap_ue_telegram_card = TelegramFormatter.format_5g_nr_rel17_redcap_ue_telegram_card
 format_fiber_raman_amplifier_telegram_card = TelegramFormatter.format_fiber_raman_amplifier_telegram_card
 format_satellite_link_cn0_telegram_card = TelegramFormatter.format_satellite_link_cn0_telegram_card
+format_5g_nr_rel17_ntn_delay_telegram_card = TelegramFormatter.format_5g_nr_rel17_ntn_delay_telegram_card
 
 
 
