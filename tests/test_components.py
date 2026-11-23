@@ -3582,6 +3582,94 @@ class TestEditorialComponents(unittest.TestCase):
         self.assertIn("SSB / CD-SSB", html)
         self.assertIn("CORESET#0", html)
 
+    def test_render_satellite_link_cn0_density_card(self):
+        html = EditorialComponents.render_satellite_link_cn0_density_card(
+            data={
+                "eirp_dbw": 55.0,
+                "fspl_db": 205.5,
+                "additional_loss_db": 1.8,
+                "g_over_t_db_k": 25.0,
+                "bandwidth_hz": 36e6,
+                "carrier_to_noise_density_dbhz": 101.3,
+                "carrier_to_noise_ratio_db": 25.7,
+                "status_category": "EXCELLENT_HIGH_ORDER_MODULATION"
+            }
+        )
+        self.assertIn("tu-sat-cn0-card", html)
+        self.assertIn("55.0 dBW", html)
+        self.assertIn("101.30 dB-Hz", html)
+        self.assertIn("ITU-R S.524", html)
+
+    def test_render_optical_second_order_pmd_telemetry_card(self):
+        html = EditorialComponents.render_optical_second_order_pmd_telemetry_card(
+            data={
+                "mean_dgd_ps": 3.0,
+                "sopmd_ps2": 4.5,
+                "depolarization_sopmd_ps2": 3.67,
+                "pcd_sopmd_ps2": 2.60,
+                "bitrate_gbps": 100.0,
+                "pulse_broadening_ratio": 1.05,
+                "status_category": "LOW_IMPACT_TRANSMISSION"
+            }
+        )
+        self.assertIn("tu-sopmd-card", html)
+        self.assertIn("4.50 ps²", html)
+        self.assertIn("ITU-T G.650.2", html)
+
+    def test_render_5g_nr_rel17_ntn_delay_doppler_card(self):
+        html = EditorialComponents.render_5g_nr_rel17_ntn_delay_doppler_card(
+            data={
+                "orbit_altitude_km": 600.0,
+                "elevation_angle_deg": 30.0,
+                "carrier_frequency_ghz": 2.0,
+                "slant_range_km": 1073.8,
+                "one_way_delay_ms": 3.58,
+                "rtt_delay_ms": 7.16,
+                "common_ta_ms": 7.16,
+                "max_doppler_shift_khz": 48.0,
+                "doppler_rate_hz_s": 540.0,
+                "status_category": "LOW_EARTH_ORBIT_NTN_FAST_DOPPLER"
+            }
+        )
+        self.assertIn("tu-nr-ntn-delay-card", html)
+        self.assertIn("7.16 ms", html)
+        self.assertIn("3GPP Rel-17 TR 38.821", html)
+
+    def test_render_optical_micro_ring_resonator_card(self):
+        html = EditorialComponents.render_optical_micro_ring_resonator_card(
+            data={
+                "ring_radius_um": 10.0,
+                "resonance_wavelength_nm": 1550.0,
+                "group_index": 4.0,
+                "self_coupling_coefficient": 0.95,
+                "free_spectral_range_nm": 9.56,
+                "free_spectral_range_ghz": 1193.0,
+                "fwhm_bandwidth_nm": 0.15,
+                "fwhm_bandwidth_ghz": 18.7,
+                "finesse": 63.7,
+                "quality_factor": 10333.0,
+                "status_category": "HIGH_FINESSE_WDM_CHANNEL_SELECTOR"
+            }
+        )
+        self.assertIn("tu-mrr-filter-card", html)
+        self.assertIn("9.56 nm", html)
+        self.assertIn("10,333", html)
+
+    def test_render_5g_nr_ntn_satellite_link_architecture_svg(self):
+        html = EditorialComponents.render_5g_nr_ntn_satellite_link_architecture_svg(
+            data={
+                "orbit_altitude_km": 600.0,
+                "elevation_angle_deg": 30.0,
+                "slant_range_km": 1073.8,
+                "common_ta_ms": 7.16
+            }
+        )
+        self.assertIn("tu-nr-ntn-svg-container", html)
+        self.assertIn("<svg", html)
+        self.assertIn("Feeder Link", html)
+        self.assertIn("Service Link", html)
+        self.assertIn("LEO Satellite", html)
+
 
 
 
