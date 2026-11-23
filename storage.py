@@ -1913,6 +1913,24 @@ class StorageManager:
                 );
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_ntn_delay_cell ON nr_ntn_delay_doppler_records(cell_id);")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS optical_micro_ring_resonator_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    device_id TEXT NOT NULL,
+                    ring_radius_um REAL NOT NULL,
+                    resonance_wavelength_nm REAL NOT NULL,
+                    group_index REAL NOT NULL,
+                    free_spectral_range_nm REAL NOT NULL,
+                    free_spectral_range_ghz REAL NOT NULL,
+                    fwhm_bandwidth_nm REAL NOT NULL,
+                    fwhm_bandwidth_ghz REAL NOT NULL,
+                    finesse REAL NOT NULL,
+                    quality_factor REAL NOT NULL,
+                    status_category TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_mrr_device ON optical_micro_ring_resonator_records(device_id);")
 
 
 
@@ -8580,6 +8598,62 @@ class StorageManager:
     save_ntn_record = save_nr_ntn_delay_doppler_record
     list_ntn_records = list_nr_ntn_delay_doppler_records
     get_ntn_record_by_id = get_nr_ntn_delay_doppler_record_by_id
+
+    def save_optical_micro_ring_resonator_record(self, data: Optional[Dict[str, Any]] = None, **kwargs) -> int:
+        """
+        Saves an optical silicon photonic micro-ring resonator (MRR) filter record.
+        """
+        d = dict(data or {})
+        d.update(kwargs)
+        with self._get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO optical_micro_ring_resonator_records (
+                    device_id, ring_radius_um, resonance_wavelength_nm,
+                    group_index, free_spectral_range_nm, free_spectral_range_ghz,
+                    fwhm_bandwidth_nm, fwhm_bandwidth_ghz, finesse,
+                    quality_factor, status_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                str(d.get("device_id", "MRR-WDM-1550")).strip(),
+                float(d.get("ring_radius_um", 10.0)),
+                float(d.get("resonance_wavelength_nm", 1550.0)),
+                float(d.get("group_index", 4.0)),
+                float(d.get("free_spectral_range_nm", 9.56)),
+                float(d.get("free_spectral_range_ghz", 1193.0)),
+                float(d.get("fwhm_bandwidth_nm", 0.15)),
+                float(d.get("fwhm_bandwidth_ghz", 18.7)),
+                float(d.get("finesse", 63.7)),
+                float(d.get("quality_factor", 10333.0)),
+                str(d.get("status_category", "HIGH_FINESSE_WDM_CHANNEL_SELECTOR")).strip()
+            ))
+            return cursor.lastrowid
+
+    def list_optical_micro_ring_resonator_records(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent optical MRR filter records ordered by descending ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_micro_ring_resonator_records ORDER BY id DESC LIMIT ?",
+                (int(limit),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_optical_micro_ring_resonator_record_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a single optical MRR filter record by primary ID.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM optical_micro_ring_resonator_records WHERE id = ?",
+                (int(record_id),)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    save_mrr_record = save_optical_micro_ring_resonator_record
+    list_mrr_records = list_optical_micro_ring_resonator_records
+    get_mrr_record_by_id = get_optical_micro_ring_resonator_record_by_id
 
 
 
