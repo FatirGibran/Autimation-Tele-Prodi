@@ -1699,6 +1699,38 @@ class WordPressClient:
         results = self._send_request(posts_req)
         return results if isinstance(results, list) else []
 
+    def get_posts_by_tag_slug(
+        self,
+        tag_slug: str,
+        page: int = 1,
+        per_page: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves published WordPress posts assigned to the tag identified by slug.
+        """
+        clean_slug = urllib.parse.quote(tag_slug.strip().lower())
+        tag_req = urllib.request.Request(
+            f"{self.api_url}/tags?slug={clean_slug}",
+            headers=self._get_headers(),
+            method="GET"
+        )
+        tag_results = self._send_request(tag_req)
+        if not isinstance(tag_results, list) or len(tag_results) == 0:
+            return []
+        tag_id = tag_results[0].get("id")
+        if not tag_id:
+            return []
+
+        p = max(1, int(page))
+        pp = max(1, min(100, int(per_page)))
+        posts_req = urllib.request.Request(
+            f"{self.api_url}/posts?tags={tag_id}&page={p}&per_page={pp}",
+            headers=self._get_headers(),
+            method="GET"
+        )
+        results = self._send_request(posts_req)
+        return results if isinstance(results, list) else []
+
 
 
 
