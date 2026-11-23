@@ -1595,6 +1595,40 @@ class TestArticleExporter(unittest.TestCase):
         self.assertIn(":::", res)
         self.assertIn("<p>Konten panduan RedCap</p>", res)
 
+    def test_generate_telecom_dataset_json_ld(self):
+        meta = {
+            "name": "Dataset Pengukuran Propagasi Satelit dan NTN",
+            "description": "Dataset hasil simulasi delay RTT LEO dan carrier-to-noise density.",
+            "url": "https://bif-pwt.telkomuniversity.ac.id/datasets/sat-ntn",
+            "keywords": ["satelit", "ntn", "itu-r"],
+            "date_published": "2026-11-23"
+        }
+        res = ArticleExporter.generate_telecom_dataset_json_ld(meta)
+        self.assertEqual(res["@context"], "https://schema.org")
+        self.assertEqual(res["@type"], "Dataset")
+        self.assertEqual(res["name"], "Dataset Pengukuran Propagasi Satelit dan NTN")
+        self.assertIn("satelit", res["keywords"])
+        self.assertEqual(res["creator"]["@type"], "EducationalOrganization")
+        self.assertEqual(len(res["distribution"]), 2)
+        self.assertEqual(res["distribution"][0]["encodingFormat"], "application/json")
+        self.assertTrue(res["isAccessibleForFree"])
+
+    def test_to_rspress_mdx(self):
+        meta = {
+            "seo_title": "Panduan Filter Optik Micro-Ring Resonator",
+            "meta_description": "Dokumentasi simulasi FSR dan faktor Q silikon fotonik.",
+            "order": 3,
+            "tags": ["silicon-photonics", "mrr", "optical-filter"]
+        }
+        res = ArticleExporter.to_rspress_mdx(meta, "<p>Analisis resonator cincin optik</p>")
+        self.assertTrue(res.startswith("---"))
+        self.assertIn('title: "Panduan Filter Optik Micro-Ring Resonator"', res)
+        self.assertIn("order: 3", res)
+        self.assertIn("sidebar: true", res)
+        self.assertIn("overview: true", res)
+        self.assertIn(":::tip Catatan Rekayasa Telekomunikasi", res)
+        self.assertIn("<p>Analisis resonator cincin optik</p>", res)
+
 
 
 if __name__ == "__main__":
