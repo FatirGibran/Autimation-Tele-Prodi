@@ -1617,6 +1617,80 @@ class TestTelegramFormatter(unittest.TestCase):
         self.assertIn("-1.85 dB", msg)
         self.assertIn("HIGH GAIN DISTRIBUTED AMPLIFICATION", msg)
 
+    def test_format_satellite_link_cn0_telegram_card(self):
+        msg = TelegramFormatter.format_satellite_link_cn0_telegram_card(
+            data={
+                "link_id": "SAT-TELKOM-4-KU",
+                "eirp_dbw": 55.0,
+                "fspl_db": 205.5,
+                "additional_loss_db": 1.8,
+                "g_over_t_db_k": 25.0,
+                "bandwidth_hz": 36e6,
+                "carrier_to_noise_density_dbhz": 101.3,
+                "carrier_to_noise_ratio_db": 25.7,
+                "status_category": "HIGH_CAPACITY_LINK",
+                "portal_url": "https://sat.telkomuniversity.ac.id/link/01"
+            }
+        )
+        self.assertIn("Telemetri Link Budget C/N₀ Satelit", msg)
+        self.assertIn("SAT-TELKOM-4-KU", msg)
+        self.assertIn("55.0 dBW", msg)
+        self.assertIn("205.50 dB", msg)
+        self.assertIn("101.30 dB-Hz", msg)
+        self.assertIn("25.70 dB", msg)
+        self.assertIn("HIGH CAPACITY LINK", msg)
+        self.assertIn("https://sat.telkomuniversity.ac.id/link/01", msg)
+
+    def test_format_5g_nr_rel17_ntn_delay_telegram_card(self):
+        msg = TelegramFormatter.format_5g_nr_rel17_ntn_delay_telegram_card(
+            data={
+                "cell_id": "NTN-LEO-SAT-07",
+                "orbit_altitude_km": 600.0,
+                "elevation_angle_deg": 30.0,
+                "carrier_frequency_ghz": 2.0,
+                "slant_range_km": 1073.8,
+                "one_way_delay_ms": 3.58,
+                "rtt_delay_ms": 7.16,
+                "common_ta_ms": 7.16,
+                "max_doppler_shift_khz": 48.0,
+                "doppler_rate_hz_s": 540.0,
+                "status_category": "LOW_EARTH_ORBIT_NTN_FAST_DOPPLER",
+                "portal_url": "https://ran.telkomuniversity.ac.id/ntn/07"
+            }
+        )
+        self.assertIn("Telemetri Propagasi 5G NR Rel-17 NTN", msg)
+        self.assertIn("NTN-LEO-SAT-07", msg)
+        self.assertIn("600.0 km", msg)
+        self.assertIn("7.16 ms", msg)
+        self.assertIn("±48.00 kHz", msg)
+        self.assertIn("LOW EARTH ORBIT NTN FAST DOPPLER", msg)
+        self.assertIn("https://ran.telkomuniversity.ac.id/ntn/07", msg)
+
+    def test_format_optical_micro_ring_resonator_telegram_card(self):
+        msg = TelegramFormatter.format_optical_micro_ring_resonator_telegram_card(
+            data={
+                "device_id": "MRR-SOI-FILTER-02",
+                "ring_radius_um": 10.0,
+                "resonance_wavelength_nm": 1550.0,
+                "group_index": 4.0,
+                "free_spectral_range_nm": 9.56,
+                "free_spectral_range_ghz": 1193.0,
+                "fwhm_bandwidth_nm": 0.15,
+                "fwhm_bandwidth_ghz": 18.7,
+                "finesse": 63.7,
+                "quality_factor": 10333.0,
+                "status_category": "HIGH_FINESSE_WDM_CHANNEL_SELECTOR",
+                "portal_url": "https://pic.telkomuniversity.ac.id/mrr/02"
+            }
+        )
+        self.assertIn("Telemetri Micro-Ring Resonator Silikon Fotonik", msg)
+        self.assertIn("MRR-SOI-FILTER-02", msg)
+        self.assertIn("10.0 µm", msg)
+        self.assertIn("9.56 nm", msg)
+        self.assertIn("10,333", msg)
+        self.assertIn("HIGH FINESSE WDM CHANNEL SELECTOR", msg)
+        self.assertIn("https://pic.telkomuniversity.ac.id/mrr/02", msg)
+
 
 
 class TestCommandRateLimiter(unittest.TestCase):
